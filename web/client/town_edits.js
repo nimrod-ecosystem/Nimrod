@@ -119,6 +119,87 @@ export function scaleItem(recipe, i, steps = 1) {
   if (it.scale === 1) delete it.scale;
   return r;
 }
+// =====================================================================================================
+// THE ONE EDITOR'S ROWS FOR A TOWN PIECE (row 2.145 step 2, 2026-10-31). The Town's pieces are edit-mode targets now
+// (modules/town.js editTargets), so the one editor (editor.js) shows a Town piece's place, size and facing under
+// Transform, the same rows a room piece has (room_edits.js pieceFields): absolute values, not Rearrange's "move left".
+// *** NOT room_edits.js's functions, argued. *** room_edits.js names its pieces by id and stands a thing on the floor by
+// the room renderer's rule; Town's drawing is by index and by Town's own rule (`onWall`: everything but a few wall
+// pieces stands), and a room piece's edit skips signs and mounts, which Town moves. So the BOUNDS are shared (they are
+// these, imported there) and the functions are Town's: the same clamps as moveItem and scaleItem above.
+// *** NO TURN. *** Town's flat drawing (town.js placeSvg) draws a size and a flip, never a turn: a Rotation row would
+// write a number nothing draws.
+// =====================================================================================================
+// How far one ‹ or › moves a Town piece: Rearrange's own "Move left" (modules/town.js imports it from here). 4% of the
+// room: about a chair's width at the back, a third of one at the front -- fine enough to place a lamp beside a chair,
+// coarse enough that crossing the room is ~20 presses, not 100.
+export const MOVE_STEP = 4;
+const FACING = [{ value: 'drawn', label: 'As drawn' }, { value: 'turned', label: 'Turned round' }];
+/** Thing `it`'s rows, as settings_fields.js fields. PURE. */
+export function itemFields(it) {
+  if (!it || typeof it !== 'object') return [];
+  const wall = onWall(it);
+  const [lo, hi] = wall ? WALL_Y : FLOOR_Y;
+  return [
+    { key: 'x', label: 'Left or right', kind: 'number', min: X_RANGE[0], max: X_RANGE[1], step: MOVE_STEP, level: 'essential',
+      default: 50, note: '‹ moves it left, › right' },
+    wall
+      ? { key: 'y', label: 'Higher or lower', kind: 'number', min: lo, max: hi, step: MOVE_STEP, level: 'essential', default: 30,
+        note: '‹ moves it up, › down' }
+      : { key: 'y', label: 'Nearer or further', kind: 'number', min: lo, max: hi, step: MOVE_STEP, level: 'essential', default: 92,
+        note: '‹ moves it further back, › nearer' },
+    { key: 'size', label: 'Size', kind: 'number', min: SCALE_RANGE[0], max: SCALE_RANGE[1], step: SCALE_STEP, level: 'essential',
+      default: 1, note: '1 is its usual size' },
+    { key: 'facing', label: 'Facing', kind: 'choice', level: 'essential', default: 'drawn', options: FACING.map((o) => ({ ...o })) },
+  ];
+}
+/** What those rows show now. PURE. */
+export function itemValues(it) {
+  if (!it || typeof it !== 'object') return {};
+  return { x: Number(it.x) || 0, y: Number(it.y) || 0, size: Number(it.scale) || 1, facing: it.flip ? 'turned' : 'drawn' };
+}
+/**
+ * The recipe with thing `i` changed by `patch` ({ x?, y?, size?, facing? }), absolute values each kept inside moveItem's
+ * and scaleItem's bounds; a thing standing on another (`ground`) moves up and down with it. The recipe unchanged (a
+ * copy) when there is no thing `i`. PURE.
+ */
+export function withItemEdit(recipe, i, patch = {}) {
+  const r = copy(recipe);
+  const it = r.items && r.items[i];
+  if (!it || !patch || typeof patch !== 'object') return r;
+  if ('x' in patch && Number.isFinite(Number(patch.x))) it.x = round1(clamp(Number(patch.x), X_RANGE[0], X_RANGE[1]));
+  if ('y' in patch && Number.isFinite(Number(patch.y))) {
+    const [lo, hi] = onWall(it) ? WALL_Y : FLOOR_Y;
+    const was = Number(it.y) || 0;
+    const y = round1(clamp(Number(patch.y), lo, hi));
+    if (Number.isFinite(it.ground)) it.ground = round1(clamp(it.ground + (y - was), lo, hi));
+    it.y = y;
+  }
+  if ('size' in patch && Number.isFinite(Number(patch.size))) {
+    const s = round1(clamp(Number(patch.size), SCALE_RANGE[0], SCALE_RANGE[1]));
+    if (s === 1) delete it.scale; else it.scale = s;
+  }
+  if ('facing' in patch) { if (patch.facing === 'turned') it.flip = true; else delete it.flip; }
+  return r;
+}
+// A copy goes 2 steps (8%) to the right of what it copies, or to the left at the right-hand edge. FOR: on top of the
+// first it would look like nothing happened; 8% is clear of a chair and still in the same part of the room. AGAINST: a
+// wide piece (a sofa) still overlaps its copy -- one or two › presses away.
+const COPY_OFFSET = 2 * MOVE_STEP;
+/** The recipe with a copy of thing `i` added last (drawn in front), beside it. { recipe, index }: index -1 when the
+ * room is full or there is no thing `i`. PURE. */
+export function copyItem(recipe, i) {
+  const r = copy(recipe);
+  r.items = Array.isArray(r.items) ? r.items : [];
+  const it = r.items[i];
+  if (!it || r.items.length >= RECIPE_MAX_ITEMS) return { recipe: r, index: -1 };
+  const c = copy(it);
+  const x = Number(c.x) || 0;
+  c.x = round1(clamp(x + COPY_OFFSET <= X_RANGE[1] ? x + COPY_OFFSET : x - COPY_OFFSET, X_RANGE[0], X_RANGE[1]));
+  r.items.push(c);
+  return { recipe: r, index: r.items.length - 1 };
+}
+
 export function flipItem(recipe, i) {
   const r = copy(recipe);
   const it = r.items && r.items[i];

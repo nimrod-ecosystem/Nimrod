@@ -2161,7 +2161,10 @@ export function createArrangement({
         // THE ONE EDITOR'S TRANSFORM SECTION (row 2.145 step 1, 2026-10-31; editor.js): which of the rows below are where
         // it stands, how big it is and which way it is turned, so the editor's inspector shows them first, under
         // "Transform", and the rest under the piece's own settings. Only a piece this file arranges has them.
-        ...(arrange ? { transformKeys: ['x', 'y', 'size', 'rotate'] } : {}),
+        // (row 2.145 step 2, 2026-10-31: which way it faces and which wall it hangs on are where it stands too -- Godot's
+        // flip is a scale of -1 -- so they join its Transform. "Which wall" is only a row for a wall thing; edit_mode.js
+        // keeps only the keys a piece really has.)
+        ...(arrange ? { transformKeys: ['x', 'y', 'size', 'rotate', 'facing', 'wall'] } : {}),
         help: arrange ? `${o.name}: where it stands, how big it is, which way it faces, ${built ? 'how it is drawn, ' : ''}and which dashboard it opens when it is pressed, or nothing.`
           : built ? `${o.name}: how it is drawn, and which dashboard it opens when it is pressed, or nothing.`
             : `${o.name}: which dashboard it opens when it is pressed, or nothing.`,

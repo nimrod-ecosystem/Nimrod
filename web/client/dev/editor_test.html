@@ -14,7 +14,7 @@
 </style>
 </head>
 <body>
-<h1>the one editor (row 2.145 step 1) — a scene tree and an inspector over what edit mode edits</h1>
+<h1>the one editor (row 2.145 steps 1 and 2) — a scene tree and an inspector over what edit mode edits; one Transform, typed numbers, Town's pieces</h1>
 <p>Mike: "There should just be one thing built for this. It should feel like editing a scene in Godot or Blender." Step 1:
 the target interface, the tree and the inspector over a dashboard's panels and its room, driven through a REAL
 arrangement (arrangement.js) with real modules (a sign, a village, a clock) and a real room. No server needed.</p>
@@ -27,14 +27,17 @@ import { createArrangement, ROOM_PANEL_ID } from '../arrangement.js';
 import { createBus } from '../bus.js';
 import { mountModule, getManifest } from '../module.js';
 import { mergeLayoutSave } from '../doc_merge.js';
-import { targetsOf } from '../edit_mode.js';
+import { targetsOf, parseTyped, typedRange } from '../edit_mode.js';
+import { normalizeField, displayValue } from '../settings_fields.js';
 import { sceneRecipe } from '../room_doors.js';
-import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS } from '../editor.js';
-import { buildTree, nodeIdFor, ROOT_ID, splitSelection, PLACED_TRANSFORM_FIELDS } from '../editor_targets.js';
+import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS, transformWhy } from '../editor.js';
+import { buildTree, nodeIdFor, ROOT_ID, splitSelection, PLACED_TRANSFORM_FIELDS, TRANSFORM_ORDER, presentField, presentFields } from '../editor_targets.js';
 import '../modules/button.js';
 import '../modules/clock.js';
 import '../modules/village.js';
 import '../modules/edit_options.js';
+import '../modules/town.js';
+import { recipeFor, itemFields, withItemEdit, copyItem, isWallPiece, PLACE_IDS, EDITABLE_PLACES, MOVE_STEP } from '../town_edits.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -70,8 +73,12 @@ const LAYOUT = () => ({ preset: 'side', slots: ['b1', 'v1'], scene: { kind: 'roo
 const MODULES = [{ id: 'b1', type: 'button' }, { id: 'v1', type: 'village' }, { id: 'k2', type: 'clock' }];
 const SEEDS = { b1: { label: 'Ada', style: 'plate' } };
 
+// (step 2) Town in a cell, beside a sign: no room behind them. Town's edits go to its own panel row (no person here).
+const TOWN_LAYOUT = () => ({ preset: 'side', slots: ['t1', 'b1'] });
+const TOWN_MODULES = [{ id: 't1', type: 'town' }, { id: 'b1', type: 'button' }];
+
 /** A real arrangement, mounted, saving into one doc the way the kiosk does (doc_merge.js mergeLayoutSave, both writers). */
-async function make() {
+async function make({ layout = LAYOUT, modules = MODULES } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const el = (cls, parent = host) => { const e = document.createElement('div'); e.className = cls; parent.append(e); return e; };
@@ -79,7 +86,11 @@ async function make() {
   const stageEl = el('k-stage', kioskEl), mirrorEl = el('k-mirror', kioskEl), clockEl = el('k-clock', kioskEl), ambientEl = el('k-ambient', kioskEl);
   mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
   const bus = createBus();
-  const t = { doc: { kiosk: { layout: LAYOUT() } }, saves: [], notes: [], bus, kioskEl };
+  const t = { doc: { kiosk: { layout: layout() } }, saves: [], notes: [], bus, kioskEl };
+  // Town's own timers, caught (its "back to the town after 2 minutes"), so a suite can run one by hand.
+  t.timers = [];
+  const setT = (fn, ms) => { const h = { fn, ms, cleared: false }; t.timers.push(h); return h; };
+  const clearT = (h) => { if (h) h.cleared = true; };
   const mergeInto = (who) => (next, base) => {
     const m = mergeLayoutSave(base, next, t.doc.kiosk.layout ?? null, { prefer: 'theirs' });
     t.doc = { ...t.doc, kiosk: { ...t.doc.kiosk, layout: m.layout } };
@@ -95,7 +106,8 @@ async function make() {
     mountInstance: async (def, h) => {
       const state = memState(SEEDS[def.id] || {});
       const instance = mountModule(def.type, { mount: h, bus, rootBus: bus, state, events: noEvents(), user: 'u', personId: null,
-        instanceId: def.id, profileId: 'scr-A', output: { say() {}, notify() {} }, sources: { list: async () => [] } });
+        instanceId: def.id, profileId: 'scr-A', output: { say() {}, notify() {} }, sources: { list: async () => [] },
+        ...(def.type === 'town' ? { setTimer: setT, clearTimer: clearT } : {}) });
       instance.init();
       return { id: def.id, type: def.type, title: getManifest(def.type)?.title, el: h, instance, state, events: { destroy() {} } };
     },
@@ -104,7 +116,7 @@ async function make() {
     layoutStore: { get: () => t.doc.kiosk.layout, save: (next, base) => { mergeInto('room')(next, base); } },
     notify: (text) => t.notes.push(text),
   });
-  t.arr.setProfile({ id: 'scr-A', name: 'Test dashboard', modules: MODULES });
+  t.arr.setProfile({ id: 'scr-A', name: 'Test dashboard', modules });
   t.arr.resolve(t.doc.kiosk.layout); t.arr.partition(); await t.arr.mountOverlays(); await t.arr.mountLayout();
   t.dashOpts = { baseLayout: () => t.doc.kiosk.layout, save: mergeInto('placed') };
   t.closed = [];
@@ -170,10 +182,11 @@ try {
   check('*** a room piece\'s transform is its own rows named by `transformKeys` (x, y, size, turn) ***',
     !!armed && J(armed.transform()?.fields.map((f) => f.key).filter((k) => ['x', 'y', 'size'].includes(k))) === J(['x', 'y', 'size']),
     J(armed?.fields()?.transformKeys));
-  check('...and the village\'s pieces name the same four', (vParts[0]?.fields()?.transformKeys || []).join() === 'x,y,size,rotate', J(vParts[0]?.fields()?.transformKeys));
-  check('splitSelection: Transform takes only the named rows, Settings the rest (Facing stays a setting)',
+  check('...and the village\'s pieces name the same, with which way it faces (step 2)', (vParts[0]?.fields()?.transformKeys || []).join() === 'x,y,size,rotate,facing', J(vParts[0]?.fields()?.transformKeys));
+  check('splitSelection: Transform takes only the named rows (Facing joined them in step 2), Settings the rest (Opens)',
     (() => { const s = splitSelection(armed.fields()); return s.transform.fields.every((f) => armed.fields().transformKeys.includes(f.key))
-      && s.settings.fields.some((f) => f.key === 'facing') && !s.settings.fields.some((f) => f.key === 'x'); })());
+      && s.transform.fields.some((f) => f.key === 'facing') && !s.settings.fields.some((f) => f.key === 'facing')
+      && s.settings.fields.some((f) => f.key === 'opens') && !s.settings.fields.some((f) => f.key === 'x'); })());
 
   // ============================================================================================
   section('*** opening it: the tree, the inspector and the toolbar, Done first ***');
@@ -237,9 +250,10 @@ try {
   row(ed, pieceNode).click();
   check('(setup) the piece is chosen in the room', J(t.arr.editing()) === J({ id: ROOM_PANEL_ID, target: pieceId }), J(t.arr.editing()));
   const tRows = [...(sec(ed, 't')?.querySelectorAll('[data-em-row]') || [])].map((r) => r.dataset.emRow);
-  check('*** its Transform rows are where it stands, its size and its turn; Facing and Opens are under its settings ***',
-    ['x', 'y', 'size'].every((k) => tRows.includes(k)) && tRows.every((k) => ['x', 'y', 'size', 'rotate'].includes(k))
-    && !!sec(ed, 's')?.querySelector('[data-em-row="facing"]') && !sec(ed, 's')?.querySelector('[data-em-row="x"]'), J(tRows));
+  check('*** its Transform rows are where it stands, its size, its turn and which way it faces; Opens is under its settings ***',
+    ['x', 'y', 'size', 'facing'].every((k) => tRows.includes(k)) && tRows.every((k) => ['x', 'y', 'size', 'rotate', 'facing', 'wall'].includes(k))
+    && !!sec(ed, 's')?.querySelector('[data-em-row="opens"]') && !sec(ed, 's')?.querySelector('[data-em-row="facing"]')
+    && !sec(ed, 's')?.querySelector('[data-em-row="x"]'), J(tRows));
   const x0 = t.arr.editSelection().values().x;
   sec(ed, 't').querySelector('[data-em-step="1"][data-em-key="x"]').click();
   check('*** › on Left or right moves the piece, and the SAVED recipe has the new place ***',
@@ -390,8 +404,8 @@ try {
     const vp = e.tree().list.find((x) => x.parent === 'panel:v1');
     row(e, vp.id).click();
     check('(setup) a village piece is chosen', t.arr.editing()?.id === 'v1' && t.arr.editing()?.target === vp.targetId);
-    check('*** its Transform is x, y, size, turn; Duplicate and Delete are on (its own Copy it / Take it out) ***',
-      J([...(sec(e, 't')?.querySelectorAll('[data-em-row]') || [])].map((r) => r.dataset.emRow)) === J(['x', 'y', 'size', 'rotate'])
+    check('*** its Transform is x, y, size, turn, facing; Duplicate and Delete are on (its own Copy it / Take it out) ***',
+      J([...(sec(e, 't')?.querySelectorAll('[data-em-row]') || [])].map((r) => r.dataset.emRow)) === J(['x', 'y', 'size', 'rotate', 'facing'])
       && !bar(e, 'duplicate').disabled && !bar(e, 'delete').disabled && !bar(e, 'add').disabled);
     const count = () => e.tree().list.filter((x) => x.parent === 'panel:v1').length;
     const c0 = count();
@@ -400,7 +414,233 @@ try {
     e.close();
   }
 
+  // ============================================================================================
+  section('*** step 2: ONE Transform -- a room piece, a village piece and a placed panel read the same ***');
+  const tRowsOf = (e) => [...(sec(e, 't')?.querySelectorAll('[data-em-row]') || [])];
+  const keysOf = (e) => tRowsOf(e).map((r) => r.dataset.emRow);
+  const labelOf = (e, k) => sec(e, 't')?.querySelector(`[data-em-row="${k}"] .em-l`)?.textContent || '';
+  const shownOf = (e, k) => sec(e, 't')?.querySelector(`[data-em-row="${k}"] [data-em-value]`)?.textContent || '';
+  const boxOf = (e, k) => sec(e, 't')?.querySelector(`[data-em-num="${k}"]`) || null;
+  const key = (el, k) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+  const typeInto = (e, k, text) => { const b = boxOf(e, k); if (!b) return false; b.value = text; key(b, 'Enter'); return true; };
+  const inOrder = (ks) => ks.every((k, i) => i === 0 || TRANSFORM_ORDER.indexOf(ks[i - 1]) < TRANSFORM_ORDER.indexOf(k));
+  {
+    const e = t.open();
+    const roomPiece = e.tree().list.find((x) => x.parent === nodeIdFor(ROOM_PANEL_ID) && (x.fields()?.transformKeys || []).length);
+    row(e, roomPiece.id).click();
+    const rKeys = keysOf(e), rSize = t.arr.editSelection().values().size;
+    check('*** a room piece: x, y, size, turn?, facing, wall? -- in the one order ***', inOrder(rKeys) && rKeys[0] === 'x' && rKeys[1] === 'y' && rKeys[2] === 'size', J(rKeys));
+    check('*** ...its size reads as a percent ("100 %" for its usual size), where it stands as a percent ***',
+      shownOf(e, 'size') === `${Math.round(rSize * 100)} %` && / %$/.test(shownOf(e, 'x')), `${shownOf(e, 'size')} / ${shownOf(e, 'x')}`);
+    const vp = e.tree().list.find((x) => x.parent === 'panel:v1');
+    row(e, vp.id).click();
+    const vv = t.arr.editSelection().values();
+    check('*** a village piece: the same order and the same words; its pixels shown as a percent of the stage ***',
+      inOrder(keysOf(e)) && labelOf(e, 'x') === 'Left or right' && labelOf(e, 'size') === 'Size' && labelOf(e, 'rotate') === 'Rotation'
+      && shownOf(e, 'size') === `${Math.round(vv.size * 100)} %` && shownOf(e, 'x') === `${Math.round((vv.x / 16) * 10) / 10} %`,
+      `${J(keysOf(e))} ${shownOf(e, 'x')} ${shownOf(e, 'size')} ${J(vv)}`);
+    row(e, 'panel:k2').click();
+    const kv = e.placedModel().item('k2');
+    check('*** a placed panel: the same order and words; its size already a percent ***',
+      inOrder(keysOf(e)) && labelOf(e, 'x') === 'Left or right' && labelOf(e, 'scale') === 'Size' && labelOf(e, 'rot') === 'Rotation'
+      && shownOf(e, 'scale') === `${kv.scale} %`, `${J(keysOf(e))} ${shownOf(e, 'scale')} ${J(kv)}`);
+    check('...placed: "Size" reads "100 %" at its usual size, as a room\'s and a village\'s do', kv.scale !== 100 || shownOf(e, 'scale') === '100 %', shownOf(e, 'scale'));
+
+    // ------------------------------------------------------------------------------------------
+    section('*** step 2: typed numbers ***');
+    check('every number in Transform has a box between its ‹ and ›; a choice (Where it sits) has none',
+      ['x', 'y', 'scale', 'rot', 'layer'].every((k) => !!boxOf(e, k)) && !boxOf(e, 'place')
+      && boxOf(e, 'x').previousElementSibling?.dataset.emStep === '-1' && boxOf(e, 'x').nextElementSibling?.dataset.emStep === '1');
+    check('*** no box is a switch stop: the walk is buttons only, ‹ and › still on it ***',
+      e.scan.stops().every((b) => b.tagName !== 'INPUT') && e.scan.stops().some((b) => b.dataset.emFocus === 'x:1'));
+    const kx0 = e.placedModel().item('k2').x, saves0 = t.saves.length;
+    typeInto(e, 'x', '33.5');
+    check('*** placed: 33.5 typed and Enter -> kept as 33.5 (not 34), on the screen and saved ***',
+      await until(() => savedPlaced(t, 'k2')?.x === 33.5 && t.arr.placed().find((x) => x.id === 'k2')?.x === 33.5),
+      J({ saved: savedPlaced(t, 'k2'), box: boxOf(e, 'x')?.value }));
+    check('...the box and the row read 33.5', boxOf(e, 'x')?.value === '33.5' && shownOf(e, 'x') === '33.5 %', `${boxOf(e, 'x')?.value} ${shownOf(e, 'x')}`);
+    bar(e, 'undo').click();
+    check('*** one Undo puts it back where it was ***', await until(() => savedPlaced(t, 'k2')?.x === kx0), J({ kx0, saved: savedPlaced(t, 'k2') }));
+    const savesB = t.saves.length;
+    typeInto(e, 'x', 'abc');
+    check('*** "abc" is refused: nothing saved, the box marked, the row says the range ***',
+      t.saves.length === savesB && savedPlaced(t, 'k2')?.x === kx0 && boxOf(e, 'x')?.getAttribute('aria-invalid') === 'true'
+      && /Between 0 and 100 %/.test(shownOf(e, 'x')), shownOf(e, 'x'));
+    typeInto(e, 'x', '999');
+    check('*** 999 is refused, not squeezed to 100 ***', t.saves.length === savesB && savedPlaced(t, 'k2')?.x === kx0 && /Between/.test(shownOf(e, 'x')));
+    typeInto(e, 'rot', '190');
+    check('a turn goes round: 190 typed is -170', await until(() => savedPlaced(t, 'k2')?.rot === -170), J(savedPlaced(t, 'k2')));
+    bar(e, 'undo').click();
+    await until(() => !savedPlaced(t, 'k2')?.rot);
+    // Escape in the box: put back, used up there.
+    boxOf(e, 'x').value = '77';
+    key(boxOf(e, 'x'), 'Escape');
+    check('*** Escape in a box puts it back, and edit mode and the editor both stay ***',
+      boxOf(e, 'x')?.value === String(kx0) && t.arr.editing()?.id === 'k2' && e.isOpen() && savedPlaced(t, 'k2')?.x === kx0,
+      `${boxOf(e, 'x')?.value} ${J(t.arr.editing())} ${e.isOpen()}`);
+    boxOf(e, 'x').value = '12';
+    boxOf(e, 'x').dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    check('leaving a box keeps nothing and puts it back', boxOf(e, 'x')?.value === String(kx0) && savedPlaced(t, 'k2')?.x === kx0);
+
+    row(e, vp.id).click();
+    typeInto(e, 'x', '50');
+    check('*** village: 50 (percent) typed -> 800 px kept ***', await until(() => t.arr.editSelection()?.values()?.x === 800),
+      J(t.arr.editSelection()?.values()));
+    row(e, roomPiece.id).click();
+    typeInto(e, 'size', '120');
+    check('*** room: 120 (percent) typed -> size 1.2 kept in the saved recipe ***',
+      await until(() => savedPiece(t, roomPiece.targetId)?.scale === 1.2), J(savedPiece(t, roomPiece.targetId)));
+    check('...and the row says "120 %"', await until(() => shownOf(e, 'size') === '120 %'), shownOf(e, 'size'));
+    const savesC = t.saves.length;
+    typeInto(e, 'size', '45');
+    check('room: 45 % refused (the room\'s own 50 to 160)', t.saves.length === savesC && /Between 50 and 160 %/.test(shownOf(e, 'size')), shownOf(e, 'size'));
+    e.close();
+  }
+  {
+    // The in-panel card (nobody claims the choice): the same rows as before, no boxes.
+    t.arr.editPanel(ROOM_PANEL_ID, true);
+    const anyPiece = targetsOf(t.roomRec()).find((x) => (x.transformKeys || []).length);
+    t.arr.editSelect(anyPiece.id);
+    check('*** the in-panel card has no typed boxes (only the editor asks for them), its ‹ › as before ***',
+      !!t.card() && !t.card().hidden && !t.card().querySelector('[data-em-num]') && !!t.card().querySelector('[data-em-step]'));
+    t.arr.editPanel(ROOM_PANEL_ID, false);
+  }
+  {
+    section('step 2: why a thing has no Transform, said truly');
+    check('*** a 3D room\'s piece: "moving the 3D room\'s furniture is not built yet", not "it moves with its panel" ***',
+      transformWhy({ kind: 'piece', targetId: 'sofa' }, { type: 'room3d' }) === EDITOR_WORDS.room3dTransform
+      && EDITOR_WORDS.room3dTransform !== EDITOR_WORDS.partTransform);
+    check('...a 2D room thing that is not moved here says so; a sign\'s words still move with their panel',
+      transformWhy({ kind: 'piece', targetId: 'door' }, { type: 'room-scene' }) === EDITOR_WORDS.pieceFixed
+      && transformWhy({ kind: 'part', targetId: 'words' }, { type: 'button' }) === EDITOR_WORDS.partTransform);
+    const e = t.open();
+    const fixed = e.tree().list.find((x) => x.parent === nodeIdFor(ROOM_PANEL_ID) && !(x.fields()?.transformKeys || []).length);
+    if (fixed) {
+      row(e, fixed.id).click();
+      check('*** in the inspector: a room thing with no Transform of its own says moving it is not built yet ***',
+        (sec(e, 't')?.textContent || '').includes(EDITOR_WORDS.pieceFixed) && !(sec(e, 't')?.textContent || '').includes(EDITOR_WORDS.partTransform),
+        sec(e, 't')?.textContent);
+    } else check('(the room has no fixed thing to show; the pure check above stands)', true);
+    e.close();
+  }
+  {
+    section('step 2: the pure parts');
+    const f = presentField(normalizeField({ key: 'size', kind: 'number', min: 0.5, max: 1.6, step: 0.1 }));
+    check('parseTyped: "120 %", "120", "1,2e2" no -- a unit and a decimal comma taken, a stray letter refused',
+      parseTyped(f, '120 %').value === 1.2 && parseTyped(f, '120').value === 1.2 && parseTyped(f, '121,5').ok && !parseTyped(f, '1,2e2').ok
+      && !parseTyped(f, '').ok && !parseTyped(f, '  ').ok, J([parseTyped(f, '120 %'), parseTyped(f, '121,5')]));
+    const rot = presentField(normalizeField({ key: 'rotate', kind: 'number', min: -180, max: 180, step: 15, unit: '°' }));
+    check('parseTyped: a turn goes round both ways (190 -> -170, -200 -> 160, 540 -> -180)',
+      parseTyped(rot, '190').value === -170 && parseTyped(rot, '-200').value === 160 && parseTyped(rot, '540').value === -180);
+    const vx = presentField(normalizeField({ key: 'x', kind: 'number', min: 0, max: 1600, step: 10 }));
+    check('a stage in pixels (0..1600) is shown as a percent: 800 px is "50 %", 50 typed is 800',
+      displayValue(vx, 800) === '50 %' && parseTyped(vx, '50').value === 800 && typedRange(vx) === 'Between 0 and 100 %.');
+    check('presentFields puts the one order on any rows given', J(presentFields([{ key: 'facing' }, { key: 'size', kind: 'number' }, { key: 'x', kind: 'number' }]).map((x) => x.key)) === J(['x', 'size', 'facing']));
+    check('*** presenting is a copy: the module\'s own field is untouched ***', f !== null && (() => { const raw = normalizeField({ key: 'size', kind: 'number', min: 0.5, max: 1.6, step: 0.1 }); presentField(raw); return raw.displayScale === 1 && !raw.unit; })());
+  }
+
   t.arr.destroy();
+
+  // ============================================================================================
+  section('*** step 2, cut B: Town -- an open place\'s things are pieces in the one editor ***');
+  {
+    const tw = await make({ layout: TOWN_LAYOUT, modules: TOWN_MODULES });
+    const tRec = () => tw.arr.recFor('t1');
+    const probe = () => tRec().instance.impl.__probe();
+    const kept = (pl = 'kingHall') => ((tRec().state.get().town || {})[probe().deck] || {})[pl] || null;
+    const kids = (e) => e.tree().list.filter((x) => x.parent === 'panel:t1');
+    check('(setup) Town in a cell, showing the whole town', !!tRec() && probe().view === 'map', J(probe().view));
+    let e = tw.open();
+    check('*** on the whole town: Town is a row, with no pieces under it ***', !!row(e, 'panel:t1') && kids(e).length === 0, J(kids(e).map((x) => x.id)));
+    row(e, 'panel:t1').click();
+    check('...its row: "Open a place" and Town\'s own settings (Which town...) in the inspector; no Transform of its own',
+      !!sec(e, 's')?.querySelector('[data-em-row="openPlace"]') && !!sec(e, 's')?.querySelector('[data-em-row="townTheme"]')
+      && !sec(e, 's')?.querySelector('[data-em-row="addPiece"]') && !(sec(e, 't')?.querySelector('[data-em-row]')));
+    e.close();
+    // Open the King's hall by its tile (edit mode off: the town works as itself), then the editor.
+    tRec().el.querySelector('[data-place="kingHall"]').click();
+    check('(setup) the King\'s hall is open', probe().view === 'place' && probe().place === 'kingHall');
+    e = tw.open();
+    const n0 = recipeFor('kingHall', probe().deck, {}).items.length;
+    check('*** once a place is open: one piece row per thing in it, by index, named ***',
+      kids(e).length === n0 && kids(e).every((x, i) => x.id === `panel:t1/piece-${i}` && x.kind === 'piece' && x.label),
+      `${n0} ${J(kids(e).map((x) => `${x.id}:${x.label}`))}`);
+    const p0 = kids(e)[0];
+    row(e, p0.id).click();
+    check('(setup) a Town piece chosen in edit mode', J(tw.arr.editing()) === J({ id: 't1', target: 'piece-0' }), J(tw.arr.editing()));
+    const tk = keysOf(e);
+    check('*** its Transform: where it stands, its size, which way it faces -- no Rotation (Town draws no turn) ***',
+      J(tk) === J(['x', 'y', 'size', 'facing']) && labelOf(e, 'x') === 'Left or right' && labelOf(e, 'size') === 'Size', J(tk));
+    const v0 = tw.arr.editSelection().values();
+    check('...its size reads as a percent, like everything else\'s', shownOf(e, 'size') === `${Math.round(v0.size * 100)} %`, shownOf(e, 'size'));
+    const goRight = v0.x + MOVE_STEP <= 97;
+    sec(e, 't').querySelector(`[data-em-step="${goRight ? 1 : -1}"][data-em-key="x"]`).click();
+    check('*** › on Left or right moves it by 4 and KEEPS it (Town\'s own store, per theme, per place) ***',
+      await until(() => kept()?.items?.[0]?.x === v0.x + (goRight ? MOVE_STEP : -MOVE_STEP)), J({ v0, kept: kept()?.items?.[0] }));
+    typeInto(e, 'size', '120');
+    check('*** typed: 120 % -> size 1.2 kept ***', await until(() => kept()?.items?.[0]?.scale === 1.2), J(kept()?.items?.[0]));
+    bar(e, 'undo').click();
+    check('*** the toolbar\'s Undo is the place\'s: the size back ***', await until(() => kept()?.items?.[0]?.scale !== 1.2), J(kept()?.items?.[0]));
+    bar(e, 'delete').click();
+    check('*** Delete takes the thing out: one row fewer ***', await until(() => kids(e).length === n0 - 1 && kept()?.items?.length === n0 - 1),
+      `${kids(e).length} ${kept()?.items?.length}`);
+    bar(e, 'undo').click();
+    check('*** ...and Undo puts it back ***', await until(() => kids(e).length === n0 && kept()?.items?.length === n0), `${kids(e).length}`);
+    row(e, kids(e)[1].id).click();
+    bar(e, 'duplicate').click();
+    check('*** Duplicate copies it: one row more, beside it ***', await until(() => kids(e).length === n0 + 1 && kept()?.items?.length === n0 + 1),
+      `${kids(e).length} ${J(kept()?.items?.at(-1))}`);
+    // The inspector's own "Take it out" (a deed in the settings section): the list follows (step 2's laterFollow).
+    row(e, kids(e).at(-1).id).click();
+    sec(e, 's').querySelector('[data-em-run="remove"]').click();
+    check('*** the inspector\'s own "Take it out": the list follows without anything else pressed ***', await until(() => kids(e).length === n0), `${kids(e).length}`);
+    // A press in the picture chooses a thing (edit mode), and the tree follows.
+    const circle = tRec().el.querySelector('.tw-pic [data-tw-i="2"]');
+    circle?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    check('*** a press on a thing in the picture chooses it, and its row is marked ***', e.selected() === 'panel:t1/piece-2' && J(tw.arr.editing()) === J({ id: 't1', target: 'piece-2' }),
+      `${e.selected()} ${J(tw.arr.editing())}`);
+    check('...its circle is marked chosen; the others choosable', circle?.hasAttribute('data-edit-selected')
+      && tRec().el.querySelectorAll('.tw-pic [data-tw-i][data-edit-target]').length === n0);
+    // The return timer: two minutes with no press in the town goes back to the map -- not while it is being edited.
+    const pending = () => tw.timers.filter((h) => h.ms === 120000 && !h.cleared);
+    const fire = () => { const h = pending().at(-1); if (h) { h.cleared = true; h.fn(); } return !!h; };
+    check('(setup) the town\'s "back to the town" wait is set', pending().length > 0);
+    fire();
+    check('*** while it is being edited, the wait does not take the place away: it waits again ***', probe().view === 'place' && pending().length > 0, J(probe().view));
+    // "Open a place" on Town's own row moves between them, and the list follows.
+    row(e, 'panel:t1').click();
+    sec(e, 's').querySelector('[data-em-step="1"][data-em-key="openPlace"]').click();
+    const next = PLACE_IDS[PLACE_IDS.indexOf('kingHall') + 1];
+    check('*** Town\'s row: › on "Open a place" opens the next place, and its things are the list now ***',
+      await until(() => probe().place === next && kids(e).length === (EDITABLE_PLACES.includes(next) ? recipeFor(next, probe().deck, {}).items.length : 0)),
+      `${probe().place} ${kids(e).length}`);
+    check('...and "Add a piece" is on Town\'s row while a place is open', !EDITABLE_PLACES.includes(next) || !!sec(e, 's')?.querySelector('[data-em-row="addPiece"]'));
+    e.close();
+    fire();
+    check('*** with nobody editing, the wait goes back to the town as before ***', probe().view === 'map', J(probe().view));
+    e = tw.open();
+    check('...and the pieces leave the list with the place', kids(e).length === 0);
+    check('the town\'s circles take no press unless it is being edited (CSS)', /\.tw-pic \[data-tw-i\]\{pointer-events:none/.test(document.getElementById('town-style')?.textContent || ''));
+    e.close();
+    tw.arr.destroy();
+  }
+  {
+    section('step 2, cut B: the pure Town rows');
+    const r = recipeFor('kingHall', 'nimrod', {});
+    const fi = r.items.findIndex((it) => it.kind === 'furniture' && !isWallPiece(it.part));
+    const wi = r.items.findIndex((it) => it.kind !== 'furniture' || isWallPiece(it.part));
+    check('itemFields: a standing thing\'s y is "Nearer or further" (62..100), a wall thing\'s "Higher or lower" (4..66)',
+      itemFields(r.items[fi]).find((f) => f.key === 'y')?.label === 'Nearer or further' && itemFields(r.items[fi]).find((f) => f.key === 'y').min === 62
+      && (wi < 0 || itemFields(r.items[wi]).find((f) => f.key === 'y')?.label === 'Higher or lower'));
+    check('withItemEdit: absolute values, clamped as moveItem and scaleItem clamp',
+      (() => { const e2 = withItemEdit(r, fi, { x: 500, y: 0, size: 9, facing: 'turned' }).items[fi]; return e2.x === 97 && e2.y === 62 && e2.scale === 1.6 && e2.flip === true; })());
+    check('withItemEdit: size 1 is no `scale` at all; As drawn is no `flip`',
+      (() => { const e2 = withItemEdit(withItemEdit(r, fi, { size: 1.5, facing: 'turned' }), fi, { size: 1, facing: 'drawn' }).items[fi]; return !('scale' in e2) && !('flip' in e2); })());
+    check('withItemEdit leaves the recipe it was given alone', J(recipeFor('kingHall', 'nimrod', {})) === J(r));
+    const c = copyItem(r, fi);
+    check('copyItem: a copy last, beside it, nothing else moved', c.index === r.items.length && c.recipe.items.length === r.items.length + 1
+      && Math.abs(c.recipe.items.at(-1).x - r.items[fi].x) === 8 && J(c.recipe.items.slice(0, -1)) === J(r.items));
+  }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

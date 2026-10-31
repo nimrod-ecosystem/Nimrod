@@ -287,7 +287,8 @@ registerModule(
           help: `${pieceName(it)}. Drag it to move it, drag the corner square to change its size, or the round handle to turn it.`,
           fields: pieceFields(it), values: () => pieceValues(current?.pieces?.[i] || it),
           // The one editor's Transform section (row 2.145 step 1, edit_mode.js `transformKeys`): the same four as a room piece.
-          transformKeys: ['x', 'y', 'size', 'rotate'],
+          // (row 2.145 step 2, 2026-10-31: and which way it faces, as a room piece's.)
+          transformKeys: ['x', 'y', 'size', 'rotate', 'facing'],
           set: (patch) => { editPiece(i, patch); },
           actions: [
             { id: 'copy', label: 'Copy it', run: () => { const got = withCopy(current, i); if (got) keep(got.recipe); else say(`This scene is full (${PIECES_MAX} things).`); } },

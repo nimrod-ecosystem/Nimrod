@@ -30,6 +30,8 @@
 //   a room / village    the piece's own rows its target names as `transformKeys` (edit_mode.js contract).
 //   piece
 //   anything else       none: a panel in a grid cell is placed by its cell; a room has no place of its own.
+// (row 2.145 step 2, 2026-10-31) ALL OF THEM SHOWN ONE WAY: `presentTransform` below -- the same order, size as a
+// percent, where it stands as a percent of the stage -- whatever units each owner keeps them in.
 import { targetsOf, selectionFor } from './edit_mode.js';
 import { normalizeField } from './settings_fields.js';
 import { preset } from './layout.js';
@@ -48,6 +50,7 @@ const titleOf = (rec) => rec?.title || safe(() => getManifest(rec?.type)?.title,
 // THE PLACED PANEL'S TRANSFORM ROWS (edit_model.js's own numbers: its limits and its normal steps, so a ›
 // here moves a panel exactly as a + in the Transform window does).
 // =====================================================================================================
+// (row 2.145 step 2, 2026-10-31: decimals 1 on x, y, size and turn -- see presentTransform below, which sets them.)
 const [X_LO, X_HI] = MODEL_DEFAULTS.limits.x;
 const [Y_LO, Y_HI] = MODEL_DEFAULTS.limits.y;
 const [S_LO, S_HI] = MODEL_DEFAULTS.limits.scale;
@@ -82,7 +85,8 @@ export function placedTransformSel(model, id, { title = '' } = {}) {
   if (!model || !id) return null;
   return {
     panelId: id, type: 'placed', title, target: null, label: 'Transform', help: '',
-    fields: PLACED_TRANSFORM_FIELDS.map((f) => normalizeField(f)).filter(Boolean),
+    // (step 2: through the same presentation as every other Transform, so a placed panel reads like a room piece.)
+    fields: presentFields(PLACED_TRANSFORM_FIELDS.map((f) => normalizeField(f)).filter(Boolean)),
     transformKeys: PLACED_KEYS.slice(),
     actions: [],
     values: () => safe(() => model.item(id), null) || {},
@@ -96,14 +100,86 @@ export function placedTransformSel(model, id, { title = '' } = {}) {
   };
 }
 
-/** A selection split in two: its Transform rows (`transformKeys`) and the rest, its own settings. PURE. */
+// =====================================================================================================
+// ONE TRANSFORM, HOWEVER EACH THING KEEPS ITS NUMBERS (row 2.145 step 2, 2026-10-31).
+// Mike's "editing a scene in Godot or Blender": a thing's place, size and turn read the same whatever it is. Underneath
+// they are kept four ways, and none of them changes here (each owner keeps its own units, bounds and rounding):
+//   a room piece (room_edits.js)   x, y: stage percent (3-97; a wall's or a floor's band)  size: x1, 0.5-1.6   turn: degrees
+//   a Town piece (town_edits.js)   the same as a room's (its bounds are Town's: room_edits.js imports them)   no turn
+//   a village piece (village.js)   x, y: stage PIXELS (0-1600, 0-900)   size: x1, 0.1-4   turn: degrees
+//   a placed panel (edit_model.js) x, y: percent 0-100   size: PERCENT 10-400 ('scale')   turn: degrees ('rot')
+// THIS IS DISPLAY ONLY: settings_fields.js's own `displayScale` / `displayDecimals` / `unit` (the row divides by it;
+// stepping, wrapping and bounds stay in the stored units), on a COPY of each field. So:
+//   * SIZE IS A PERCENT EVERYWHERE ("100 %"). FOR: the placed panels already say it so, and a percent is what a person
+//     types ("make it 120"). AGAINST: a room's "1.2" was what its own card said; the in-panel card still says that, the
+//     inspector says "120 %". The in-panel card is the small fallback (edit_mode.js); the editor is the place with numbers.
+//   * WHERE IT STANDS IS A PERCENT OF THE STAGE EVERYWHERE. A room's, Town's and a placed panel's already are. The
+//     village's are pixels on a stage whose size is its rows' own top (0..1600 across, 0..900 down: village.js declares
+//     them so), so a position row whose range is 0..N with N over 100 is shown as N/100 a percent. FOR: read from the
+//     row's own declaration, so nothing here names the village or copies its stage size. AGAINST: it is a rule about a
+//     range, not a declared unit -- a future row kept in pixels on a stage NOT starting at 0 would show as it is kept
+//     (pixels with a % after them would be wrong, so such a row keeps no % either: see `stage` below). One decimal: a
+//     village step (10 px) is 0.6 % across, and "50.6 %" is honest where "51 %" is not.
+//   * X, Y, A PLACED PANEL'S SIZE AND TURN SHOW ONE DECIMAL (`decimals: 1`): every owner keeps them to a tenth
+//     (room_edits.js round1, town_edits.js round1, edit_model.js clampValue round1), so a typed 33.5 is shown 33.5,
+//     not 34. A room's and the village's turn stay whole degrees: their owners round them so.
+//   * A TURN GOES ROUND (`wraps: 360`): typed 190 is -170, as the edit windows already take it (edit_model.js clampValue).
+//   * THE ORDER IS ONE ORDER: where it stands, its size, its turn, which way it faces, which wall; then a placed panel's
+//     layer and where it sits. Each keeps its own words for up and down ("Nearer or further" on a floor, "Higher or
+//     lower" on a wall, "Up or down" for a panel): they say which way a press moves it, which one word could not.
+// =====================================================================================================
+export const TRANSFORM_ORDER = Object.freeze(['x', 'y', 'size', 'scale', 'rotate', 'rot', 'facing', 'wall', 'layer', 'place', 'surface']);
+const TURN_KEYS = new Set(['rotate', 'rot']);
+const orderOf = (k) => { const i = TRANSFORM_ORDER.indexOf(k); return i < 0 ? TRANSFORM_ORDER.length : i; };
+
+/** One Transform row, as the inspector shows it (a copy; the field itself is untouched). PURE. */
+export function presentField(f) {
+  if (!f || f.kind !== 'number') return f;
+  const out = { ...f };
+  if (f.key === 'x' || f.key === 'y') {
+    out.decimals = Math.max(Number(f.decimals) || 0, 1);
+    const stage = f.min === 0 && Number(f.max) > 100;     // kept in pixels on a stage this wide (the village's)
+    if (stage || (Number(f.min) >= 0 && Number(f.max) <= 100)) {
+      out.unit = '%';
+      out.displayScale = stage ? Number(f.max) / 100 : 1;
+      out.displayDecimals = 1;
+    }
+  } else if (f.key === 'size') {
+    out.displayScale = 0.01;
+    out.displayDecimals = 0;
+    out.unit = '%';
+    out.unitOne = '';
+    out.note = '100 % is its usual size';
+    out.why = out.note;
+  } else if (f.key === 'scale') {
+    out.decimals = Math.max(Number(f.decimals) || 0, 1);
+    out.displayDecimals = 1;
+  }
+  if (TURN_KEYS.has(f.key)) {
+    out.wraps = 360;
+    out.unit = '°';
+    if (f.key === 'rot') { out.decimals = Math.max(Number(f.decimals) || 0, 1); out.displayDecimals = 1; }
+  }
+  return out;
+}
+/** Transform rows in the one order, each presented. PURE. */
+export function presentFields(fields) {
+  return (Array.isArray(fields) ? fields : []).filter(Boolean).map((f, i) => [f, i])
+    .sort((a, b) => (orderOf(a[0].key) - orderOf(b[0].key)) || (a[1] - b[1])).map(([f]) => presentField(f));
+}
+/** A Transform selection, presented (above): the same rows, written the same way, shown the one way. PURE. */
+export function presentTransform(sel) {
+  return sel ? { ...sel, fields: presentFields(sel.fields) } : sel;
+}
+
+/** A selection split in two: its Transform rows (`transformKeys`, presented) and the rest, its own settings. PURE. */
 export function splitSelection(sel) {
   if (!sel) return { transform: null, settings: null };
   const keys = new Set(Array.isArray(sel.transformKeys) ? sel.transformKeys : []);
   const fields = Array.isArray(sel.fields) ? sel.fields : [];
   const tf = fields.filter((f) => keys.has(f.key));
   return {
-    transform: tf.length ? { ...sel, label: 'Transform', help: '', fields: tf, actions: [] } : null,
+    transform: tf.length ? presentTransform({ ...sel, label: 'Transform', help: '', fields: tf, actions: [] }) : null,
     settings: { ...sel, label: 'Settings', help: '', fields: fields.filter((f) => !keys.has(f.key)) },
   };
 }
@@ -149,8 +225,11 @@ export function buildTree(arr, { placedModel = null } = {}) {
       wholeId: whole ? whole.id : null, place });
     for (const t of targets) {
       if (t.whole) continue;
+      // (step 2: a thing with a Transform of its own -- a village's or Town's piece -- is a 'piece' like a room's; a
+      // sign's words are a 'part'.)
+      const piece = room || (Array.isArray(t.transformKeys) && t.transformKeys.length > 0);
       add({ id: nodeIdFor(rec.id, t.id), parent: nodeIdFor(rec.id), depth: depth + 1, label: String(t.label || t.id),
-        kind: room ? 'piece' : 'part', panelId: rec.id, targetId: t.id });
+        kind: piece ? 'piece' : 'part', panelId: rec.id, targetId: t.id });
     }
   }
   function transformOf(node) {

@@ -15,6 +15,11 @@
 // lists of its own things: a village's pieces, a sign's words). Town, pages, words and the two layers (the site's
 // default and a person's own) are later steps of the same proposal. Its look is the theme's plain one, tokens only: the
 // editor's own design is Design's item 49, not delivered yet.
+// *** STEP 2 (2026-10-31): ONE TRANSFORM. *** A room's, the village's and a placed panel's Transform read the same
+// (editor_targets.js presentTransform: one order, size as a percent, where it stands as a percent of the stage), and
+// their numbers can be TYPED between ‹ and › (edit_mode.js renderOptions `typed`; Enter keeps, Escape puts it back).
+// And Town is in the list: an open place's things are its pieces (modules/town.js editTargets), "Open a place" on the
+// Town's own row moves between its places.
 //
 // *** HOW IT SITS ON WHAT IS THERE (nothing underneath it changes). ***
 //   * The selection IS edit mode's. A row chosen here is `arr.editPanel(id, true)` then `arr.editSelect(target)`; a
@@ -52,16 +57,34 @@ export const EDITOR_WORDS = Object.freeze({
   copyModule: 'Copying a module is not built yet.',
   copyPiece: 'Copying a piece of furniture is not built yet.',
   cannotCopy: 'This one cannot be copied.',
-  addHere: 'Adding to the dashboard from here is not built yet. Choose a room or a scene to add a piece to it.',
+  addHere: 'Adding to the dashboard from here is not built yet. Choose a room, a scene or an open Town place to add a piece to it.',
   slotTransform: 'Its place is its cell of the layout.',
   stageTransform: 'It fills the screen.',
   roomTransform: 'The room fills the screen behind the panels.',
   partTransform: 'It moves with its panel.',
+  // (row 2.145 step 2, 2026-10-31) A room's piece with no Transform of its own was told "It moves with its panel", which
+  // is not true of furniture: it is that moving it is not built there yet. Said so, plainly.
+  room3dTransform: 'Moving the 3D room\'s furniture is not built yet.',
+  pieceFixed: 'Moving this one is not built yet.',
   rootHelp: 'Choose something in the list, or press ✎ on a panel and then a thing in it. Its options show here.',
   cellHelp: 'Choose the panel in it to see its options.',
   emptyCell: 'Nothing is in this cell.',
   groupHelp: 'Panels placed freely. Choose one to move it with numbers.',
 });
+
+/**
+ * Why a chosen thing has no Transform section, in words (row 2.145 step 2). PURE.
+ *   node        the tree's node (editor_targets.js): its kind and whether it is a thing in a panel
+ *   sel         edit mode's selection for it (its `type`: 'room3d' for the 3D room)
+ *   hasLayout   whether the dashboard has a layout of cells (else it is the one-at-a-time stage)
+ */
+export function transformWhy(node, sel = null, { hasLayout = true } = {}) {
+  if (!node) return EDITOR_WORDS.stageTransform;
+  if (node.kind === 'room') return EDITOR_WORDS.roomTransform;
+  if (node.kind === 'piece') return sel?.type === 'room3d' ? EDITOR_WORDS.room3dTransform : EDITOR_WORDS.pieceFixed;
+  if (node.targetId) return EDITOR_WORDS.partTransform;
+  return hasLayout ? EDITOR_WORDS.slotTransform : EDITOR_WORDS.stageTransform;
+}
 
 const LEVELS = ['essential', 'standard', 'advanced'];
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -92,6 +115,7 @@ export function openSceneEditor(opts = {}) {
   let box = null;
   let tree = null;
   let selectedId = ROOT_ID;
+  let selectedPrev = null;        // (step 2) the row the inspector was last drawn for: its scroll is kept for the same one
   let chosenLocal = ROOT_ID;      // a row that is not a panel (the dashboard, a cell, a group): chosen here, not in edit mode
   let views = [];
   let lastNote = '';
@@ -260,9 +284,16 @@ export function openSceneEditor(opts = {}) {
     if (!id) id = tree.nodes.has(chosenLocal) ? chosenLocal : ROOT_ID;
     selectedId = id;
     const node = tree.nodes.get(id) || null;
+    // (step 2) Drawn again for the SAME thing, the inspector and the list stay where they were scrolled to (a press
+    // low in a long list of rows must not jump it to the top). A different thing starts at the top.
+    const sameThing = id === selectedPrev;
+    const insTop = sameThing ? insEl.scrollTop : 0;
+    const treeTop = treeEl.scrollTop;
+    selectedPrev = id;
     drawBar(node, editing);
     drawTree();
     drawInspector(node, editing);
+    try { insEl.scrollTop = insTop; treeEl.scrollTop = treeTop; } catch { /* not laid out */ }
     paint();
     if (focusKey) { const n = stops(true).find((b) => keyOf(b) === focusKey); try { n?.focus({ preventScroll: true }); } catch { /* gone */ } }
   }
@@ -284,14 +315,16 @@ export function openSceneEditor(opts = {}) {
     treeEl.innerHTML = tree.list.map((n) => `<button type="button" class="se-row" role="treeitem" data-se-node="${esc(n.id)}"
       data-se-kind="${esc(n.kind)}" aria-level="${n.depth + 1}" aria-selected="${n.id === selectedId}" style="--se-d:${n.depth}">${esc(n.label)}</button>`).join('');
   }
-  function section(key, sel) {
+  function section(key, sel, { typed = false } = {}) {
     const wrap = doc.createElement('section');
     wrap.className = 'se-sec';
     wrap.dataset.seSec = key;
     const host = doc.createElement('div');
     wrap.append(host);
     insEl.append(wrap);
-    views.push(renderOptions(host, sel, { level: levelNow(), onDone: null }));
+    // (row 2.145 step 2) Transform's numbers can be TYPED as well as stepped: a box between ‹ and › (edit_mode.js
+    // renderOptions `typed`). Never a switch stop (stops() below takes buttons and links only).
+    views.push(renderOptions(host, sel, { level: levelNow(), onDone: null, typed }));
   }
   function plain(key, title, text) {
     const wrap = doc.createElement('section');
@@ -324,14 +357,11 @@ export function openSceneEditor(opts = {}) {
     const sel = safe(() => arr.editSelection(), null);
     head.innerHTML = `<strong class="em-title" data-se-title>${esc(sel?.label || node.label)}</strong>${sel?.help ? `<p class="em-help" data-se-help>${esc(sel.help)}</p>` : ''}`;
     const split = splitSelection(sel);
-    // TRANSFORM first: a placed panel's (the edit model's), else a piece's own rows, else why it has none.
+    // TRANSFORM first: a placed panel's (the edit model's), else a piece's own rows, else why it has none. Both are
+    // presented one way (editor_targets.js presentTransform), and its numbers take typing (step 2).
     const tf = node.place && !node.targetId ? safe(() => node.transform(), null) : split.transform;
-    if (tf) section('t', tf);
-    else {
-      const why = node.kind === 'room' ? EDITOR_WORDS.roomTransform : node.targetId ? EDITOR_WORDS.partTransform
-        : safe(() => arr.layout(), null) ? EDITOR_WORDS.slotTransform : EDITOR_WORDS.stageTransform;
-      plain('t', 'Transform', why);
-    }
+    if (tf) section('t', tf, { typed: true });
+    else plain('t', 'Transform', transformWhy(node, sel, { hasLayout: !!safe(() => arr.layout(), null) }));
     // ...then its own settings (and its buttons: Take it out, Copy as the default...).
     if (split.settings && (split.settings.fields.length || (split.settings.actions || []).length)) section('s', split.settings);
   }
@@ -438,7 +468,38 @@ export function openSceneEditor(opts = {}) {
     if (!b || !box.contains(b)) return;
     if (scanKey !== null && keyOf(b)) scanKey = keyOf(b);
     queueMicrotask(() => { if (!closed) paint(); });
+    if (insEl.contains(b) && (b.matches('[data-em-run]') || b.matches('[data-em-step]'))) laterFollow();
   }, true);
+  // ...and a number typed and kept (Enter in a Transform box) the same.
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('[data-em-num]') && insEl.contains(e.target)) laterFollow();
+  }, true);
+  // (row 2.145 step 2) AFTER A CHANGE MADE IN THE INSPECTOR, THE LIST FOLLOWS. A press there can change what is in the
+  // list, not only a value: a piece taken out or copied ("Take it out", "Copy it"), a Town place opened ("Open a place"
+  // puts its things in the list), a piece added. So once the press is done the tree is built again, and if it differs
+  // (or edit mode's choice has moved) the editor is drawn again; if it is the same, only the toolbar is (Undo may have
+  // lit). FOR checking first: drawing the inspector again on every ‹ › would be wasted work on a Pi 400 for the usual
+  // press, which changes a number and nothing in the list. AGAINST: the tree is built twice for a press that does change it.
+  // A TIMER, NOT A MICROTASK: a real press runs microtasks between this capture listener and the row's own, and drawing
+  // here would take the button away before its row's listener saw it pressed (edit_mode.js renderOptions checks it is
+  // still there). One pending at a time.
+  let followTimer = null;
+  const sigOf = (tr) => (tr?.list || []).map((n) => `${n.id}|${n.label}|${n.kind}`).join('\n');
+  function laterFollow() {
+    if (closed || followTimer !== null) return;
+    const win = doc.defaultView || globalThis;
+    followTimer = win.setTimeout(() => {
+      followTimer = null;
+      if (closed) return;
+      const next = safe(() => buildTree(arr, { placedModel: model() }), null);
+      const editing = editingNow();
+      const id = next && editing ? nodeForEditing(next, editing) : null;
+      if (!next || sigOf(next) !== sigOf(tree) || (editing && id !== selectedId)) { render(); return; }
+      tree = next;
+      drawBar(tree.nodes.get(selectedId) || null, editing);
+      paint();
+    }, 0);
+  }
   // ESCAPE. While edit mode has something chosen, its own capture listener takes the key first (and leaves); so a key
   // that reaches here is a second one, or one with nothing chosen: it closes the editor. Bubble phase, and claimed, so
   // the same key does not also open the menu (input_keyboard.js binds Escape to it on window).

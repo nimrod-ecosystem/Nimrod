@@ -45,6 +45,7 @@ import { cardSvg } from '../playing_cards.js';
 import {
   openTownEdits, personOf, EDITABLE_PLACES, PLACE_IDS, TOWN_THEMES, recipeFor, itemName, moveItem, scaleItem, flipItem,
   removeItem, addPiece, piecesFor, pieceName, isWallPiece, RECIPE_MAX_ITEMS,
+  MOVE_STEP, itemFields, itemValues, withItemEdit, copyItem,
 } from '../town_edits.js';
 import { sceneSvg } from '../town_scene.js';
 import { talkTo, townTalkReady, onTownTalkChange } from '../town_talk.js';
@@ -58,9 +59,9 @@ export const TITLE = 'Town';
 // person thinking takes, three laps of the town's eight places at the default step is 96 s, short enough that an empty
 // room does not watch a light go round for long). Not a setting.
 export const IDLE_MS = 45000;
-// How far one press of "Move left" moves a thing: 4% of the room (about a chair's width at the back, a third of one at
-// the front). Fine enough to place a lamp beside a chair; coarse enough that crossing the room is ~20 presses, not 100.
-export const MOVE_STEP = 4;
+// How far one press of "Move left" moves a thing: 4% of the room, argued where it lives now (town_edits.js MOVE_STEP,
+// row 2.145 step 2: the one editor's ‹ › for a Town piece move by the same step, so it is kept in one place).
+export { MOVE_STEP };
 
 export const VOICE = Object.freeze({
   'next place': 'next', 'previous place': 'prev', 'go in': 'select', 'open it': 'select', 'go back': 'back',
@@ -214,6 +215,9 @@ const CSS = `
 .tw-card{width:clamp(48px,14cqh,92px);aspect-ratio:250/350}
 .tw-card svg{display:block;width:100%;height:100%}
 .tw-say{margin:0;min-height:1.3em;font-size:clamp(13px,2.9cqh,20px);font-weight:600;color:var(--text-strong, var(--text))}
+.tw-pic [data-tw-i]{pointer-events:none;fill:transparent;stroke:none}
+[data-editing] .tw-pic [data-tw-i]{pointer-events:all;cursor:pointer;stroke:var(--focus, currentColor);stroke-width:3;stroke-dasharray:8 8}
+[data-editing] .tw-pic [data-tw-i][data-edit-selected]{stroke-width:7;stroke-dasharray:none}
 `;
 function ensureStyle(doc) {
   if (!doc || doc.getElementById?.(STYLE_ID)) return;
@@ -244,6 +248,9 @@ registerModule(
     let draft = null;            // the recipe being rearranged
     let sel = 0;                 // the thing chosen in it
     let undo = [];
+    // (row 2.145 step 2) The one editor's changes to an OPEN place (not Rearrange's): what the person's version of it was
+    // before each, null for "the theme's own" -- so Undo back to the start puts the place back, not a copy of it.
+    let placeUndo = [];
     let addGroup = -1;           // in the piece list: -1 the groups, else which group
     let lit = -1;
     let idle = true;
@@ -322,8 +329,18 @@ registerModule(
       returnTimer = clear(returnTimer);
       const ms = Number(cfg.townReturnMs) || 0;
       if (dead || hidden || view === 'map' || !(ms > 0)) return;
-      returnTimer = setT(() => { returnTimer = null; if (!dead && view !== 'map') toMap(); }, ms);
+      // (row 2.145 step 2) NOT WHILE IT IS BEING EDITED: somebody choosing a piece in the one editor (or edit mode's card)
+      // presses nothing in the town itself, so its "nobody has pressed anything" would take the place away from under
+      // them. It waits another while instead. Edit mode leaves by itself after its own wait (edit_mode.js idleMs) and
+      // the editor is closed by its host's, so this never holds a place open for good.
+      returnTimer = setT(() => {
+        returnTimer = null;
+        if (dead || view === 'map') return;
+        if (beingEdited()) { armReturn(); return; }
+        toMap();
+      }, ms);
     }
+    const beingEdited = () => { try { return !!mount.closest?.('[data-editing]'); } catch { return false; } };
 
     // ---- voice: listening for place names ----------------------------------------------------------------------
     function announce(open) {
@@ -353,7 +370,7 @@ registerModule(
 
     // ---- the views ------------------------------------------------------------------------------------------------
     function toMap() {
-      view = 'map'; draft = null; undo = []; addGroup = -1;
+      view = 'map'; draft = null; undo = []; placeUndo = []; addGroup = -1;
       lit = idle ? -1 : Math.max(0, PLACE_IDS.indexOf(place));
       news = '';
       render();
@@ -362,7 +379,7 @@ registerModule(
     }
     function openPlace(id) {
       if (!PLACES[id]) return;
-      view = 'place'; place = id; draft = null; undo = []; addGroup = -1; lit = idle ? -1 : 0; news = '';
+      view = 'place'; place = id; draft = null; undo = []; placeUndo = []; addGroup = -1; lit = idle ? -1 : 0; news = '';
       render();
       armReturn();
       if (cfg.sayPlaces) { const p = placeInfo(id, deckNow()); speak(`${p.label}. ${p.blurb}`); }
@@ -370,7 +387,7 @@ registerModule(
     function startEdit() {
       if (!EDITABLE_PLACES.includes(place)) return;
       draft = recipeFor(place, deckNow(), edits());
-      sel = draft.items.length ? 0 : -1; undo = []; addGroup = -1;
+      sel = draft.items.length ? 0 : -1; undo = []; placeUndo = []; addGroup = -1;
       view = 'edit'; lit = idle ? -1 : 0; news = '';
       listenTimer = clear(listenTimer);
       if (listening) { listening = false; announce(false); }
@@ -409,7 +426,7 @@ registerModule(
         sel = draft.items.length ? Math.min(Math.max(sel, 0), draft.items.length - 1) : -1;
         news = 'Undone.'; render();
       },
-      done: () => { view = 'place'; draft = null; undo = []; lit = idle ? -1 : 0; news = 'Kept.'; render(); openListening(); },
+      done: () => { view = 'place'; draft = null; undo = []; placeUndo = []; lit = idle ? -1 : 0; news = 'Kept.'; render(); openListening(); },
     };
     function choosePiece(part) {
       const { recipe, index } = addPiece(draft, part);
@@ -428,6 +445,148 @@ registerModule(
       const taken = await talkTo(req, { bus });
       if (dead) return;
       if (!taken) { news = `Talking to ${RESIDENT_NAME[who]} is not set up on this screen yet.`; render(); }
+    }
+
+    // =====================================================================================================
+    // EDIT MODE AND THE ONE EDITOR (row 2.145 step 2, 2026-10-31). Mike: *"It should feel like editing a scene in Godot or
+    // Blender"* -- Town's places among the rest, not a separate editor of their own. While an editable place is open (as
+    // a place, or in Rearrange), each thing in it is an edit-mode target (edit_mode.js contract): pressed in the picture
+    // while the panel is edited, or chosen in the editor's list, its place, size and facing are its Transform -- typed or
+    // stepped -- and Copy it, Take it out and Undo are the editor's Duplicate, Delete and Undo. The town itself is the
+    // `whole` target: which place is open ("Open a place": the editor's way between them, since a press in an edited
+    // panel chooses rather than opens), a piece to add, and every one of Town's own settings.
+    // EVERY CHANGE IS KEPT AT ONCE, as Rearrange's are (the same store). In Rearrange they go through its own `keep` (its
+    // Undo is the same Undo); on a place that is open, they are kept the same way with an Undo of their own (placeUndo).
+    // Rearrange's buttons are unchanged: this is one more way in, not a replacement.
+    // =====================================================================================================
+    const editableOpen = () => (view === 'place' || view === 'edit') && EDITABLE_PLACES.includes(place);
+    const recipeNow = () => (view === 'edit' && draft ? draft : recipeFor(place, deckNow(), edits()));
+    /** Keep `next` as the open place's recipe. True if kept. */
+    function change(next, words) {
+      if (!next || !editableOpen()) return false;
+      if (view === 'edit' && draft) { keep(next, words); return true; }
+      const before = edits()[place] || null;
+      const ok = store ? store.save(deckNow(), place, next) : false;
+      if (ok) { placeUndo.push(before); if (placeUndo.length > 30) placeUndo.shift(); }
+      news = ok ? words : 'That could not be kept.';
+      render();
+      return ok;
+    }
+    function editThing(i, patch) {
+      const r = recipeNow();
+      if (!r?.items?.[i]) return false;
+      if (view === 'edit') sel = i;
+      return change(withItemEdit(r, i, patch), `Changed: ${itemName(r.items[i])}.`);
+    }
+    function copyThing(i) {
+      const r = recipeNow();
+      if (!r?.items?.[i]) return false;
+      const { recipe, index } = copyItem(r, i);
+      if (index < 0) { news = `This room is full (${RECIPE_MAX_ITEMS} things).`; render(); return false; }
+      const ok = change(recipe, `Copied: ${itemName(r.items[i])}.`);
+      if (ok && view === 'edit') { sel = index; render(); }
+      return ok;
+    }
+    function removeThing(i) {
+      const r = recipeNow();
+      if (!r?.items?.[i]) return false;
+      const ok = change(removeItem(r, i), `Taken out: ${itemName(r.items[i])}.`);
+      if (ok && view === 'edit') { sel = draft.items.length ? Math.min(sel, draft.items.length - 1) : -1; render(); }
+      return ok;
+    }
+    function undoThing() {
+      if (view === 'edit') { if (undo.length) EDIT_ACTS.undo(); else { news = 'Nothing to undo.'; render(); } return; }
+      if (!editableOpen() || !placeUndo.length) { news = 'Nothing to undo.'; render(); return; }
+      const prev = placeUndo.pop();
+      if (store) { if (prev) store.save(deckNow(), place, prev); else store.reset(deckNow(), place); }
+      news = 'Undone.';
+      render();
+    }
+    function putBack() {
+      if (!editableOpen()) return;
+      const before = edits()[place] || null;
+      if (!before) { news = 'This is already as it comes.'; render(); return; }
+      if (store) store.reset(deckNow(), place);
+      if (view === 'edit') { undo.push(draft); draft = recipeFor(place, deckNow(), edits()); sel = draft.items.length ? 0 : -1; }
+      else placeUndo.push(before);
+      news = `Put back to the ${themeLabel()} version.`;
+      render();
+    }
+    function addThing(part) {
+      const r = recipeNow();
+      const { recipe, index } = addPiece(r, part);
+      if (index < 0) { news = `This room is full (${RECIPE_MAX_ITEMS} things).`; render(); return false; }
+      const ok = change(recipe, `Added: ${pieceName(part)}. Move it where you want it.`);
+      if (ok && view === 'edit') { sel = index; render(); }
+      return ok;
+    }
+    function addOptions() {
+      const seen = new Set();
+      const out = [{ value: '', label: 'Choose a piece to add' }];
+      for (const [, parts] of piecesFor(deckNow())) {
+        for (const part of parts) { if (!seen.has(part)) { seen.add(part); out.push({ value: part, label: pieceName(part) }); } }
+      }
+      return out;
+    }
+    function wholeTarget() {
+      const open = editableOpen();
+      const deck = deckNow();
+      return {
+        id: 'town', label: 'The town', el: rootEl, whole: true,
+        help: open ? 'This place: press a thing in it, or choose one in the list, to move it. Every change is kept.'
+          : 'The town. Open a place to move what is in it.',
+        fields: [
+          { key: 'openPlace', label: 'Open a place', kind: 'choice', level: 'essential', default: '',
+            options: [{ value: '', label: 'The whole town' }, ...PLACE_IDS.map((id) => ({ value: id, label: placeInfo(id, deck).label }))] },
+          ...(open ? [{ key: 'addPiece', label: 'Add a piece', kind: 'choice', level: 'essential', default: '', options: addOptions(),
+            note: 'it goes in the middle of the wall or the floor, to move from there' }] : []),
+          ...SETTINGS,
+        ],
+        values: () => ({ ...cfg, openPlace: view === 'map' ? '' : (place || ''), addPiece: '' }),
+        set: (patch) => {
+          if (!patch || dead) return;
+          if ('openPlace' in patch) {
+            const id = patch.openPlace;
+            if (!id) { if (view !== 'map') toMap(); }
+            else if (PLACES[id] && !(id === place && view !== 'map')) openPlace(id);
+            return;
+          }
+          if ('addPiece' in patch) { if (patch.addPiece && open) addThing(patch.addPiece); return; }
+          try { state?.set?.(patch); } catch (err) { console.error('town: setting', err); }
+        },
+        actions: open ? [
+          { id: 'undo', label: 'Undo', run: () => { undoThing(); } },
+          { id: 'reset', label: 'Put it back', note: `as the ${themeLabel()} town has it`, run: () => { putBack(); } },
+        ] : [],
+      };
+    }
+    function editTargets() {
+      if (dead || !rootEl) return [];
+      const out = [];
+      if (editableOpen()) {
+        const r = recipeNow();
+        for (const el of mount.querySelectorAll('.tw-pic [data-tw-i]')) {
+          const i = Number(el.getAttribute('data-tw-i'));
+          const it = r?.items?.[i];
+          if (!it) continue;
+          out.push({
+            id: `piece-${i}`, label: itemName(it), el,
+            help: `${itemName(it)}: where it stands, how big it is and which way it faces. Every change is kept.`,
+            fields: itemFields(it),
+            transformKeys: ['x', 'y', 'size', 'facing'],
+            values: () => itemValues(recipeNow()?.items?.[i] || it),
+            set: (patch) => { editThing(i, patch); },
+            actions: [
+              { id: 'copy', label: 'Copy it', run: () => { copyThing(i); } },
+              { id: 'remove', label: 'Take it out', note: 'Undo puts it back', run: () => { removeThing(i); } },
+              { id: 'undo', label: 'Undo', run: () => { undoThing(); } },
+            ],
+          });
+        }
+      }
+      // The town itself, last (it holds everything above).
+      out.push(wholeTarget());
+      return out;
     }
 
     function addBack() { if (addGroup >= 0) addGroup = -1; else view = 'edit'; lit = idle ? -1 : 0; render(); }
@@ -523,10 +682,25 @@ registerModule(
           + `${placeSvg(id, deck, town[id] ? { edited: town[id] } : {})}<b>${esc(p.label)}</b><small>${esc(sub)}${town[id] ? ' · rearranged' : ''}</small></button>`;
       }).join('')}</div>`;
     }
+    // (row 2.145 step 2) THE THINGS IN A PLACE, PRESSABLE IN EDIT MODE. The flat drawing has no element per thing (and
+    // draws them in its own order, town.js placeSvg), so each thing gets a clear circle of its own over it, in the
+    // recipe's order: `data-tw-i` is the thing's index, the edit-mode target's element (editTargets below). They take
+    // no press unless the panel is being edited (the CSS above), so the picture works exactly as before otherwise.
+    // Where: the same spot the chosen-thing ring has always been drawn at (a standing thing's middle, 50 above its feet;
+    // a wall thing's own point). The 960x540 stage is town_scene.js's. Size: the ring's 58, times the thing's size.
+    const spotOf = (it) => ({ cx: round1(it.x * 9.6), cy: round1(it.kind === 'furniture' && !isWallPiece(it.part) ? it.y * 5.4 - 50 : it.y * 5.4) });
+    const round1 = (v) => Math.round((Number(v) || 0) * 10) / 10;
+    const hitCircles = (recipe) => (recipe && Array.isArray(recipe.items) ? recipe.items : []).map((it, i) => {
+      if (!it || typeof it !== 'object') return '';
+      const { cx, cy } = spotOf(it);
+      return `<circle cx="${cx}" cy="${cy}" r="${round1(58 * (Number(it.scale) || 1))}" data-tw-i="${i}"/>`;
+    }).join('');
+    const withHits = (svg, recipe) => svg.replace(/<\/svg>$/, `${hitCircles(recipe)}</svg>`);
     function placeHtml() {
       const deck = deckNow(), town = edits(), p = placeInfo(place, deck), who = RESIDENT[place];
-      const scene = sceneSvg({ place, deck, edited: town[place] || null, cast: who ? [{ role: who, pose: 'wave' }] : [],
+      let scene = sceneSvg({ place, deck, edited: town[place] || null, cast: who ? [{ role: who, pose: 'wave' }] : [],
         title: who ? `${p.label}, with ${RESIDENT_NAME[who]} at home` : p.label });
+      if (EDITABLE_PLACES.includes(place)) scene = withHits(scene, recipeFor(place, deck, town));
       const btns = [btn('town', 'Back to the town')];
       if (EDITABLE_PLACES.includes(place)) btns.push(btn('edit', 'Rearrange'));
       if (who && talkShown()) btns.push(btn('talk', `Talk to ${RESIDENT_NAME[who]}`));
@@ -542,9 +716,10 @@ registerModule(
       let scene = sceneSvg({ place, deck, edited: draft, title: `${p.label}, being rearranged` });
       const it = draft.items[sel];
       if (it) {
-        const cx = it.x * 9.6, cy = it.kind === 'furniture' && !isWallPiece(it.part) ? it.y * 5.4 - 50 : it.y * 5.4;
+        const { cx, cy } = spotOf(it);
         scene = scene.replace(/<\/svg>$/, `<circle cx="${cx}" cy="${cy}" r="58" fill="none" stroke="currentColor" stroke-width="7" stroke-dasharray="14 9" data-chosen/></svg>`);
       }
+      scene = withHits(scene, draft);
       const has = sel >= 0;
       const dis = has ? '' : ' disabled';
       const btns = [btn('done', 'Done'), btn('next', `Next thing (now: ${selName()})`, draft.items.length > 1 ? '' : ' disabled', 'Next thing'),
@@ -592,7 +767,9 @@ registerModule(
       __probe: () => ({ view, place, deck: deckNow(), sel, draft, undo: undo.length, lit, idle, listening, news,
         said: said.slice(), talks: talks.slice(), edits: edits(), stops: stops().map((el) => el.getAttribute('data-act')),
         lightRunning: lightTimer != null, lightStepMs: lightStepMs(), person: store ? store.isPerson() : false,
-        timers: [lightTimer, idleTimer, returnTimer, listenTimer].filter((h) => h != null).length }),
+        timers: [lightTimer, idleTimer, returnTimer, listenTimer].filter((h) => h != null).length, placeUndo: placeUndo.length }),
+      // (row 2.145 step 2) edit mode's targets: the open place's things, then the town itself (above).
+      editTargets: () => editTargets(),
       init() {
         const doc = mount.ownerDocument || (typeof document !== 'undefined' ? document : null);
         ensureStyle(doc);
@@ -620,12 +797,14 @@ registerModule(
         themeWatch = watchTheme(mount, () => {
           // A new theme is a new town: an edit in progress belonged to the old one (and is already kept).
           if (view === 'edit' || view === 'add') { view = 'place'; draft = null; undo = []; }
+          placeUndo = [];          // (step 2) the one editor's Undo was the old theme's place
           lastBody = ''; render(); if (listening) announce(true);
         });
         state?.subscribe?.((s) => {
           const was = cfg.townTheme;
           applyCfg(s);
           if (was !== cfg.townTheme && (view === 'edit' || view === 'add')) { view = 'place'; draft = null; undo = []; }
+          if (was !== cfg.townTheme) placeUndo = [];   // (step 2) as above
           render(); armLight(); armReturn();
           if (listenWanted() !== listening) openListening();
         });

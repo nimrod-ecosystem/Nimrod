@@ -39,6 +39,8 @@
 //             its turn (['x', 'y', 'size', 'rotate'] for a room or village piece). The one editor (editor.js) shows
 //             those first, under "Transform", and the rest under its settings. Absent: it has no transform of its own.
 //             Carried onto the selection as `transformKeys` ([] when absent); nothing else reads it.
+//             (step 2, 2026-10-31: a room piece also names 'facing' and 'wall', a village piece 'facing', a Town piece
+//             ['x', 'y', 'size', 'facing'] -- where it stands, its size, its turn and which way it faces.)
 // A record may also say `passThrough` (a CSS selector): a press inside a matching element nested in the
 // panel is NOT taken -- a module sitting in a room's slot keeps working while the room is being edited.
 // A module that cannot be edited (yet) without changing its file can be DECLARED here instead
@@ -218,11 +220,60 @@ export function optionRows(sel, { level = EDIT_DEFAULTS.level } = {}) {
   });
 }
 
+// =====================================================================================================
+// TYPED NUMBERS (row 2.145 step 2, 2026-10-31). The one editor's Transform (editor.js) puts a box between a number's ‹
+// and ›, as Godot's and Blender's inspectors do: type 33.5, press Enter. ONLY WHERE ASKED (`renderOptions(..., { typed:
+// true })`): the in-panel card and the builder's options panel draw exactly what they drew before.
+//   * The box shows and takes the number IN THE ROW'S OWN UNITS (settings_fields.js `displayScale`: a size typed "120"
+//     is kept as 1.2, a village's "50" across as 800 px). A unit typed after it ("120 %") and a decimal comma ("33,5")
+//     are taken; anything else that is not a number is refused.
+//   * Out of the row's range: REFUSED, not squeezed in. FOR: a typo (999 for 99) that quietly became the maximum would
+//     move the thing somewhere nobody asked for; refused, the box says "Between 3 and 97 %" and nothing is written.
+//     AGAINST: one more Enter. A TURN is the exception: it goes round (`wraps`, 190° is -170°), as the edit windows take
+//     it -- every number is a turn there is.
+//   * Enter keeps it (one undoable step, through the row's own `set`: its owner's bounds and rounding, as for ‹ ›).
+//     Escape puts the box back and is used up there (edit mode and the editor stay as they were). Leaving the box keeps
+//     nothing and puts it back: a box never shows a number that is not in force.
+//   * NEVER A SWITCH STOP: a switch cannot type. The ‹ and › either side of it are the stops, exactly as before.
+// =====================================================================================================
+const isNumLike = (v) => typeof v === 'number' && Number.isFinite(v);
+const roundTo = (v, d) => { const p = 10 ** Math.max(0, Math.min(6, Number(d) || 0)); return Math.round(v * p) / p; };
+/** A stored number as the row shows it (its own units, its own decimals), without the unit. PURE. */
+export function shownNumber(field, value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '';
+  const scale = Number(field?.displayScale) > 0 ? Number(field.displayScale) : 1;
+  return scale === 1 ? n : roundTo(n / scale, field?.displayDecimals ?? 0);
+}
+/** What a typed number's row says when it is refused. */
+export function typedRange(field) {
+  const unit = field?.unit ? ` ${field.unit}` : '';
+  return `Between ${shownNumber(field, field?.min)} and ${shownNumber(field, field?.max)}${unit}.`;
+}
+/**
+ * A number typed into a row's box, as the value to keep (in stored units), or why not. PURE.
+ *   -> { ok: true, value } | { ok: false, why }
+ */
+export function parseTyped(field, raw) {
+  if (!field || field.kind !== 'number' || !isNumLike(field.min) || !isNumLike(field.max)) return { ok: false, why: 'This one is not set by typing.' };
+  let s = String(raw ?? '').trim();
+  if (field.unit && s.endsWith(field.unit)) s = s.slice(0, -field.unit.length).trim();
+  s = s.replace(/^−/, '-').replace(',', '.');     // a typographic minus; a decimal comma
+  if (!/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return { ok: false, why: s ? `That is not a number. ${typedRange(field)}` : `Type a number. ${typedRange(field)}` };
+  const scale = Number(field.displayScale) > 0 ? Number(field.displayScale) : 1;
+  let v = roundTo(Number(s) * scale, 6);                // 6 places: 120 x 0.01 is 1.2, not 1.2000000000000002
+  const w = Number(field.wraps);
+  if (w > 0) v = roundTo((((v - field.min) % w) + w) % w + field.min, 6);
+  if (v < field.min - 1e-9 || v > field.max + 1e-9) return { ok: false, why: typedRange(field) };
+  return { ok: true, value: v };
+}
+
 /**
  * Draw `sel`'s options into `host` (replacing what is there). `onDone`: the Done button. `level`: which
  * rows. Returns { refresh, destroy }. Every press writes through `sel.set` and redraws.
+ * `typed` (row 2.145 step 2): a box between a number's ‹ and › to type it into (above). Off unless asked.
  */
-export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.level, doneLabel = 'Done' } = {}) {
+export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.level, doneLabel = 'Done', typed = false } = {}) {
   if (!host) return { refresh() {}, destroy() {} };
   const doc = host.ownerDocument || document;
   ensureEditCss(doc);
@@ -240,6 +291,10 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
           <span class="em-v" data-em-value>${esc(r.shown)}</span>
           <span class="em-c">${r.cycle
             ? `<button type="button" class="em-btn" data-em-step="-1" data-em-key="${esc(r.key)}" data-em-focus="${esc(r.key)}:-1" aria-label="${esc(`${r.label}: back one`)}">‹</button>`
+              // (row 2.145 step 2) The typed box, between the two: only where asked, only on a number.
+              + (typed && r.field.kind === 'number'
+                ? `<input class="em-num" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-em-num="${esc(r.key)}" data-em-focus="${esc(r.key)}:n" aria-label="${esc(`${r.label}, type a number${r.field.unit ? ` in ${r.field.unit === '%' ? 'percent' : r.field.unit === '°' ? 'degrees' : r.field.unit}` : ''}`)}" value="${esc(shownNumber(r.field, r.value))}">`
+                : '')
               + `<button type="button" class="em-btn" data-em-step="1" data-em-key="${esc(r.key)}" data-em-focus="${esc(r.key)}:1" aria-label="${esc(`${r.label}: next`)}">›</button>`
             : r.text
               // A secret (a key, a pass phrase; row 2.83) is a HIDDEN box with a Show button, opened empty as before.
@@ -299,17 +354,66 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
     const item = fieldItems([f], { values: () => sel.values(), level: 'advanced', onStep: (k, v) => { sel.set(k, v); } })[0];
     if (item?.commit(box.value)) draw();
   }
+  // ---- the typed box (row 2.145 step 2): Enter keeps, Escape and leaving put it back ----
+  const numBox = (key) => host.querySelector(`[data-em-num="${CSS.escape ? CSS.escape(key) : key}"]`);
+  const rowOf = (key) => host.querySelector(`[data-em-row="${CSS.escape ? CSS.escape(key) : key}"]`);
+  function putBack(key) {
+    const f = rowField(key);
+    const box = numBox(key);
+    if (!f || !box) return;
+    const v = fieldValue(f, sel.values());
+    box.value = String(shownNumber(f, v));
+    box.removeAttribute('aria-invalid');
+    const shown = rowOf(key)?.querySelector('[data-em-value]');
+    if (shown) shown.textContent = displayValue(f, v);
+  }
+  function keepTyped(key) {
+    const f = rowField(key);
+    const box = numBox(key);
+    if (!f || !box) return false;
+    const got = parseTyped(f, box.value);
+    if (!got.ok) {
+      // Refused: nothing written; the box keeps what was typed (to be put right), the row says why.
+      box.setAttribute('aria-invalid', 'true');
+      const shown = rowOf(key)?.querySelector('[data-em-value]');
+      if (shown) shown.textContent = got.why;
+      return false;
+    }
+    let ok = false;
+    try { ok = sel.set(f.key, got.value) !== false; } catch (err) { console.error('edit mode: typed', err); }
+    if (torn) return ok;
+    draw();
+    // Still in the box (draw put the focus back): its number chosen, so the next one typed replaces it.
+    try { const b = numBox(key); if (b && doc.activeElement === b) b.select(); } catch { /* not focusable here */ }
+    return ok;
+  }
   function onKey(e) {
     if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('[data-em-text]')) {
       e.preventDefault(); e.stopPropagation(); keepText(e.target.dataset.emText);
+      return;
     }
+    if (e.target instanceof Element && e.target.matches('[data-em-num]')) {
+      if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); keepTyped(e.target.dataset.emNum); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); putBack(e.target.dataset.emNum); }
+    }
+  }
+  function onLeave(e) {
+    if (torn || !(e.target instanceof Element) || !e.target.matches('[data-em-num]') || !e.target.isConnected) return;
+    putBack(e.target.dataset.emNum);
   }
   host.addEventListener('click', onClick);
   host.addEventListener('keydown', onKey);
+  host.addEventListener('focusout', onLeave);
   draw();
   return {
     refresh: draw,
-    destroy() { torn = true; host.removeEventListener('click', onClick); host.removeEventListener('keydown', onKey); host.innerHTML = ''; },
+    /** (row 2.145 step 2) The typed box's Enter, for a host or a suite: keep what is in `key`'s box. */
+    keepTyped,
+    destroy() {
+      torn = true;
+      host.removeEventListener('click', onClick); host.removeEventListener('keydown', onKey); host.removeEventListener('focusout', onLeave);
+      host.innerHTML = '';
+    },
   };
 }
 
@@ -320,6 +424,10 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
 // DASHED (inside its edge), the things you can choose in it DOTTED, the one chosen SOLID -- on a band of
 // --surface filling the gap, because what is around a chosen thing is the module's own picture (a room's wood
 // is mixed from --accent), not a surface the ring was measured on.
+// THE TYPED BOX (row 2.145 step 2, 2026-10-31): 4.6em wide. FOR: "-180.0" or "100.0" fits at 15px, and with its ‹ and ›
+// (44px each) the row's controls stay near 160px, inside the 340px inspector beside the label. AGAINST: a longer number
+// (a village's "1600" never shows: it is shown as a percent) scrolls inside the box. Refused, it is marked by SHAPE (a
+// dashed edge in the text's own colour) as the rings are, and the row says why in words.
 const CSS_ID = 'em-css';
 export function ensureEditCss(doc = (typeof document !== 'undefined' ? document : null)) {
   if (!doc || doc.getElementById(CSS_ID)) return;
@@ -350,6 +458,10 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
 .em-v{grid-column:1;color:var(--text-soft,var(--text));font-size:.9rem}
 .em-c{grid-column:2;grid-row:1/span 2;display:flex;gap:4px;align-items:center}
 .em-text{min-height:44px;max-width:150px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font:inherit}
+.em-num{width:4.6em;min-height:44px;box-sizing:border-box;padding:6px 6px;border:1px solid var(--border);border-radius:8px;background:var(--surface);
+  color:var(--text);font:600 15px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;text-align:end}
+.em-num:focus-visible{outline:3px solid var(--focus, var(--accent));outline-offset:2px}
+.em-num[aria-invalid="true"]{border:2px dashed var(--text)}
 .em-none{margin:4px 0;color:var(--text-soft,var(--text))}
 .em-act{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:8px}
 .em-act a.em-btn{display:inline-flex;align-items:center;text-decoration:none}
@@ -443,6 +555,8 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
   }
   function onKey(e) {
     if (!active || e.key !== 'Escape') return;
+    // (row 2.145 step 2) Escape in a typed number's box puts the box back (renderOptions, above); it does not leave.
+    if (e.target instanceof Element && e.target.closest('[data-em-num]')) return;
     e.preventDefault();
     e.stopPropagation();
     leave('escape');
