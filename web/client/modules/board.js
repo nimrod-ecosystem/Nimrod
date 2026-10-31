@@ -311,7 +311,7 @@ const DEFAULTS = {
   //   not think a default can be right for both. ***
   fitScreen: true,
 
-  // *** WHICH DRAWINGS: THE BOARD'S OWN, UNLESS SOMEBODY CHOOSES OTHERWISE. ***
+  // *** WHICH DRAWINGS (2026-10-31: NOW THE THEME'S, see the end of this note; what follows is the earlier case). ***
   //
   // Claude Design's sets (2026-09-28, `aac_sets.js`) are OFFERED, not swapped in — Mike: *"Offered
   // as a choice."* The default stays the drawings every existing board has today, for three
@@ -330,7 +330,14 @@ const DEFAULTS = {
   // they like how it looks, for whom a board in different drawings looks unfinished. For them this
   // is one press on the card, or one setting. A NEW board defaulting to 'theme' would serve them
   // better and is Mike's call (`MIKE_CHANGE_LIST.md`), not something to decide inside a default.
-  symbols: 'own',
+  //
+  // *** MIKE'S CALL, MADE (row 2.141, 2026-10-31): 'theme'. *** "The symbols on the AAC boards still aren't changing
+  // with the themes", after asking on 2026-09-29 that they "should change when you change themes". So a board nobody
+  // set follows the theme. The first reason above is still true and is now the case for ONE setting rather than for
+  // the default: a board whose person finds words by their pictures should be set to "The board's own drawings" (or
+  // one set, locked), because a following board's pictures also change when a seasonal theme comes in by date
+  // (theme_schedule.js). The second is answered per word by `pickSymbol`'s guard. A board already set keeps its value.
+  symbols: 'theme',
 
   // How long the choice card stays if nobody answers it. See the SETTINGS row.
   choiceCardMs: CHOICE_TIMEOUT_MS,
@@ -449,7 +456,16 @@ export const SETTINGS = [
   //
   // `standard`, not `essential`: it is how the board looks, not whether it can be read. The
   // legibility controls above stay the essential ones.
-  { key: 'symbols', label: 'Symbols', kind: 'choice', default: 'own', level: 'standard',
+  //
+  // *** THE DEFAULT FOLLOWS THE THEME (row 2.141, Mike 2026-10-31): "The symbols on the AAC boards still aren't changing
+  // with the themes." *** It defaulted to the board's own drawings, with a choice card offering the theme's set after a
+  // theme was picked on the screen, so a board nobody touched never changed. His ask of 2026-09-29 was that they
+  // "should change when you change themes", the lock being the option. FOR: his words, twice. AGAINST: the board's own
+  // drawings are the measured ones; answered by `pickSymbol`'s guard, which keeps the board's own drawing of any word
+  // the theme's would read worse than, on the card it actually sits on. A board somebody set keeps its setting.
+  // Themes with no set of their own borrow the nearest (aac_sets.js THEME_SETS: Halloween wears Fall's); symbols
+  // DRAWN for a theme (bats for Halloween) are Design's item 48.
+  { key: 'symbols', label: 'Symbols', kind: 'choice', default: 'theme', level: 'standard',
     options: [
       { value: 'own',   label: 'The board’s own drawings' },
       { value: 'theme', label: 'Designed sets — change with the screen’s theme' },
@@ -460,7 +476,8 @@ export const SETTINGS = [
       })),
     ],
     note: 'When symbols follow the theme, a hard-to-see drawing is swapped for the '
-      + 'board’s own. A set chosen here is always used as it is. The words never change.' },
+      + 'board’s own. A set chosen here is always used as it is. The words never change. '
+      + 'If somebody finds words by their pictures, choose the board’s own drawings or one set, so the pictures stay put.' },
   // *** THE CHOICE CARD GOES BY ITSELF, AND THIS IS HOW SOON. ***
   //
   // Thirty seconds by default: long enough to close a settings menu, look at the board and read
@@ -744,7 +761,7 @@ registerModule(
     function setUnit() {
       // Row 2.105: a board is drawn before its host puts it in the panel, when there is no panel background to find
       // yet. Its first resize is after, so the surface is looked at again here (only redrawn when it changed).
-      if (shownSurface() !== surfaceNow) applyAppearance();
+      if (shownSurface() !== surfaceNow) resurface();
       const g = grid();
       const t = effectiveTier();
       if (!g || !t) return;
@@ -1147,6 +1164,14 @@ registerModule(
     // all behind a board nobody can see it through). Then the board's own Card surface, when somebody set one. Otherwise the panel's background: the nearest
     // `data-panel-surface` up the page, which is this panel's own when it has one (kiosk.js puts it on the panel)
     // and the screen's otherwise. No panel round it (the care board, a page of its own): solid.
+    // The surface changed (the panel's background, a scene coming or going): re-dressed, and when a designed set is in
+    // use the cards are drawn again, because which drawing reads depends on what it now sits on (cardColours).
+    function resurface() {
+      const was = { s: surfaceNow, page: !!mount.querySelector('.aboard.ab-onpage') };
+      applyAppearance();
+      if (activeSet() && (surfaceNow !== was.s || !!mount.querySelector('.aboard.ab-onpage') !== was.page)) draw();
+    }
+
     function shownSurface() {
       if (cfg.highContrast) return 'solid';
       if (['solid', 'veil', 'clear'].includes(cfg.surface)) return cfg.surface;
@@ -1203,6 +1228,8 @@ registerModule(
       if (!a || !view?.getComputedStyle) return { bg: null, ink: null };
       const cs = view.getComputedStyle(a);
       let bg = resolveColour(cs.getPropertyValue('--ab-card'));
+      // A clear board on the page (row 2.105, `ab-onpage`): what is behind the drawing is the theme's page colour.
+      if ((!bg || bg.alpha < 1) && a.classList.contains('ab-onpage')) bg = resolveColour(cs.getPropertyValue('--bg'));
       if (!bg || bg.alpha < 1) bg = resolveColour(cs.getPropertyValue('--board-card'));
       const ink = resolveColour(cs.getPropertyValue('--ab-ink'));
       return { bg: bg && bg.alpha >= 1 ? bg.hex : null, ink: ink ? ink.hex : null };
@@ -1522,7 +1549,7 @@ registerModule(
           themeWatch.observe(docRoot(), { attributes: true, attributeFilter: ['style'] });
           // Row 2.105: a board following its panel's background follows it when it changes, and when the theme
           // gains or loses a moving scene (which decides whether a clear board sits on a scene or on the page).
-          panelWatch = new MutationObserver(() => { if (!destroyed) applyAppearance(); });
+          panelWatch = new MutationObserver(() => { if (!destroyed) resurface(); });
           panelWatch.observe(docRoot(), { attributes: true, subtree: true,
             attributeFilter: ['data-panel-surface', 'data-live-scene'] });
         }

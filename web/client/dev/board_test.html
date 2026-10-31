@@ -400,7 +400,8 @@ try {
     check('it mounts the default board', p().boardId === 'yesno' && p().cells === 3);
     check('every slot in the tier is drawn', host.querySelectorAll('.ab-card').length === 3);
     check('the cards say what they say', /Yes/.test(host.textContent) && /Other/.test(host.textContent));
-    check('a card with a symbol draws it', !!host.querySelector('.ab-card .ab-sym svg'));
+    // (row 2.141: following the theme by default, a symbol may be a designed set's picture rather than the board's own SVG)
+    check('a card with a symbol draws it', !!host.querySelector('.ab-card .ab-sym svg, .ab-card .ab-sym img'));
     check('scanning is OFF by default', p().scanning === false);
 
     host.querySelectorAll('.ab-card')[1].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
@@ -1122,7 +1123,7 @@ try {
     check('*** the word is on the card too \u2014 a picture never replaces it ***',
       /Kitchen/.test(host.querySelector('.ab-card').textContent));
     check('a card with a drawn symbol still draws it',
-      !!host.querySelectorAll('.ab-card')[1].querySelector('.ab-sym svg'));
+      !!host.querySelectorAll('.ab-card')[1].querySelector('.ab-sym svg, .ab-sym img'));
     check('...and a card with neither is word-only, not broken',
       host.querySelectorAll('.ab-card')[2].querySelector('.ab-sym,.ab-img') === null);
     inst.destroy();
