@@ -725,6 +725,24 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       const nav2 = sh.querySelector('.youtube .nav');
       check('*** turned on, the strip is on screen ***', nav2 && getComputedStyle(nav2).display !== 'none', nav2 ? getComputedStyle(nav2).display : 'no nav');
       shown.destroy(); sh.remove();
+
+      // YouTube's own controls (row 2.156): the panel asks the player for them off unless the setting is on.
+      const asked = async (row) => {
+        let got = null; const h = document.createElement('div'); document.body.append(h);
+        let d = { playlist: PLAYLIST.slice(0, 2), ...row };
+        const s = { load: async () => d, get: () => d, set: () => Promise.resolve(), subscribe: (f) => { f(d); return () => {}; },
+          flush: () => Promise.resolve(), startPolling() {}, destroy() {} };
+        const i = mountModule('youtube', { mount: h, bus: createBus(), state: s, events: sev, user: USER, instanceId: 'yt-ctl',
+          playerFactory: (_m, _h, o) => { got = o; return quiet(); } });
+        i.init(); await sleep(30);
+        const v = typeof got?.controls === 'function' ? got.controls() : got?.controls;
+        i.destroy(); h.remove();
+        return v;
+      };
+      check('*** YouTube’s own controls are asked for OFF by default (row 2.156) ***', (await asked({})) === false);
+      check('...and ON when "YouTube’s own controls on the video" is on', (await asked({ ytControls: true })) === true);
+      check('...a setting, advanced, off', SETTINGS.find((f) => f.key === 'ytControls')?.default === false
+        && SETTINGS.find((f) => f.key === 'ytControls')?.level === 'advanced');
       check('*** no gear on the panel: its settings are the one menu\'s (row 2.95) ***',
         !host.querySelector('.youtube .gear') && !host.querySelector('.youtube [data-gear]'));
       const sheet = host.querySelector('.youtube .settings');
@@ -1129,6 +1147,15 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       const hostY = document.createElement('div'); document.body.append(hostY);
       const p = createYtPlayer(hostY, { onPlaylist: (l) => got.lists.push(l), onPlaying: () => { got.playing += 1; }, onIdle: () => { got.idle += 1; } });
       await sleep(20);
+      check('row 2.156: a caller that does not ask (music, cams, a follow page) keeps YouTube\'s controls', !('controls' in (inst.o.playerVars || {})),
+        JSON.stringify(inst.o.playerVars));
+      const keep = inst;
+      const hostZ = document.createElement('div'); document.body.append(hostZ);
+      const pz = createYtPlayer(hostZ, {}, { controls: () => false });
+      await sleep(20);
+      check('*** row 2.156: controls off reaches YouTube as its own switch, controls: 0 ***', inst.o.playerVars?.controls === 0, JSON.stringify(inst.o.playerVars));
+      pz.destroy(); hostZ.remove();
+      inst = keep;
       p.cueList('PLmorning');
       inst.o.events.onStateChange({ data: 3 });      // YouTube buffers its own first video...
       inst.o.events.onStateChange({ data: 1 });      // ...and plays it, with no CUED and no list yet

@@ -65,6 +65,15 @@ const DEFAULTS = {
   // bar's Back and Next already send the same `youtube/prev` / `youtube/next`. Off by default; a setting rather than
   // deleted (Rule 1) for a panel shown where there is no bar, or somebody who wants the title on the panel.
   showNav: false,
+  // ROW 2.156 again (Mike, 2026-10-31): "I'd like to only see the video without any overlay, but I think some of it may
+  // be part of the app." YouTube's own controls (its timeline, time, volume, captions, settings and full-screen buttons)
+  // go with `controls: 0`, YouTube's documented switch. What that does NOT remove, measured in real Chrome on
+  // 2026-10-31 with the mouse resting on the video: the title and channel, the centre pause button, "More videos" and
+  // the YouTube logo; with no mouse over it nothing shows while it plays. Those stay by YouTube's rules: the title and
+  // channel always show before playback, when paused and at the end (player_parameters, 2018 showinfo note), and the
+  // developer policies forbid obscuring YouTube's attribution or links or blocking any part of the player, so nothing
+  // here covers, crops or disables the player to hide them.
+  ytControls: false,
   directed: false,
   stallMs: 20000,
   // *** SOMEBODY PRESSED PAUSE. DO WE EVER RESTART IT BY OURSELVES? ***
@@ -218,6 +227,9 @@ export const SETTINGS = [
     appliesWhen: (v) => !v?.directed },
   { key: 'showNav', label: 'Previous, next and the title on the panel', kind: 'toggle', default: DEFAULTS.showNav,
     level: 'advanced', onLabel: 'Shown', offLabel: 'Hidden (the bar’s Back and Next do it)' },
+  { key: 'ytControls', label: 'YouTube’s own controls on the video', kind: 'toggle', default: DEFAULTS.ytControls,
+    level: 'advanced', onLabel: 'Shown', offLabel: 'Hidden (the bar does it)',
+    note: 'Its timeline and buttons. YouTube still shows the title when a video is paused or the mouse is over it. Takes effect the next time this panel loads.' },
   { key: 'shuffle', label: 'Shuffle the playlist', kind: 'toggle', default: DEFAULTS.shuffle, level: 'standard',
     onLabel: 'Shuffled', offLabel: 'In order',
     // While a preset is in use its shuffle counts (youtube.js effectiveShuffle): the preset is edited on the Media page.
@@ -491,6 +503,9 @@ export const LIST_POLL_TRIES = 20;
 export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }, opts = {}) {
   let player = null, ready = false, pending = null, pendingList = null, pendingCue = false, destroyed = false;
   let pendingStart = 0, curId = null, ytState = -1;   // watching along: where a queued load starts, what is loaded, its state
+  const controlsWanted = () => {
+    try { return (typeof opts.controls === 'function' ? opts.controls() : opts.controls) !== false; } catch { return true; }
+  };
   let listWanted = false, listPoll = null, listTries = 0;   // row 2.99: a cued list whose ids have not been handed over
   const stopListPoll = () => { if (listPoll != null) { clearTimeout(listPoll); listPoll = null; } };
   // The cued list's ids, once the player has them: stop a first video the module did not ask for, then hand them over.
@@ -539,7 +554,10 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
     player = new YT.Player(host, {
       host: 'https://www.youtube-nocookie.com',
       width: '100%', height: '100%',
-      playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, ...(wantMuted ? { mute: 1 } : {}) },
+      playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, ...(wantMuted ? { mute: 1 } : {}),
+        // Row 2.156: `opts.controls === false` (or a getter giving false) turns YouTube's own controls off; every other
+        // caller leaves it out and keeps them. Read here, when the API has loaded, so a panel's saved setting is in.
+        ...(controlsWanted() ? {} : { controls: 0 }) },
       events: {
         onReady: () => {
           ready = true;
@@ -970,7 +988,8 @@ registerModule(
       setHeld(true);
     }
 
-    // The player's own controls are on screen, so a visitor has a pause button to press.
+    // A visitor has a pause button to press: the bar's Pause, and a click on the video (YouTube keeps its centre
+    // pause button with its own controls off, row 2.156; "YouTube's own controls" brings the rest back).
     // A per-module default (see `personal.js`, where the opposite is true and for a stated
     // reason), not a claim about kiosks in general.
     const pauseIsReachable = true;
@@ -1740,7 +1759,7 @@ registerModule(
           },
           onPlaying,
           onIdle,
-        });
+        }, { controls: () => !!cfg.ytControls });   // row 2.156: YouTube's own controls, off unless asked for
 
         // Join the music group once the player exists to enact a level on. VIDEO PRIORITY, so
         // it takes the slot from a game's music; `media` tier, so a spoken cue still ducks it.
