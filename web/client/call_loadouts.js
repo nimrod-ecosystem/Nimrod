@@ -140,6 +140,33 @@ export const CALL_THEIR_CAPTIONS_FIELD = Object.freeze({
   ],
   note: 'A caller can choose to send subtitles of what they say. Nothing is kept. The words go when the call ends.',
 });
+// SUBTITLES OF WHAT IS SAID HERE, SENT TO THE PERSON ON THE CALL (row 2.144 step 2, 2026-10-31). The screen's half of
+// Mike's "you could choose to have subtitles on your outgoing and/or incoming calls": the call page already sends its
+// own (call_outgoing_captions.js); this is the screen doing the same, made by its own speech program from the call's
+// own microphone track, so nothing goes to a company (a screen's browser recogniser is not used). Same three choices
+// as "Captions on calls", for the same reason (`any` sends this room's voice to the other computers too). 'off' by
+// default, argued as Captions on calls is: it needs the speech program running here, which most screens do not have.
+export const CALL_OWN_CAPTIONS_KEY = 'callOwnCaptions';
+export const CALL_OWN_CAPTIONS_DEFAULT = 'off';
+export const CALL_OWN_CAPTIONS_FIELD = Object.freeze({
+  key: CALL_OWN_CAPTIONS_KEY,
+  label: 'Send subtitles of what is said here',
+  kind: 'choice',
+  level: 'standard',
+  default: CALL_OWN_CAPTIONS_DEFAULT,
+  options: [
+    { value: 'off', label: 'Off' },
+    { value: 'here', label: 'On — words worked out on this computer only' },
+    { value: 'any', label: 'On — worked out on this computer and the other computers in this screen’s voice settings' },
+  ],
+  note: 'Writes what is said in this room and sends it to the person on the call, under their picture. It needs the speech '
+      + 'program running on this computer. Mute stops it. Nothing is kept.',
+});
+/** 'off' | 'here' | 'any' from a screen's row. Pure. */
+export function callOwnCaptionsOf(row) {
+  const v = row && row[CALL_OWN_CAPTIONS_KEY];
+  return CALL_CAPTION_MODES.includes(v) ? v : CALL_OWN_CAPTIONS_DEFAULT;
+}
 /** 'theirs' | 'ours' | 'none' from a screen's row. Pure. */
 export function callTheirCaptionsOf(row) {
   const v = row && row[CALL_THEIR_CAPTIONS_KEY];
@@ -172,7 +199,7 @@ export function boardPreset({ width = 0, height = 0 } = {}) {
 
 /**
  * Everything the call view needs to open a call, from the screen's row and its size. Pure.
- *   { key, label, camera, theirVideo, board, captions, theirCaptions, preset, slots: ['call', 'board'?], grid }
+ *   { key, label, camera, theirVideo, board, captions, theirCaptions, ownCaptions, preset, slots: ['call', 'board'?], grid }
  * `grid` is layout.js's own CSS for the preset, so the call view and a dashboard cannot draw it differently.
  */
 export function callViewPlan(row, { width = 0, height = 0, boardAvailable = true } = {}) {
@@ -184,6 +211,7 @@ export function callViewPlan(row, { width = 0, height = 0, boardAvailable = true
     key: lo.key, label: lo.label, camera: lo.camera, theirVideo: lo.theirVideo, board,
     captions: callCaptionsOf(row),
     theirCaptions: callTheirCaptionsOf(row),
+    ownCaptions: callOwnCaptionsOf(row),   // row 2.144 step 2
     preset, slots: !board ? ['call'] : preset === 'side' ? ['board', 'call'] : ['call', 'board'],
     grid: { cols: p.cols, rows: p.rows },
   };

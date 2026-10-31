@@ -77,7 +77,7 @@ import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS }
 import { dropInFor, dropInSecondsOf, lendLengthOf, checkInTicked } from './screen_permissions.js';
 import { mountSeeAsk } from './see_ask.js';
 // call loadouts (2026-10-09): what the call view shows (call_loadouts.js) and captions of the person on the call.
-import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_FIELD } from './call_loadouts.js';
+import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_FIELD, CALL_OWN_CAPTIONS_FIELD } from './call_loadouts.js';
 import { createCallCaptions } from './call_captions.js';
 import { CALL_ENDED, CALL_INCOMING } from './modules/call.js';
 // 2026-10-04: the screen picks up a new version of the site by itself, at a quiet moment (version_watch.js).
@@ -377,6 +377,9 @@ export async function mountKiosk(root, {
   // Seams for the restart behavior: the test needs its own storage and must never be
   // navigated away from mid-run.
   storage = undefined, session = undefined,
+  // row 2.144 step 2: a seam for the suites, the recogniser call captions use (call_captions.js `recognizer`;
+  // absent, its own default, the speech program's). Lets a suite say words without a speech program running.
+  callCaptionRecognizer = undefined,
   // after a restart (row 2.70): how this page was opened -- `{ search, navType }` -- for a suite; the page's own
   // address and navigation entry when absent. See `isColdStart` (restart.js).
   launch = undefined,
@@ -4397,7 +4400,9 @@ export async function mountKiosk(root, {
     ...(!embedded ? [{ ...CALL_OPENS_FIELD, options: CALL_OPENS_FIELD.options.map((o) => ({ ...o })) },
       { ...CALL_CAPTIONS_FIELD, options: CALL_CAPTIONS_FIELD.options.map((o) => ({ ...o })) },
       // row 2.144 (2026-10-28): subtitles a caller made of their own voice - theirs by default (Mike's rule).
-      { ...CALL_THEIR_CAPTIONS_FIELD, options: CALL_THEIR_CAPTIONS_FIELD.options.map((o) => ({ ...o })) }] : []),
+      { ...CALL_THEIR_CAPTIONS_FIELD, options: CALL_THEIR_CAPTIONS_FIELD.options.map((o) => ({ ...o })) },
+      // row 2.144 step 2 (2026-10-31): subtitles of what is said HERE, sent to the person on the call.
+      { ...CALL_OWN_CAPTIONS_FIELD, options: CALL_OWN_CAPTIONS_FIELD.options.map((o) => ({ ...o })) }] : []),
     // 2026-10-04 (version_watch.js argues the default, OFF: a live screen is never changed remotely, so following
     // deploys is chosen per screen - the bench turns it on): this screen restarts itself once for a new version
     // of the site, only when nothing is going on. The SCREEN's: it is about this device and its room. Not on an
@@ -5975,6 +5980,8 @@ export async function mountKiosk(root, {
     try { took = await cv.inst.impl.takeCall(from, { ringStartedAt, camera: plan.camera, theirVideo: plan.theirVideo }); }
     catch (err) { console.error('kiosk: answering in the call view', err); took = false; }
     if (callView === cv && !took && !live()) closeCallView('failed');
+    // After answering: only now is there a microphone track going into the call to caption.
+    if (callView === cv && took && plan.ownCaptions && plan.ownCaptions !== 'off') startOwnCaptions(cv);
     return true;     // the module had the call: whatever became of it, it hung up its own way
   }
   // call loadouts (2026-10-09): the talk board in the call view. Words chosen on it go into the call (board.js
@@ -6033,12 +6040,34 @@ export async function mountKiosk(root, {
       const row = personRow || settings.get() || {};
       callSubsFor(cv);
       cv.captions = createCallCaptions({ row, mode: cv.plan.captions, sink: cv.subs,
+        ...(callCaptionRecognizer ? { recognizer: callCaptionRecognizer } : {}),
         who: () => (from && typeof from.name === 'string' && from.name.trim()) || 'On the call' });
       const t = callTransportNow();
       const now = t?.remote?.();
       if (now) cv.captions.start(now);
       cv.offs.push(t?.onRemote?.((s) => { if (callView === cv && s) cv.captions?.start(s); }) || (() => {}));
     } catch (err) { console.error('kiosk: call captions', err); }
+  }
+  // row 2.144 step 2 (2026-10-31; call_loadouts.js CALL_OWN_CAPTIONS_FIELD): subtitles of what is said HERE, made by this
+  // computer's speech program from the microphone track the call was answered with (call.js mutes by switching that very
+  // track off, so mute stops them too; once a board word's clip is mixed in, the call sends a mixed track, and this
+  // keeps listening to the plain microphone under it), and sent on the call's words channel; the caller's page shows
+  // them. Nothing is shown here. While a clip plays the lines are not sent: that word went as text already.
+  // NOT YET: a microphone changed mid-call is not followed (the captions stop with the old one).
+  function startOwnCaptions(cv) {
+    try {
+      const t = callTransportNow();
+      const track = (t?.sending?.() || []).find((x) => x && x.kind === 'audio');
+      if (!track || typeof MediaStream === 'undefined') return;
+      const row = personRow || settings.get() || {};
+      cv.ownCaptions = createCallCaptions({ row, mode: cv.plan.ownCaptions,
+        ...(callCaptionRecognizer ? { recognizer: callCaptionRecognizer } : {}), sink: { caption: (c) => {
+        if (callView !== cv || !c || !c.text) return;
+        if (t?.clipPlaying?.()) return;
+        try { t.sendCaption({ id: c.id, text: c.text, final: !!c.final }); } catch (err) { console.error('kiosk: own captions', err); }
+      } } });
+      cv.ownCaptions.start(new MediaStream([track]));
+    } catch (err) { console.error('kiosk: own captions', err); }
   }
   // ---- "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12) ----------------------------------------------------
   // The caller pressed "Play Quiz mix together" on their call page; the ask is past the person's input gate already.
@@ -6153,6 +6182,7 @@ export async function mountKiosk(root, {
     cv.offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
     // call loadouts: the board and the captions go with the call (captions keep nothing).
     try { cv.captions?.stop(); } catch { /* gone */ }
+    try { cv.ownCaptions?.stop(); } catch { /* gone */ }   // row 2.144 step 2
     try { cv.subs?.destroy?.(); } catch { /* gone */ }
     if (cv.boardInst) { try { cv.boardInst.destroy(); } catch (err) { console.error('kiosk: closing the call board', err); } }
     // A call still live is hung up by the module itself on the way out (call.js `destroy`).

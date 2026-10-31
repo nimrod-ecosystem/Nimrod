@@ -39,6 +39,7 @@ import {
   CALL_LOADOUTS, CALL_LOADOUT_ORDER, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_OPENS_KEY, CALL_CAPTIONS_KEY,
   CALL_OPENS_DEFAULT, CALL_CAPTIONS_DEFAULT, CALL_CAPTION_MODES, callLoadoutOf, callCaptionsOf, boardPreset, callViewPlan,
   CALL_THEIR_CAPTIONS_KEY, CALL_THEIR_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_DEFAULT, CALL_THEIR_CAPTION_MODES, callTheirCaptionsOf,
+  CALL_OWN_CAPTIONS_KEY, CALL_OWN_CAPTIONS_FIELD, CALL_OWN_CAPTIONS_DEFAULT, callOwnCaptionsOf,   // row 2.144 step 2
 } from '../call_loadouts.js';
 import { callCaptionPlan, createCallCaptions } from '../call_captions.js';
 import { PRESETS, normalizeLayout } from '../layout.js';
@@ -113,6 +114,12 @@ try {
     && CALL_THEIR_CAPTIONS_FIELD.options.map((o) => o.value).join() === 'theirs,ours,none'
     && callTheirCaptionsOf({}) === 'theirs' && callTheirCaptionsOf({ [CALL_THEIR_CAPTIONS_KEY]: 'none' }) === 'none' && callTheirCaptionsOf({ [CALL_THEIR_CAPTIONS_KEY]: 'x' }) === 'theirs');
   check('...and the plan carries it', callViewPlan({}).theirCaptions === 'theirs' && callViewPlan({ [CALL_THEIR_CAPTIONS_KEY]: 'ours' }).theirCaptions === 'ours');
+  // row 2.144 step 2 (2026-10-31): the screen's own subtitles, sent to the caller.
+  check('*** subtitles of what is said here: off by default; "this computer only" and "and the others" (row 2.144 step 2) ***',
+    CALL_OWN_CAPTIONS_DEFAULT === 'off' && CALL_OWN_CAPTIONS_FIELD.options.map((o) => o.value).join() === 'off,here,any'
+    && callOwnCaptionsOf({}) === 'off' && callOwnCaptionsOf({ [CALL_OWN_CAPTIONS_KEY]: 'here' }) === 'here' && callOwnCaptionsOf({ [CALL_OWN_CAPTIONS_KEY]: 'x' }) === 'off');
+  check('...the plan carries it, and its words say "her screen" nowhere', callViewPlan({ [CALL_OWN_CAPTIONS_KEY]: 'any' }).ownCaptions === 'any'
+    && callViewPlan({}).ownCaptions === 'off' && !/her screen|Cici/i.test(JSON.stringify(CALL_OWN_CAPTIONS_FIELD)));
   check('*** the board sits beside the call on a wide screen, under it on a tall one ***',
     boardPreset({ width: 1280, height: 720 }) === 'side' && boardPreset({ width: 390, height: 844 }) === 'stack' && boardPreset({ width: 500, height: 500 }) === 'side');
   const wide = callViewPlan({ [CALL_OPENS_KEY]: 'audio_board', [CALL_CAPTIONS_KEY]: 'here' }, { width: 1280, height: 720 });
@@ -251,7 +258,16 @@ try {
     await profiles.addModule(p.id, 'photos');
     await profiles.addModule(p.id, 'clock');
     const kbus = createBus();
-    k = await mountKiosk(root, { user: KUSER, profileId: p.id, profiles, bus: kbus });
+    // row 2.144 step 2: a recogniser that says what the suite tells it, for the screen's own subtitles.
+    const ownRecs = [];
+    const callCaptionRecognizer = (opts) => {
+      const caps = new Set();
+      const r = { opts, onCaption: (fn) => { caps.add(fn); return () => caps.delete(fn); }, start() {}, stop() { r.stopped = true; },
+        sourcesChanged() {}, status: () => ({ state: 'listening' }), say: (c) => { for (const fn of caps) fn(c); } };
+      ownRecs.push(r);
+      return r;
+    };
+    k = await mountKiosk(root, { user: KUSER, profileId: p.id, profiles, bus: kbus, callCaptionRecognizer });
     check('(setup) the screen attached its drive socket and built the notice', await settled(() => !!k.drive() && !!k.callNotice(), 12000));
     // The screen's row: "Calls open as" -> Audio + talk board, by its menu row (as a person would).
     k.menu.open();
@@ -265,6 +281,10 @@ try {
     row(CALL_OPENS_KEY)?.commit?.('audio_board');
     await settled(() => row(CALL_OPENS_KEY)?.value === 'audio_board', 3000);
     check('(setup) "Calls open as: Audio + talk board"', row(CALL_OPENS_KEY)?.value === 'audio_board', row(CALL_OPENS_KEY)?.value);
+    check('row 2.144 step 2: "Send subtitles of what is said here" is on This screen too', !!row(CALL_OWN_CAPTIONS_KEY));
+    // Three choices: a quick row that steps (no list, so no `commit`); one step is off -> here.
+    k.menu.focusRow(`set:${CALL_OWN_CAPTIONS_KEY}`); k.menu.select();
+    check('(setup) it is turned on', await settled(() => row(CALL_OWN_CAPTIONS_KEY)?.value === 'here', 3000), row(CALL_OWN_CAPTIONS_KEY)?.value);
     k.menu.close();
     const callMedia = (re) => {
       const mic = (k.micOwner()?.status?.().consumers || []).filter((c) => re.test(c));
@@ -312,6 +332,28 @@ try {
     check('*** LIVE: ...corrected in place: still one line, now the better words ***',
       await settled(() => /hello there friend/.test(subsText()), 4000) && (subsText().match(/hello there/g) || []).length === 1, subsText());
     check('LIVE: ...and they were not taken for a board word (nothing read out, nothing came back as words)', words.length === 1, JSON.stringify(words));
+    // row 2.144 step 2 (2026-10-31): what is said in the room goes to the caller as subtitles.
+    const theirSubs = [];
+    d.onCaptions((c) => theirSubs.push(c));
+    const own = ownRecs.find((r) => (r.opts?.phoneStreams?.() || []).length === 1);
+    // The plain microphone the call was answered with (once the board word's clip above was mixed in, the call sends a
+    // mixed track; the captions keep to the microphone under it, which never hears the clips).
+    const capTrack = own?.opts.phoneStreams()[0].getAudioTracks?.()[0];
+    check('*** LIVE: the screen captions its own microphone, live ***', !!capTrack && capTrack.kind === 'audio' && capTrack.readyState === 'live',
+      JSON.stringify(ownRecs.map((r) => ({ stopped: !!r.stopped, streams: (r.opts?.phoneStreams?.() || []).length }))));
+    // A board word's clip still going into the call holds the lines back (that word went as text): wait it out.
+    own?.say({ id: 'g6', text: 'said over a clip', final: false });
+    const clipWas = k.callTransport()?.clipPlaying?.();
+    await settled(() => !k.callTransport()?.clipPlaying?.(), 8000);
+    check('...and while a board word\'s clip was playing, nothing was sent', !clipWas || !theirSubs.some((c) => c.text === 'said over a clip'), JSON.stringify(theirSubs));
+    own?.say({ id: 'g7', text: 'good to see you', final: false });
+    check('*** LIVE: words heard here reach the caller as subtitles ***',
+      await settled(() => theirSubs.some((c) => c.text === 'good to see you'), 4000),
+      JSON.stringify({ theirSubs, clip: k.callTransport()?.clipPlaying?.() }));
+    own?.say({ id: 'g7', text: 'good to see you too', final: true });
+    check('...corrected in place: the same line, final', await settled(() => theirSubs.some((c) => c.text === 'good to see you too' && c.final === true), 4000)
+      && new Set(theirSubs.filter((c) => /good to see you/.test(c.text)).map((c) => c.id)).size === 1, JSON.stringify(theirSubs));
+    check('...and nothing went to the screen\'s own caption box (it is the caller\'s to show)', !/good to see you/.test(subsText()), subsText());
     // A switch in the call view drives THIS board, not one under it.
     let mine = 0, bare = 0;
     const offA = kbus.subscribe('board/select#call:board', () => { mine += 1; });
