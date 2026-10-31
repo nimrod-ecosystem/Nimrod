@@ -11,8 +11,8 @@
 </style>
 </head>
 <body>
-<h1>release — "26.10.1beta" (row 2.154, Mike 2026-10-31)</h1>
-<p>Mike: "26.10.1beta sounds good." The name lives in release.js; every page footer that shows it says it in its own
+<h1>release — "26.10.1-beta" (row 2.154, Mike 2026-10-31)</h1>
+<p>Mike: "Shouldn't we just always go with 26.10.1-beta? I didn't know that was the standard." The name lives in release.js; every page footer that shows it says it in its own
 HTML (so it shows with no script). This holds them together. No server state needed.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
@@ -27,10 +27,10 @@ function check(name, cond, detail = '') {
 }
 (async () => {
   try {
-    check('*** the name is Mike\'s: 26.10.1beta ***', RELEASE.name === '26.10.1beta', RELEASE.name);
-    check('the SemVer form is the same release, with the hyphen a pre-release takes', RELEASE.semver === '26.10.1-beta'
-      && RELEASE.semver.replace('-', '') === RELEASE.name && /^\d+\.\d+\.\d+-[a-z]+$/.test(RELEASE.semver), RELEASE.semver);
-    check('the footer line', releaseLine() === 'Version 26.10.1beta', releaseLine());
+    check('*** the name is Mike\'s, in Semantic Versioning\'s own form: 26.10.1-beta ***', RELEASE.name === '26.10.1-beta', RELEASE.name);
+    check('one form everywhere: the SemVer string IS the name (no leading zeros, a hyphen before "beta")', RELEASE.semver === RELEASE.name
+      && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-[a-z]+$/.test(RELEASE.name), RELEASE.semver);
+    check('the footer line', releaseLine() === 'Version 26.10.1-beta', releaseLine());
     // Every page that shows a version says exactly this one.
     for (const page of ['../landing.html', '../modules.html']) {
       const html = await (await fetch(page, { cache: 'no-store' })).text();
@@ -42,7 +42,7 @@ function check(name, cond, detail = '') {
     // (the suite server serves web/client; a missing README is said, not failed).
     const readme = await fetch('../../../README.md', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : null)).catch(() => null);
     if (readme) check('the README says the same version', readme.includes(`**Version:** ${RELEASE.name}`));
-    else check('(README not reachable from this server: checked by eye; it says **Version:** 26.10.1beta)', true);
+    else check('(README not reachable from this server: checked by eye; it says **Version:** 26.10.1-beta)', true);
   } catch (err) {
     check('the suite ran to the end', false, String(err && err.stack || err));
   }
