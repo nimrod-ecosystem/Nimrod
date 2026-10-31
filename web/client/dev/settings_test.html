@@ -32,7 +32,8 @@ tested end to end — so the resolver gets hammered alone and the wiring gets te
 <script type="module">
 import { createNav, buildItems, mountSettings, MENU_TOPIC } from '../settings.js';
 import { normalizeField, fieldValue, stepValue, displayValue, showsAtLevel,
-         fieldItems, fieldsFor, readWithLegacy, LEVELS, KINDS, keepFields } from '../settings_fields.js';
+         fieldItems, fieldsFor, readWithLegacy, LEVELS, KINDS, keepFields,
+         pointerControl, segmentUnits, SEGMENTED_MAX, SEG_FIT_NARROW, SEG_FIT_WIDE } from '../settings_fields.js';
 import { DEFAULT_PALETTE } from '../color_picker.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
@@ -1672,6 +1673,192 @@ section('*** a repaint keeps where the list is scrolled and which row has focus 
   const on2 = h.querySelector('.st-item.on').getBoundingClientRect();
   const pr2 = panel.getBoundingClientRect();
   check('opening the menu shows its cursor', on2.top >= pr2.top - 1 && on2.bottom <= pr2.bottom + 1);
+  m.destroy();
+}
+
+// =====================================================================
+// Row 2.159 (Mike, 2026-10-31): "We need to work on the settings menu. First of all it is set up as if everyone is a
+// switch user. You have to click through all the options on things that should be dropdowns." Step 1 of the settings-
+// menu proposal: in Point and click every choice / number / toggle row draws its
+// own POINTER control beside it - not cursor stops - and in Step through nothing new is drawn.
+section('*** POINTER CONTROLS beside a row, in Point and click (row 2.159: "set up as if everyone is a switch user") ***');
+const J = (x) => JSON.stringify(x);
+{
+  const ch = (labels, extra = {}) => normalizeField({ key: 'c', label: 'C', kind: 'choice',
+    options: labels.map((l, i) => ({ value: `v${i}`, label: l })), ...extra });
+  check('the numbers: 2-4 options are buttons, the fit counts 4 a button, 32 fits a phone, 56 a wide menu',
+    SEGMENTED_MAX === 4 && SEG_FIT_NARROW === 32 && SEG_FIT_WIDE === 56 && segmentUnits([{ label: 'Off' }, { label: 'On' }]) === 13);
+  check('a 3-way choice of short words: buttons, everywhere', J(pointerControl(ch(['Small', 'Medium', 'Large']))) === J({ kind: 'segmented', fit: 'any' }));
+  check('four words that fit a wide menu but not a phone: buttons where wide, a dropdown where narrow',
+    J(pointerControl(ch(['Quarter', 'Half', 'Three quarters', 'Whole']))) === J({ kind: 'segmented', fit: 'wide' }));
+  check('labels too long for any menu: a dropdown', pointerControl(ch(['Every single minute', 'Every single hour', 'Every day of the week']))?.kind === 'dropdown');
+  check('5 options or more: a dropdown', pointerControl(ch(['a', 'b', 'c', 'd', 'e']))?.kind === 'dropdown');
+  check('`picker: true` (the field says "always a list"): a dropdown even for 3', pointerControl(ch(['a', 'b', 'c'], { picker: true }))?.kind === 'dropdown');
+  check('a number with bounds: a slider; without: nothing', pointerControl(normalizeField({ key: 'n', kind: 'number', min: 0, max: 9 }))?.kind === 'slider'
+    && pointerControl(normalizeField({ key: 'n', kind: 'number', default: 3 })) === null);
+  check('a toggle: a switch', pointerControl(normalizeField({ key: 't', default: false }))?.kind === 'switch');
+  check('text, colour, picture, a read-only row: nothing new', pointerControl(normalizeField({ key: 'x', kind: 'text' })) === null
+    && pointerControl(normalizeField({ key: 'x', kind: 'color' })) === null && pointerControl(normalizeField({ key: 'x', kind: 'picture' })) === null
+    && pointerControl(ch(['a', 'b'], { readOnly: true })) === null);
+  check('*** Step through: nothing, for any kind ***', [ch(['a', 'b']), ch(['a', 'b', 'c', 'd', 'e', 'f']),
+    normalizeField({ key: 'n', kind: 'number', min: 0, max: 9 }), normalizeField({ key: 't', default: false })]
+    .every((f) => pointerControl(f, { mode: 'step' }) === null));
+}
+{
+  const F = [
+    { key: 'size', label: 'Size', kind: 'choice', default: 's', options: [
+      { value: 's', label: 'Small' }, { value: 'm', label: 'Medium' }, { value: 'l', label: 'Large' }] },
+    { key: 'shade', label: 'Shade', kind: 'choice', default: 'a',
+      options: 'abcdefg'.split('').map((c) => ({ value: c, label: `Shade ${c.toUpperCase()}` })) },
+    { key: 'wait', label: 'Wait', kind: 'number', default: 8, min: 4, max: 40, step: 4, unit: 'seconds', unitOne: 'second' },
+    { key: 'calm', label: 'Calm', default: false },
+    { key: 'name', label: 'Name', kind: 'text' },
+  ].map(normalizeField);
+  let live = {};
+  const writes = [];
+  const told = [];
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'x', title: 'Pointer' }),
+    fields: () => fieldItems(F, { values: () => live, onStep: (k, v) => { writes.push([k, v]); live = { ...live, [k]: v }; } }),
+    onSelect: (it) => told.push(it.id),
+  });
+  m.open();
+  // Every stop one lap of `next` visits (as a set: where the lap starts is wherever the cursor is).
+  const walk = () => { const seen = []; const start = m.focusId(); do { seen.push(m.focusId()); m.next(); } while (m.focusId() !== start && seen.length < 60); return seen.sort(); };
+  const nOf = (id) => h.querySelector(`.st-item[data-id="${id}"]`)?.dataset.n;
+  const hint = (id) => m.items().find((i) => i.id === id)?.hint;
+  const stopsPoint = walk();
+  const itemsPoint = J(m.items().map((i) => i.id));
+
+  // --- a 3-way choice: three buttons, one click sets it ---
+  const segs = () => [...h.querySelectorAll(`[data-seg][data-for="${nOf('set:size')}"]`)];
+  check('*** a 3-option choice draws 3 buttons, every option showing ***', segs().length === 3
+    && segs().map((b) => b.textContent.trim()).join(',') === 'Small,Medium,Large', segs().map((b) => b.textContent).join(','));
+  check('...the one in force is pressed (aria-pressed)', segs().filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.textContent.trim()).join() === 'Small');
+  segs()[1].click();
+  check('*** ONE CLICK sets it outright, through the row\'s own write path (onStep) ***', live.size === 'm' && J(writes) === J([['size', 'm']]), J(writes));
+  check('...the row\'s words say so, and the pressed button follows', hint('set:size') === 'Medium'
+    && segs().find((b) => b.getAttribute('aria-pressed') === 'true')?.textContent.trim() === 'Medium', hint('set:size'));
+  check('...the host is told (onSelect), as for a swatch; no page opened; the menu stays open', told.includes('set:size') && m.page() === null && m.isOpen());
+  m.focusRow('set:size'); m.select();
+  check('*** a press on the ROW itself still steps it, as always ***', live.size === 'l' && hint('set:size') === 'Large');
+
+  // --- they are not cursor stops ---
+  check('*** none of the controls is a cursor stop: the walk and items() are unchanged by them ***',
+    !h.querySelector('.st-ctl .st-item') && [...h.querySelectorAll('.st-ctl button, .st-ctl input')].every((b) => !b.classList.contains('st-item'))
+    && stopsPoint.every((id) => typeof id === 'string' && !/seg|switch|range|dd/.test(id)), J(stopsPoint));
+
+  // --- a 7-way choice: a dropdown, not the page ---
+  const ddBtn = () => h.querySelector(`[data-dd-btn="${nOf('set:shade')}"]`);
+  const ddList = () => h.querySelector('[data-dd-list]');
+  check('a 7-option choice draws a dropdown button (no row of buttons), closed', !!ddBtn()
+    && !h.querySelector(`[data-seg][data-for="${nOf('set:shade')}"]`) && !ddList() && ddBtn().getAttribute('aria-expanded') === 'false');
+  ddBtn().click();
+  check('*** a click opens its list UNDER the row, over the menu - not the full-page picker ***', !!ddList() && m.page() === null
+    && m.dropdown() === 'set:shade' && ddList().querySelectorAll('[role="option"]').length === 7 && ddBtn().getAttribute('aria-expanded') === 'true'
+    && ddBtn().closest('.st-dd').contains(ddList()));
+  check('...the list has the keyboard, on the option in force', document.activeElement === ddList()
+    && ddList().querySelector('.st-dd-opt.active')?.textContent.trim() === 'Shade A');
+  ddList().querySelector('[data-dd-opt="4"]').click();
+  check('*** picking an option sets it and closes the list ***', live.shade === 'e' && !ddList() && m.dropdown() === null && hint('set:shade') === 'Shade E', J(live));
+  check('...and the keyboard is back on the dropdown\'s button', document.activeElement === ddBtn());
+  const before = writes.length;
+  ddBtn().click();
+  ddList().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  check('*** Escape closes the list, writes nothing, and the menu stays open ***', !ddList() && m.isOpen() && writes.length === before && document.activeElement === ddBtn());
+  ddBtn().click();
+  document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  check('*** a click anywhere else closes it ***', !ddList() && m.dropdown() === null && writes.length === before);
+  ddBtn().click();
+  let leaked = 0;
+  const spy = () => { leaked += 1; };
+  window.addEventListener('keydown', spy);
+  ddList().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+  ddList().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+  ddList().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+  window.removeEventListener('keydown', spy);
+  check('*** keyboard-operable: Down, Down, Enter takes the option two below ***', live.shade === 'g' && !ddList(), J(live));
+  check('...and those keys never reached the page (the bus would have moved the cursor or pressed the row)', leaked === 0, String(leaked));
+  ddBtn().click(); m.next();
+  check('a move of the cursor closes it (it never holds a switch user)', !ddList() && m.dropdown() === null);
+  ddBtn().click(); m.back();
+  check('Back closes it before it closes the menu', !ddList() && m.isOpen());
+  ddBtn().click(); m.close();
+  check('*** it closes when the menu closes ***', !ddList() && m.dropdown() === null);
+  m.open();
+  check('...and is not open again when the menu opens', !ddList());
+  m.focusRow('set:shade'); m.select();
+  check('*** a press on the long row ITSELF still opens the full list page, as before ***', m.page() === '__choice');
+  m.back();
+
+  // --- a number: a slider ---
+  const wn = () => nOf('set:wait');
+  const range = () => h.querySelector(`[data-range="${wn()}"]`);
+  const said = () => h.querySelector(`[data-range-val="${wn()}"]`)?.textContent;
+  check('*** a number draws a slider with its bounds, its step and its value written beside it ***', range()?.type === 'range'
+    && range().min === '4' && range().max === '40' && range().step === '4' && range().value === '8' && said() === '8 seconds', said());
+  const w0 = writes.length;
+  range().value = '20';
+  range().dispatchEvent(new Event('input', { bubbles: true }));
+  check('moving it changes only the words beside it (nothing written mid-drag)', said() === '20 seconds' && writes.length === w0);
+  range().dispatchEvent(new Event('change', { bubbles: true }));
+  check('*** letting go sets the value, through the row\'s write path ***', live.wait === 20 && hint('set:wait') === '20 seconds' && writes.length === w0 + 1, J(live));
+  h.querySelector(`[data-nudge="1"][data-for="${wn()}"]`).click();
+  check('+ is one step up', live.wait === 24 && said() === '24 seconds');
+  h.querySelector(`[data-nudge="-1"][data-for="${wn()}"]`).click();
+  check('- is one step down', live.wait === 20);
+  range().value = '40'; range().dispatchEvent(new Event('change', { bubbles: true }));
+  check('at the top, + is off (a pointer\'s + does not wrap to the bottom the way a switch\'s step does)',
+    live.wait === 40 && h.querySelector(`[data-nudge="1"][data-for="${wn()}"]`).disabled);
+
+  // --- a toggle: a switch ---
+  const sw = () => h.querySelector(`[data-switch="${nOf('set:calm')}"]`);
+  check('*** a toggle draws an on/off switch ***', sw()?.getAttribute('role') === 'switch' && sw().getAttribute('aria-checked') === 'false' && /Off/.test(sw().textContent));
+  sw().click();
+  check('*** one click turns it on, through the write path; the row says On ***', live.calm === true && sw().getAttribute('aria-checked') === 'true' && hint('set:calm') === 'On');
+  let leaked2 = 0;
+  const spy2 = () => { leaked2 += 1; };
+  window.addEventListener('keydown', spy2);
+  sw().focus();
+  sw().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+  window.removeEventListener('keydown', spy2);
+  check('Enter on the focused switch presses THAT switch, not the cursor\'s row', live.calm === false && leaked2 === 0 && document.activeElement === sw());
+
+  check('a text row draws nothing new', !h.querySelector(`[data-ctl-for="${nOf('set:name')}"]`));
+  check('*** the cursor\'s stops are the same as before any of this was pressed ***', J(walk()) === J(stopsPoint));
+
+  // --- step mode: the menu a switch user had ---
+  m.setChooseMode('step');
+  check('*** in Step through, none of them is drawn ***', !h.querySelector('.st-ctl, [data-seg], [data-dd-btn], [data-range], [data-switch]'));
+  check('...and the stops and the rows are exactly the same in both modes', J(walk()) === J(stopsPoint) && J(m.items().map((i) => i.id)) === itemsPoint);
+  m.setChooseMode(null);
+  check('back to Point and click: they are drawn again', !!h.querySelector('[data-seg]') && !!h.querySelector('[data-range]'));
+  m.destroy();
+}
+{
+  // NARROW: buttons that fit a wide menu fall back to the dropdown where the LIST is narrow (a container query - no
+  // ResizeObserver, no frame). Both are drawn; the list's width chooses.
+  const f = normalizeField({ key: 'part', label: 'Part', kind: 'choice', default: 'q',
+    options: [{ value: 'q', label: 'Quarter' }, { value: 'h', label: 'Half' }, { value: 't', label: 'Three quarters' }, { value: 'w', label: 'Whole' }] });
+  const h = makeHost();
+  h.style.cssText = 'position:relative;width:340px;height:520px';
+  let live = {};
+  const m = mountSettings(h, { inline: true, subject: () => ({ type: 'x', title: 'Narrow' }),
+    fields: () => fieldItems([f], { values: () => live, onStep: (k, v) => { live = { ...live, [k]: v }; } }) });
+  m.open();
+  const ctl = () => h.querySelector('.st-ctl.st-fit-wide');
+  const shown = (sel) => { const el = ctl()?.querySelector(sel); return !!el && getComputedStyle(el).display !== 'none'; };
+  check('(setup) both are drawn for a choice that fits only a wide menu', !!ctl()?.querySelector('.st-seg') && !!ctl()?.querySelector('.st-dd'));
+  check('*** narrow (a phone, a small panel): the dropdown shows, the buttons do not ***', shown('.st-dd') && !shown('.st-seg'),
+    `list ${Math.round(h.querySelector('.st-list').getBoundingClientRect().width)}px`);
+  h.style.width = '760px';
+  check('*** wide: the buttons show, the dropdown does not ***', shown('.st-seg') && !shown('.st-dd'),
+    `list ${Math.round(h.querySelector('.st-list').getBoundingClientRect().width)}px`);
+  const btns = [...ctl().querySelectorAll('[data-seg]')];
+  const last = btns.at(-1).getBoundingClientRect();
+  const row = ctl().getBoundingClientRect();
+  check('...and they sit inside the row (nothing runs off it)', last.right <= row.right + 1, `${Math.round(last.right)} vs ${Math.round(row.right)}`);
   m.destroy();
 }
 

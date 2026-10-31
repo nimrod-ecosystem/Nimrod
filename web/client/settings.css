@@ -328,8 +328,153 @@
 .chp-dialog-box { width: min(760px, 100%); max-height: 100%; overflow: auto; padding: 16px; border-radius: 16px;
   background: var(--surface, Canvas); border: 1px solid var(--border, CanvasText); }
 
+/* ---- 2026-10-31 (row 2.159): POINTER CONTROLS under a row, in Point and click (settings.js "POINTER CONTROLS";
+ * which control, and the numbers, in settings_fields.js `pointerControl`). For a POINTER, like the swatches and the
+ * tab strip: not cursor stops, so they are plain and compact - but every target is at least 44px tall, for a finger.
+ * What is chosen is drawn in the cursor's colour pair (--link on --bg, legible in every theme for the reason at
+ * `.st-item.on`) AND with a mark or words, never colour alone. Tokens with keyword fallbacks only. ---- */
+/* THE LIST IS A CONTAINER, so a choice whose buttons fit a wide menu but not a phone can pick between them by the
+ * LIST's width - not the window's: the same menu drawn in a quarter panel is narrow on a wide screen. */
+.st-list { container: st-list / inline-size; }
+.st-ctl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(6px, 1vmin, 10px);
+  padding: clamp(4px, 0.8vmin, 8px) clamp(10px, 1.6vmin, 16px) clamp(6px, 1vmin, 10px);
+  min-width: 0;
+}
+.st-seg-btn, .st-dd-btn, .st-nudge, .st-switch {
+  font: inherit;
+  font-size: clamp(0.85rem, 1.8vmin, 1.1rem);
+  min-height: 44px;
+  min-width: 44px;
+  padding: clamp(6px, 1vmin, 10px) clamp(10px, 1.6vmin, 16px);
+  border: 1px solid var(--border, currentColor);
+  border-radius: clamp(8px, 1.4vmin, 14px);
+  background: var(--surface-alt, Canvas);
+  color: var(--text, CanvasText);
+  cursor: pointer;
+}
+.st-seg-btn:hover, .st-dd-btn:hover, .st-nudge:hover:not(:disabled), .st-switch:hover { border-color: var(--text-muted, currentColor); }
+.st-seg-btn:focus-visible, .st-dd-btn:focus-visible, .st-nudge:focus-visible, .st-switch:focus-visible, .st-range:focus-visible {
+  outline: 3px solid var(--focus, var(--accent, currentColor));
+  outline-offset: 2px;
+}
+/* A ROW OF BUTTONS. They WRAP rather than run off the row: the "do they fit" rule counts characters, and a wide font
+ * or a long word that beats the count costs a second line, never a hidden option (settings_fields.js argues it). */
+.st-seg { display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 100%; min-width: 0; }
+.st-seg-btn { flex: 1 1 auto; overflow-wrap: anywhere; }
+.st-seg-btn[aria-pressed="true"] {
+  background: var(--link, CanvasText);
+  border-color: var(--link, CanvasText);
+  color: var(--bg, Canvas);
+  font-weight: 700;
+}
+.st-seg-btn[aria-pressed="true"]::before { content: "\2713\00a0"; }
+/* THE DROPDOWN. Its list opens under its button, OVER the rows below (not a page), and scrolls inside itself. */
+.st-dd { position: relative; flex: 1 1 100%; min-width: 0; }
+.st-dd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+.st-dd-val { min-width: 0; overflow-wrap: anywhere; }
+.st-dd-caret::after { content: "\25BE"; }
+.st-dd-btn[aria-expanded="true"] { border-color: var(--link, currentColor); }
+.st-dd-btn[aria-expanded="true"] .st-dd-caret::after { content: "\25B4"; }
+.st-dd-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  /* Above the rows under it. A band from layers.css, per this file's first line (inside the menu's own stacking
+   * context any band above the rows would do; "a menu" is the one that says what it is). */
+  z-index: calc(var(--z-menus) + 1);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: min(50vh, 320px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--surface, Canvas);
+  color: var(--text, CanvasText);
+  border: 1px solid var(--border, currentColor);
+  border-radius: clamp(8px, 1.4vmin, 14px);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--text, CanvasText) 25%, transparent);
+}
+.st-dd-list:focus { outline: none; }        /* the keys' place is the ring on the active option, below */
+.st-dd-opt {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: clamp(0.85rem, 1.8vmin, 1.1rem);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.st-dd-opt:hover { background: var(--surface-alt, Canvas); }
+.st-dd-opt[aria-selected="true"] { background: var(--link, CanvasText); color: var(--bg, Canvas); font-weight: 700; }
+.st-dd-opt[aria-selected="true"]::before { content: "\2713\00a0"; }
+.st-dd-list:focus .st-dd-opt.active { outline: 3px solid var(--focus, var(--accent, currentColor)); outline-offset: -3px; }
+/* BUTTONS OR DROPDOWN, BY THE LIST'S WIDTH (`fit: 'wide'`): both are drawn; the buttons show from 480px of list,
+ * the dropdown below it. 480 is argued at SEG_FIT_WIDE in settings_fields.js. */
+.st-fit-wide > .st-dd { display: none; }
+@container st-list (max-width: 479.98px) {
+  .st-fit-wide > .st-seg { display: none; }
+  .st-fit-wide > .st-dd { display: block; }
+}
+/* THE SLIDER, its - / + and its value. The value is words ("8 seconds"), the row's own words. */
+.st-range {
+  flex: 1 1 8em;
+  min-width: 6em;
+  min-height: 44px;
+  margin: 0;
+  accent-color: var(--link, auto);
+  cursor: pointer;
+}
+.st-nudge { padding-inline: 0; font-weight: 700; }
+.st-nudge:disabled { opacity: 0.5; cursor: default; }
+.st-range-val {
+  flex: 0 0 auto;
+  min-width: 5ch;
+  font-size: clamp(0.85rem, 1.8vmin, 1.1rem);
+  color: var(--text, CanvasText);
+  font-variant-numeric: tabular-nums;
+}
+/* THE ON/OFF SWITCH: a track and a knob, AND the word, so it reads without the colour. */
+.st-switch { display: inline-flex; align-items: center; gap: 10px; }
+.st-switch-track {
+  position: relative;
+  flex: none;
+  width: 2.6em;
+  height: 1.4em;
+  border-radius: 999px;
+  background: var(--surface, Canvas);
+  border: 2px solid var(--text-muted, currentColor);
+}
+.st-switch-knob {
+  position: absolute;
+  top: 50%;
+  left: 0.15em;
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 50%;
+  background: var(--text-muted, currentColor);
+  transform: translateY(-50%);
+}
+.st-switch[aria-checked="true"] .st-switch-track { background: var(--link, CanvasText); border-color: var(--link, CanvasText); }
+.st-switch[aria-checked="true"] .st-switch-knob { background: var(--bg, Canvas); transform: translate(1.15em, -50%); }
+.st-switch[aria-checked="true"] .st-switch-text { font-weight: 700; }
+
 @media (prefers-reduced-motion: no-preference) {
   .st-item { transition: background 120ms ease, color 120ms ease; }
+  /* (row 2.159) The switch's knob slides; with reduced motion asked for, it simply is where it is. */
+  .st-switch-knob { transition: transform 120ms ease; }
 }
 
 /* The remote-drive notice. Deliberately NOT a subtle corner dot: somebody sitting in front

@@ -332,6 +332,71 @@ export function opensPicker(field, { mode = DEFAULT_CHOOSE_MODE, over = PICKER_O
 }
 
 // ---------------------------------------------------------------------------------------
+// *** POINTER CONTROLS BESIDE THE ROW, IN POINT AND CLICK (row 2.159, 2026-10-31). ***
+//
+// Mike: *"We need to work on the settings menu. First of all it is set up as if everyone is a switch user. You
+// have to click through all the options on things that should be dropdowns."* The threshold above was argued in
+// SWITCH PRESSES; with a mouse, seeing every option and taking one is one click whatever the length. So in Point
+// and click a choice, a number and a toggle row each get the control an ordinary settings screen has, drawn beside
+// the row the way a colour row's swatches are (settings.js "POINTER CONTROLS"): for a pointer only, NOT cursor
+// stops, so a switch or keyboard walking the rows and `select` on a row are exactly what they were. This function
+// says which control, and is pure so the rule is tested without a page.
+//
+//   choice, 2 to SEGMENTED_MAX options    a row of buttons, every option showing ('segmented')
+//   choice, more (or `picker: true`)       a dropdown, a small list opening under the row ('dropdown')
+//   number with bounds                     a slider with its value and - / + ('slider')
+//   toggle                                 an on/off switch ('switch')
+//   anything else, a read-only row, or 'step' mode: null (nothing drawn; the row is the whole control)
+//
+// *** SEGMENTED_MAX = 4, argued (Rule 1: a default, changed here). *** FOR 4: four short words ("Off / Low /
+// Medium / High") sit side by side in the menu at every width it is drawn, and seeing all of them is the point -
+// a dropdown hides them behind a click. It is also the proposal's line, PICKER_OVER's 5 being where a LIST starts.
+// AGAINST: four LONG labels do not fit a phone; that is answered by the width rule below, not by a smaller number,
+// because a 4-way choice of short words is the common case and should not pay for the rare long one.
+// `picker: true` on a field ("always a list") is a dropdown here whatever its length: it is the field's own say.
+//
+// *** DO THE BUTTONS FIT? DECIDED WITHOUT MEASURING. *** Nothing here may wait on ResizeObserver or a frame (the
+// suites run in a hidden page, where neither ever fires; and a control that changes shape after it is drawn moves
+// under somebody's finger). So the labels are counted: `segmentUnits` is the labels' characters plus
+// SEG_UNITS_PER_BUTTON per button (its padding and the gap, at the buttons' font, is about four characters).
+//   up to SEG_FIT_NARROW (32)   buttons, everywhere. FOR 32: the narrowest menu drawn is a 320px phone, a list
+//                               about 255px wide inside its padding, and the buttons' 0.85rem type runs about 7.5px
+//                               a character there: 255 / 7.5 = 34, less a little for the chosen one being bold.
+//   up to SEG_FIT_WIDE (56)     'wide': both are drawn, and a container query on the list (settings.css, the one
+//                               thing CSS answers without a frame) shows the buttons where the list is at least 480px
+//                               wide and the dropdown where it is narrower. FOR 56: the full menu's list is about
+//                               500-530px, at about 8.6px a character (1.1rem, bold) = 58. FOR 480px: under the full
+//                               menu's narrowest list (a 609px window), over a phone's (325px) and a quarter panel's.
+//   more                        the dropdown, everywhere.
+// AGAINST counting characters: "WWWW" is wider than "iiii", and a theme with a wide font is wider again. Answered
+// by the buttons WRAPPING onto a second line rather than running off the row (settings.css `.st-seg`), so a guess
+// that is short by a few characters costs a taller control, never a hidden option.
+// ---------------------------------------------------------------------------------------
+export const SEGMENTED_MAX = 4;
+export const SEG_UNITS_PER_BUTTON = 4;
+export const SEG_FIT_NARROW = 32;
+export const SEG_FIT_WIDE = 56;
+/** The width a choice's buttons need, in characters (see above). */
+export function segmentUnits(options = []) {
+  return (options || []).reduce((n, o) => n + String(o?.label ?? o?.value ?? '').length + SEG_UNITS_PER_BUTTON, 0);
+}
+/** Which pointer control a row draws beside it: `{ kind, fit? }` or null. Pure. */
+export function pointerControl(field, { mode = DEFAULT_CHOOSE_MODE } = {}) {
+  if (!field || field.readOnly || !field.cycleable) return null;
+  if (chooseModeOf(mode) === 'step') return null;
+  if (field.kind === 'toggle') return { kind: 'switch' };
+  if (field.kind === 'number') return isNum(field.min) && isNum(field.max) && field.min < field.max ? { kind: 'slider' } : null;
+  if (field.kind !== 'choice') return null;
+  const opts = field.options || [];
+  if (opts.length < 2) return null;
+  if (field.picker === true || opts.length > SEGMENTED_MAX) return { kind: 'dropdown' };
+  const units = segmentUnits(opts);
+  if (units <= SEG_FIT_NARROW) return { kind: 'segmented', fit: 'any' };
+  if (units <= SEG_FIT_WIDE) return { kind: 'segmented', fit: 'wide' };
+  return { kind: 'dropdown' };
+}
+
+// ---------------------------------------------------------------------------------------
 // normalizeField — one declaration in, one usable field out (or null).
 //
 // A BAD DECLARATION IS DROPPED, NEVER THROWN. One module shipping a malformed field must not
@@ -827,6 +892,18 @@ export function fieldItems(fields = [], {
           const hit = opts.find((o) => o.value === raw) || opts.find((o) => String(o.value) === String(raw));
           if (!hit) return false;
           next = hit.value;
+        } else if (f.kind === 'number' && f.cycleable) {
+          // (row 2.159, 2026-10-31) A NUMBER SET OUTRIGHT, from the slider (or its - / +) a pointer gets beside the row
+          // in Point and click (settings.js "POINTER CONTROLS"). Clamped to the declared bounds and rounded the way
+          // `fieldValue` reads, so what is written is what the row will say is in force. Not a number: refused.
+          const n = (raw === '' || raw == null || typeof raw === 'boolean') ? NaN : Number(raw);
+          if (!Number.isFinite(n)) return false;
+          next = round(Math.min(f.max, Math.max(f.min, n)), f.decimals ?? 0);
+        } else if (f.kind === 'toggle' && f.cycleable) {
+          // (row 2.159) A TOGGLE SET OUTRIGHT, from its on/off switch. Only a real true or false: a "yes" from
+          // somewhere is not a toggle's value, and guessing would be a write nobody chose.
+          if (typeof raw !== 'boolean') return false;
+          next = raw;
         } else if (f.kind === 'picture') {
           // A REFERENCE, or null for "No picture". Anything else (a URL, a File, bytes) is refused:
           // see PICTURE in the header for why a picture never goes into a settings row.

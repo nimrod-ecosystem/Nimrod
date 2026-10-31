@@ -54,7 +54,7 @@ import { swatchesHTML } from './color_picker.js';
 import { mountPicturePicker } from './picture_picker.js';
 import { mountChoicePicker } from './choice_picker.js';
 import { mountPlayerPicker } from './player_picker.js';   // players (2026-10-06)
-import { normalizeField, fieldItems, fieldValue, displayValue, opensPicker, chooseModeOf, PICKER_OVER, showsAtLevel } from './settings_fields.js';
+import { normalizeField, fieldItems, fieldValue, displayValue, opensPicker, chooseModeOf, PICKER_OVER, showsAtLevel, pointerControl } from './settings_fields.js';
 
 // SEARCH's words (row 2.94; `tabbed`). Site copy: plain, no names.
 export const SEARCH_WORDS = Object.freeze({
@@ -219,6 +219,9 @@ export const MENU_TOPIC = verbTopic(MENU_VERB);
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// (row 2.159) Each mounted menu's own number, so two menus on one page (the ⚙ menu and a Settings panel) never
+// give a dropdown's options the same element ids.
+let MOUNTS = 0;
 
 // ---------------------------------------------------------------------------------
 // PURE: the cursor.
@@ -550,6 +553,10 @@ export function mountSettings(root, {
   let stayId = null;
   // An open page's own moves, when its `render` handed some back (see openPage), or null.
   let pageCtl = null;
+  // (row 2.159) THE ONE DROPDOWN that may be open beside a row, as `{ id, active }` (the row, and the option the keys
+  // are on), or null. See "POINTER CONTROLS" below.
+  let dd = null;
+  const uid = ++MOUNTS;
   let items = [];
   let nav = createNav([]);
   let returnFocus = null;
@@ -766,6 +773,8 @@ export function mountSettings(root, {
     // A box open on a row that no longer exists (the panel it belonged to went away) closes
     // rather than floating under whatever row took its place.
     if (editing && !items.some((it) => it.id === editing.id && it.edit)) editing = null;
+    // ...and so does a dropdown (row 2.159): its row went to another tab, or away.
+    if (dd && !items.some((it) => it.id === dd.id && it.kind === 'item' && !it.disabled)) dd = null;
     paint();
     // (themes) A list kept open after a choice (`stay`, the Themes panel) marks the value as it is NOW: a choice made
     // in the ⚙ menu or on another screen shows here too.
@@ -796,6 +805,14 @@ export function mountSettings(root, {
     if (d.editInput !== undefined) return null;                      // the box: carried across by its own code below
     if (d.swatch !== undefined) return `[data-swatch="${cssq(d.swatch)}"][data-for="${cssq(d.for)}"]`;
     if (d.fine !== undefined) return `[data-fine][data-for="${cssq(d.for)}"]`;
+    // (row 2.159) The pointer controls. A dropdown's list keeps the keyboard while it stays open; once it has closed
+    // (a choice taken) the keyboard is back on the dropdown's own button.
+    if (d.seg !== undefined) return `[data-seg="${cssq(d.seg)}"][data-for="${cssq(d.for)}"]`;
+    if (d.ddList !== undefined) return dd ? `[data-dd-list="${cssq(d.ddList)}"]` : `[data-dd-btn="${cssq(d.ddList)}"]`;
+    if (d.ddBtn !== undefined) return `[data-dd-btn="${cssq(d.ddBtn)}"]`;
+    if (d.range !== undefined) return `[data-range="${cssq(d.range)}"]`;
+    if (d.nudge !== undefined) return `[data-nudge="${cssq(d.nudge)}"][data-for="${cssq(d.for)}"]`;
+    if (d.switch !== undefined) return `[data-switch="${cssq(d.switch)}"]`;
     if (d.tab !== undefined) return `[data-tab="${cssq(d.tab)}"]`;
     for (const k of ['editShow', 'editSave', 'editClear', 'editCancel']) if (d[k] !== undefined) return `[data-${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}]`;
     if (d.id !== undefined) return `.st-item[data-id="${cssq(d.id)}"]`;
@@ -843,6 +860,8 @@ export function mountSettings(root, {
         ? swatchesHTML({ palette: it.color.palette, value: it.color.value, label: it.label,
           attrs: `data-for="${n}"` })
         : '';
+      // (row 2.159) The same rule, for a choice, a number and a toggle in Point and click: see POINTER CONTROLS.
+      const pointer = pointerHTML(it, n);
       // THE TAB STRIP, for a POINTER: one button per tab, under the tab row. Not cursor stops (see
       // TABS); the row above them is the one stop, and `select` on it goes to the next tab.
       const strip = it.tabStrip ? `<div class="st-tabs" role="tablist" aria-label="Settings tabs">${
@@ -862,7 +881,7 @@ export function mountSettings(root, {
           ${secret && typeof it.clear === 'function' && it.value ? '<button type="button" class="st-mini" data-edit-clear>Clear</button>' : ''}
           <button type="button" class="st-mini" data-edit-cancel>Cancel</button>
         </div>` : '';
-      return row + swatches + editor;
+      return row + swatches + pointer + editor;
     }).join('');
     if (panel && panel.scrollTop !== scrolledTo) panel.scrollTop = scrolledTo;
     if (focusKey) { try { listEl.querySelector(focusKey)?.focus?.({ preventScroll: true }); } catch { /* a selector this browser refuses */ } }
@@ -885,6 +904,139 @@ export function mountSettings(root, {
     if (moved) listEl.querySelector('.st-item.on')?.scrollIntoView({ block: 'nearest' });
     // ...and so must a box somebody has just opened.
     if (opened) editInput()?.scrollIntoView?.({ block: 'nearest' });
+  }
+
+  // ---------------------------------------------------------------------------------
+  // *** POINTER CONTROLS (row 2.159, 2026-10-31). *** Mike: "We need to work on the settings menu. First of all it is
+  // set up as if everyone is a switch user. You have to click through all the options on things that should be
+  // dropdowns." (Step 1 of the settings-menu proposal, row 2.159: "run with it".)
+  //
+  // In Point and click ("How you choose things"), a choice, a number and a toggle row each draw, under the row, the
+  // control an ordinary settings screen has - which one is `pointerControl` (settings_fields.js, where the numbers are
+  // argued):
+  //   a choice of 2-4     a row of buttons, every option showing, the one in force pressed; one click sets it
+  //   a longer choice     a dropdown: a small list that opens under the row, over the menu (not the page the row's
+  //                       own press opens); it closes on a choice, on Escape, on a click anywhere else, and with the
+  //                       menu; arrows, Home / End, Enter and Space work in it
+  //   a number            a slider with its value written beside it, and - / + for one step
+  //   a toggle            an on/off switch
+  // THE COLOUR SWATCHES' RULE, EXACTLY: these are for a POINTER and are NOT cursor stops - they are not items, so
+  // `items()`, the cursor's walk, `select` on a row, and every suite that drives rows by `focusRow` + `select` are
+  // what they were. A press on the row itself (a click, a switch, Enter) does what it always did, in both modes. In
+  // Step through nothing is drawn: a switch user sees the menu they had.
+  // ONE WRITE PATH: every one of them sets its value through the row's own `commit()` - the host's `onStep`, which
+  // the swatches, the text box and the choice picker already use - and the host is told through `onSelect`, as for a
+  // swatch. Nothing here writes a setting itself.
+  // A MODAL-FREE DROPDOWN: it never holds anybody. Escape, a click elsewhere, any move of the cursor, Back, and the
+  // menu closing all close it; nothing else in the menu waits on it.
+  // ---------------------------------------------------------------------------------
+  const same = (a, b) => a === b || (a != null && b != null && String(a) === String(b));
+  const choiceOpts = (it) => (it && (it.choice?.options || it.field?.options)) || [];
+  function pointerHTML(it, n) {
+    if (!it || it.disabled || !it.field || typeof it.commit !== 'function') return '';
+    if (it.edit || it.color || it.picture || it.players) return '';
+    const pc = pointerControl(it.field, { mode: modeNow() });
+    if (!pc) return '';
+    const f = it.field;
+    const label = it.label || f.label || '';
+    if (pc.kind === 'switch') {
+      const on = !!it.value;
+      return `<div class="st-ctl st-ctl-switch" data-ctl-for="${n}">
+        <button type="button" role="switch" class="st-switch" data-switch="${n}" aria-checked="${on ? 'true' : 'false'}" aria-label="${esc(label)}">
+          <span class="st-switch-track" aria-hidden="true"><span class="st-switch-knob"></span></span>
+          <span class="st-switch-text">${esc(on ? f.onLabel : f.offLabel)}</span></button></div>`;
+    }
+    if (pc.kind === 'slider') {
+      const v = Number(it.value);
+      const shown = displayValue(f, v);
+      return `<div class="st-ctl st-ctl-slider" data-ctl-for="${n}">
+        <button type="button" class="st-nudge" data-nudge="-1" data-for="${n}" aria-label="${esc(`Less: ${label}`)}"${v <= f.min ? ' disabled' : ''}>−</button>
+        <input type="range" class="st-range" data-range="${n}" min="${f.min}" max="${f.max}" step="${f.step}" value="${Number.isFinite(v) ? v : f.min}"
+          aria-label="${esc(label)}" aria-valuetext="${esc(shown)}">
+        <button type="button" class="st-nudge" data-nudge="1" data-for="${n}" aria-label="${esc(`More: ${label}`)}"${v >= f.max ? ' disabled' : ''}>+</button>
+        <output class="st-range-val" data-range-val="${n}">${esc(shown)}</output></div>`;
+    }
+    const opts = choiceOpts(it);
+    const seg = pc.kind === 'segmented' ? `<div class="st-seg" role="group" aria-label="${esc(label)}">${
+      opts.map((o, i) => `<button type="button" class="st-seg-btn" data-seg="${i}" data-for="${n}" aria-pressed="${same(o.value, it.value) ? 'true' : 'false'}">${esc(o.label)}</button>`).join('')
+    }</div>` : '';
+    // The dropdown: on its own past SEGMENTED_MAX, and ALSO drawn (and shown only where the list is narrow, by a
+    // container query in settings.css) for buttons that fit a wide menu but not a phone - `fit: 'wide'`.
+    const withDd = pc.kind === 'dropdown' || pc.fit === 'wide';
+    let drop = '';
+    if (withDd) {
+      const isOpen = !!(dd && dd.id === it.id);
+      const cur = opts.find((o) => same(o.value, it.value));
+      const shown = cur ? cur.label : displayValue(f, it.value);
+      const listId = `st-dd-${uid}-${n}`;
+      const list = isOpen ? `<ul class="st-dd-list" id="${listId}" role="listbox" tabindex="-1" data-dd-list="${n}" aria-label="${esc(label)}"
+          aria-activedescendant="${listId}-${dd.active}">${opts.map((o, i) => `<li role="option" id="${listId}-${i}" class="st-dd-opt${i === dd.active ? ' active' : ''}"
+          data-dd-opt="${i}" data-for="${n}" aria-selected="${same(o.value, it.value) ? 'true' : 'false'}">${esc(o.label)}</li>`).join('')}</ul>` : '';
+      drop = `<div class="st-dd">
+        <button type="button" class="st-dd-btn" data-dd-btn="${n}" aria-haspopup="listbox" aria-expanded="${isOpen ? 'true' : 'false'}"${isOpen ? ` aria-controls="${listId}"` : ''}
+          aria-label="${esc(`${label}: ${shown}`)}"><span class="st-dd-val">${esc(shown)}</span><span class="st-dd-caret" aria-hidden="true"></span></button>${list}</div>`;
+    }
+    return `<div class="st-ctl st-ctl-choice${pc.fit === 'wide' ? ' st-fit-wide' : ''}" data-ctl-for="${n}">${seg}${drop}</div>`;
+  }
+
+  /** Set row `n` to `value` outright, through its own `commit()` (the one write path), the cursor going to the row as
+   *  a swatch's click puts it there. True when it wrote. */
+  function setOutright(n, value) {
+    const it = items[n];
+    if (!it || typeof it.commit !== 'function') return false;
+    editing = null;
+    dd = null;
+    nav.setIndex(n);
+    let wrote = false;
+    try { wrote = !!it.commit(value); } catch (err) { console.warn('settings: commit threw', err); }
+    if (wrote) onSelect?.(it);
+    render();
+    return wrote;
+  }
+  function openDd(n) {
+    const it = items[n];
+    const opts = choiceOpts(it);
+    if (!it || !opts.length) return false;
+    // Its own button again: closed (a dropdown's button opens AND closes it, as everywhere).
+    if (dd && dd.id === it.id) { closeDd({ focus: true }); return false; }
+    editing = null;
+    const at = opts.findIndex((o) => same(o.value, it.value));
+    dd = { id: it.id, active: at >= 0 ? at : 0 };
+    paint();
+    const list = listEl.querySelector('[data-dd-list]');
+    try { list?.focus?.({ preventScroll: true }); } catch { /* no focus here */ }
+    // In view, under the row (the panel scrolls; nothing is clipped off its foot).
+    list?.scrollIntoView?.({ block: 'nearest' });
+    list?.querySelector('.st-dd-opt.active')?.scrollIntoView?.({ block: 'nearest' });
+    return true;
+  }
+  /** Close the open dropdown. Its list is taken out of the page directly - not a repaint - so a click that closed it on
+   *  the way to another row still lands on that row (a repaint would replace the row under the press). */
+  function closeDd({ focus = false } = {}) {
+    if (!dd) return false;
+    dd = null;
+    const list = listEl.querySelector('[data-dd-list]');
+    const n = list ? list.dataset.ddList : null;
+    list?.remove();
+    const btn = n != null ? listEl.querySelector(`[data-dd-btn="${cssq(n)}"]`) : null;
+    if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.removeAttribute('aria-controls'); }
+    if (focus) { try { btn?.focus?.({ preventScroll: true }); } catch { /* gone */ } }
+    return true;
+  }
+  function moveDd(to) {
+    const list = listEl.querySelector('[data-dd-list]');
+    if (!dd || !list) return;
+    const opts = [...list.querySelectorAll('[data-dd-opt]')];
+    if (!opts.length) return;
+    dd.active = Math.max(0, Math.min(opts.length - 1, to));
+    opts.forEach((o, i) => o.classList.toggle('active', i === dd.active));
+    list.setAttribute('aria-activedescendant', opts[dd.active].id);
+    opts[dd.active].scrollIntoView?.({ block: 'nearest' });
+  }
+  function pickDd(n, i) {
+    const o = choiceOpts(items[n])[i];
+    if (!o) { closeDd({ focus: true }); return false; }
+    return setOutright(n, o.value);
   }
 
   // ---------------------------------------------------------------------------------
@@ -1058,16 +1210,18 @@ export function mountSettings(root, {
   function next() {
     if (open && picker) { picker.next(); return null; }
     if (open && page && pageCtl?.next) { pageCtl.next(); return null; }
-    if (!open || page) return null; if (editing) editing = null; const it = nav.next(); paint(); return it;
+    if (!open || page) return null; if (editing) editing = null; dd = null; const it = nav.next(); paint(); return it;
   }
   function prev() {
     if (open && picker) { picker.prev(); return null; }
     if (open && page && pageCtl?.prev) { pageCtl.prev(); return null; }
-    if (!open || page) return null; if (editing) editing = null; const it = nav.prev(); paint(); return it;
+    if (!open || page) return null; if (editing) editing = null; dd = null; const it = nav.prev(); paint(); return it;
   }
 
   function activate(item) {
     if (!item || item.disabled) return null;
+    // A press on a row is an answer to an open dropdown too (row 2.159): it closes, whatever the row does.
+    closeDd();
     // The tab row: on to the next tab, the cursor staying on the row (see TABS).
     if (item.tabStrip) { stepTab(1); return item; }
     // "Settings for": on to the next subject. The rows below it follow on the repaint.
@@ -1131,6 +1285,8 @@ export function mountSettings(root, {
       return;
     }
     if (page) { closePage(); return; }
+    // (row 2.159) Back leaves an open dropdown before it leaves the menu, as it leaves the box.
+    if (dd) { closeDd({ focus: true }); return; }
     if (editing) { cancelEdit(); return; }
     // A menu in a panel is not a thing that closes: back on its list stays where it is.
     if (asPanel) return;
@@ -1212,6 +1368,7 @@ export function mountSettings(root, {
     // way out would be a write nobody asked for. Removed from the DOM too, so a hidden menu is
     // not holding a focusable text box.
     if (editing) { editing = null; listEl.querySelector('.st-edit')?.remove(); }
+    closeDd();                      // (row 2.159) a dropdown goes with the menu
     open = false;
     scrim.hidden = true;
     router?.setPaused?.(false);
@@ -1250,6 +1407,7 @@ export function mountSettings(root, {
     if (!open || !id) return null;
     if (page) closePage();
     if (editing) editing = null;
+    dd = null;
     render();
     if (!focusRow(id)) return null;
     const it = items.find((x) => x.id === id);
@@ -1284,6 +1442,28 @@ export function mountSettings(root, {
       return;
     }
     if (e.target.closest('.st-edit')) return;            // a click INTO the box is typing, not a choice
+    // (row 2.159) THE POINTER CONTROLS beside a row: each sets the row outright through its `commit()`.
+    const ddOpt = e.target.closest('[data-dd-opt]');
+    if (ddOpt) { pickDd(Number(ddOpt.dataset.for), Number(ddOpt.dataset.ddOpt)); return; }
+    const ddBtn = e.target.closest('[data-dd-btn]');
+    if (ddBtn) { openDd(Number(ddBtn.dataset.ddBtn)); return; }
+    const segBtn = e.target.closest('[data-seg]');
+    if (segBtn) {
+      const n = Number(segBtn.dataset.for);
+      const o = choiceOpts(items[n])[Number(segBtn.dataset.seg)];
+      if (o) setOutright(n, o.value);
+      return;
+    }
+    const swBtn = e.target.closest('[data-switch]');
+    if (swBtn) { const n = Number(swBtn.dataset.switch); if (items[n]) setOutright(n, !items[n].value); return; }
+    const nudge = e.target.closest('[data-nudge]');
+    if (nudge) {
+      const n = Number(nudge.dataset.for);
+      const it = items[n];
+      if (it?.field) setOutright(n, Number(it.value) + Number(nudge.dataset.nudge) * (it.field.step || 1));
+      return;
+    }
+    if (e.target.closest('.st-ctl')) return;             // the slider, the gaps between buttons: not a press on the row
     // A TAB BUTTON (a pointer's way to a tab): that tab, the cursor on the tab row.
     const tb = e.target.closest('[data-tab]');
     if (tb) { showTab(tb.dataset.tab); return; }
@@ -1313,6 +1493,10 @@ export function mountSettings(root, {
   // The browser's own fine colour picker. `change`, not `input`: `input` fires continuously while
   // somebody drags across the spectrum, and every one of those would be a write.
   listEl.addEventListener('change', (e) => {
+    // (row 2.159) A SLIDER writes when it is LET GO (`change`), for the fine picker's reason: `input` fires at every
+    // step of a drag, and each of those would be a write. While it moves, only its words change (`input`, below).
+    const range = e.target.closest?.('[data-range]');
+    if (range) { setOutright(Number(range.dataset.range), Number(range.value)); return; }
     const fine = e.target.closest?.('[data-fine]');
     if (!fine) return;
     const n = Number(fine.dataset.for);
@@ -1326,7 +1510,68 @@ export function mountSettings(root, {
   // The draft, kept in step with the box so a repaint cannot lose it.
   listEl.addEventListener('input', (e) => {
     if (editing && e.target.matches?.('[data-edit-input]')) editing.draft = e.target.value;
+    // (row 2.159) A slider moving: the value beside it says where it is, nothing is written yet.
+    if (e.target.matches?.('[data-range]')) {
+      const n = Number(e.target.dataset.range);
+      const f = items[n]?.field;
+      if (!f) return;
+      const said = displayValue(f, Number(e.target.value));
+      const out = listEl.querySelector(`[data-range-val="${n}"]`);
+      if (out) out.textContent = said;
+      e.target.setAttribute('aria-valuetext', said);
+    }
   }, sig);
+
+  // (row 2.159) THE KEYS ON A POINTER CONTROL, when one has the keyboard (Tab reached it). Stopped here, so the input
+  // bus does not ALSO read Enter as `select` on the cursor's row, Space as Pause, or an arrow as a move of the cursor.
+  //   the open dropdown:  Up / Down / Home / End move, Enter / Space choose, Escape closes (back to its button),
+  //                       Tab closes and leaves the keyboard on its button
+  //   a dropdown button:  Down / Up / Enter / Space open it
+  //   a button, a switch, - / +: Enter / Space press THAT control, not the row
+  // Escape anywhere in the list while a dropdown is open closes the dropdown, not the menu.
+  listEl.addEventListener('keydown', (e) => {
+    const t = e.target;
+    if (!t || typeof t.closest !== 'function') return;
+    const stop = () => { e.preventDefault(); e.stopPropagation(); };
+    const list = t.closest('[data-dd-list]');
+    if (list && dd) {
+      const last = list.querySelectorAll('[data-dd-opt]').length - 1;
+      if (e.key === 'ArrowDown') { stop(); moveDd(dd.active + 1); }
+      else if (e.key === 'ArrowUp') { stop(); moveDd(dd.active - 1); }
+      else if (e.key === 'Home') { stop(); moveDd(0); }
+      else if (e.key === 'End') { stop(); moveDd(last); }
+      else if (e.key === 'Enter' || e.key === ' ') { stop(); pickDd(Number(list.dataset.ddList), dd.active); }
+      else if (e.key === 'Escape' || e.key === 'Tab') { stop(); closeDd({ focus: true }); }
+      return;
+    }
+    const ddBtn = t.closest('[data-dd-btn]');
+    if (ddBtn && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
+      stop();
+      const openList = listEl.querySelector(`[data-dd-list="${cssq(ddBtn.dataset.ddBtn)}"]`);
+      // An arrow on the button of a list already open goes into the list; otherwise the key opens (or closes) it.
+      if (openList && e.key.startsWith('Arrow')) { try { openList.focus({ preventScroll: true }); } catch { /* gone */ } }
+      else openDd(Number(ddBtn.dataset.ddBtn));
+      return;
+    }
+    if (e.key === 'Escape' && dd) { stop(); closeDd({ focus: true }); return; }
+    const press = (e.key === 'Enter' || e.key === ' ') ? t.closest('[data-seg], [data-switch], [data-nudge]') : null;
+    if (press) { stop(); if (!press.disabled) press.click(); }
+  }, sig);
+
+  // (row 2.159) A press anywhere outside the open dropdown closes it. Capture, so nothing on the page can keep it from
+  // hearing; both events, so a touch closes it as soon as a mouse does. Only the list goes (closeDd), so the press goes
+  // on to whatever it was on.
+  {
+    const outside = (e) => {
+      if (!dd) return;
+      const wrap = listEl.querySelector('[data-dd-list]')?.closest('.st-dd');
+      if (wrap && e.target instanceof Node && wrap.contains(e.target)) return;
+      closeDd();
+    };
+    const at = doc && typeof doc.addEventListener === 'function' ? doc : null;
+    at?.addEventListener('pointerdown', outside, { capture: true, signal: listeners.signal });
+    at?.addEventListener('mousedown', outside, { capture: true, signal: listeners.signal });
+  }
 
   // Enter and Escape IN THE BOX. Handled here, on the list, because this runs before the panel's
   // own keydown below (the event bubbles box -> list -> panel). See TEXT ROWS for why only
@@ -1361,6 +1606,8 @@ export function mountSettings(root, {
     // nothing, on any host with a single menu and the default bindings (a signed-out kiosk, and
     // the modules-page embed). `M` and the Close row never had the problem: neither reaches this
     // handler.
+    // (row 2.159) ...but an open dropdown first: Escape closes it, and the menu stays.
+    if (e.key === 'Escape' && dd) { e.preventDefault(); e.stopPropagation(); closeDd({ focus: true }); return; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
     if (e.key !== 'Tab') return;
     // The focus trap. Tab must not walk out of an open modal onto the page behind it. Inputs
@@ -1423,7 +1670,9 @@ export function mountSettings(root, {
     // ---- how somebody chooses (2026-10-02) ----
     // The mode in force ('point' | 'step'), and an outright setting of it (null hands it back to the host).
     chooseMode: () => modeNow(),
-    setChooseMode(m) { modeOverride = m == null ? null : chooseModeOf(m); if (open && !page) paint(); return modeNow(); },
+    setChooseMode(m) { modeOverride = m == null ? null : chooseModeOf(m); dd = null; if (open && !page) paint(); return modeNow(); },
+    // (row 2.159) The row whose dropdown is open, or null (POINTER CONTROLS).
+    dropdown: () => dd?.id || null,
     // Would a press on row `id` open the choice picker right now?
     opensList: (id) => opensList(items.find((it) => it.id === id) || allItems.find((it) => it.id === id)),
     // The open picker's own probe (a choice or a picture picker), or null.
