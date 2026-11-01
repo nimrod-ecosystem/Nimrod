@@ -99,8 +99,8 @@ third-party licence to record here — this entry is the credit.
 
 | | |
 |---|---|
-| **What** | The AAC board's 55 symbol words drawn in nine styles — one for each live theme, a full-colour set and a black-line set. Offered on the board as a choice (`modules/board.js` setting "Symbols"; `aac_sets.js`): a board follows the screen's theme by default, or keeps its own drawings, or pins one set. A tenth style, `halloween/` (2026-10-31), re-tints the same 55 shapes for the Halloween theme, and six words of that theme's own (pumpkin, ghost, bat, candy, witch hat, treat pail) are drawn in every style; their unthemed drawings are in `aac_symbols.js` |
-| **Made by** | [Claude Design](https://claude.ai), for this project, delivered 2026-09-28 (the Halloween style and the six words: 2026-10-26) |
+| **What** | The AAC board's 55 symbol words drawn in nine styles — one for each live theme, a full-colour set and a black-line set. Offered on the board as a choice (`modules/board.js` setting "Symbols"; `aac_sets.js`): a board follows the screen's theme by default, or keeps its own drawings, or pins one set. A tenth style, `halloween/` (2026-10-31), re-tints the same 55 shapes for the Halloween theme, and six words of that theme's own (pumpkin, ghost, bat, candy, witch hat, treat pail) are drawn in every style; their unthemed drawings are in `aac_symbols.js`. Nine more words in every style (2026-11-01): eat, drink, hungry, thirsty, please, come, bye, other, bad; their unthemed drawings are in `aac_symbols.js` too |
+| **Made by** | [Claude Design](https://claude.ai), for this project, delivered 2026-09-28 (the Halloween style and the six words: 2026-10-26; the nine words: 2026-11-01) |
 | **Provenance** | Each SVG carries its C2PA content credential in `<metadata>`; it is kept, not stripped |
 | **Changed** | Nothing — byte-for-byte what was delivered. Every file was checked on the way in (no script, handler, external reference or drawn text) by `web/tools/build_aac_sets.py`, and is re-checked by `dev/aac_sets_test.html`. Design's tenth, unthemed style was not copied: it is identical, word for word, to the board's own drawings in `aac_symbols.js` |
 

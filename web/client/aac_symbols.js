@@ -349,6 +349,52 @@ export const SYMBOLS = {
       '<path d="M20 40h60l-6 46H26z" fill="none" stroke="currentColor" stroke-width="6"></path>' +
       '<path d="M34 54l6-7 6 7zM54 54l6-7 6 7z" fill="currentColor"></path>' +
       '<path d="M36 68q14 10 28 0" stroke="currentColor" stroke-width="5"></path>'),
+
+    // -------------------------------------------------------------------------------------
+    // NINE MISSING WORDS (Design, 2026-11-01): eat, drink, hungry, thirsty, please, come, bye, other, bad.
+    // -------------------------------------------------------------------------------------
+    // The eat / drink gap this file and aac_vocab.js name, closed: Design drew the nine in all eleven simple sets
+    // (`design-assets/aac/<set>/`), and this is the unthemed set's, taken from Design's files, not retyped. Mike's
+    // choices among Design's options: come B, please A, bye B; bad pairs with good (a broken star), not with like.
+    // Names a board can use; which built-in board shows them, and where, is aac_vocab.js's.
+    eat: d('<path d="M16 54 H84 Q82 84 50 84 Q18 84 16 54 Z" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M61 41 L82 14" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<ellipse cx="55" cy="46" rx="10" ry="6.5" transform="rotate(-52 55 46)" fill="currentColor"/>'),
+    drink: d('<path d="M28 30 H72 L65 86 H35 Z" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M56 30 L62 10 H76" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M34 50 H66" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity="0.55"/>'),
+    hungry: d('<circle cx="50" cy="54" r="22" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<circle cx="50" cy="54" r="10" stroke="currentColor" stroke-width="5" fill="none" opacity="0.55"/>'
+      + '<path d="M10 16 V32 M16 16 V32 M22 16 V32 M10 32 Q16 40 22 32" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M16 38 V86" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M80 50 V16 Q90 24 89 50 Z" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M84 52 V86" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'),
+    thirsty: d('<path d="M30 36 L37 88 H63 L70 36" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M50 6 C57 15 59 20 59 23 A9 9 0 0 1 41 23 C41 20 43 15 50 6 Z" fill="currentColor"/>'),
+    please: d('<circle cx="50" cy="20" r="12" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M10 94 Q50 18 90 94" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M60 79 A10 10 0 1 1 50 69" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M44 63 L51 69 L44 75" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'),
+    come: d('<path d="M74 50 H26" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M40 34 L22 50 L40 66" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M78 36 H92 M78 64 H92" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.55"/>'),
+    bye: d('<g transform="translate(-12 0)">'
+      + '<path d="M36 54 L36 66 Q36 77 47 77 L57 77 Q68 77 68 66 L68 52" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M40 54 L40 36" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M48 54 L48 31" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M56 54 L56 33" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M64 54 L64 40" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M36 57 L27 50" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>'
+      + '<path d="M66 46 H88" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M78 36 L90 46 L78 56" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'),
+    other: d('<circle cx="28" cy="64" r="16" fill="currentColor"/>'
+      + '<circle cx="72" cy="64" r="16" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M30 38 Q50 16 68 34" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+      + '<path d="M57 33 L68 36 L70 25" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'),
+    bad: d('<g transform="translate(-5 2) rotate(-7 50 74)">'
+      + '<path d="M50 14 L39 39 L12 42 L32 61 L26 88 L50 74 L45 62 L54 50 L45 38 L52 26 Z" stroke="#D3968C" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>'
+      + '<g transform="translate(5 2) rotate(7 50 74)">'
+      + '<path d="M50 14 L52 26 L45 38 L54 50 L45 62 L50 74 L74 88 L68 61 L88 42 L61 39 Z" stroke="#D3968C" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>'),
 };
 
 /** Every symbol name, for a picker and for the vocabulary validator. */

@@ -59,11 +59,12 @@
 // as the default a new board inherits, and the software's job is to make a vocabulary easy to
 // edit rather than to guess well.
 //
-// **Known gap, stated rather than hidden:** there are no eat / drink / hungry / thirsty symbols
-// in `aac_symbols.js`, because the set was drawn for a board that did not need them. Adding
-// them is a drawing job, not a coding one, and until it happens those cards would render
-// word-only. That is a real limitation of shipping today and it is written down so it is not
-// rediscovered by somebody's family.
+// **The drawing gap is closed (Design, 2026-11-01):** eat, drink, hungry, thirsty, please, come, bye,
+// other and bad are drawn in every symbol set (`aac_symbols.js`, `design-assets/aac/<set>/`), so a
+// board somebody builds can use them with a picture. **Still open, stated rather than hidden:** no
+// built-in board below carries eat / drink / hungry / thirsty, because a built-in board's places are
+// fixed once it ships (the top of this file) and where they go is a vocabulary decision, not a
+// drawing one. It is a DECIDE row on Mike's list (2.146), so it is not rediscovered by somebody's family.
 //
 // ---------------------------------------------------------------------------------------
 // WHAT A CARD DOES, AND THE ONE THING IT MUST NOT DO
@@ -402,9 +403,8 @@ export const YESNO = {
   cells: [
     { id: 'yes',   word: 'Yes',   symbol: 'yes',  kind: 'yes' },
     { id: 'no',    word: 'No',    symbol: 'no',   kind: 'no' },
-    // No symbol for this one yet — it renders word-only, which the card supports. A drawing is
-    // a design job; shipping the escape without it beats shipping a forced choice with one.
-    { id: 'other', word: 'Other', symbol: null,   kind: 'plain' },
+    // Word-only until Design drew it (2026-11-01); the card stays where it always was.
+    { id: 'other', word: 'Other', symbol: 'other', kind: 'plain' },
   ],
 };
 

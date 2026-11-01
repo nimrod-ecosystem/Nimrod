@@ -253,9 +253,12 @@ try {
       YESNO.cells.length === 3 && YESNO.cells[2].word === 'Other',
       JSON.stringify(YESNO.cells.map((c) => c.word)));
     check('...and it is the default board', BUILTIN_BOARDS.yesno === YESNO);
-    // Shipping the escape without a drawing beats shipping a forced choice with one.
-    check('the third card has no symbol yet and renders word-only',
-      YESNO.cells[2].symbol == null && symbolSvg(YESNO.cells[2].symbol) === '');
+    // It shipped word-only ("the escape without a drawing beats a forced choice with one"); Design drew it on
+    // 2026-11-01, and the card took its picture where it always was.
+    check('the third card has its picture now (Design, 2026-11-01), in the same place',
+      YESNO.cells[2].id === 'other' && YESNO.cells[2].symbol === 'other' && symbolSvg('other').length > 0);
+    check('...and a card with no symbol still renders word-only (a missing name draws nothing, never a crash)',
+      symbolSvg(null) === '' && symbolSvg('no-such-word') === '');
 
     const c = checkBoard(CARE);
     check('the care set fills its tier exactly', c.cells === 16 && c.capacity === 16 && c.free === 0,

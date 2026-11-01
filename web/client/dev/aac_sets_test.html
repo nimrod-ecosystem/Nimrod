@@ -101,15 +101,16 @@ try {
       }
     }
     await Promise.all(jobs);
-    // 495 until 2026-10-31 (nine sets of 55); now ten sets of 61 (row 2.141, Design item 48).
-    check(`all ${jobs.length} files are served from ${AAC_ASSETS}`, jobs.length === 610 && missing.length === 0,
+    // 495 until 2026-10-31 (nine sets of 55); ten sets of 61 (row 2.141, Design item 48); ten sets of 70 since
+    // 2026-11-01 (Design's nine missing words: eat, drink, hungry, thirsty, please, come, bye, other, bad).
+    check(`all ${jobs.length} files are served from ${AAC_ASSETS}`, jobs.length === 700 && missing.length === 0,
       `${jobs.length} files; ${missing.slice(0, 5).join('; ')}`);
     // *** DESIGN'S RULE, HELD BY A CHECK: a theme never changes a symbol's SHAPE, only its tint (handoff item 48),
     // so a person who knows a word by its picture meets the same picture in Halloween. Compared with the fall set:
     // the files must be the same once their colours are taken out. ***
     const reshaped = Object.keys(SET_WORDS.halloween).filter((n) => drawn[`halloween/${n}`] !== drawn[`fall/${n}`]);
     check('*** every Halloween drawing is the same shape as the same word in the fall set; only the colours differ ***',
-      Object.keys(SET_WORDS.halloween).length === 61 && reshaped.length === 0, reshaped.join());
+      Object.keys(SET_WORDS.halloween).length === 70 && reshaped.length === 0, reshaped.join());
     check('*** no script, handler, external reference, or drawn text in any of them ***',
       bad.length === 0, bad.slice(0, 8).join('; '));
     check('every one is drawn on the board’s 100×100 grid', shape.length === 0, shape.slice(0, 5).join());
@@ -241,8 +242,10 @@ try {
       drawingContrast(setColours('color', n), '#ffffff', null) < 3);
     info(`  color fails on the pinned card (${colorDark.length}): ${colorDark.join(', ')}`);
     info(`  color fails on white (${colorLight.length}): ${colorLight.join(', ')}`);
-    check('color: the 13 words in the default theme’s link colour are the ones that fail on the pinned card',
-      colorDark.length === 13 && colorDark.every((n) => setColours('color', n).includes('#105666')));
+    // 15 since the nine words (2026-11-01): `bye` and `please` are drawn in the same people blue (#105666, the colour
+    // Design itself called dim on the dark card, note DU 5).
+    check('color: the 15 words in the default theme’s link colour are the ones that fail on the pinned card',
+      colorDark.length === 15 && colorDark.every((n) => setColours('color', n).includes('#105666')));
     // On white, some of those 12 fail in the board's own drawings too (the same light accent in
     // the same word), and some are words the board draws in its ink but Design drew in an accent.
     const alsoOwn = colorLight.filter((n) => drawingContrast(ownColours(n), '#ffffff', '#0a3323')
@@ -250,7 +253,8 @@ try {
     const worse = colorLight.filter((n) => !alsoOwn.includes(n));
     info(`  ...of which fail the same way in the board’s own drawings: ${alsoOwn.join(', ')}`);
     info(`  ...and read worse than the board’s own: ${worse.join(', ')}`);
-    check('color on white: 12 words fail, all in the light accents', colorLight.length === 12
+    // 15 since the nine words (2026-11-01): `bad` (#d3968c), `hungry` and `thirsty` (#e2b45a) are in the light accents too.
+    check('color on white: 15 words fail, all in the light accents', colorLight.length === 15
       && colorLight.every((n) => setColours('color', n).some((c) => ['#e2b45a', '#7fc6d8', '#d98a5f',
         '#d3968c', '#6abf69'].includes(c))), colorLight.join());
     check('...and following the theme, the ones worse than the board’s own use the board’s own',
