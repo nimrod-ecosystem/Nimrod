@@ -173,6 +173,94 @@ export function callTheirCaptionsOf(row) {
   return CALL_THEIR_CAPTION_MODES.includes(v) ? v : CALL_THEIR_CAPTIONS_DEFAULT;
 }
 
+// ---- SUBTITLES ON MY CALLS: ONE CHOICE PER PERSON, OUTGOING AND INCOMING (row 2.144, 2026-10-31) ----------------------
+// Mike, 2026-10-27: "You could choose to have subtitles on your outgoing and/or incoming calls", and "computed at
+// whoever's end has them turned on". The proposal (DC 3): "a person who needs captions turns them on once, and every call
+// they're on follows". Until now the choice lived per device: the call page's tick in one browser, the two rows above on
+// one screen. These two live on the PERSON's own row (the one their subtitles, voice and bindings already live in:
+// person state `input-bindings`), so the call page (the caller's own "you" card) and every screen of that person read
+// the same one.
+//   OUTGOING  subtitles of what I say, made at my end and sent to the other end (Mike's rule: the speaker's end, which
+//             knows the voice best). On a screen: its speech program, from the call's microphone. On the call page: the
+//             browser's recogniser, which ALSO needs this device's own yes (call_outgoing_captions.js
+//             `captionsOutInForce`), because there the voice goes to the browser's maker.
+//   INCOMING  subtitles of the other person, made at my end - when they are not sending their own (the 'theirs' rule
+//             above). A screen only, for now: the call page cannot hear a call's sound to make them (call_captions.js
+//             header); "ask the other end" is step 3.
+// What the other end SENDS is not this choice: it was made at their end, for this one, and is shown by the row above.
+//
+// *** BOTH OFF BY DEFAULT, argued (the proposal's argument): *** FOR on, somebody who needs subtitles finds them without
+// hunting. AGAINST, and it wins: outgoing through a browser sends a person's voice to a company, which must be their own
+// choice; on a screen both need the speech program, which most do not have, and a box saying "nothing is listening" on
+// every call is noise.
+//
+// *** WHICH WINS: THE PERSON'S CHOICE OR A DEVICE'S OLD ONE (the migration), argued. *** Nothing is copied over: a tick
+// one browser gave, or a row one screen set, is not a choice about every screen and every device, and turning it into
+// one would start sending somebody's voice from devices where nobody asked for that. So:
+//   NOT CHOSEN YET (the key absent from the person's row): every device does what it did - the call page's own tick,
+//     the screen's "Captions on calls" and "Send subtitles of what is said here".
+//   CHOSEN (true or false): it decides on or off everywhere, and a device keeps only what is a device's to say - a
+//     screen's row says WHERE the words are worked out ('any' stays 'any'; 'off' or 'here' read as 'here', this computer
+//     only, the private one), and a browser says whether ITS recogniser may hear you.
+// The other order (a device's explicit row beating the person, as the theme's levels do - settings.js "LEVELS") was
+// weighed. FOR it: a screen in a shared room could keep subtitles of its room off whatever the person chose. AGAINST,
+// and it wins: these are about one person's own voice and own understanding, not a room's look, and "turned on once,
+// every call follows" fails the first time a stale row on one screen quietly overrides it. A room that must never send
+// its words keeps the speech program off (nothing can be made without it), or 'Do not show them' for incoming.
+// NOT YET: a profile that lives on another login (claims.py) has its own row there; these keys are not PROFILE_KEYS, so
+// they do not follow a claim across logins, exactly as `subtitlesOn` does not. On Mike's list.
+// The person-state row they live on: input_runtime.js INPUTS_KEY, spelled out here because importing that file would
+// pull the whole input runtime into the call page (call_loadouts_test checks the two agree).
+export const CALL_SUBS_PERSON_ROW = 'input-bindings';
+export const CALL_SUBS_OUT_KEY = 'callSubtitlesOut';
+export const CALL_SUBS_IN_KEY = 'callSubtitlesIn';
+export const CALL_SUBS_OUT_FIELD = Object.freeze({
+  key: CALL_SUBS_OUT_KEY,
+  label: 'Send subtitles of what I say on calls',
+  kind: 'toggle',
+  level: 'standard',
+  default: false,
+  note: 'Made where you are: on a screen by its speech program, on the call page by the browser (which asks once on each '
+      + 'device, because some browsers send the voice to their maker). It follows you to your screens and the call page. '
+      + 'Mute stops it. Nothing is kept.',
+});
+export const CALL_SUBS_IN_FIELD = Object.freeze({
+  key: CALL_SUBS_IN_KEY,
+  label: 'Make subtitles of the other person on calls',
+  kind: 'toggle',
+  level: 'standard',
+  default: false,
+  note: 'Made on this computer by its speech program, when the other person is not sending their own. It follows you to '
+      + 'your screens. Nothing is kept.',
+});
+export const CALL_SUBS_PERSON_FIELDS = Object.freeze([CALL_SUBS_OUT_FIELD, CALL_SUBS_IN_FIELD]);
+
+/** The person's own choice, 'out' or 'in': true | false, or null while they have not made one. Pure. */
+export function personCallSubsOf(person, which = 'out') {
+  const v = person && person[which === 'in' ? CALL_SUBS_IN_KEY : CALL_SUBS_OUT_KEY];
+  return v === true ? true : v === false ? false : null;
+}
+
+/**
+ * A screen's subtitles for a call, from its own row and its person's (the precedence above). Pure.
+ *   { captions, ownCaptions, theirCaptions, decided: { in: 'person' | 'screen', out: 'person' | 'screen' } }
+ * `captions` / `ownCaptions`: 'off' | 'here' | 'any' (incoming made here / outgoing made here). `theirCaptions` is the
+ * screen's own row, untouched.
+ */
+export function callSubtitlesPlan(screenRow, person) {
+  const where = (m) => (m === 'any' ? 'any' : 'here');
+  const pin = personCallSubsOf(person, 'in');
+  const pout = personCallSubsOf(person, 'out');
+  const sin = callCaptionsOf(screenRow);
+  const sout = callOwnCaptionsOf(screenRow);
+  return {
+    captions: pin === null ? sin : pin ? where(sin) : 'off',
+    ownCaptions: pout === null ? sout : pout ? where(sout) : 'off',
+    theirCaptions: callTheirCaptionsOf(screenRow),
+    decided: { in: pin === null ? 'screen' : 'person', out: pout === null ? 'screen' : 'person' },
+  };
+}
+
 /** The loadout a screen's row asks for (anything unknown is the default). Pure. */
 export function callLoadoutOf(row) {
   const k = row && typeof row[CALL_OPENS_KEY] === 'string' ? row[CALL_OPENS_KEY] : '';
@@ -201,17 +289,19 @@ export function boardPreset({ width = 0, height = 0 } = {}) {
  * Everything the call view needs to open a call, from the screen's row and its size. Pure.
  *   { key, label, camera, theirVideo, board, captions, theirCaptions, ownCaptions, preset, slots: ['call', 'board'?], grid }
  * `grid` is layout.js's own CSS for the preset, so the call view and a dashboard cannot draw it differently.
+ * `person`: the row of the person the screen is for, whose own subtitle choice decides on or off (callSubtitlesPlan).
  */
-export function callViewPlan(row, { width = 0, height = 0, boardAvailable = true } = {}) {
+export function callViewPlan(row, { width = 0, height = 0, boardAvailable = true, person = null } = {}) {
   const lo = callLoadoutOf(row);
   const board = !!(lo.board && boardAvailable);
   const preset = board ? boardPreset({ width, height }) : 'full';
   const p = PRESETS.find((x) => x.id === preset) || PRESETS[0];
+  const subs = callSubtitlesPlan(row, person);   // row 2.144: the person's choice, else the screen's rows
   return {
     key: lo.key, label: lo.label, camera: lo.camera, theirVideo: lo.theirVideo, board,
-    captions: callCaptionsOf(row),
-    theirCaptions: callTheirCaptionsOf(row),
-    ownCaptions: callOwnCaptionsOf(row),   // row 2.144 step 2
+    captions: subs.captions,
+    theirCaptions: subs.theirCaptions,
+    ownCaptions: subs.ownCaptions,   // row 2.144 step 2
     preset, slots: !board ? ['call'] : preset === 'side' ? ['board', 'call'] : ['call', 'board'],
     grid: { cols: p.cols, rows: p.rows },
   };

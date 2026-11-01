@@ -49,6 +49,28 @@ export function captionsOutChoice(stored) {
   return stored === 'on' || stored === 'off' ? stored : CAPTIONS_OUT_DEFAULT;
 }
 
+// ---- THE PERSON'S CHOICE AND THIS DEVICE'S YES (row 2.144, 2026-10-31; call_loadouts.js CALL_SUBS_OUT_KEY) ------------
+// "Send subtitles of what I say" is now the PERSON's choice (one for every device and screen of theirs). On this page it
+// still needs THIS DEVICE's yes as well - the remembered tick above, CAPTIONS_OUT_KEY - because here the browser's own
+// recogniser makes them, and in Chrome that sends the voice to Google. Turned on from a screen's menu (whose speech
+// program keeps the voice at home), the person never saw that note: so a person-level "on" alone never starts a cloud
+// recogniser on a device that was not asked. Ticking here says yes for both at once (the note is beside the tick).
+//   person null (not chosen yet)   the tick here decides, exactly as before the person-level choice existed
+//   person false                   off, whatever any device remembers
+//   person true                    on where this device said yes; where it has not, the page asks (`ask`)
+/** `{ on, ask }` from the person's choice (true | false | null) and this device's remembered tick. Pure. */
+export function captionsOutInForce(person, stored) {
+  const here = captionsOutChoice(stored) === 'on';
+  if (person === false) return { on: false, ask: false };
+  if (person === true) return { on: here, ask: !here };
+  return { on: here, ask: false };
+}
+// Said beside the tick when the person's choice is on but this device has not said yes.
+export const CAPTIONS_OUT_ASK = 'Subtitles of what you say are on for you, but not yet on this device. Turning them on here '
+  + 'lets this browser make them (in Chrome, Google’s speech service hears your voice).';
+// ...and once the choice is the person's: where it is kept.
+export const CAPTIONS_OUT_FOLLOWS = 'Saved for you: your own screens and the call page on your other devices follow it.';
+
 /**
  * One call's outgoing subtitles.
  *   send({ id, text, final })   where each guess goes (call_transport.js `sendCaption`)

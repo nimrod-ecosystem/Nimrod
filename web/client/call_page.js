@@ -38,8 +38,11 @@ import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT } from './call_gro
 import { createWakeHold } from './phone_mic_show.js';
 import { createSpeechChannel } from './output_channels.js';
 import { createCallAnnouncer } from './follow_sound.js';   // the hear half: a follow page in this browser hears of the call
-import { createOutgoingCaptions, captionsOutChoice, captionsOutSupported, CAPTIONS_OUT_KEY, CAPTIONS_OUT_LABEL,
-  CAPTIONS_OUT_NOTE, CAPTIONS_OUT_SAYS } from './call_outgoing_captions.js';   // row 2.144: subtitles of what I say
+import { createOutgoingCaptions, captionsOutInForce, captionsOutSupported, CAPTIONS_OUT_KEY, CAPTIONS_OUT_LABEL,
+  CAPTIONS_OUT_NOTE, CAPTIONS_OUT_SAYS, CAPTIONS_OUT_ASK, CAPTIONS_OUT_FOLLOWS } from './call_outgoing_captions.js';   // row 2.144: subtitles of what I say
+// row 2.144 (2026-10-31): the PERSON's own "Send subtitles of what I say on calls", on their own row (call_loadouts.js).
+import { CALL_SUBS_OUT_KEY, CALL_SUBS_PERSON_ROW, personCallSubsOf } from './call_loadouts.js';
+import { createState } from './state.js';
 import { playPath } from './game_together.js';   // the join page's address for a game's room (Quiz mix's as it always was)
 
 const esc = (s) => String(s == null ? '' : s)
@@ -226,6 +229,9 @@ export async function mountCallPage(root, {
   // row 2.144: what turns this device's own voice into subtitles for the other end (call_outgoing_captions.js). A seam
   // for the suites.
   makeOutgoingCaptions = (o) => createOutgoingCaptions(o),
+  // row 2.144 (2026-10-31): the caller's own person row (their "you" card), where "Send subtitles of what I say on calls"
+  // is kept for every device and screen of theirs. state.js's handle; a seam for the suites.
+  makePersonState = (o) => createState(o),
 } = {}) {
   if (!root) throw new Error('mountCallPage: a root element is required');
   const callNews = announceCall || (() => { try { return createCallAnnouncer({ setTimer, clearTimer }); } catch { return null; } })();
@@ -253,6 +259,9 @@ export async function mountCallPage(root, {
   let outCaps = null;                  // row 2.144: subtitles of what I say, while they are running (syncCaptions)
   let mine = '';                       // ...the latest of them, shown to me
   let capsState = 'off';
+  let youId = '';                      // row 2.144: this login's own "you" card (its first person), when the site says
+  let personRow = null;                // ...and its row (state.js), once read; null = the choice stays on this device
+  let theirs = null;                   // row 2.144: the latest subtitle the screen sent of what is said there { id, text }
   let readTok = 0;
   let run = 0;
   // group calls (see the header): this page's group, the other screens it rang into the call (call id -> leg), the
@@ -303,6 +312,8 @@ export async function mountCallPage(root, {
     let shared = { people: [] };
     try { shared = await getJSON('/api/drive/shared'); } catch { /* none shared is fine */ }
     const out = [];
+    // row 2.144: the login's own card (/api/people `kind: 'you'`), whose row keeps this person's subtitle choice.
+    youId = String(((mine.people || []).find((p) => p && p.kind === 'you') || {}).id || '');
     for (const p of mine.people || []) if (p && p.id) out.push({ id: p.id, name: p.name || 'My screen' });
     for (const p of shared.people || []) {
       if (p && p.person_id && !out.some((x) => x.id === p.person_id)) out.push({ id: p.person_id, name: p.name || 'A shared screen' });
@@ -350,7 +361,7 @@ export async function mountCallPage(root, {
         </select>
       </label>
       <label class="cp-check"><input type="checkbox" data-captions-out${captionsOutOn() ? ' checked' : ''}${captionsOutSupported(win) ? '' : ' disabled'}> ${esc(CAPTIONS_OUT_LABEL)}</label>
-      <p class="cp-note" data-captions-out-note>${esc(captionsOutSupported(win) ? CAPTIONS_OUT_NOTE : CAPTIONS_OUT_SAYS.unsupported)}</p>
+      <p class="cp-note" data-captions-out-note>${esc(captionsOutNote())}</p>
       <p class="cp-note">To talk without video and hear the room, <a data-intercom-link href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead.</p>
       <p class="cp-note">During a call you can add more people: up to ${MESH_MAX_OTHERS.video} others on a video call,
         ${MESH_MAX_OTHERS.audio} on an audio call. Everybody connects straight to everybody else.</p>
@@ -469,6 +480,7 @@ export async function mountCallPage(root, {
           <p class="cp-words-before" data-words-before></p>
           <button type="button" class="cp-btn cp-ctl cp-words-aloud" data-words-aloud aria-pressed="true">Read out loud</button>
         </section>
+        <p class="cp-theirs" data-theirs hidden aria-live="polite"></p>
         <p class="cp-note cp-mine" data-mine hidden></p>
         <p class="cp-note" data-mine-note hidden></p>
         <div class="cp-stage">
@@ -775,12 +787,33 @@ export async function mountCallPage(root, {
   }
 
   // ---- SUBTITLES OF WHAT I SAY (row 2.144, call_outgoing_captions.js) ----------------------------------------
-  // Remembered on this device, off by default (the file argues why). They run only while the call is going AND this
+  // Off by default (the file argues why). They run only while the call is going AND this
   // device's microphone is on: the browser's recogniser listens to the microphone itself, not to the call, so muting
   // the call must stop them too, or "Mute" would still send what was said, as text. Likewise while a board word is
   // read out here (heldForWords): that is this device's own voice, not the caller's. To the first screen only for now;
   // a group call's other screens get none yet (row 2.144 step 4).
-  function captionsOutOn() { return captionsOutChoice(get(CAPTIONS_OUT_KEY, '')) === 'on'; }
+  // WHOSE CHOICE (2026-10-31; call_loadouts.js CALL_SUBS_OUT_KEY argues the precedence): the PERSON's, on their own "you"
+  // row, once they have made one - and this device's own yes besides, because this browser's recogniser may send the
+  // voice to its maker (`captionsOutInForce`). Not chosen yet, or no row to keep it on (an older site, a row that could
+  // not be read): this device's tick alone, as before. Read once, when the page opens; a change made elsewhere meanwhile
+  // shows the next time it is opened.
+  function personOut() { return personRow ? personCallSubsOf(personRow.get?.() || {}, 'out') : null; }
+  function captionsOutNow() { return captionsOutInForce(personOut(), get(CAPTIONS_OUT_KEY, '')); }
+  function captionsOutOn() { return captionsOutNow().on; }
+  function captionsOutNote() {
+    if (!captionsOutSupported(win)) return CAPTIONS_OUT_SAYS.unsupported;
+    if (captionsOutNow().ask) return CAPTIONS_OUT_ASK;
+    return personRow ? `${CAPTIONS_OUT_NOTE} ${CAPTIONS_OUT_FOLLOWS}` : CAPTIONS_OUT_NOTE;
+  }
+  async function loadPersonRow() {
+    personRow = null;
+    if (!youId || typeof makePersonState !== 'function') return;
+    try {
+      const h = makePersonState({ url: `${base}/api/people/${encodeURIComponent(youId)}/state/${CALL_SUBS_PERSON_ROW}`, user });
+      await h.load();
+      personRow = h;
+    } catch (err) { console.error('call: the person’s subtitle choice', err); personRow = null; }
+  }
   function syncCaptions() {
     const should = captionsOutOn() && phase === 'in-call' && micOn && !heldForWords && !!transport && !!local;
     if (should && !outCaps) {
@@ -802,13 +835,40 @@ export async function mountCallPage(root, {
   function paintMine() {
     const el = q('[data-mine]');
     if (el) { el.textContent = mine ? `You: ${mine}` : ''; el.hidden = !(outCaps && mine); }
-    const says = outCaps ? (CAPTIONS_OUT_SAYS[capsState] || '') : '';
+    const says = outCaps ? (CAPTIONS_OUT_SAYS[capsState] || '')
+      : (phase === 'in-call' && captionsOutSupported(win) && captionsOutNow().ask ? CAPTIONS_OUT_ASK : '');
     const n = q('[data-mine-note]');
     if (n) { n.textContent = says; n.hidden = !says; }
     const b = q('[data-captions-out-btn]');
     if (b) { const on = captionsOutOn(); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Subtitles of me: on' : 'Subtitles of me: off'; }
   }
-  function setCaptionsOut(on) { put(CAPTIONS_OUT_KEY, on ? 'on' : 'off'); syncCaptions(); }
+  // One press says both: this device's yes (or no), and - where the person has a row - the person's own choice, which
+  // their screens and the call page on their other devices follow.
+  function setCaptionsOut(on) {
+    put(CAPTIONS_OUT_KEY, on ? 'on' : 'off');
+    if (personRow) { try { personRow.set({ [CALL_SUBS_OUT_KEY]: !!on }); } catch (err) { console.error('call: the person’s subtitle choice', err); } }
+    const n = q('[data-captions-out-note]');
+    if (n) n.textContent = captionsOutNote();
+    syncCaptions();
+  }
+
+  // ---- SUBTITLES THE SCREEN SENDS of what is said there (row 2.144 step 2's other half, 2026-10-31) -----------------
+  // A screen whose person (or row) turned on "Send subtitles of what I say" sends them on the call's words channel; they
+  // were made THERE, for this end (Mike: "computed at whoever's end has them turned on"), so they are shown here as they
+  // come, as the screen shows a caller's (call_loadouts.js 'theirs'). One line, the latest, corrected in place under its
+  // id - the same as the speaker's own line beside it. Nothing is kept; it goes with the call.
+  function heardCaption(c) {
+    if (!c || !c.text) return;
+    theirs = { id: c.id, text: c.text };
+    paintTheirs();
+  }
+  function paintTheirs() {
+    const el = q('[data-theirs]');
+    if (!el) return;
+    const show = !!theirs && phase !== 'idle';
+    el.textContent = show ? `${target?.name || 'Them'}: ${theirs.text}` : '';
+    el.hidden = !show;
+  }
 
   // ---- words from the screen's AAC board (WORDS_KEY above) -------------------------------------------
   function wordsMode() { const m = get(WORDS_KEY, 'speak'); return WORDS_MODES.includes(m) ? m : 'speak'; }
@@ -1025,6 +1085,8 @@ export async function mountCallPage(root, {
     }));
     // board into call: a word chosen on the screen's AAC board during this call.
     offs.push(transport.onWords?.((w) => { if (my === run) heard(w); }) || (() => {}));
+    // row 2.144: subtitles the screen made of what is said there.
+    offs.push(transport.onCaptions?.((c) => { if (my === run) heardCaption(c); }) || (() => {}));
     offs.push(transport.onAnswered?.(() => { if (my !== run) return; answered = true; if (phase === 'ringing') setPhase('answered'); }));
     offs.push(transport.onConnection?.((st) => {
       if (my !== run) return;
@@ -1153,6 +1215,8 @@ export async function mountCallPage(root, {
     phase = 'idle';
     syncCaptions();                     // row 2.144: subtitles of me go with the call
     capsState = 'off';
+    theirs = null;                      // ...and the screen's
+    paintTheirs();
     ended = message;
     tellCall();
     renderSetup();
@@ -1246,6 +1310,7 @@ export async function mountCallPage(root, {
   try {
     people = await loadPeople();
     try { const me = await getJSON('/api/me'); myName = (me && typeof me.display_name === 'string') ? me.display_name.trim() : ''; } catch { myName = ''; }
+    await loadPersonRow();              // row 2.144: the person's own subtitle choice, before the tick is drawn
     renderSetup();
   } catch (err) {
     if (isAuthError(err)) renderSignIn();
@@ -1264,7 +1329,10 @@ export async function mountCallPage(root, {
     askGame: (which) => askForGame(which || GAME_ASK_GAME),
     words: () => [...said],
     wordsMode: () => wordsMode(),
-    captionsOut: () => ({ on: captionsOutOn(), running: !!outCaps, state: capsState, mine }),
+    captionsOut: () => ({ on: captionsOutOn(), running: !!outCaps, state: capsState, mine,
+      // row 2.144: the person's own choice (true | false | null), whether this device must still say yes, and the row's id.
+      person: personOut(), ask: captionsOutNow().ask, you: personRow ? youId : '' }),
+    theirCaption: () => (theirs ? { ...theirs } : null),
     micHeld: () => heldForWords,
     call: (want = 'video') => start(want),
     hangup: () => finish('The call ended.'),
@@ -1278,6 +1346,10 @@ export async function mountCallPage(root, {
     tiles: () => tileList().map(({ stream, ...t }) => ({ ...t, hasStream: !!stream })),
     // the hear half: which people this page tells the follow page it is on a call with (follow_sound.js).
     callingWith: () => (callNews?.people?.() || []),
-    destroy() { finish(null); wake.destroy(); ac.abort(); try { callNews?.destroy?.(); } catch { /* gone */ } },
+    destroy() {
+      finish(null); wake.destroy(); ac.abort(); try { callNews?.destroy?.(); } catch { /* gone */ }
+      // A choice still waiting out its debounce is sent, not dropped (state.js `destroy` would only cancel it).
+      try { Promise.resolve(personRow?.flush?.()).catch(() => {}); personRow?.destroy?.(); } catch { /* gone */ }
+    },
   };
 }

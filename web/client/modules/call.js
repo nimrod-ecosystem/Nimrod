@@ -376,6 +376,32 @@ registerModule(
     let lastEndText = '';        // why a placed call ended, said for a moment (like END_MESSAGES for a call received)
     let lastDialKey = '';        // the dial settings the list was last read for
 
+    // ---- SUBTITLES ON THIS PANEL'S CALL (row 2.144, 2026-10-31) ----
+    // A Call panel on a dashboard showed none; only the call view (kiosk.js) did. The host's `ctx.callSubtitles` makes all
+    // of them (call_captions.js attachCallSubtitles, the same code the call view uses): of the person on the call, made
+    // here or sent by them, in a box inside this panel; and of this room, made here and sent, once the call has a
+    // microphone track. Answered calls and calls this panel placed alike. A host with none (the call view's own Call
+    // module, which makes them itself; Home; a suite): no subtitles, and nothing else changes.
+    let subs = null;
+    let subsSeq = 0;
+    function startSubs(t) {
+      stopSubs();
+      if (typeof ctx.callSubtitles !== 'function' || !root || !t) return;
+      const mine = ++subsSeq;
+      try {
+        subs = ctx.callSubtitles({ host: root, transport: t, from: who ? { ...who } : null,
+          live: () => subsSeq === mine && phase === 'connected' }) || null;
+      } catch (err) { console.error('call: subtitles', err); subs = null; }
+    }
+    function startOwnSubs(micTrack) {
+      try { subs?.startOwn?.(micTrack || null); } catch (err) { console.error('call: subtitles of this room', err); }
+    }
+    function stopSubs() {
+      subsSeq += 1;
+      const h = subs; subs = null;
+      try { h?.stop?.(); } catch { /* gone */ }
+    }
+
     const AUDIO_ID = `call:${ctx.instanceId || 'call'}`;
     const CAM_ID = `call:${ctx.instanceId || 'call'}`;
     const MIC_ID = `call:${ctx.instanceId || 'call'}`;
@@ -652,6 +678,9 @@ registerModule(
         if (out.timer != null) { clearTimer(out.timer); out.timer = null; }
         phase = 'connected';
         render();
+        // row 2.144: subtitles on a call this panel placed, as on one it answered.
+        startSubs(t);
+        startOwnSubs(micTrack);
         applyControls();
         publishControls();
         publishOutgoing();
@@ -694,6 +723,7 @@ registerModule(
       phase = 'idle';
       who = null;
       lit = -1;
+      stopSubs();                   // row 2.144: they go with the call
       dropCamera();
       dropMic();
       takeSpeaker(false);
@@ -1224,9 +1254,13 @@ registerModule(
       let micTrack = null;
       try { micTrack = mic?.getAudioTracks?.()?.[0] || null; } catch { micTrack = null; }
       bindTransport();              // a ring can arrive by the bus before any "ready"; look once more
+      // row 2.144: this call's subtitles, listening before the far end's sound arrives (it comes with the answer).
+      if (phase === 'connected') startSubs(transport);
       try { await transport?.answer?.({ from: who, outgoing: track, remoteVideo: v, ...(micTrack ? { audio: micTrack } : {}) }); }
       catch (err) { console.error('call: transport failed to answer', err); end('failed'); }
       if (phase === 'connected') watchMicSound(micTrack);
+      // ...and of this room, from the plain microphone the call was answered with (mute switches that very track off).
+      if (phase === 'connected') startOwnSubs(micTrack);
       // The bars and the menu learn the call is live, and what it can control.
       applyControls();
       publishControls();
@@ -1301,6 +1335,7 @@ registerModule(
       // leave its start time lying around for a LATER, unrelated call's answer() to measure
       // against — the same reasoning as board.js's own litAt reset when scanning stops.
       ringingAt = null;
+      stopSubs();                   // row 2.144: they go with the call
       dropCamera();
       dropMic();
       takeSpeaker(false);
@@ -1362,6 +1397,7 @@ registerModule(
       __dial: (c) => dial(c),
       __outgoing: () => (out ? { name: out.contact.name, reach: out.contact.reach, answered: out.answered, note: outNote } : null),
       __endText: () => lastEndText,
+      __subtitles: () => (subs ? (subs.probe?.() || {}) : null),   // row 2.144, for the suites
       __reloadContacts: () => loadContacts(),
       __probe: () => ({ phase, who, hasOutgoing: !!outgoing, ringArmed: !!ringTimer,
                         counting: !!tickTimer, remaining, cfg: { ...cfg },
@@ -1614,6 +1650,7 @@ registerModule(
         const live = phase !== 'idle';
         clearRing();
         stopDemo();
+        stopSubs();                 // row 2.144
         dropCamera();
         dropMic();
         takeSpeaker(false);

@@ -77,8 +77,11 @@ import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS }
 import { dropInFor, dropInSecondsOf, lendLengthOf, checkInTicked } from './screen_permissions.js';
 import { mountSeeAsk } from './see_ask.js';
 // call loadouts (2026-10-09): what the call view shows (call_loadouts.js) and captions of the person on the call.
-import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_FIELD, CALL_OWN_CAPTIONS_FIELD } from './call_loadouts.js';
-import { createCallCaptions } from './call_captions.js';
+import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_FIELD, CALL_OWN_CAPTIONS_FIELD,
+  callSubtitlesPlan, personCallSubsOf, callCaptionsOf, callOwnCaptionsOf, CALL_SUBS_PERSON_FIELDS, CALL_SUBS_IN_KEY,
+} from './call_loadouts.js';
+// row 2.144 (2026-10-31): every subtitle of a call, in the call view and in a Call panel on a dashboard alike.
+import { attachCallSubtitles } from './call_captions.js';
 import { CALL_ENDED, CALL_INCOMING } from './modules/call.js';
 // 2026-10-04: the screen picks up a new version of the site by itself, at a quiet moment (version_watch.js).
 import {
@@ -1920,6 +1923,12 @@ export async function mountKiosk(root, {
     // server checks this screen answered that call and lends it to that call's own caller (screen_access.py).
     lendScreen: ({ session, on = true, what = 'see', length = null } = {}) => (drive && typeof drive.lend === 'function'
       ? drive.lend({ what, session, on, length: length ?? lendLengthOf(personRow || {}) }) : Promise.resolve(null)),
+    // SUBTITLES ON A CALL PANEL'S CALL (row 2.144, 2026-10-31): the same three the call view has (callSubtitlesFor), for
+    // a call a Call panel on a dashboard holds - answered or placed. The panel hands its own box, the call's transport,
+    // the caller and whether the call is still its own; this screen's rows and its person's choice make the plan.
+    // Returns `{ startOwn(track), stop() }`, or null. (The call view's own Call module gets null here: it has its own.)
+    callSubtitles: ({ host = null, transport = null, from = null, live = () => true } = {}) => (torn ? null
+      : callSubtitlesFor({ host, transport, from, live, plan: callSubtitlesPlanNow() })),
     // CALLING OUT FROM A CALL PANEL (row 2.167, Mike 2026-10-31: "You should be able to make calls to your contacts
     // through the call module"). A caller's socket to the person called - its own, because this screen's socket is its
     // own person's room - CALLING AS the person this screen is for (the far end names them, app.py `_caller_on_screen`),
@@ -4524,11 +4533,11 @@ export async function mountKiosk(root, {
     // either with a talk board - and captions of the person on it. The SCREEN's, beside the row above, for its
     // reason: a bedside screen with a board and a hallway screen without one are different rooms.
     ...(!embedded ? [{ ...CALL_OPENS_FIELD, options: CALL_OPENS_FIELD.options.map((o) => ({ ...o })) },
-      { ...CALL_CAPTIONS_FIELD, options: CALL_CAPTIONS_FIELD.options.map((o) => ({ ...o })) },
+      { ...CALL_CAPTIONS_FIELD, options: CALL_CAPTIONS_FIELD.options.map((o) => ({ ...o })), ...callRowDecided('in') },
       // row 2.144 (2026-10-28): subtitles a caller made of their own voice - theirs by default (Mike's rule).
       { ...CALL_THEIR_CAPTIONS_FIELD, options: CALL_THEIR_CAPTIONS_FIELD.options.map((o) => ({ ...o })) },
       // row 2.144 step 2 (2026-10-31): subtitles of what is said HERE, sent to the person on the call.
-      { ...CALL_OWN_CAPTIONS_FIELD, options: CALL_OWN_CAPTIONS_FIELD.options.map((o) => ({ ...o })) }] : []),
+      { ...CALL_OWN_CAPTIONS_FIELD, options: CALL_OWN_CAPTIONS_FIELD.options.map((o) => ({ ...o })), ...callRowDecided('out') }] : []),
     // 2026-10-04 (version_watch.js argues the default, OFF: a live screen is never changed remotely, so following
     // deploys is chosen per screen - the bench turns it on): this screen restarts itself once for a new version
     // of the site, only when nothing is going on. The SCREEN's: it is about this device and its room. Not on an
@@ -4883,6 +4892,9 @@ export async function mountKiosk(root, {
       ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || (subsOn && (!/^subtitles(Shrink|SmallestPx)$/.test(f.key) || r.subtitlesStyle === 'eyechart' || subtitles?.style?.() === 'eyechart'))),
       // subtitle learning: its switch while subtitles are on; its two other rows only while it learns.
       ...(subsOn ? SUBTITLE_LEARNING_FIELDS.filter((f) => f.key === 'subtitlesLearn' || r.subtitlesLearn !== false) : []),
+      // row 2.144 (2026-10-31): subtitles on this person's calls, outgoing and incoming - theirs, on every screen and the
+      // call page (call_loadouts.js). Always shown: they are not part of the room's subtitles mode above.
+      ...callSubsPersonFields(),
       ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
       // VOICE RECORDING (row 2.44): the switch always (so anybody can SEE it is off, and a guardian
       // can find it); its retention rows only while it is on - the same rule as every mode above.
@@ -4922,7 +4934,7 @@ export async function mountKiosk(root, {
     // through the speaker); the intercom is PEOPLE (who may talk in). Every row is in exactly one, under
     // its own heading; the rules above for which rows show are unchanged.
     const keyOf = (it) => String(it.id || '').replace(/^set:/, '');
-    const SUBS = new Set([...SUBTITLES_FIELDS, ...SUBTITLE_LEARNING_FIELDS].map((f) => f.key));   // + subtitle learning
+    const SUBS = new Set([...SUBTITLES_FIELDS, ...SUBTITLE_LEARNING_FIELDS, ...CALL_SUBS_PERSON_FIELDS].map((f) => f.key));   // + subtitle learning, + calls (row 2.144)
     const AMP = new Set(AMPLIFY_FIELDS.map((f) => f.key));
     const IC = new Set(INTERCOM_FIELDS.map((f) => f.key));
     const CI = new Set(CHECKIN_FIELDS.map((f) => f.key));   // the quiet check-in (2026-10-14)
@@ -6041,7 +6053,8 @@ export async function mountKiosk(root, {
     let plan = null;
     try {
       plan = callViewPlan(settings.get() || {}, { width: kioskEl.clientWidth || window.innerWidth || 0,
-        height: kioskEl.clientHeight || window.innerHeight || 0 });
+        height: kioskEl.clientHeight || window.innerHeight || 0,
+        person: embedded ? null : personRow });   // row 2.144: the person's own subtitle choice decides on or off
     } catch (err) { console.error('kiosk: call loadout', err); plan = null; }
     if (!plan) plan = { key: 'video', camera: true, theirVideo: true, board: false, captions: 'off', preset: 'full', grid: { cols: '1fr', rows: '1fr' } };
     box.dataset.loadout = plan.key;
@@ -6079,7 +6092,7 @@ export async function mountKiosk(root, {
     // `at`: the lit stop of the call view's switch lap - null (nothing lit: a stray select does nothing), 'hangup', or
     // 'game' while a game is open in it (see callViewVerb).
     const cv = { box, slot, hang, area, boardSlot, plan, inst: null, state: null, events: null, at: null, offs: [],
-                 boardInst: null, captions: null, subs: null };
+                 boardInst: null, subtitles: null };
     callView = cv;
     holdCallScan(true);
     try {
@@ -6089,6 +6102,9 @@ export async function mountKiosk(root, {
       cv.inst = mountModule('call', extendCtx(childCtx({ id: CALL_VIEW_ID, type: 'call' }), {
         // It hosts the call it was handed and closes with it: no list of people to call (row 2.167) in this view.
         mount: slot, state: cv.state, events: cv.events, dialOut: null,
+        // row 2.144: the call view makes this call's subtitles itself (below, in the call's half), so the module it
+        // hosts must not make a second set.
+        callSubtitles: null,
       }));
       await cv.state.load?.().catch?.(() => {});
       if (callView !== cv) return false;
@@ -6111,15 +6127,57 @@ export async function mountKiosk(root, {
     // call loadouts: the board and the captions come up beside the call. Neither may stop the call: a failure in
     // either is logged and the call goes on without it.
     if (cv.boardSlot) mountCallBoard(cv).catch((err) => console.error('kiosk: call board', err));
-    if (plan.captions !== 'off') startCallCaptions(cv, from);
-    if (plan.theirCaptions !== 'none') listenTheirCaptions(cv, from);
+    // row 2.144: the call's subtitles (callSubtitlesFor), in the call's half. Incoming ones start now; outgoing ones
+    // once the call is answered (only then is there a microphone track going into it).
+    cv.subtitles = callSubtitlesFor({ host: area, transport: callTransportNow(), plan, from, live: () => callView === cv });
     let took = false;
     try { took = await cv.inst.impl.takeCall(from, { ringStartedAt, camera: plan.camera, theirVideo: plan.theirVideo }); }
     catch (err) { console.error('kiosk: answering in the call view', err); took = false; }
     if (callView === cv && !took && !live()) closeCallView('failed');
-    // After answering: only now is there a microphone track going into the call to caption.
-    if (callView === cv && took && plan.ownCaptions && plan.ownCaptions !== 'off') startOwnCaptions(cv);
+    // After answering: the microphone track the call was answered with (call.js mutes by switching that very track
+    // off, so mute stops them too; a board word's clip mixed in later goes out as a mixed track, and the subtitles
+    // keep to the plain microphone under it).
+    if (callView === cv && took) cv.subtitles?.startOwn();
     return true;     // the module had the call: whatever became of it, it hung up its own way
+  }
+  // row 2.144 (2026-10-31): ALL OF A CALL'S SUBTITLES - made here of the caller, sent by the caller, made here of this
+  // room and sent - are call_captions.js `attachCallSubtitles`, shared with a Call panel on a dashboard (ctx.callSubtitles)
+  // so the two cannot drift. Before 2026-10-31 the same three pieces lived here, for the call view only.
+  //   `plan`   call_loadouts.js callSubtitlesPlan: the PERSON's own choice where they made one, else this screen's rows.
+  //   `who`    the caller's name, as the call gave it.
+  // The caption box goes in `host` (the call's half here; the panel itself on a dashboard). Neither may stop the call.
+  function callSubtitlesFor({ host, transport, plan, from, live }) {
+    try {
+      return attachCallSubtitles({
+        transport, host, plan, live,
+        row: personRow || settings.get() || {},
+        who: () => (from && typeof from.name === 'string' && from.name.trim()) || 'On the call',
+        recognizer: callCaptionRecognizer, flashLimit: flashLimitNow,
+      });
+    } catch (err) { console.error('kiosk: call subtitles', err); return null; }
+  }
+  // The screen's "Captions on calls" / "Send subtitles of what is said here" once the person has made their own choice:
+  // the row then decides only WHERE the words are worked out, and says so after its value (a row that went on saying
+  // "Off" while the person's "on" ran would be a row that lies).
+  function callRowDecided(which) {
+    const p = embedded ? null : personCallSubsOf(personRow || {}, which);
+    if (p === null) return {};
+    return { status: `on or off is the person’s own choice now (${p ? 'on' : 'off'}); this row says only where the words are worked out` };
+  }
+  // The person's own two rows (call_loadouts.js CALL_SUBS_PERSON_FIELDS), on the menu's Subtitles heading. Not chosen yet,
+  // each shows what this screen's own row does now, and says that it is not chosen yet.
+  function callSubsPersonFields() {
+    const screenSays = (key) => (key === CALL_SUBS_IN_KEY ? callCaptionsOf(settings.get() || {}) : callOwnCaptionsOf(settings.get() || {})) !== 'off';
+    return CALL_SUBS_PERSON_FIELDS.map((f) => {
+      const chosen = personCallSubsOf(personRow || {}, f.key === CALL_SUBS_IN_KEY ? 'in' : 'out') !== null;
+      return { ...f, defaultFrom: () => screenSays(f.key),
+        ...(chosen ? {} : { status: 'not chosen yet: this screen’s own row decides' }) };
+    });
+  }
+  // The plan for one call: this screen's rows and its person's own choice (call_loadouts.js argues which wins).
+  function callSubtitlesPlanNow() {
+    try { return callSubtitlesPlan(settings.get() || {}, embedded ? null : personRow); }
+    catch { return { captions: 'off', ownCaptions: 'off', theirCaptions: 'theirs' }; }
   }
   // call loadouts (2026-10-09): the talk board in the call view. Words chosen on it go into the call (board.js
   // `intoCall`, with the recorded clip when there is one) and are spoken in the room as on any board. Its record is
@@ -6136,75 +6194,6 @@ export async function mountKiosk(root, {
     if (callView !== cv) return;
     await inst.init();
     state.startPolling?.();
-  }
-  // call loadouts (2026-10-09; call_captions.js): captions of the person on the call, in the call's half. Their
-  // own caption box (subtitles.js), on for the call whatever this screen's subtitles mode is, and gone with it.
-  function callSubsFor(cv) {
-    if (cv.subs) return cv.subs;
-    const row = personRow || settings.get() || {};
-    cv.subs = createSubtitles(cv.area, {
-      settings: { ...row, subtitlesOn: true, subtitlesScreen: false },
-      flashLimit: flashLimitNow,
-    });
-    cv.subs.setOn(true);
-    // Inside the call's half, not across the whole screen (subtitles.css places a box against the window).
-    const box = cv.area.querySelector('.subs');
-    if (box) { box.style.position = 'absolute'; box.style.width = '92%'; box.style.zIndex = '2'; }
-    return cv.subs;
-  }
-  // row 2.144 (2026-10-28; call_outgoing_captions.js): subtitles the CALLER made of their own voice, on the call's words
-  // channel. Mike's rule: made at whoever's end turned them on, and when both ends did, the speaker's own by default
-  // ('theirs': this screen's own captions of the caller stop at the first of theirs, so the words are not written twice).
-  // 'ours' keeps this screen's own while they are actually running. The caption box is made on the first one.
-  function listenTheirCaptions(cv, from) {
-    try {
-      const off = callTransportNow()?.onCaptions?.((c) => {
-        if (callView !== cv || !c || !c.text) return;
-        const oursRunning = !!cv.captions && !['no-recogniser', 'stopped'].includes(cv.captions.status?.()?.state);
-        if (cv.plan.theirCaptions === 'ours' && oursRunning) return;
-        if (cv.captions && cv.plan.theirCaptions === 'theirs') { try { cv.captions.stop(); } catch { /* gone */ } cv.captions = null; }
-        const name = (from && typeof from.name === 'string' && from.name.trim()) || 'On the call';
-        try {
-          callSubsFor(cv).caption({ id: `their-${c.id}`, text: c.text, ear: 'call', source: 'call', others: [],
-            speaker: { name, confidence: 1 } });
-        } catch (err) { console.error('kiosk: their captions', err); }
-      });
-      if (off) cv.offs.push(off);
-    } catch (err) { console.error('kiosk: their captions', err); }
-  }
-  function startCallCaptions(cv, from) {
-    try {
-      const row = personRow || settings.get() || {};
-      callSubsFor(cv);
-      cv.captions = createCallCaptions({ row, mode: cv.plan.captions, sink: cv.subs,
-        ...(callCaptionRecognizer ? { recognizer: callCaptionRecognizer } : {}),
-        who: () => (from && typeof from.name === 'string' && from.name.trim()) || 'On the call' });
-      const t = callTransportNow();
-      const now = t?.remote?.();
-      if (now) cv.captions.start(now);
-      cv.offs.push(t?.onRemote?.((s) => { if (callView === cv && s) cv.captions?.start(s); }) || (() => {}));
-    } catch (err) { console.error('kiosk: call captions', err); }
-  }
-  // row 2.144 step 2 (2026-10-31; call_loadouts.js CALL_OWN_CAPTIONS_FIELD): subtitles of what is said HERE, made by this
-  // computer's speech program from the microphone track the call was answered with (call.js mutes by switching that very
-  // track off, so mute stops them too; once a board word's clip is mixed in, the call sends a mixed track, and this
-  // keeps listening to the plain microphone under it), and sent on the call's words channel; the caller's page shows
-  // them. Nothing is shown here. While a clip plays the lines are not sent: that word went as text already.
-  // NOT YET: a microphone changed mid-call is not followed (the captions stop with the old one).
-  function startOwnCaptions(cv) {
-    try {
-      const t = callTransportNow();
-      const track = (t?.sending?.() || []).find((x) => x && x.kind === 'audio');
-      if (!track || typeof MediaStream === 'undefined') return;
-      const row = personRow || settings.get() || {};
-      cv.ownCaptions = createCallCaptions({ row, mode: cv.plan.ownCaptions,
-        ...(callCaptionRecognizer ? { recognizer: callCaptionRecognizer } : {}), sink: { caption: (c) => {
-        if (callView !== cv || !c || !c.text) return;
-        if (t?.clipPlaying?.()) return;
-        try { t.sendCaption({ id: c.id, text: c.text, final: !!c.final }); } catch (err) { console.error('kiosk: own captions', err); }
-      } } });
-      cv.ownCaptions.start(new MediaStream([track]));
-    } catch (err) { console.error('kiosk: own captions', err); }
   }
   // ---- "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12) ----------------------------------------------------
   // The caller pressed "Play Quiz mix together" on their call page; the ask is past the person's input gate already.
@@ -6318,9 +6307,7 @@ export async function mountKiosk(root, {
     closeCallGame(cv);
     cv.offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
     // call loadouts: the board and the captions go with the call (captions keep nothing).
-    try { cv.captions?.stop(); } catch { /* gone */ }
-    try { cv.ownCaptions?.stop(); } catch { /* gone */ }   // row 2.144 step 2
-    try { cv.subs?.destroy?.(); } catch { /* gone */ }
+    try { cv.subtitles?.stop(); } catch { /* gone */ }   // row 2.144: all of them, and their box
     if (cv.boardInst) { try { cv.boardInst.destroy(); } catch (err) { console.error('kiosk: closing the call board', err); } }
     // A call still live is hung up by the module itself on the way out (call.js `destroy`).
     if (cv.inst) { try { cv.inst.destroy(); } catch (err) { console.error('kiosk: closing the call view', err); } }

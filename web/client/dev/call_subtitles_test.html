@@ -23,6 +23,8 @@
   the call page has it off by default with a plain note of where the voice goes, and runs it only while the call is
   going and its microphone is on - Mute stops the subtitles too, and so does a board word being read out. The
   screen's side is in dev/call_loadouts_test.html (LIVE). The browser's recogniser and the connections are fakes.
+  Since 2026-10-31: the choice is the PERSON's (their own "you" row, LIVE through the real server), with this device's
+  own yes for the browser's recogniser; and the subtitles a screen sends show on the call page.
 </div>
 <div id="page"></div>
 <div id="results"></div>
@@ -34,7 +36,9 @@ import { mountCallPage } from '../call_page.js';
 import {
   createOutgoingCaptions, captionsOutChoice, captionsOutSupported, CAPTIONS_OUT_KEY, CAPTIONS_OUT_DEFAULT,
   CAPTIONS_OUT_NOTE, CAPTIONS_OUT_SAYS, CAPTIONS_OUT_RESTART_MS,
+  captionsOutInForce, CAPTIONS_OUT_ASK, CAPTIONS_OUT_FOLLOWS,   // row 2.144 (2026-10-31)
 } from '../call_outgoing_captions.js';
+import { CALL_SUBS_OUT_KEY } from '../call_loadouts.js';
 import { SIGNAL_KINDS } from '../drive.js';
 
 const out = document.getElementById('results');
@@ -345,6 +349,145 @@ try {
       q('[data-captions-out]')?.disabled === true && /cannot turn speech into words/.test(q('[data-captions-out-note]')?.textContent || ''));
     page.destroy?.();
     screen.destroy();
+  }
+
+  // =====================================================================================
+  section('*** row 2.144: the PERSON\'s own choice on the call page - their "you" row - and this device\'s yes ***');
+  {
+    check('captionsOutInForce: not chosen -> the device\'s tick, as before', captionsOutInForce(null, 'on').on === true && captionsOutInForce(null, '').on === false
+      && captionsOutInForce(null, 'on').ask === false);
+    check('*** person OFF beats a device that said yes ***', captionsOutInForce(false, 'on').on === false && captionsOutInForce(false, 'on').ask === false);
+    check('*** person ON, this device never said yes: NOT on (its browser would send the voice to its maker), and it asks ***',
+      captionsOutInForce(true, '').on === false && captionsOutInForce(true, '').ask === true && captionsOutInForce(true, 'off').ask === true);
+    check('person ON, this device said yes: on', captionsOutInForce(true, 'on').on === true && captionsOutInForce(true, 'on').ask === false);
+    check('the ask names where the voice goes', /Google/.test(CAPTIONS_OUT_ASK) && !/her screen|Cici/i.test(CAPTIONS_OUT_ASK + CAPTIONS_OUT_FOLLOWS));
+
+    const clk = fakeClock();
+    const P = fakePeer();
+    const R = fakeRecognition();
+    const [dl, sl] = linkPair();
+    const screen = createCallTransport({ link: sl, role: 'screen', PeerConnection: P.PC, Stream: FakeStream });
+    const rings = []; screen.onIncoming((f) => rings.push(f));
+    const connect = ({ onState, onPresence } = {}) => {
+      dl.state = () => 'connected'; dl.close = () => {}; dl.claim = () => false;
+      queueMicrotask(() => { onState?.('connected'); onPresence?.({ screens: 1, drivers: 1 }); });
+      return dl;
+    };
+    const ok = (b, s = 200) => ({ ok: s < 400, status: s, json: async () => b });
+    const fetchImpl = async (url) => {
+      if (/ticket/.test(url)) return ok({ ticket: 'T' });
+      if (/\/api\/people$/.test(url)) return ok({ people: [{ id: 'me', name: 'Me', kind: 'you' }, { id: 'p1', name: 'Alex', kind: 'mine' }] });
+      if (/\/api\/drive\/shared$/.test(url)) return ok({ people: [] });
+      if (/\/api\/me$/.test(url)) return ok({ display_name: 'Ann' });
+      return ok({}, 404);
+    };
+    // The person's row, as state.js would hold it: what it was loaded with, and every write.
+    const rows = [];
+    const personState = (start, { fail = false } = {}) => (o) => {
+      let data = { ...start };
+      const h = { o, sets: [], async load() { if (fail) throw new Error('offline'); return { ...data }; }, get: () => ({ ...data }),
+        set(p) { data = { ...data, ...p }; h.sets.push(p); }, flush: async () => {}, destroy() { h.destroyed = true; } };
+      rows.push(h);
+      return h;
+    };
+    const getUserMedia = async (c) => new FakeStream(c.audio ? [{ id: 'a', kind: 'audio', enabled: true, stop() {} }] : []);
+    const win = { addEventListener: () => {}, SpeechRecognition: R.Rec };
+    const root = document.getElementById('page');
+    const q = (s) => root.querySelector(s);
+    const mk = (store, start, opts) => {
+      const storage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
+      return mountCallPage(root, { fetchImpl, connect, getUserMedia, storage, search: '?person=p1', nav: {}, attach: () => {}, win,
+        enumerateDevices: async () => [], speakWords: () => null, setTimer: clk.setTimer, clearTimer: clk.clearTimer,
+        makeTransport: (x) => createCallTransport({ ...x, PeerConnection: P.PC, Stream: FakeStream }),
+        makeOutgoingCaptions: (o) => createOutgoingCaptions({ ...o, Recognition: R.Rec, lang: 'en-US' }),
+        makePersonState: personState(start, opts) });
+    };
+    const callUp = async (page) => {
+      root.querySelector('[data-start="audio"]').click();
+      await settled(() => rings.length > 0);
+      rings.length = 0;
+      await screen.answer({}); await ticks();
+      meet(P.made.filter((p) => p.log.includes('offer')).at(-1), P.last()); await ticks();
+      return page.state() === 'in-call';
+    };
+
+    // 1. Not chosen yet, this device never ticked: off, as before; the row read is the login's own "you" card.
+    let store = {};
+    let page = await mk(store, {});
+    check('*** the row read is the login\'s own "you" card\'s, on the person\'s own row ***',
+      /\/api\/people\/me\/state\/input-bindings$/.test(rows.at(-1)?.o.url || ''), rows.at(-1)?.o.url);
+    check('not chosen yet, never ticked here: off', page.captionsOut().on === false && page.captionsOut().person === null && q('[data-captions-out]')?.checked === false);
+    // 2. Ticked here: this device's yes AND the person's own choice, at once.
+    q('[data-captions-out]').checked = true;
+    q('[data-captions-out]').dispatchEvent(new Event('change', { bubbles: true }));
+    check('*** ticked: saved for the PERSON (their screens and other devices follow) and this device said yes ***',
+      JSON.stringify(rows.at(-1).sets) === JSON.stringify([{ [CALL_SUBS_OUT_KEY]: true }]) && store[CAPTIONS_OUT_KEY] === 'on'
+      && page.captionsOut().person === true && page.captionsOut().on === true, JSON.stringify({ sets: rows.at(-1).sets, store }));
+    check('...and the note says it follows them', /Saved for you/.test(q('[data-captions-out-note]')?.textContent || ''));
+    check('in the call, it runs', await callUp(page) && page.captionsOut().running === true);
+    // 3. The screen sends subtitles of what is said there: shown here, corrected in place, gone with the call.
+    screen.sendCaption({ id: 's1', text: 'hello from the room' }); await ticks();
+    check('*** subtitles the screen sends show on the call page, with whose they are ***', q('[data-theirs]')?.hidden === false
+      && q('[data-theirs]').textContent === 'Alex: hello from the room', q('[data-theirs]')?.outerHTML);
+    screen.sendCaption({ id: 's1', text: 'hello from the whole room', final: true }); await ticks();
+    check('...corrected in place (one line, the better words)', q('[data-theirs]').textContent === 'Alex: hello from the whole room' && page.theirCaption()?.id === 's1');
+    page.hangup(); await ticks();
+    check('...and gone with the call', page.theirCaption() === null);
+    page.destroy?.();
+
+    // 4. Chosen ON elsewhere (a screen's menu), this device never said yes: not on, and it asks.
+    store = {};
+    page = await mk(store, { [CALL_SUBS_OUT_KEY]: true });
+    check('*** chosen ON elsewhere, never allowed on this device: NOT running here, and the page asks ***',
+      page.captionsOut().person === true && page.captionsOut().on === false && page.captionsOut().ask === true
+      && q('[data-captions-out]')?.checked === false && /not yet on this device/.test(q('[data-captions-out-note]')?.textContent || ''));
+    const before = R.made.length;
+    await callUp(page);
+    check('...in the call nothing listens, and the ask is beside the call', R.made.length === before && page.captionsOut().running === false
+      && q('[data-mine-note]')?.hidden === false && /not yet on this device/.test(q('[data-mine-note]').textContent));
+    q('[data-captions-out-btn]').click();
+    check('*** one press says yes here: it runs ***', store[CAPTIONS_OUT_KEY] === 'on' && page.captionsOut().running === true);
+    page.hangup(); await ticks(); page.destroy?.();
+
+    // 5. Chosen OFF for the person: this device's old yes no longer starts anything.
+    store = { [CAPTIONS_OUT_KEY]: 'on' };
+    page = await mk(store, { [CALL_SUBS_OUT_KEY]: false });
+    check('*** chosen OFF for the person: a device\'s old yes starts nothing ***', page.captionsOut().on === false && q('[data-captions-out]')?.checked === false);
+    page.destroy?.();
+
+    // 6. The row could not be read (offline): this device's tick alone, as before - and nothing is written to the person.
+    store = { [CAPTIONS_OUT_KEY]: 'on' };
+    page = await mk(store, {}, { fail: true });
+    check('the row could not be read: this device\'s tick decides, as before', page.captionsOut().on === true && page.captionsOut().you === '');
+    q('[data-captions-out]').checked = false;
+    q('[data-captions-out]').dispatchEvent(new Event('change', { bubbles: true }));
+    check('...and nothing is written to a row it could not read', rows.at(-1).sets.length === 0 && store[CAPTIONS_OUT_KEY] === 'off');
+    page.destroy?.();
+    check('site copy never says "her screen", a person’s name', !/her screen|Cici/i.test(root.textContent));
+    screen.destroy();
+
+    // LIVE, through the real server and state.js: the tick lands on the login's own "you" row, beside what is already there.
+    const WHO = 'call-subs-person-' + Math.floor(Math.random() * 1e9);
+    const api = (path, opts = {}) => fetch(path, { ...opts, headers: { 'X-Dev-User': WHO, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+    const people = (await (await api('/api/people')).json()).people || [];
+    const you = people.find((p) => p.kind === 'you');
+    check('(setup) a new login has its own "you" card', !!you, JSON.stringify(people));
+    // Something already on that row (a binding-row setting), which the tick must not lose.
+    await api(`/api/people/${you.id}/state/input-bindings`, { method: 'PUT', body: JSON.stringify({ data: { subtitlesOn: true }, base_version: 0 }) });
+    const lstore = {};
+    const lstorage = { getItem: (k) => (k in lstore ? lstore[k] : null), setItem: (k, v) => { lstore[k] = String(v); } };
+    page = await mountCallPage(root, { user: WHO, storage: lstorage, search: '', nav: {}, attach: () => {}, win,
+      enumerateDevices: async () => [], setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    check('LIVE: the page reads the "you" row (nothing chosen yet)', page.captionsOut().you === you.id && page.captionsOut().person === null,
+      JSON.stringify(page.captionsOut()));
+    q('[data-captions-out]').checked = true;
+    q('[data-captions-out]').dispatchEvent(new Event('change', { bubbles: true }));
+    const rowNow = async () => ((await (await api(`/api/people/${you.id}/state/input-bindings`)).json()).data || {});
+    await sleep(700);   // state.js's write waits out its debounce (250 ms), then one round trip
+    const saved = await rowNow();
+    check('*** LIVE: ticked on the call page, the person\'s own row on the server says ON - and kept what was there ***',
+      saved[CALL_SUBS_OUT_KEY] === true && saved.subtitlesOn === true, JSON.stringify(saved));
+    page.destroy?.();
   }
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));

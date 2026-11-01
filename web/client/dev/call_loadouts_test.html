@@ -40,8 +40,12 @@ import {
   CALL_OPENS_DEFAULT, CALL_CAPTIONS_DEFAULT, CALL_CAPTION_MODES, callLoadoutOf, callCaptionsOf, boardPreset, callViewPlan,
   CALL_THEIR_CAPTIONS_KEY, CALL_THEIR_CAPTIONS_FIELD, CALL_THEIR_CAPTIONS_DEFAULT, CALL_THEIR_CAPTION_MODES, callTheirCaptionsOf,
   CALL_OWN_CAPTIONS_KEY, CALL_OWN_CAPTIONS_FIELD, CALL_OWN_CAPTIONS_DEFAULT, callOwnCaptionsOf,   // row 2.144 step 2
+  // row 2.144 (2026-10-31): the person's own choice
+  CALL_SUBS_OUT_KEY, CALL_SUBS_IN_KEY, CALL_SUBS_OUT_FIELD, CALL_SUBS_IN_FIELD, CALL_SUBS_PERSON_FIELDS, CALL_SUBS_PERSON_ROW,
+  personCallSubsOf, callSubtitlesPlan,
 } from '../call_loadouts.js';
-import { callCaptionPlan, createCallCaptions } from '../call_captions.js';
+import { callCaptionPlan, createCallCaptions, attachCallSubtitles } from '../call_captions.js';
+import { INPUTS_KEY } from '../input_runtime.js';
 import { PRESETS, normalizeLayout } from '../layout.js';
 import { createSubtitles } from '../subtitles.js';
 import { drawCallControls, HANG_CONFIRM_MS } from '../transport_bar.js';
@@ -120,6 +124,111 @@ try {
     && callOwnCaptionsOf({}) === 'off' && callOwnCaptionsOf({ [CALL_OWN_CAPTIONS_KEY]: 'here' }) === 'here' && callOwnCaptionsOf({ [CALL_OWN_CAPTIONS_KEY]: 'x' }) === 'off');
   check('...the plan carries it, and its words say "her screen" nowhere', callViewPlan({ [CALL_OWN_CAPTIONS_KEY]: 'any' }).ownCaptions === 'any'
     && callViewPlan({}).ownCaptions === 'off' && !/her screen|Cici/i.test(JSON.stringify(CALL_OWN_CAPTIONS_FIELD)));
+  // =====================================================================================
+  section('*** row 2.144: ONE per-person choice, outgoing and incoming, on the person\'s own row ***');
+  {
+    check('it lives on the person\'s own row, the one input_runtime.js keeps (the same key, spelled out)', CALL_SUBS_PERSON_ROW === INPUTS_KEY);
+    check('*** both OFF by default, two toggles at "standard" ***', CALL_SUBS_PERSON_FIELDS.length === 2
+      && CALL_SUBS_PERSON_FIELDS.every((f) => f.kind === 'toggle' && f.default === false && f.level === 'standard')
+      && CALL_SUBS_OUT_FIELD.key === CALL_SUBS_OUT_KEY && CALL_SUBS_IN_FIELD.key === CALL_SUBS_IN_KEY);
+    check('site copy names nobody and never says "her screen"', !/her screen|Cici/i.test(JSON.stringify(CALL_SUBS_PERSON_FIELDS)));
+    check('the person\'s choice reads true / false, and null while not chosen (anything else is not a choice)',
+      personCallSubsOf({}, 'out') === null && personCallSubsOf(null, 'in') === null
+      && personCallSubsOf({ [CALL_SUBS_OUT_KEY]: true }, 'out') === true && personCallSubsOf({ [CALL_SUBS_IN_KEY]: false }, 'in') === false
+      && personCallSubsOf({ [CALL_SUBS_OUT_KEY]: 'on' }, 'out') === null && personCallSubsOf({ [CALL_SUBS_OUT_KEY]: true }, 'in') === null);
+    const S = (own, cap, their) => ({ ...(own ? { [CALL_OWN_CAPTIONS_KEY]: own } : {}), ...(cap ? { [CALL_CAPTIONS_KEY]: cap } : {}),
+      ...(their ? { [CALL_THEIR_CAPTIONS_KEY]: their } : {}) });
+    const P = (o, i) => ({ ...(o === undefined ? {} : { [CALL_SUBS_OUT_KEY]: o }), ...(i === undefined ? {} : { [CALL_SUBS_IN_KEY]: i }) });
+    let p = callSubtitlesPlan(S('here', 'any', 'ours'), {});
+    check('*** not chosen yet: the screen\'s own rows decide, exactly as before (the migration) ***',
+      p.ownCaptions === 'here' && p.captions === 'any' && p.theirCaptions === 'ours' && p.decided.out === 'screen' && p.decided.in === 'screen', JSON.stringify(p));
+    p = callSubtitlesPlan(S('here', 'any'), P(false, false));
+    check('*** the person chose OFF: off on this screen, whatever its rows say ***', p.ownCaptions === 'off' && p.captions === 'off'
+      && p.decided.out === 'person' && p.decided.in === 'person', JSON.stringify(p));
+    p = callSubtitlesPlan(S(), P(true, true));
+    check('*** the person chose ON, the screen\'s rows untouched: on, worked out on this computer only (the private one) ***',
+      p.ownCaptions === 'here' && p.captions === 'here', JSON.stringify(p));
+    p = callSubtitlesPlan(S('any', 'off'), P(true, true));
+    check('...the screen\'s row still says WHERE: "and the other computers" stays; "off" there reads as this computer only',
+      p.ownCaptions === 'any' && p.captions === 'here', JSON.stringify(p));
+    p = callSubtitlesPlan(S('any', 'any', 'none'), P(true));
+    check('one chosen, the other not: each decided on its own; what a caller sends is still the screen\'s row',
+      p.ownCaptions === 'any' && p.captions === 'any' && p.decided.in === 'screen' && p.theirCaptions === 'none', JSON.stringify(p));
+    check('*** the call view\'s plan follows the person ***', callViewPlan(S('here', 'here'), { person: P(false, false) }).ownCaptions === 'off'
+      && callViewPlan(S(), { person: P(true, true) }).captions === 'here' && callViewPlan(S('here')).ownCaptions === 'here');
+  }
+
+  // =====================================================================================
+  section('*** row 2.144: a call\'s subtitles in one place (call_captions.js attachCallSubtitles), for the call view and a Call panel ***');
+  {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    // A real microphone-like track (MediaStream will not take a fake one): an audio graph's own output.
+    let realTrack = null;
+    try { const ac = new AudioContext(); realTrack = ac.createMediaStreamDestination().stream.getAudioTracks()[0]; } catch { realTrack = null; }
+    const mkT = () => {
+      const t = { capCbs: new Set(), remoteCbs: new Set(), sent: [], clip: false, stream: null,
+        remote: () => t.stream, onRemote: (cb) => { t.remoteCbs.add(cb); return () => t.remoteCbs.delete(cb); },
+        onCaptions: (cb) => { t.capCbs.add(cb); return () => t.capCbs.delete(cb); },
+        sendCaption: (c) => { t.sent.push(c); return true; }, sending: () => (realTrack ? [realTrack] : []), clipPlaying: () => t.clip,
+        theirs: (c) => { for (const f of [...t.capCbs]) f(c); } };
+      return t;
+    };
+    const made = [];
+    const makeCaptions = (o) => { const c = { o, starts: [], stopped: false, start(s) { c.starts.push(s); }, stop() { c.stopped = true; },
+      status: () => ({ state: 'listening' }) }; made.push(c); return c; };
+    let t = mkT();
+    let h = attachCallSubtitles({ transport: t, host, plan: { captions: 'off', theirCaptions: 'none', ownCaptions: 'off' }, makeCaptions });
+    check('*** everything off: nothing is made, no box, nothing listened to, nothing sent ***',
+      made.length === 0 && !host.querySelector('.subs') && t.capCbs.size === 0 && h.startOwn() === false && t.sent.length === 0);
+    h.stop();
+    t = mkT(); t.stream = new FakeStream([track('far')]);
+    h = attachCallSubtitles({ transport: t, host, plan: { captions: 'here', theirCaptions: 'theirs', ownCaptions: 'here' }, makeCaptions,
+      who: () => 'Ann' });
+    const ours = made.at(-1);
+    check('*** incoming made here: captioned on this computer from the far end\'s stream, in a box inside the host ***',
+      ours?.o.mode === 'here' && ours.starts[0] === t.stream && !!host.querySelector('.subs') && host.querySelector('.subs').style.position === 'absolute');
+    const s2 = new FakeStream([track('far2')]);
+    t.remoteCbs.forEach((f) => f(s2));
+    check('...a new stream (a reconnect) is followed', ours.starts.at(-1) === s2);
+    t.theirs({ id: 'x1', text: 'hello from the phone' });
+    check('*** "theirs" (Mike\'s both-on rule): the first subtitle the caller sends stops ours, and theirs show, with their name ***',
+      ours.stopped === true && /hello from the phone/.test(host.querySelector('.subs')?.textContent || '')
+      && /Ann/.test(host.querySelector('.subs')?.textContent || ''), host.querySelector('.subs')?.textContent);
+    check('*** outgoing made here: started from the call\'s own microphone track ***', realTrack ? h.startOwn() === true : true,
+      realTrack ? '' : 'no audio track in this browser');
+    if (realTrack) {
+      const own = made.at(-1);
+      own.o.sink.caption({ id: 'call-g1', text: 'said in this room', final: false });
+      check('...each line is SENT to the other end (and not shown here)', t.sent.length === 1 && t.sent[0].text === 'said in this room'
+        && !/said in this room/.test(host.querySelector('.subs')?.textContent || ''), JSON.stringify(t.sent));
+      t.clip = true;
+      own.o.sink.caption({ id: 'call-g2', text: 'over a clip' });
+      check('...nothing is sent while a board word\'s clip plays (that word went as text)', t.sent.length === 1);
+      t.clip = false;
+      check('...and only once per call', h.startOwn() === false);
+    }
+    h.stop();
+    check('*** stop: everything goes, the box too, and nothing arriving later shows ***', !host.querySelector('.subs') && t.capCbs.size === 0
+      && (t.theirs({ id: 'x2', text: 'late' }), !host.querySelector('.subs')));
+    // 'ours': this screen's own while they run.
+    t = mkT(); t.stream = new FakeStream([track('far')]);
+    h = attachCallSubtitles({ transport: t, host, plan: { captions: 'here', theirCaptions: 'ours', ownCaptions: 'off' }, makeCaptions });
+    const ours2 = made.at(-1);
+    t.theirs({ id: 'y1', text: 'theirs ignored' });
+    check('"ours": while this screen\'s own run, what the caller sends is not shown', !ours2.stopped && !/theirs ignored/.test(host.textContent));
+    h.stop();
+    // `live()` false: the call it belonged to is over.
+    t = mkT();
+    let alive = true;
+    h = attachCallSubtitles({ transport: t, host, plan: { captions: 'off', theirCaptions: 'theirs', ownCaptions: 'off' }, makeCaptions, live: () => alive });
+    alive = false;
+    t.theirs({ id: 'z1', text: 'after the call' });
+    check('a call that is over shows nothing more', !/after the call/.test(host.textContent));
+    h.stop();
+    host.innerHTML = '';
+  }
+
   check('*** the board sits beside the call on a wide screen, under it on a tall one ***',
     boardPreset({ width: 1280, height: 720 }) === 'side' && boardPreset({ width: 390, height: 844 }) === 'stack' && boardPreset({ width: 500, height: 500 }) === 'side');
   const wide = callViewPlan({ [CALL_OPENS_KEY]: 'audio_board', [CALL_CAPTIONS_KEY]: 'here' }, { width: 1280, height: 720 });
@@ -218,6 +327,57 @@ try {
   }
 
   // =====================================================================================
+  section('*** row 2.144: a Call panel on a dashboard shows subtitles too (it had none; only the call view did) ***');
+  for (const hosted of [false, true]) {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    host.style.cssText = 'position:relative;width:480px;height:360px';
+    let realTrack = null;
+    try { const ac = new AudioContext(); realTrack = ac.createMediaStreamDestination().stream.getAudioTracks()[0]; } catch { realTrack = null; }
+    const cameraOwner = { acquireTrack: async () => track('cam', 'video'), release() {} };
+    const micOwner = { acquire: async () => (realTrack ? new MediaStream([realTrack]) : new FakeStream([track('mic')])), release() {}, status: () => ({}) };
+    const capCbs = new Set(), sent = [];
+    const transport = { claim: async () => true, answer: async () => true, onIncoming: () => () => {}, onEnded: () => () => {}, hangup() {},
+      remote: () => null, onRemote: () => () => {}, onCaptions: (cb) => { capCbs.add(cb); return () => capCbs.delete(cb); },
+      sendCaption: (c) => { sent.push(c); return true; }, sending: () => [], clipPlaying: () => false };
+    const recs = [];
+    const asked = [];
+    // What kiosk.js hands a Call panel (ctx.callSubtitles): the shared helper, with a plan and a stand-in recogniser.
+    const callSubtitles = (o) => { asked.push(o); return attachCallSubtitles({ ...o, plan: { captions: 'off', theirCaptions: 'theirs', ownCaptions: 'here' },
+      makeCaptions: (x) => { const c = { x, start() {}, stop() { c.stopped = true; }, status: () => ({ state: 'listening' }) }; recs.push(c); return c; } }); };
+    const bus = createBus();
+    const inst = mountModule('call', { mount: host, bus, instanceId: hosted ? 'cv' : 'panel', state: { get: () => ({}), set() {}, subscribe: () => () => {} },
+      cameraOwner, micOwner, callTransport: transport, audio: null, output: null,
+      // The call view's own Call module is handed null: the call view makes them itself.
+      callSubtitles: hosted ? null : callSubtitles });
+    inst.init();
+    await inst.impl.takeCall({ name: 'Ann', video: false }, { camera: false, theirVideo: false });
+    if (hosted) {
+      check('the call view\'s own Call module makes none (no second set under the call view\'s)', asked.length === 0 && inst.impl.__subtitles() === null);
+      inst.destroy();
+      continue;
+    }
+    check('*** answered in a Call panel: its subtitles start, in the panel itself, for that caller ***',
+      asked.length === 1 && host.contains(asked[0].host) && asked[0].transport === transport && asked[0].from?.name === 'Ann' && asked[0].live() === true,
+      JSON.stringify({ n: asked.length, from: asked[0]?.from }));
+    capCbs.forEach((f) => f({ id: 'p1', text: 'hello from the caller' }));
+    check('*** what the caller sends of their own voice shows in the panel ***', /hello from the caller/.test(host.querySelector('.subs')?.textContent || ''),
+      host.querySelector('.subs')?.textContent);
+    if (realTrack) {
+      const own = recs.find((r) => r.x.mode === 'here');
+      check('*** and what is said in this room is captioned from the panel\'s own microphone track, and sent ***', !!own
+        && (own.x.sink.caption({ id: 'call-r1', text: 'said by the panel\'s room' }), sent.some((c) => c.text === 'said by the panel\'s room')), JSON.stringify(sent));
+    } else {
+      skip('the panel\'s own microphone captioned and sent', 'no audio track in this browser');
+    }
+    inst.impl.__end('hangup');
+    check('*** the call ends: the panel\'s subtitles go with it ***', inst.impl.__subtitles() === null && !host.querySelector('.subs')
+      && capCbs.size === 0, JSON.stringify(inst.impl.__subtitles()));
+    inst.destroy();
+    host.style.cssText = '';
+  }
+
+  // =====================================================================================
   section('*** Hang up on the bar: one press with a pointer; from a switch it asks first ***');
   {
     const el = document.getElementById('bar');
@@ -285,6 +445,15 @@ try {
     // Three choices: a quick row that steps (no list, so no `commit`); one step is off -> here.
     k.menu.focusRow(`set:${CALL_OWN_CAPTIONS_KEY}`); k.menu.select();
     check('(setup) it is turned on', await settled(() => row(CALL_OWN_CAPTIONS_KEY)?.value === 'here', 3000), row(CALL_OWN_CAPTIONS_KEY)?.value);
+    // row 2.144 (2026-10-31): the person's own two rows, on the menu's Subtitles heading. Nobody chose yet, so each shows
+    // what this screen's own row does now (outgoing on, from the row just set; incoming off) and says it is not chosen.
+    k.menu.close(); k.menu.open();
+    check('*** row 2.144: the person\'s own "subtitles on my calls" rows are on the menu, not chosen yet ***',
+      !!row(CALL_SUBS_OUT_KEY) && !!row(CALL_SUBS_IN_KEY) && /not chosen yet/.test(row(CALL_SUBS_OUT_KEY)?.hint || ''),
+      JSON.stringify(k.menu.items().filter((i) => /callSubtitles/.test(i.id)).map((i) => [i.id, i.value, i.hint])));
+    check('...each showing what this screen does now: outgoing on (its row), incoming off', row(CALL_SUBS_OUT_KEY)?.value === true
+      && row(CALL_SUBS_IN_KEY)?.value === false, JSON.stringify([row(CALL_SUBS_OUT_KEY)?.value, row(CALL_SUBS_IN_KEY)?.value]));
+    check('...and the screen\'s own row does not yet say the person decides', !/person’s own choice/.test(row(CALL_OWN_CAPTIONS_KEY)?.hint || ''));
     k.menu.close();
     const callMedia = (re) => {
       const mic = (k.micOwner()?.status?.().consumers || []).filter((c) => re.test(c));

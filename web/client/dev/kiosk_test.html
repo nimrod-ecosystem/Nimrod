@@ -542,10 +542,13 @@ const toTab = (m, id) => {
       // (subtitles on calls, 2026-10-28, row 2.144, DELIBERATELY: "Subtitles a caller sends of their own voice" on
       // This screen, beside "Captions on calls". 56. The panel's lap is unchanged.)
       // (row 2.144 step 2, 2026-10-31, DELIBERATELY: "Send subtitles of what is said here" beside them. 57.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 57) ***',
-        lapStops.length === 15 && oldStops.length === 57 && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
+      // (row 2.144, 2026-10-31, DELIBERATELY: the person's own "Send subtitles of what I say on calls" and "Make subtitles
+      // of the other person on calls", on the Subtitles heading - one choice per person, every screen of theirs. 59.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 59) ***',
+        lapStops.length === 15 && oldStops.length === 59 && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
         && oldStops.some((i) => i.id === 'set:callTheirCaptions') /* subtitles a caller sends */
         && oldStops.some((i) => i.id === 'set:callOwnCaptions') /* subtitles of what is said here */
+        && oldStops.some((i) => i.id === 'set:callSubtitlesOut') && oldStops.some((i) => i.id === 'set:callSubtitlesIn') /* the person's own */
         && oldStops.some((i) => i.id === 'speaker-test') /* which speaker */
         && oldStops.some((i) => i.id === 'set:speakerCalls') /* calls play on */
         && oldStops.some((i) => i.id === 'set:flashWarning') /* flash warning */

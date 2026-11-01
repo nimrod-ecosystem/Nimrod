@@ -23,6 +23,7 @@
 // caption box goes with the call.
 
 import { rankedRecognizer, enginePlanFrom } from './speech_engines.js';
+import { createSubtitles } from './subtitles.js';   // the caption box (attachCallSubtitles, below)
 
 // The plan for the call's ear, from the screen's (or person's) speech row. Pure.
 //   mode 'here': local passes only (remote passes are dropped, and said in `skipped`).
@@ -105,5 +106,105 @@ export function createCallCaptions({
       if (!plan.passes.length) return { state: 'no-recogniser', skipped: plan.skipped };
       return rec?.status?.() || { state: 'stopped' };
     },
+  };
+}
+
+// ---- ALL OF A CALL'S SUBTITLES ON A SCREEN, IN ONE PLACE (row 2.144, 2026-10-31) -----------------------------------------
+// Until now this lived in kiosk.js and only the call view (a call answered over the panels) had it; a Call panel on a
+// dashboard showed none. Both now use this, so the two cannot drift:
+//   INCOMING made here    plan.captions 'here' | 'any': the far end's stream, captioned by this computer (createCallCaptions)
+//   INCOMING they sent    plan.theirCaptions 'theirs' | 'ours': subtitles the other end made of its own voice, on the
+//                         call's words channel. 'theirs' (Mike's both-on rule): this screen's own of them stop at the first.
+//   OUTGOING made here    plan.ownCaptions 'here' | 'any': this end's microphone, captioned here and SENT (`startOwn`, once
+//                         the call has a microphone track). Nothing of it is shown here; it is the other end's to show.
+// The caption box (subtitles.js) is made inside `host` on the first line to show, placed against `host` rather than the
+// window, and goes with `stop()`. `plan` is call_loadouts.js `callSubtitlesPlan` (the person's choice, else the screen's).
+// `live()`: false once the call this belongs to is over (anything still arriving does nothing).
+export function attachCallSubtitles({
+  transport = null, host = null, plan = {}, row = {}, who = () => null, live = () => true,
+  recognizer = undefined, flashLimit = undefined,
+  makeSubtitles = createSubtitles, makeCaptions = createCallCaptions,
+} = {}) {
+  let subs = null;
+  let captions = null;           // incoming, made here
+  let own = null;                // outgoing, made here
+  let stopped = false;
+  const offs = [];
+  const ok = () => { if (stopped) return false; try { return live() !== false; } catch { return false; } };
+  const name = () => { try { return who() || 'On the call'; } catch { return 'On the call'; } };
+  const rec = recognizer ? { recognizer } : {};
+
+  function box() {
+    if (subs || !host) return subs;
+    subs = makeSubtitles(host, {
+      settings: { ...(row || {}), subtitlesOn: true, subtitlesScreen: false },
+      ...(flashLimit !== undefined ? { flashLimit } : {}),
+    });
+    subs.setOn?.(true);
+    // Inside the call's own box, not across the whole screen (subtitles.css places a box against the window).
+    const b = host.querySelector?.('.subs');
+    if (b) { b.style.position = 'absolute'; b.style.width = '92%'; b.style.zIndex = '2'; }
+    return subs;
+  }
+
+  if (plan.captions && plan.captions !== 'off') {
+    try {
+      box();
+      captions = makeCaptions({ row, mode: plan.captions, sink: subs, ...rec, who: name });
+      const now = transport?.remote?.();
+      if (now) captions.start(now);
+      offs.push(transport?.onRemote?.((s) => { if (ok() && s) captions?.start(s); }) || (() => {}));
+    } catch (err) { console.error('call subtitles: incoming', err); }
+  }
+
+  if (plan.theirCaptions && plan.theirCaptions !== 'none') {
+    try {
+      offs.push(transport?.onCaptions?.((c) => {
+        if (!ok() || !c || !c.text) return;
+        const oursRunning = !!captions && !['no-recogniser', 'stopped'].includes(captions.status?.()?.state);
+        if (plan.theirCaptions === 'ours' && oursRunning) return;
+        if (captions && plan.theirCaptions === 'theirs') { try { captions.stop(); } catch { /* gone */ } captions = null; }
+        try {
+          box()?.caption({ id: `their-${c.id}`, text: c.text, ear: 'call', source: 'call', others: [],
+            speaker: { name: name(), confidence: 1 } });
+        } catch (err) { console.error('call subtitles: theirs', err); }
+      }) || (() => {}));
+    } catch (err) { console.error('call subtitles: theirs', err); }
+  }
+
+  /**
+   * Outgoing: caption `track` (this end's plain microphone; absent, the call's own audio track as it is sent now) and
+   * send each line on the call's words channel. Not while a board word's clip plays into the call: that word went as
+   * text already. True when it started. NOT YET: a microphone changed mid-call is not followed.
+   */
+  function startOwn(track = null) {
+    if (!ok() || own || !plan.ownCaptions || plan.ownCaptions === 'off') return false;
+    try {
+      const t = track || (transport?.sending?.() || []).find((x) => x && x.kind === 'audio');
+      if (!t || typeof MediaStream === 'undefined') return false;
+      own = makeCaptions({ row, mode: plan.ownCaptions, ...rec, sink: { caption: (c) => {
+        if (!ok() || !c || !c.text) return;
+        if (transport?.clipPlaying?.()) return;
+        try { transport?.sendCaption?.({ id: c.id, text: c.text, final: !!c.final }); } catch (err) { console.error('call subtitles: own', err); }
+      } } });
+      own.start(new MediaStream([t]));
+      return true;
+    } catch (err) { console.error('call subtitles: own', err); own = null; return false; }
+  }
+
+  function stop() {
+    if (stopped) return;
+    stopped = true;
+    offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
+    try { captions?.stop(); } catch { /* gone */ }
+    try { own?.stop(); } catch { /* gone */ }
+    try { subs?.destroy?.(); } catch { /* gone */ }
+    captions = null; own = null; subs = null;
+  }
+
+  return {
+    startOwn, stop, plan,
+    // For the suites and the host: what is running now.
+    probe: () => ({ box: !!subs, incoming: !!captions, own: !!own, stopped }),
   };
 }

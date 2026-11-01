@@ -53,6 +53,11 @@
     border-radius:10px; border:2px solid var(--surface); transform:scaleX(-1); background:var(--surface); }
   .cp-self[data-rear="1"] { transform:none; }   /* a camera facing away is shown as it sees, not mirrored */
   .cp-callnote { margin:0; font-weight:600; color:var(--text-soft); }
+  /* SUBTITLES THE SCREEN SENDS of what is said there (row 2.144): one line, the latest, corrected in place. Bigger than a
+     note (it is read while watching the picture), smaller than a board word (which is a word somebody chose to say). */
+  .cp-theirs { margin:0; padding:8px 12px; border-radius:10px; background:var(--surface); font-size:clamp(20px, 5.5vw, 32px);
+    line-height:1.25; font-weight:700; overflow-wrap:anywhere; }
+  .cp-theirs[hidden] { display:none; }
   .cp-controls { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; }
   .cp-ctl[aria-pressed="true"] { background:var(--text); color:var(--bg); border-color:var(--text); }
   .cp-hang { background:var(--accent-warm-deep); border-color:var(--accent-warm-deep); color:var(--on-accent-warm-deep); }
