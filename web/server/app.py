@@ -1801,14 +1801,15 @@ def _seer_name(row: dict, account: str) -> str:
 
 def _caller_on_screen(owner: str, screen_person: str, caller: str, caller_person: str | None = None) -> dict:
     """WHO IS CALLING, as the screen should show it (row 2.167, 2026-10-31): `{"byPerson": <card id or "">, "byName":
-    <name or "">}`, stamped on a call's offer beside `by`, never taken from the page. `caller_person`: which of the
+    <name or "">}`, stamped on a call's offer beside `by`, never taken from the page - and (2026-11-01) on an intercom's
+    and a silent check-in's offer too, so a screen names one person one way. `caller_person`: which of the
     caller's own people is calling (drive_socket checked it is theirs) - a screen calling as the person it is for;
     None: the login itself, its first person.
       byPerson  the caller's card on the owning login's people list (claims.caller_card), so the screen shows its
                 picture - the same card the screen's own People panel draws.
       byName    that card's name AS THE SCREEN'S PERSON KNOWS THEM (claims.seen_name: their own label, else the login's
                 "I call them", else the name on the card); with no card, the owner's name for them on the screen's list,
-                else their own display name (_seer_name, the intercom's rule); '' when none of those exists, and the
+                else their own display name (_seer_name, the older rule); '' when none of those exists, and the
                 screen then says "Someone".
     The default "Me" a new login's first person carries is not a name (_inviter_name's rule): it would read as the
     person at the screen. Fails empty: a lookup that breaks must never stop a call ringing."""
@@ -2309,13 +2310,13 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                     # caller is the account that owns these screens (drop-in by default for the owner), and - on an
                     # intercom offer - the name the room should show (the list's, else their display name).
                     stamped["signal"]["byOwner"] = user == room_key
-                    # (The silent check-in too, 2026-10-14: its notice names who is checking in by the SERVER's name.)
-                    if sig.get("kind") == "offer" and sig.get("purpose") in ("intercom", "checkin"):
-                        stamped["signal"]["byName"] = _seer_name(_person_row(room_key, person_id), user) or ""
                     # row 2.167 (2026-10-31): a CALL's offer says who is calling as the screen knows them - the caller's
                     # card among the owner's people (its name and, for its picture, its id). Before, only the page's own
                     # words for itself reached the screen. A purpose-less offer is a call too (an older caller page).
-                    if sig.get("kind") == "offer" and sig.get("purpose") in (None, "call"):
+                    # (2026-11-01) THE INTERCOM AND THE SILENT CHECK-IN THE SAME WAY: they named the caller by the owner's
+                    # list name, else the display name (_seer_name), so one person read "Dad" on a call and "Pat" on the
+                    # intercom, with no picture. One lookup now; _seer_name is still its fallback when there is no card.
+                    if sig.get("kind") == "offer" and sig.get("purpose") in (None, "call", "intercom", "checkin"):
                         stamped["signal"].update(_caller_on_screen(room_key, person_id, user, call_as or None))
                     # 2026-10-25: an offer naming one screen (`toScreen`) rings that screen alone, and the rest of its
                     # call follows it there (drive.py ScreenTargets). Not online: nothing rings, and the caller is told.

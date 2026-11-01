@@ -87,8 +87,14 @@ function fakeRoom({ stamp = true, owner = 'owner@x', names = {} } = {}) {
         me.sent.push(s);
         const copy = JSON.parse(JSON.stringify(s));
         if (stamp) copy.by = account; else delete copy.by;
-        if (stamp && role === 'driver') { copy.byOwner = account === owner; copy.byName = names[account] || ''; }
-        else { delete copy.byOwner; delete copy.byName; }
+        // `names[account]`: the name the server stamps, or (2026-11-01) { byName, byPerson } - its card too.
+        delete copy.byPerson;
+        if (stamp && role === 'driver') {
+          copy.byOwner = account === owner;
+          const n = names[account];
+          if (n && typeof n === 'object') Object.assign(copy, { byName: n.byName || '', ...(n.byPerson ? { byPerson: n.byPerson } : {}) });
+          else copy.byName = n || '';
+        } else { delete copy.byOwner; delete copy.byName; }
         if (s.purpose === CHECKIN_PURPOSE) {
           const rec = recs.get(s.session);
           if (role === 'driver') {
@@ -178,7 +184,7 @@ const track = (kind = 'audio') => ({ kind, stopped: false, stop() { this.stopped
 
 const host = document.getElementById('host');
 
-function rig({ row = {}, stamp = true, busy = () => false, camera = true, names = {} } = {}) {
+function rig({ row = {}, stamp = true, busy = () => false, camera = true, names = {}, avatars = null } = {}) {
   const room = fakeRoom({ stamp, names });
   const clock = fakeClock();
   const bus = createBus();
@@ -200,8 +206,8 @@ function rig({ row = {}, stamp = true, busy = () => false, camera = true, names 
     now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
   });
   host.innerHTML = '';
-  note = mountCheckInNotice(host, { receiver: recv, bus });
-  const press = () => { for (const f of [...presses]) f(); };
+  note = mountCheckInNotice(host, { receiver: recv, bus, ...(avatars ? { avatars } : {}) });
+  const press =() => { for (const f of [...presses]) f(); };
   function checker(account = 'owner@x', want = 'both') {
     const link = room.join('driver', account);
     const got = [];
@@ -268,11 +274,47 @@ try {
       admitFor({}, { by: 'owner@x', byOwner: true })?.name === 'Someone on this account');
     check('...or by their display name the server sent', admitFor({}, { by: 'owner@x', byOwner: true, byName: 'Pat' })?.name === 'Pat');
     check('*** an ordinary account: no ***', admitFor({}, { by: 'mike@x', byName: 'Mike' }) === null);
-    check('*** with the guardian set: yes, by the name the owner gave them ***',
-      admitFor({ screenPeople: [{ account: 'ann@x', name: 'Ann', guardian: true }] }, { by: 'ann@x', byName: 'typed' })?.name === 'Ann');
+    check('*** with the guardian set: yes, by the name the owner gave them when the server sent none ***',
+      admitFor({ screenPeople: [{ account: 'ann@x', name: 'Ann', guardian: true }] }, { by: 'ann@x' })?.name === 'Ann');
+    // 2026-11-01: the server's name is the same lookup a call uses (their card as this screen's person knows them, else
+    // the list's name, else their display name). drive.py stamp_signal removes any byName a page writes, so it is the
+    // server's word, and it comes first; the list's name is the fallback for an older server.
+    const ann = admitFor({ screenPeople: [{ account: 'ann@x', name: 'Ann', guardian: true }] }, { by: 'ann@x', byName: 'Mum', byPerson: 'p-ann' });
+    check('*** the server\'s name for them first (as a call names them), with their card ***',
+      ann?.name === 'Mum' && ann?.personId === 'p-ann', JSON.stringify(ann));
+    check('a blank server name is no name: the list\'s', admitFor({ screenPeople: [{ account: 'ann@x', name: 'Ann', guardian: true }] },
+      { by: 'ann@x', byName: '   ' })?.name === 'Ann');
+    check('a card id that is not one: no card', admitFor({}, { by: 'owner@x', byOwner: true, byPerson: '../x' })?.personId === null);
+    check('*** a name never admits anybody ***', admitFor({}, { by: 'mike@x', byName: 'Mum', byPerson: 'p-ann' }) === null);
     check('ticked "May check in quietly": yes', !!admitFor({ screenPeople: [{ account: 'mike@x', name: 'Mike', checkIn: true }] }, { by: 'mike@x' }));
     check('a guardian unticked: no', admitFor({ screenPeople: [{ account: 'ann@x', guardian: true, checkIn: false }] }, { by: 'ann@x' }) === null);
     check('the owner unticked themselves: no', admitFor({ screenPeople: [{ account: 'owner@x', checkIn: false }] }, { by: 'owner@x', byOwner: true }) === null);
+  }
+
+  section('*** who is checking in: the server\'s name and their picture, as a call shows them (2026-11-01) ***');
+  {
+    const rows = {};
+    const subs = new Set();
+    const avatars = { get: (pid) => rows[pid] || null, subscribe(fn) { subs.add(fn); return () => subs.delete(fn); } };
+    const r = rig({ names: { 'owner@x': { byName: 'Dad', byPerson: 'p-dad' } }, avatars: () => avatars });
+    const c = r.checker('owner@x', 'sound');
+    await c.s.start();
+    await flush();
+    check('*** the notice names them by the server\'s name ***', r.note.text() === 'Dad is checking in (sound only)', r.note.text());
+    check('the session carries their card', r.recv.sessions()[0]?.personId === 'p-dad', JSON.stringify(r.recv.sessions()));
+    check('no picture made for them yet: the pill is the words exactly as before', r.note.face() === null);
+    rows['p-dad'] = { show: 'picture', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' };
+    for (const fn of [...subs]) fn('p-dad');
+    check('*** their picture arrives: drawn in the pill beside their name, small and still ***',
+      /data-avatar-shown="picture"/.test(r.note.face() || '') && !!host.querySelector('.ci-live [data-caller-face] img')
+      && /width:1\.6em/.test(r.note.face() || ''), String(r.note.face()).slice(0, 160));
+    check('*** still nothing heard in the room: a picture is drawn, nothing is said or played ***',
+      !host.querySelector('.ci-live audio, .ci-live video'));
+    r.recv.endAll(); await flush();
+    check('*** it goes with the notice ***', r.note.face() === null && r.note.shown() === false);
+    r.note.destroy();
+    check('...and the picture subscription goes with the notice', subs.size === 0);
+    c.s.stop(); r.recv.destroy();
   }
 
   section('*** the checker opens NOTHING of its own ***');

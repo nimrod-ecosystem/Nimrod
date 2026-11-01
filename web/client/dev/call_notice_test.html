@@ -202,6 +202,15 @@ try {
     r.t.ring({ name: 'Someone', video: false });
     check('*** a caller the screen does not know: no picture, the generic word ***', r.n.face() === null && /Someone is calling/.test(r.el().textContent));
     r.n.decline();
+    // 2026-11-01: the slot is caller_face.js's now, shared with the intercom's and the check-in's notices.
+    rows['bad id!'] = rows['p-dad'];
+    r.t.ring({ name: 'Dad', video: true, personId: 'bad id!' });
+    check('something that is not a card id draws nothing (the shared slot checks it, whatever reaches it)', r.n.face() === null);
+    r.n.decline();
+    r.t.ring({ name: 'Dad', video: true, personId: 'p-dad' });
+    check('*** the same caller again: their picture at once (big and moving: this card asks for a decision) ***',
+      /data-avatar-shown="picture"/.test(r.n.face() || '') && /width:4em/.test(r.n.face() || ''), String(r.n.face()).slice(0, 160));
+    r.n.decline();
     r.done();
     check('...and the picture subscription goes with the notice', subs.size === 0);
   }

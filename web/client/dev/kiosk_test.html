@@ -3842,6 +3842,10 @@ const toTab = (m, id) => {
       check('the quiet check-in\'s rows are NOT in the menu while nobody is ticked to check in (the intercom\'s rule)',
         !item('set:checkInMedia') && !item('set:checkInMaxMs') && !item('set:checkInEndOnPress'));
 
+      // Faces are read only when something shows one: the who page, or (2026-11-01) a notice naming somebody - an
+      // intercom or a check-in the server stamped with a card, as a ring already did. Never at boot.
+      check('avatars: nothing is read at boot (before anything shows a face)', wk.avatars() === null);
+
       // ---- 2. THE INTERCOM, THROUGH THE REAL SERVER ----
       check('*** intercom: the room’s half is built once the drive socket exists, with its notice ***',
         await settled(() => !!wk.intercom() && !!wk.intercomNotice(), 9000));
@@ -3858,6 +3862,9 @@ const toTab = (m, id) => {
       driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-1', sdp: SDP, from: { name: 'typed by the phone' } });
       check('*** intercom: an offer from somebody ON the approved list (the server’s stamp) -> "Intercom opening: Bea" ***',
         await settled(() => !!note() && !note().hidden && /Intercom opening: Bea/.test(note().textContent), 6000), note()?.textContent);
+      check('*** intercom: the server named their card, so the notice asked for faces (the screen’s one avatar cache) ***',
+        wk.avatars() !== null && /^[A-Za-z0-9_-]+$/.test(wk.intercom().sessions()[0]?.personId || ''),
+        JSON.stringify(wk.intercom().sessions()));
       check('*** status icons: the intercom has its glyph, saying who ***',
         await settled(() => /Intercom opening: Bea/.test(glyph('intercom')?.getAttribute('aria-label') || ''), 3000), glyph('intercom')?.getAttribute('aria-label'));
       check('...and the call panel did NOT ring (an intercom is not a call)', wbox.querySelector('.m-call')?.dataset.phase === 'idle',
@@ -4062,7 +4069,7 @@ const toTab = (m, id) => {
       wk.menu.close();
 
       // ---- 5. AVATARS IN "WHO THIS SCREEN IS FOR" ----
-      check('avatars: nothing is read until the who page is drawn', wk.avatars() === null);
+      // (The cache exists by now: the intercom above named its caller's card. Nothing read it at boot - section 2.)
       wk.menu.open();
       wk.menu.openPage('who');
       const btnFor = () => [...wbox.querySelectorAll('[data-page-body] [data-person]')].find((b) => b.dataset.person === pid);

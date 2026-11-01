@@ -18,7 +18,8 @@
 //   3. THE SCREEN SAYS WHO IS CHECKING IN, FOR THE WHOLE TIME, BEFORE ANY MICROPHONE OR CAMERA OPENS. "<name> is
 //      checking in (sound and picture)", in the screen's notice column (live_notices.js) - the "something is
 //      listening" column the intercom and the phone microphone use - with an End button. The name is the SERVER's
-//      (the people list's name, else their display name), never one the checker's page typed. Small, quiet, in the
+//      (2026-11-01: the same lookup a call uses - their card as this screen's person knows them, else the people
+//      list's name, else their display name - with their picture), never one the checker's page typed. Small, quiet, in the
 //      corner; it never covers the photos more than that one pill. NO SETTING HIDES IT here - see HIDING below.
 //   4. IT ALWAYS ENDS BY ITSELF. When the checker stops; after `checkInMaxMs` (a setting, 10 minutes by default); when
 //      somebody in the room presses anything (a setting, on by default); with one press of End, a switch or a phrase
@@ -74,6 +75,7 @@ import { newSession as newPhoneSession } from './phone_mic.js';
 import { permsFor } from './screen_permissions.js';
 import { PROFILES as MIC_PROFILES } from './mic_owner.js';
 import { noticeStack } from './live_notices.js';
+import { serverCaller, createCallerFace } from './caller_face.js';
 import { MEDIA_CHOICES, CHECKIN_DEFAULTS, CHECKIN_FIELDS, checkInOptionsFrom, allowedKinds } from './checkin_options.js';
 
 export { MEDIA_CHOICES, CHECKIN_DEFAULTS, CHECKIN_FIELDS, checkInOptionsFrom, allowedKinds };
@@ -114,19 +116,23 @@ export function checkInOfferCheck(sdp) {
 }
 
 /**
- * MAY THIS SENDER CHECK IN? Pure. `sig` is the server-stamped offer: `by` (the account), `byOwner`, `byName`.
- * Returns { account, name } or null. Fails closed: no stamp, no check-in.
+ * MAY THIS SENDER CHECK IN? Pure. `sig` is the server-stamped offer: `by` (the account), `byOwner`, `byName`,
+ * `byPerson`. Returns { account, name, personId } or null. Fails closed: no stamp, no check-in.
+ * THE NAME (2026-11-01): the server's `byName` first - the same lookup a call uses (app.py `_caller_on_screen`), so one
+ * person is named one way on a call and on a check-in - then, as before, the screen list's name and the words for
+ * nobody known. `personId`: the server's card, for the picture (caller_face.js).
  */
 export function admitFor(row, sig) {
   const by = sig && typeof sig.by === 'string' && sig.by ? sig.by : null;
   if (!by) return null;
   const ok = permsFor(row || {}, by, sig.byOwner === true ? by : null).checkIn === true;
   if (!ok) return null;
+  const known = serverCaller(sig);
   const ent = (Array.isArray(row?.screenPeople) ? row.screenPeople : []).find((e) => e && e.account === by);
-  const name = (ent && typeof ent.name === 'string' && ent.name.trim())
-    || (typeof sig.byName === 'string' && sig.byName.trim())
+  const name = known.name
+    || (ent && typeof ent.name === 'string' && ent.name.trim())
     || (sig.byOwner === true ? 'Someone on this account' : 'Someone');
-  return { account: by, name: String(name).slice(0, 60) };
+  return { account: by, name: String(name).slice(0, 60), personId: known.personId };
 }
 
 export const isCheckInSignal = (sig) => !!sig && typeof sig === 'object' && sig.purpose === CHECKIN_PURPOSE;
@@ -317,7 +323,8 @@ export function createCheckInReceiver({
   const claims = new Map();
 
   const list = () => (s && s.phase !== 'claiming'
-    ? [{ session: s.session, name: s.name, phase: s.phase, since: s.since, audio: !!s.grant.audio, video: !!s.grant.video }] : []);
+    ? [{ session: s.session, name: s.name, personId: s.personId || null, phase: s.phase, since: s.since,
+         audio: !!s.grant.audio, video: !!s.grant.video }] : []);
   function changed() {
     const sessions = list();
     try { onChange?.(sessions); } catch (err) { console.error('checkin onChange', err); }
@@ -473,7 +480,8 @@ export function createCheckInReceiver({
     const allow = allowedKinds(o.media);
     const grant = { audio: check.audio && allow.audio, video: check.video && allow.video && typeof getCamera === 'function' };
     if (!grant.audio && !grant.video) { send(session, 'bye', { reason: 'not-offered' }); return; }
-    const sess = { session, by: sig.by, byOwner: sig.byOwner === true, name: entry.name, phase: 'claiming', since: now(),
+    const sess = { session, by: sig.by, byOwner: sig.byOwner === true, name: entry.name, personId: entry.personId || null,
+                   phase: 'claiming', since: now(),
                    grant, pc: null, mic: null, micHeld: false, cam: null, stall: null, limit: null };
     s = sess;
     askServer(session).then((won) => {
@@ -536,10 +544,13 @@ export function checkInText(sessions = []) {
 /**
  * "<name> is checking in (sound and picture)", with End. In the notice column, small, never a sound: `role="status"`
  * (polite), so a screen reader at the screen says it in its own time and nothing else speaks. NO SETTING HIDES IT.
+ * `avatars` (2026-11-01): the screen's avatar cache, or a function returning it - the checker's picture beside their name
+ * when the server named their card (caller_face.js), small and still, as the intercom's pill (argued there).
  */
 export function mountCheckInNotice(host, {
   receiver = null,
   bus = null,
+  avatars = null,
   doc = host?.ownerDocument || (typeof document !== 'undefined' ? document : null),
 } = {}) {
   if (!host || !doc) throw new Error('mountCheckInNotice: a host element is required');
@@ -559,7 +570,8 @@ export function mountCheckInNotice(host, {
   btn.className = 'ic-end ci-end';
   btn.textContent = 'End';
   btn.setAttribute('aria-label', 'End the check-in');
-  el.append(dot, word, btn);
+  const face = createCallerFace({ doc, avatars });
+  el.append(dot, face.el, word, btn);
   noticeStack(host, doc).append(el);
   btn.addEventListener('click', () => {
     if (receiver) receiver.endAll('room-ended');
@@ -569,14 +581,17 @@ export function mountCheckInNotice(host, {
     const t = checkInText(sessions || []);
     word.textContent = t;
     el.hidden = !t;
+    face.show(t ? ((sessions || [])[0] || {}).personId : null);
   }
   show(receiver ? receiver.sessions() : []);
   const offBus = bus && typeof bus.subscribe === 'function' ? bus.subscribe(CHECKIN_TOPIC, (p) => show((p && p.sessions) || [])) : () => {};
   return {
     shown: () => !el.hidden,
     text: () => word.textContent,
+    /** The checker's picture as drawn, or null when there is none (2026-11-01). */
+    face: () => face.html(),
     button: () => btn,
     refresh() { show(receiver ? receiver.sessions() : []); },
-    destroy() { try { offBus(); } catch { /* gone */ } el.remove(); },
+    destroy() { try { offBus(); } catch { /* gone */ } face.destroy(); el.remove(); },
   };
 }

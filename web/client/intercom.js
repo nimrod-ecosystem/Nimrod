@@ -17,8 +17,8 @@
 //      "the list" is now "May use the intercom" - see HANDLED LIKE A CALL below.)
 //   2. THE ROOM IS TOLD FIRST. Before any microphone opens, the room hears a chime and (by default) the
 //      caller's name is said, and the screen shows "Intercom opening: <name>" for `warnMs`. Only
-//      then is the room's microphone opened. The name shown is the one on the APPROVED LIST, not one the
-//      phone chose. And ONLY ON ONE SCREEN: the server picks which of the person's screens answers,
+//      then is the room's microphone opened. The name shown is the SERVER's (2026-11-01: the same lookup a call
+//      uses, with the caller's picture - `admitFor`), never one the phone chose. And ONLY ON ONE SCREEN: the server picks which of the person's screens answers,
 //      before anything chimes (CLAIM_MS, drive.py Answerers); the others do nothing.
 //   3. IT SHOWS FOR THE WHOLE TIME. "Intercom open: <name>" stays on the screen while it is open, in the
 //      screen's notice column (live_notices.js). NO SETTING HIDES IT.
@@ -76,6 +76,7 @@ import { newSession as newPhoneSession } from './phone_mic.js';
 import { permsFor } from './screen_permissions.js';
 import { PROFILES as MIC_PROFILES } from './mic_owner.js';
 import { noticeStack } from './live_notices.js';
+import { serverCaller, createCallerFace } from './caller_face.js';
 
 export const INTERCOM_PURPOSE = 'intercom';
 export const INTERCOM_TOPIC = 'intercom/state';
@@ -217,23 +218,28 @@ export function intercomOptionsFrom(values = {}) {
 
 /**
  * MAY THIS SENDER USE THE INTERCOM (2026-10-13/14)? Pure. `sig` is the server-stamped offer: `by` (the account),
- * `byOwner` (the server's word that it owns these screens), `byName` (the name the server would show). Returns
- * { account, name } or null. Fails closed: no stamp, no entry. With no row in the options (an older caller of this
- * file), only the older list counts - exactly as before.
+ * `byOwner` (the server's word that it owns these screens), `byName` and `byPerson` (who it is, as the server names
+ * them). Returns { account, name, personId } or null. Fails closed: no stamp, no entry. With no row in the options (an
+ * older caller of this file), only the older list decides who may - exactly as before.
+ *
+ * THE NAME (2026-11-01): the server's `byName` FIRST - the same lookup a call uses (app.py `_caller_on_screen`: the
+ * caller's card as this screen's person knows them, else the owner's name for them on the list, else their display
+ * name), so one person is named one way on a call and on the intercom. Then, as before, the older list's name, the
+ * screen list's name, and the words for nobody known. `personId`: the server's card, for the picture (caller_face.js).
  */
 export function admitFor(o, sig) {
   const by = sig && typeof sig.by === 'string' && sig.by ? sig.by : null;
   if (!by) return null;
+  const known = serverCaller(sig);
+  const named = (fallback) => ({ account: by, name: String(known.name || fallback).slice(0, 60), personId: known.personId });
   const listed = admits((o || {}).allowed, by);
   const row = o && o.row;
-  if (!row || typeof row !== 'object') return listed;
+  if (!row || typeof row !== 'object') return listed ? named(listed.name) : null;
   const ok = permsFor(row, by, sig.byOwner === true ? by : null).intercom === true;
   if (!ok) return null;
-  if (listed) return listed;
+  if (listed) return named(listed.name);
   const ent = (Array.isArray(row.screenPeople) ? row.screenPeople : []).find((e) => e && e.account === by);
-  const name = (ent && typeof ent.name === 'string' && ent.name.trim())
-    || (typeof sig.byName === 'string' && sig.byName.trim()) || (sig.byOwner === true ? 'Your other device' : 'Someone');
-  return { account: by, name: String(name).slice(0, 60) };
+  return named((ent && typeof ent.name === 'string' && ent.name.trim()) || (sig.byOwner === true ? 'Your other device' : 'Someone'));
 }
 
 /** An intercom offer must carry sound; video may ride along (the room's `video` setting decides what is shown). */
@@ -481,7 +487,7 @@ export function createIntercomReceiver({
   onChange = null,
 } = {}) {
   if (!link) throw new Error('createIntercomReceiver: a drive link is required');
-  // The one session: { session, by, name, phase: 'claiming'|'asking'|'warning'|'open', since, pc, mic, el, timers }.
+  // The one session: { session, by, name, personId, phase: 'claiming'|'asking'|'warning'|'open', since, pc, mic, el, timers }.
   // 'claiming' = asking the server whether this screen is the one; nothing has happened in the room,
   // so it is not shown, not listed, and holds nothing. 'asking' (auto answer off, 2026-10-13) = "Intercom from <name>"
   // with Answer / Not now; nothing is open, and it goes by itself after `answerWaitMs`.
@@ -491,7 +497,7 @@ export function createIntercomReceiver({
   const claims = new Map();   // session -> a claim waiting for the server's answer
 
   const list = () => (s && s.phase !== 'claiming'
-    ? [{ session: s.session, name: s.name, phase: s.phase, since: s.since, video: !!s.videoStream }] : []);
+    ? [{ session: s.session, name: s.name, personId: s.personId || null, phase: s.phase, since: s.since, video: !!s.videoStream }] : []);
   function changed() {
     const sessions = list();
     try { onChange?.(sessions); } catch (err) { console.error('intercom onChange', err); }
@@ -694,7 +700,8 @@ export function createIntercomReceiver({
     // Two different "no"s, so the phone says the true one: another intercom is open, or the room is on a call.
     if (s) { send(session, 'bye', { reason: 'busy' }); return; }
     if (busy()) { send(session, 'bye', { reason: 'in-a-call' }); return; }
-    const sess = { session, by: sig.by, byOwner: sig.byOwner === true, name: entry.name, phase: 'claiming', since: now(), sdp: sig.sdp,
+    const sess = { session, by: sig.by, byOwner: sig.byOwner === true, name: entry.name, personId: entry.personId || null,
+                   phase: 'claiming', since: now(), sdp: sig.sdp,
                    wantVideo: !!check.video, videoStream: null, cam: null,
                    pc: null, mic: null, micHeld: false, el: null, warn: null, stall: null, limit: null, ask: null };
     s = sess;
@@ -811,10 +818,15 @@ export function intercomText(sessions = []) {
 /**
  * "Intercom opening / open: <name>", with an End button - the one thing in the notice column that
  * takes a press. It does not block anything else on the screen. NO SETTING HIDES IT.
+ * `avatars` (2026-11-01): the screen's avatar cache, or a function returning it - the caller's picture beside their
+ * name when the server named their card (caller_face.js). At the avatar display's own size and STILL, its defaults
+ * (avatar_display.js DISPLAY_DEFAULTS, argued there): this pill stays up the whole time the intercom is open, and a
+ * face moving in the corner for half an hour pulls the eye from what the screen is showing.
  */
 export function mountIntercomNotice(host, {
   receiver = null,
   bus = null,
+  avatars = null,
   doc = host?.ownerDocument || (typeof document !== 'undefined' ? document : null),
 } = {}) {
   if (!host || !doc) throw new Error('mountIntercomNotice: a host element is required');
@@ -855,7 +867,8 @@ export function mountIntercomNotice(host, {
   vid.setAttribute('aria-hidden', 'true');
   vid.hidden = true;
   vid.style.cssText = 'display:block;width:12em;max-width:40vw;border-radius:.4em;margin-top:.3em';
-  el.append(dot, word, yes, no, btn, vid);
+  const face = createCallerFace({ doc, avatars });
+  el.append(dot, face.el, word, yes, no, btn, vid);
   noticeStack(host, doc).append(el);
   btn.addEventListener('click', () => {
     if (receiver) receiver.endAll('room-ended');
@@ -867,6 +880,7 @@ export function mountIntercomNotice(host, {
     const t = intercomText(sessions || []);
     word.textContent = t;
     el.hidden = !t;
+    face.show(t ? ((sessions || [])[0] || {}).personId : null);
     const asking = (sessions || []).some((x) => x.phase === 'asking');
     el.dataset.phase = (sessions || []).some((x) => x.phase === 'open') ? 'open' : asking ? 'asking' : 'warning';
     yes.hidden = !asking || !receiver;
@@ -881,8 +895,10 @@ export function mountIntercomNotice(host, {
   return {
     shown: () => !el.hidden,
     text: () => word.textContent,
+    /** The caller's picture as drawn, or null when there is none (2026-11-01). */
+    face: () => face.html(),
     button: () => btn,
     refresh() { show(receiver ? receiver.sessions() : []); },
-    destroy() { try { offBus(); } catch { /* gone */ } el.remove(); },
+    destroy() { try { offBus(); } catch { /* gone */ } face.destroy(); el.remove(); },
   };
 }

@@ -7573,7 +7573,8 @@ export async function mountKiosk(root, {
                 try { statusIcons?.poke(); } catch { /* not built yet */ }
               },
             });
-            intercomNote = mountIntercomNotice(kioskEl, { receiver: intercomRx, bus });
+            // 2026-11-01: the caller's picture beside their name, from the card the server named (as the call notice).
+            intercomNote = mountIntercomNotice(kioskEl, { receiver: intercomRx, bus, avatars: () => whoAvatars() });
           } catch (err) { console.error('kiosk: intercom', err); }
           // THE SILENT CHECK-IN (2026-10-14, checkin.js): same socket, so only somebody the server lets reach this
           // screen gets here at all, and then only with "May check in quietly" (the server checks it, and the room checks
@@ -7601,7 +7602,7 @@ export async function mountKiosk(root, {
                 try { statusIcons?.poke(); } catch { /* not built yet */ }
               },
             });
-            checkInNote = mountCheckInNotice(kioskEl, { receiver: checkInRx, bus });
+            checkInNote = mountCheckInNotice(kioskEl, { receiver: checkInRx, bus, avatars: () => whoAvatars() });
           } catch (err) { console.error('kiosk: check-in', err); }
           // WHO MAY SEE (Mike, 2026-10-12): the server's "may <name> see this screen?" - a corner card, never a dialog,
           // gone by itself; nobody answering means nothing is shared (see_ask.js).

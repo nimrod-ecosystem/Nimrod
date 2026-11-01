@@ -85,7 +85,9 @@ function fakeClock() {
 // AND THE SERVER'S PICK of one answering screen per offer, mirrored from drive.py `Answerers` (the
 // real one is tested in test_drive.py and in the LIVE section at the bottom of this page):
 // `arbiter: false` is a server too old to answer a claim at all.
-function fakeRoom({ stamp = true, arbiter = true } = {}) {
+// `names` (2026-11-01): account -> { byName, byPerson }, what the server stamps as who the caller is on this screen
+// (app.py `_caller_on_screen`); whatever a page wrote there is removed first, as drive.py stamp_signal does.
+function fakeRoom({ stamp = true, arbiter = true, names = {} } = {}) {
   const screens = new Set(), drivers = new Set();
   const recs = new Map();                        // session -> { answerer, declined }
   const arb = (s) => !!s && s.purpose === INTERCOM_PURPOSE && typeof s.session === 'string';
@@ -109,6 +111,8 @@ function fakeRoom({ stamp = true, arbiter = true } = {}) {
         if (stamp) copy.by = account; else delete copy.by;
         // 2026-10-14: the server also says whether the sender owns these screens (app.py `byOwner`), never the page.
         if (stamp && role === 'driver') copy.byOwner = account === 'owner@x'; else delete copy.byOwner;
+        delete copy.byName; delete copy.byPerson;
+        if (stamp && role === 'driver' && names[account]) Object.assign(copy, names[account]);
         if (arbiter && arb(s)) {
           const rec = recs.get(s.session);
           if (role === 'driver') {
@@ -209,8 +213,8 @@ function fakeAudioEl() { return { srcObject: null, playing: 0, paused: 0, volume
 
 const ALLOWED = [{ account: 'mike@x', name: 'Mike' }];
 
-function rig({ allowed = ALLOWED, row = {}, stamp = true, busy = () => false } = {}) {
-  const room = fakeRoom({ stamp });
+function rig({ allowed = ALLOWED, row = {}, stamp = true, busy = () => false, names = {} } = {}) {
+  const room = fakeRoom({ stamp, names });
   const clock = fakeClock();
   const bus = createBus();
   const screenLink = room.join('screen', 'owner@x');
@@ -293,6 +297,57 @@ try {
     pc?.fireTrack({ kind: 'video' }, [new FakeStream([{ kind: 'video' }])]);
     check(`*** room set to "${video}": the caller's picture is ${shown ? 'shown' : 'NOT shown'} ***`,
       !!r.recv.videoStream() === shown && r.recv.sessions()[0]?.video === shown, JSON.stringify(r.recv.sessions()));
+    r.recv.destroy();
+  }
+
+  // ======================================================================================
+  // 2026-11-01: the intercom named its caller the older way (the list's name first) with no picture, while a call names
+  // them by the server's card lookup. Now the same lookup, the same picture; the older names stay as the fallbacks.
+  section('*** who it is: the server\'s name and card, as a call - the list\'s names only as fallbacks ***');
+  {
+    const row = { intercomAllowed: [{ account: 'mike@x', name: 'Mike' }], screenPeople: [{ account: 'g@x', name: 'Gran', guardian: true }] };
+    const opts = intercomOptionsFrom(row);
+    const m = admitFor(opts, { by: 'mike@x', byName: 'Uncle Mike', byPerson: 'p-mike' });
+    check('*** the server\'s name wins over the older list\'s, and its card comes with it ***',
+      m?.name === 'Uncle Mike' && m?.personId === 'p-mike', JSON.stringify(m));
+    const gr = admitFor(opts, { by: 'g@x', byName: 'Grandma', byPerson: 'p-gran' });
+    check('...and over the screen list\'s', gr?.name === 'Grandma' && gr?.personId === 'p-gran', JSON.stringify(gr));
+    check('*** no name from the server (an older one): the list\'s names, exactly as before, and no card ***',
+      admitFor(opts, { by: 'mike@x' })?.name === 'Mike' && admitFor(opts, { by: 'mike@x' })?.personId === null
+      && admitFor(opts, { by: 'g@x', byName: '  ' })?.name === 'Gran');
+    check('nobody known at all: the words for nobody, as before',
+      admitFor(intercomOptionsFrom({}), { by: 'own@x', byOwner: true })?.name === 'Your other device');
+    check('a card id that is not one draws nothing (no personId)',
+      admitFor(opts, { by: 'mike@x', byName: 'Mike', byPerson: 'bad id!' })?.personId === null
+      && admitFor(opts, { by: 'mike@x', byPerson: 42 })?.personId === null);
+    check('*** a name never admits anybody: who may is still the stamp and the permissions ***',
+      admitFor(opts, { by: 'eve@x', byName: 'Uncle Mike', byPerson: 'p-mike' }) === null);
+    check('an older caller of this file (no row): the older list decides who, the server\'s name is shown',
+      admitFor({ allowed: ALLOWED }, { by: 'mike@x', byName: 'Uncle Mike' })?.name === 'Uncle Mike'
+      && admitFor({ allowed: ALLOWED }, { by: 'eve@x', byName: 'Uncle Mike' }) === null);
+  }
+  {
+    const r = rig({ names: { 'mike@x': { byName: 'Dad', byPerson: 'p-dad' } } });
+    const host = document.getElementById('host');
+    const rows = {};
+    const subs = new Set();
+    const avatars = { get: (pid) => rows[pid] || null, subscribe(fn) { subs.add(fn); return () => subs.delete(fn); } };
+    const note = mountIntercomNotice(host, { receiver: r.recv, bus: r.bus, avatars: () => avatars });
+    const p = r.phone('mike@x', { claim: 'Not Dad' });
+    await p.s.start(); await flush();
+    check('*** the room is told the server\'s name: "Intercom from Dad", shown and said ***',
+      note.text() === 'Intercom opening: Dad' && r.said[0] === 'Intercom from Dad', `${note.text()} / ${r.said[0]}`);
+    check('the session carries the card, for the picture', r.recv.sessions()[0]?.personId === 'p-dad', JSON.stringify(r.recv.sessions()));
+    check('no picture made for them yet: the pill is the words exactly as before', note.face() === null);
+    rows['p-dad'] = { show: 'picture', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' };
+    for (const fn of [...subs]) fn('p-dad');
+    check('*** their picture arrives: drawn in the pill beside their name ***',
+      /data-avatar-shown="picture"/.test(note.face() || '') && !!host.querySelector('.ic-live [data-caller-face] img'), String(note.face()).slice(0, 100));
+    check('small and still in the corner (the avatar display\'s own default size)', /width:1\.6em/.test(note.face() || ''), String(note.face()).slice(0, 160));
+    r.recv.endAll(); await flush();
+    check('*** it goes with the notice ***', note.face() === null && note.shown() === false);
+    note.destroy();
+    check('...and the picture subscription goes with the notice', subs.size === 0);
     r.recv.destroy();
   }
 

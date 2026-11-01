@@ -182,6 +182,28 @@ with ws_for(OWN, "screen") as S:
     g = ring(S, CALLONLY, {"byName": "Pat"}, purpose=None)
     check("a purpose-less offer (an older caller page) is a call, and stamped the same way", g.get("byName") == "Nurse Casey", J(g))
 
+    # 2026-11-01: the intercom and the silent check-in named the caller the older way (the owner's list name, else the
+    # display name) and carried no card, so one person read "Dad" on a call and "Pat" on the intercom, with no picture.
+    section("*** the intercom and the silent check-in name the caller exactly as a call does ***")
+    for kind in ("intercom", "checkin"):
+        g = ring(S, OWN, purpose=kind)
+        check(f"*** {kind}: the owner, by Robin's own name for them, with their card ***",
+              g.get("purpose") == kind and g.get("byName") == "Dad" and g.get("byPerson") == pat, J(g))
+    cur = c.get(f"/api/people/{robin}/state/input-bindings", headers=H(OWN)).json()
+    c.put(f"/api/people/{robin}/state/input-bindings", headers=H(OWN), json={"data": {"screenPeople": [
+        {"account": CALLONLY, "name": "Nurse Casey", "intercom": True, "checkIn": True},
+        {"account": FRIEND, "name": "Sammy", "intercom": True, "checkIn": True}]}, "base_version": cur.get("version", 0)})
+    for kind in ("intercom", "checkin"):
+        g = ring(S, FRIEND, purpose=kind)
+        check(f"*** {kind}: a friend with a card - the card's name (the login's 'I call them') wins over the list's ***",
+              g.get("byName") == "Uncle Sam" and g.get("byPerson") == sam_card, J(g))
+        g = ring(S, CALLONLY, purpose=kind)
+        check(f"{kind}: no card - the fallback kept: the owner's name for them on the list, and no card",
+              g.get("byName") == "Nurse Casey" and g.get("byPerson") == "", J(g))
+        g = ring(S, CALLONLY, {"byName": "Pat", "byPerson": pat, "byOwner": True}, purpose=kind)
+        check(f"*** {kind}: a forged byName, byPerson and byOwner are the server's again ***",
+              g.get("byName") == "Nurse Casey" and g.get("byPerson") == "" and g.get("byOwner") is False, J(g))
+
 section("*** a screen calling from its Call panel calls AS the person it is for (`as`) ***")
 kim = c.post("/api/people", json={"name": "Kim"}, headers=H(OWN)).json()["id"]
 check("(pure) the owner calling as one of their own people: that card",

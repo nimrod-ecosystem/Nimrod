@@ -38,7 +38,7 @@
 import { CALLER_GIVE_UP_MS } from './call_page.js';
 import { CALL_BLOCKED_SHORT } from './private_network.js';   // 2026-10-26 (note CV): what fixes it, in words
 import { CALL_ANSWER_TOPIC, CALL_DECLINE_TOPIC } from './actions.js';
-import { avatarHtml } from './avatar_display.js';
+import { createCallerFace } from './caller_face.js';
 
 export const CALL_NOTICE_KEY = 'callNotice';
 export const CALL_NOTICE_MODES = Object.freeze(['notice', 'off']);
@@ -172,11 +172,14 @@ export function createCallNotice({
   // The caller's picture (row 2.167): a face you know before you can read the name. Sized in em of the notice's
   // own text, so the person's text size carries it; 4em, argued: big enough to recognise across a bed, small
   // enough that Decline and Answer stay on a phone-sized notice without scrolling. Empty: the slot is hidden.
-  const faceEl = doc.createElement('div');
+  // Big and moving (`animate: true`), unlike the small still face of the intercom's and the check-in's pills: this card
+  // is up only while a call rings and asks somebody to decide, so it may hold the eye; theirs stay up the whole time.
+  // The slot itself is caller_face.js's, shared with those two notices.
+  const NOTICE_FACE_SIZE = '4em';
+  const face = createCallerFace({ doc, avatars, size: NOTICE_FACE_SIZE, animate: true, tag: 'div',
+    style: 'display:flex;justify-content:center;margin-bottom:.4em' });
+  const faceEl = face.el;
   faceEl.dataset.cnFace = '';
-  faceEl.hidden = true;
-  faceEl.setAttribute('aria-hidden', 'true');
-  faceEl.style.cssText = 'display:flex;justify-content:center;margin-bottom:.4em';
   const whoEl = doc.createElement('div');
   whoEl.dataset.cnWho = '';
   whoEl.setAttribute('aria-live', 'assertive');
@@ -207,32 +210,9 @@ export function createCallNotice({
   btns.append(declineBtn, answerBtn);
   el.append(faceEl, whoEl, kindEl, countEl, btns);
 
-  const NOTICE_FACE_SIZE = '4em';
-  const facePid = () => String((who && who.personId) || '');
-  // The cache, asked for only when a ring names somebody (`avatars` may be the cache or a function returning it), so
-  // a screen reads no faces until a call needs one.
-  let faces = null;
-  let offFaces = null;
-  function faceCache() {
-    if (faces) return faces;
-    try { faces = typeof avatars === 'function' ? avatars() : avatars; } catch { faces = null; }
-    if (!faces || typeof faces.get !== 'function') { faces = null; return null; }
-    // A picture that arrives after the ring (the first read of that card) is painted in; nothing else changes.
-    try { offFaces = faces.subscribe?.((pid) => { if (pid && pid === facePid()) paintFace(); }) || null; }
-    catch { offFaces = null; }
-    return faces;
-  }
-  function paintFace() {
-    const pid = phase === 'idle' ? '' : facePid();
-    let html = '';
-    const cache = pid ? faceCache() : null;
-    if (cache) {
-      try { html = avatarHtml(cache.get(pid), { size: NOTICE_FACE_SIZE, animate: true, personId: pid }) || ''; }
-      catch (err) { console.error('call notice: face', err); html = ''; }
-    }
-    if (faceEl.innerHTML !== html) faceEl.innerHTML = html;
-    faceEl.hidden = !html;
-  }
+  // The cache is asked for only when a ring names somebody (caller_face.js), so a screen reads no faces until a call
+  // needs one; a picture that arrives after the ring is painted in.
+  const paintFace = () => face.show(phase === 'idle' ? '' : String((who && who.personId) || ''));
 
   const noteEl = doc.createElement('div');
   noteEl.dataset.callNoticeNote = '';
@@ -443,7 +423,7 @@ export function createCallNotice({
     // A drop-in caller's countdown: seconds left, or 0 when nothing is counting (2026-10-12).
     counting: () => (dropT != null ? dropLeft : 0),
     // The caller's picture as drawn (row 2.167), or null when there is none.
-    face: () => (faceEl.hidden ? null : faceEl.innerHTML),
+    face: () => face.html(),
     element: () => el,
     verb,
     answer,
@@ -451,7 +431,7 @@ export function createCallNotice({
     destroy() {
       stopDrop();
       offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
-      try { offFaces?.(); } catch { /* gone */ } offFaces = null;
+      face.destroy();
       if (ringT != null) { try { clearTimer(ringT); } catch { /* gone */ } ringT = null; }
       if (noteT != null) { try { clearTimer(noteT); } catch { /* gone */ } noteT = null; }
       phase = 'idle';
