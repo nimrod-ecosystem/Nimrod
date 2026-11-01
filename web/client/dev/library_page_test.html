@@ -24,6 +24,7 @@ kiosk and its bar, the Settings panel drawing that kiosk's menu), that looking a
 <script type="module">
 import { createProfilesClient } from '../profile.js';
 import { authHeaders } from '../auth.js';
+import { SIGNED_OFF } from '../modules_catalog.js';
 
 const USER = 'modules-page-' + Math.floor(Math.random() * 1e6);
 const out = document.getElementById('results');
@@ -285,7 +286,12 @@ try {
   {
     const cards = $$('#lib .lib-card');
     const firstBeta = cards.findIndex((c) => c.dataset.libStage === 'beta');
-    check('*** the list: live cards first, then "Beta: still being tweaked", then the beta cards ***', firstBeta > 0
+    // Since eeacdea6 (row 2.140, 2026-10-27: every module is beta until Mike signs it off, modules_catalog.js SIGNED_OFF)
+    // there may be no live cards at all: then the list opens on the heading. Once anything is signed off, live cards
+    // must come first again, before the heading.
+    const signed = Object.keys(SIGNED_OFF).length;
+    check(`*** the list: live cards first (${firstBeta} today; ${signed} signed off), then "Beta: still being tweaked", then the beta cards ***`,
+      firstBeta >= (signed ? 1 : 0)
       && cards.slice(firstBeta).every((c) => c.dataset.libStage === 'beta')
       && $('#lib [data-lib-beta-head]')?.nextElementSibling === cards[firstBeta], `${firstBeta} of ${cards.length}`);
     check('*** a beta module on the stage says Beta beside its name ***', P().shown()?.type === 'town' && !!$('#try-head [data-beta-pill]'),
