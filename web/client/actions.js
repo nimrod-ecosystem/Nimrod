@@ -569,7 +569,8 @@ export const MODULE_VERBS = {
   youtube:       { next: 'youtube/next', prev: 'youtube/prev',
                    play: 'youtube/play', pause: 'youtube/pause' },
   // THE DIRECTOR WAS MISSING, and it is on a real bedside screen — the starter
-  // "Bedside" profile is photos + camera + clock + director. Absent from this table it is
+  // "Bedside" profile was photos + camera + clock + director (since 54de3637, row 2.93, it starts
+  // with a plain YouTube panel instead; the director is still placed on screens). Absent from this table it is
   // never focusable and answers no verb, so a switch could not skip a segment on the one
   // screen that ships by default. Its "next" is the SEGMENT skip: the director advances by
   // being told the segment ended, and `reason` is what separates "she skipped it" from
