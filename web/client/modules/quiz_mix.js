@@ -66,7 +66,7 @@ import { quizModule } from '../quiz_view.js';
 import { autostartFields, START_VOICE } from '../game_start.js';
 import { pick, record as rngRecord } from '../rng.js';
 import { ladderChooser, turnPoints } from '../question_pick.js';
-import { resolvePlayers, MAX_PLAYERS } from '../adaptive_play.js';
+import { resolvePlayers, MAX_PLAYERS, openUsualStart, usualStartField, START_WORDS } from '../adaptive_play.js';
 import { packsFor } from '../pack_library.js';
 import { createContests } from '../contests.js';
 import { SOURCES, SOURCE_IDS, SOURCE_LABELS } from '../question_kinds.js';
@@ -136,8 +136,21 @@ export const DEFAULTS = Object.freeze({
   answerBy: 'choices',
   autostart: false,
   autostartAlone: 'same',
+  guestStart: 'very easy',
   ...LINES,
 });
+
+// *** WHERE PLAYERS START (row 2.174, Mike 2026-11-01: "Can I adjust my starting level on quiz mix, so it's not asking me
+// kids messages."). *** The mix plays each game on that game's own ladder, so a level here is the same level in the
+// games themselves. Two rows:
+//   * "Your usual starting level for games": the screen's person's own (adaptive_play.js openUsualStart), THE SAME VALUE
+//     as on the People tab of the screen's menu, shown here too because nobody looking at Quiz mix finds it there.
+//     Changing it starts them again at that level in every game that follows it, the mix's included.
+//     ARGUED against a start of the mix's own: the mix has no ladder of its own (it deals each game on that game's),
+//     so its "own" start would have to be written into every game's row, which is the usual start by another name.
+//   * "Guests start at": players typed in by name (and a screen with no person), the first time they play a game.
+//     Default very easy, as every game's "A new player starts at level" 1.
+const startChoices = () => usualStartField().options;
 
 const TRIVIA_PACKS = packsFor('trivia');
 const onOff = (key, label, note) => ({ key, label, default: true, level: 'standard', onLabel: 'In the mix', offLabel: 'Left out', ...(note ? { note } : {}) });
@@ -146,6 +159,13 @@ const SETTINGS = [
   { key: 'players', label: 'Players', kind: 'players', default: '', level: 'essential', max: MAX_PLAYERS,
     note: 'Each player takes a turn every round, with a question at their own level. A person picked from this login plays as '
       + 'themselves. A guest is only a name. Up to 4 players.' },
+  { key: 'myStart', label: 'Your usual starting level for games', kind: 'choice', default: 'very easy', level: 'essential',
+    options: startChoices(),
+    note: 'The same as "Usual starting level for games" on the People tab. Changing it starts you again at that level in Quiz mix '
+      + 'and in every game that has no starting level of its own for you. After that, your answers move you.' },
+  { key: 'guestStart', label: 'Guests start at', kind: 'choice', default: 'very easy', level: 'standard',
+    options: startChoices(),
+    note: 'For players typed in by name, the first time they play each kind of question.' },
   { key: 'rounds', label: 'Rounds in a game', kind: 'choice', default: 10, level: 'essential',
     options: [5, 10, 15, 20].map((v) => ({ value: v, label: String(v) })).concat([{ value: 0, label: 'No end: keep going' }]),
     note: 'A round is one question for every player.' },
@@ -274,6 +294,20 @@ registerModule(
     let api = null;
     let dead = false;
     const rows = sharedRows(ctx);
+    // "Your usual starting level for games" (WHERE PLAYERS START, above). The person's row is the truth and the panel
+    // keeps a copy for the menu, as Trivia's "Start trivia at" does: a change made in the menu is written to the person
+    // once their row is in; a change made elsewhere (the People tab, another screen) is copied back into the row.
+    let lastMy;
+    let usualLoaded = false;
+    const usual = openUsualStart({ makePersonState: rows.ctx.makePersonState, personId: ctx.personId || null,
+      onChange: () => {
+        if (dead) return;
+        usualLoaded = true;
+        const s = usual?.values().start;
+        if (!s || s === lastMy || typeof ctx.state?.set !== 'function') return;
+        lastMy = s;   // first, so the panel's echo of this is not read as somebody changing it
+        try { ctx.state.set({ myStart: s }); } catch (err) { console.error('quiz mix: start copy', err); }
+      } });
     let contests = null;
     try {
       contests = typeof ctx.makeEvents === 'function' ? createContests({ makeEvents: ctx.makeEvents, bus: ctx.bus }) : null;
@@ -298,6 +332,8 @@ registerModule(
         // own usual choices: no quick look, the numbers to choose from (not the pad), Math on its ladder.
         turnLine: '', quickLookMs: 0, answerWith: 'offer', mathLevel: 'adaptive', dots: 'hint', showWord: false,
         adapt: true, review: 'standard', aiWrite: 'off', showLevel: false,
+        // "Guests start at" (above): a word, read over each game's own levels (adaptive_play.js startLevel).
+        startLevel: START_WORDS.includes(cfgNow.guestStart) ? cfgNow.guestStart : DEFAULTS.guestStart,
       }),
       getApi: () => api,
       changed: () => {
@@ -785,8 +821,15 @@ registerModule(
       onClick: (e) => together.onClick(e),
       onMove: (m) => together.onMove(m),
       pointNote: (game, item) => `quiz mix: ${current?.cat?.label || 'a question'}`,
+      // A screen with no person of its own: "Your usual starting level" has nobody to be about, and says so.
+      settingsChoices: () => (usual ? {} : { myStart: { note: 'This screen has no person of its own, so this changes '
+        + 'nothing here. Use "Guests start at", or pick people in Players: each one starts at their own usual level.' } }),
       onConfig: (c) => {
         cfgNow = c;
+        if (START_WORDS.includes(c.myStart) && c.myStart !== lastMy) {
+          lastMy = c.myStart;
+          if (usual && usualLoaded) usual.set(c.myStart);
+        }
         ensureSources();
         for (const s of sources.values()) { try { s.onConfig?.(c); } catch (err) { console.error('quiz mix: config', err); } }
       },
@@ -804,6 +847,7 @@ registerModule(
         together.destroy();
         for (const s of sources.values()) { try { s.destroy(); } catch { /* gone */ } }
         sources.clear();
+        try { usual?.destroy(); } catch { /* gone */ }
         rows.close();
         try { contests?.destroy?.(); } catch { /* gone */ }
       },

@@ -868,7 +868,10 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
   const startLevel = (pid = null, game = null) => {
     let own = null;
     try { own = pid ? asLevel(startFor(pid, game), game) : null; } catch { own = null; }
-    const v = own != null && Number.isFinite(Number(own)) && Number(own) >= 1 ? own : c().startLevel;
+    // "A new player starts at level": a number, or (Quiz mix's "Guests start at", row 2.174) a word read like a start's.
+    let dflt = c().startLevel;
+    try { dflt = asLevel(dflt, game); } catch { /* the number as it is */ }
+    const v = own != null && Number.isFinite(Number(own)) && Number(own) >= 1 ? own : dflt;
     return Math.max(1, Math.floor(Number(v) || 1));
   };
   const markOf = (pid) => {

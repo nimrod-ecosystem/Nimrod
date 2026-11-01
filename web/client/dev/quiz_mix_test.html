@@ -37,7 +37,7 @@ import { SOURCE_IDS, BRAIN_CATEGORIES, THINK_CATEGORIES, optionIn, mcqAdapter, s
   triviaSource } from '../question_kinds.js';
 import { TRIVIA_LADDER_KEY } from '../modules/trivia.js';
 import { auditFields, auditAcross } from '../settings_audit.js';
-import { normalizeField } from '../settings_fields.js';
+import { normalizeField, fieldsFor } from '../settings_fields.js';
 
 const { check, section, finish } = harness();
 
@@ -267,6 +267,54 @@ try {
     check('*** the guest\'s answer is on the screen\'s row, not the person\'s ***', gameRow(ratings, 'name:ann', g2)?.n === 1
       && !people.row('pat').get().ladder.players['name:ann'], JSON.stringify(ratings.get().ladder?.players));
     r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** where players start (row 2.174: "Can I adjust my starting level on quiz mix, so it\'s not asking me kids messages") ***');
+  {
+    const people = peopleRows({ 'pat:ratings': { start: 'medium', startMark: 'm0' } });
+    const r = M({ players: [{ kind: 'self' }], ...ONLY('math') }, { extra: { personId: 'pat', makePersonState: people.make } });
+    await sleep(40);
+    check('*** the menu shows the person\'s own usual starting level (medium), copied from their row ***', r.stored().myStart === 'medium',
+      JSON.stringify(r.stored()));
+    r.setCfg({ myStart: 'hard' });
+    await sleep(10);
+    const row = people.row('pat').get();
+    check('*** chosen in Quiz mix\'s menu: written to the person as their usual start, with a new mark (they start again there) ***',
+      row.start === 'hard' && row.startMark && row.startMark !== 'm0', JSON.stringify(row));
+    people.row('pat').set({ start: 'easy', startMark: 'm9' });
+    await sleep(10);
+    check('...and a change made on the People tab is copied back into the menu', r.stored().myStart === 'easy', JSON.stringify(r.stored()));
+    check('the row is offered first-tier, beside Players; "Guests start at" too', (() => {
+      const rows = getManifest('quiz_mix').settings;
+      const my = rows.find((f) => f.key === 'myStart'), g = rows.find((f) => f.key === 'guestStart');
+      return my?.level === 'essential' && g?.default === 'very easy' && JSON.stringify(my.options.map((o) => o.value)) === '["very easy","easy","medium","hard"]';
+    })());
+    r.inst.destroy();
+    const noone = M({ players: 'Ann', ...ONLY('math') });
+    await sleep(20);
+    const f = fieldsFor(getManifest('quiz_mix'), noone.inst).find((x) => x.key === 'myStart');
+    check('a screen with no person says the row changes nothing there', /no person of its own/.test(f?.note || ''), f?.note);
+    noone.inst.destroy();
+  }
+  {
+    // GUESTS: "Guests start at: hard" puts a new guest at the top of each game's own levels.
+    const ratings = liveRow();
+    const r = M({ players: 'Ann', guestStart: 'hard', ...ONLY('math') }, { ratings });
+    await sleep(30);
+    const g = cur(r)?.game;
+    answerRight(r);
+    await sleep(10);
+    const row = gameRow(ratings, 'name:ann', g);
+    const easy = M({ players: 'Bo', ...ONLY('math') }, { ratings: liveRow() });
+    await sleep(30);
+    const g2 = cur(easy)?.game;
+    answerRight(easy);
+    await sleep(10);
+    const row2 = gameRow(easy.ratings, 'name:bo', g2);
+    check('*** a guest with "Guests start at: hard" starts above one at the default (very easy) ***',
+      row && row2 && row.floor > row2.floor && row2.floor === 1, JSON.stringify([row, row2]));
+    r.inst.destroy(); easy.inst.destroy();
   }
 
   // =====================================================================================
