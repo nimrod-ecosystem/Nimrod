@@ -32,6 +32,7 @@
 import { connectDrive } from './drive.js';
 import { authHeaders, isAuthError, httpError } from './auth.js';
 import { createCallTransport, newCallSession } from './call_transport.js';
+import { watchCallOutcome, postCallOutcome } from './call_outcome.js';
 // A call that cannot connect says what to do (chat's note CV; Mike's own-private-network ruling, 2026-09-08).
 import { CALL_BLOCKED_TEXT, CALL_UP_FRONT, PRIVATE_NETWORK_URL } from './private_network.js';
 import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT } from './call_group.js';
@@ -299,18 +300,9 @@ export async function mountCallPage(root, {
 
   // HOW OFTEN CALLS CANNOT CONNECT (2026-10-26, chat's note CV; Mike's ruling: no relay unless it is most calls, so
   // measure). Once per call: "direct" when it connects, "failed" when it cannot. The site keeps two counts a day and
-  // nothing about who called whom (POST /api/call/outcome). Fire and forget: a report that fails changes nothing here.
-  let callSession = null;            // the session of the call this page placed (the transport forgets it as it ends)
-  function reportOutcome(outcome, t) {
-    let session = callSession;
-    try { session = session || t?.__probe?.().session || null; } catch { /* the remembered one */ }
-    if (!session) return;
-    try {
-      Promise.resolve(fetchImpl(`${base}/api/call/outcome`, { method: 'POST', credentials: 'same-origin',
-        headers: { ...authHeaders(user), 'Content-Type': 'application/json' }, body: JSON.stringify({ outcome, session }) }))
-        .catch(() => {});
-    } catch { /* counted nowhere: nothing lost for the call */ }
-  }
+  // nothing about who called whom (POST /api/call/outcome). The rule and the report are call_outcome.js's (row 2.167:
+  // a screen's Call panel calling out reports the same way); this page watches each call it places.
+  const reportOutcome = postCallOutcome({ fetchImpl, base, user });
 
   async function getJSON(path) {
     const res = await fetchImpl(`${base}${path}`, { headers: authHeaders(user), credentials: 'same-origin' });
@@ -733,7 +725,7 @@ export async function mountCallPage(root, {
     target = people.find((p) => p.id === want.personId) || null;
     if (!target) { renderSetup(); return; }
     mode = CALL_MODES.includes(want.mode) ? want.mode : 'video';
-    ended = null; endedHow = false; callSession = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
+    ended = null; endedHow = false; note = null; answered = false; connected = false; micOn = true; camOn = true;
     said = []; heldForWords = false; joinedByKnock = true; primaryGone = false;
     const my = ++run;
     phase = 'checking';
@@ -1094,7 +1086,7 @@ export async function mountCallPage(root, {
     if (!target) return;
     mode = CALL_MODES.includes(want) ? want : 'video';
     put(PERSON_KEY, target.id);
-    ended = null; endedHow = false; callSession = null; note = null; answered = false; connected = false; micOn = true; camOn = true;
+    ended = null; endedHow = false; note = null; answered = false; connected = false; micOn = true; camOn = true;
     said = []; heldForWords = false;
     knockOffer = null; primaryGone = false; joinedByKnock = false;     // group calls
     const my = ++run;
@@ -1155,6 +1147,8 @@ export async function mountCallPage(root, {
     group = makeGroup({ link, role: 'driver', getTracks: () => [...tracksOf('audio'), ...tracksOf('video')], setTimer, clearTimer });
     wireGroup(my);
     const primaryT = transport;
+    // Counted once, "direct" or "failed" (call_outcome.js): before the call is placed, so it hears all of it.
+    offs.push(watchCallOutcome(transport, reportOutcome));
     offs.push(transport.onEnded((reason, info) => {
       if (my !== run || transport !== primaryT) return;
       const text = endText(reason, info?.why, { answered, connected });
@@ -1165,8 +1159,8 @@ export async function mountCallPage(root, {
       const want = { personId: target?.id, mode };
       // Could not connect directly: counted (BEFORE the teardown, which forgets the call's session), then the way to fix
       // it as a link under the words (private-network.html).
+      // (Counted by the outcome watch, which hears the ending first: call_outcome.js.)
       const blocked = reason === 'unconnected' || (reason === 'stalled' && !connected);
-      if (blocked) reportOutcome('failed', primaryT);
       finish(text);
       endedHow = blocked;
       if (endedHow) renderSetup();
@@ -1188,7 +1182,7 @@ export async function mountCallPage(root, {
     offs.push(transport.onAnswered?.(() => { if (my !== run) return; answered = true; if (phase === 'ringing') setPhase('answered'); }));
     offs.push(transport.onConnection?.((st) => {
       if (my !== run) return;
-      if (st === 'connected') { if (!connected) reportOutcome('direct', primaryT); connected = true; answered = true; setPhase('in-call'); }
+      if (st === 'connected') { connected = true; answered = true; setPhase('in-call'); }
       else if ((st === 'disconnected' || st === 'failed') && connected) setPhase('reconnecting');
     }));
     setPhase('ringing');
@@ -1200,7 +1194,6 @@ export async function mountCallPage(root, {
       const toScreen = ringPick && (ringLists.get(target.id) || []).some((x) => x.id === ringPick) ? ringPick : null;
       sent = await transport.call({ tracks, from: { name: myName || 'Someone', video: mode === 'video' }, remoteVideo: q('[data-remote]'),
         ...(s ? { session: s, group: s } : {}), ...(toScreen ? { toScreen } : {}) });
-      try { callSession = transport?.__probe?.().session || null; } catch { callSession = null; }
     } catch (err) { console.error('call: place', err); sent = false; }
     if (my !== run) return;
     if (!sent) { finish('The call could not be placed. Check the connection and try again.'); return; }

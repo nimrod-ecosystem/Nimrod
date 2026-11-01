@@ -1711,8 +1711,14 @@ def drive_may(person_id: str, user: str = Depends(current_user)):
 
 # ---- calls that connected directly, and that could not (2026-10-26, chat's note CV) ----
 # Mike's ruling (2026-09-08): no relay; revisit only if calls that cannot connect are MOST calls, so measure first.
-# The caller's page reports once per call; only the two counts a day are kept (db.py call_outcomes). One report per
-# call session (remembered briefly, bounded), so a page sending twice is counted once.
+# The end that PLACED a call reports once per call - the caller page, or (row 2.167, 2026-11-01) a screen's Call panel
+# calling out; client/call_outcome.js argues why the caller and never the end that answered. Only the two counts a day
+# are kept (db.py call_outcomes). One report per CALL SESSION, whoever sends it (remembered briefly, bounded): a page
+# sending twice, or a second end of the same call reporting by mistake, is counted once. Before, it was one per login
+# and session, which counted a call twice the moment both ends reported (they are different logins). A session is
+# "call-" and 16 random hex digits (call_transport.js newCallSession), so two calls do not share one; a login that
+# reports a session before its caller does can only take the place of that one count, as any login could already
+# report a made-up session.
 _outcome_seen: dict[str, float] = {}
 OUTCOME_SEEN_MAX = 5000
 
@@ -1722,7 +1728,7 @@ def post_call_outcome(body: dict = Body(...), user: str = Depends(current_user))
     outcome, session = body.get("outcome"), body.get("session")
     if outcome not in store.CALL_OUTCOMES or not (isinstance(session, str) and 0 < len(session) <= 64):
         raise HTTPException(status_code=400, detail="an outcome (direct or failed) and the call's session")
-    key = f"{user}|{session}"
+    key = session
     if key in _outcome_seen:
         return {"ok": True, "counted": False}
     _outcome_seen[key] = time.time()

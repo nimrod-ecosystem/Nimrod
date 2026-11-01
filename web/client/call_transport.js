@@ -524,12 +524,12 @@ export function createCallTransport({
     words = null;
     if (ch) { try { ch.close(); } catch { /* gone */ } }
   }
-  function setLive(on) {
+  function setLive(on, info = null) {
     if (live === on) return;
     live = on;
     // group calls: the group answers the other people's offers once this call has its tracks.
     if (group) { try { group.setReady?.(on); } catch (e) { log('group: ready', e); } }
-    for (const cb of [...liveCbs]) { try { cb(on); } catch (e) { log('onLive threw', e); } }
+    for (const cb of [...liveCbs]) { try { cb(on, info); } catch (e) { log('onLive threw', e); } }
   }
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -626,7 +626,7 @@ export function createCallTransport({
     const was = live;
     const wasRinging = pendingOffer != null;
     const wasAnswering = answering;
-    setLive(false);
+    setLive(false, { reason, why });     // before onEnded: its owner may tear everything down (call_outcome.js)
     pendingOffer = null;
     pendingSession = null;
     currentSession = null;
@@ -1095,7 +1095,8 @@ export function createCallTransport({
     // `busy`): a live call is never talked over. A call only RINGING is not counted - an offer
     // whose caller gave up without a `bye` is never cleared, and would block the intercom for good.
     isLive: () => live,
-    /** `cb(true)` when a call goes live, `cb(false)` when it ends (not on ringing, not on a reconnect). */
+    /** `cb(true)` when a call goes live, `cb(false, { reason, why })` when it ends (not on ringing, not on a reconnect).
+     *  The ending is heard here BEFORE `onEnded` (row 2.167: call_outcome.js counts it whoever owns the call). */
     onLive(cb) { if (typeof cb !== 'function') return () => {}; liveCbs.add(cb); return () => { liveCbs.delete(cb); }; },
     /** The screen's own view of its rings (see `ringCbs`): `cb({ type: 'ring' | 'end', ... })`. Returns an unsubscribe. */
     onRing(cb) { if (typeof cb !== 'function') return () => {}; ringCbs.add(cb); return () => { ringCbs.delete(cb); }; },

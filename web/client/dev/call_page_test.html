@@ -36,6 +36,7 @@ import { createCallTransport, CALL_PURPOSE, CALL_CLAIM_MS, GATHER_TIMEOUT_MS, AN
 import { SIGNAL_KINDS, connectDrive } from '../drive.js';
 import { createProfilesClient } from '../profile.js';
 import { LONGEST_RING_S, LONGEST_COUNTDOWN_S } from '../modules/call.js';
+import { watchCallOutcome, postCallOutcome, failedEnding, CALL_OUTCOME_PATH } from '../call_outcome.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -208,7 +209,7 @@ const PEOPLE = { people: [{ id: 'p1', name: 'Alex' }] };
 function fakeFetch({ people = PEOPLE, shared = { people: [] }, ticket = 200, me = { user: 'ann@x', display_name: 'Ann' }, may = null, screens = null } = {}) {
   const calls = [];
   const fn = async (url, opts = {}) => {
-    calls.push({ url, method: opts.method || 'GET' });
+    calls.push({ url, method: opts.method || 'GET', body: typeof opts.body === 'string' ? opts.body : null });
     const ok = (body, status = 200) => ({ ok: status < 400, status, json: async () => body });
     if (/\/api\/drive\/ticket\//.test(url)) return ok({ ticket: 'T', expires_in: 30 }, ticket);
     // which screens are on (2026-10-25): absent here unless a check asks for it - an older site, or not the owner.
@@ -599,8 +600,12 @@ try {
       M.page.state() === 'idle' && M.page.ended() === CALL_BLOCKED_TEXT && /could not connect/.test(text()), M.page.ended());
     check('*** ...with a link to how to set up a private network, under the words ***',
       !!root.querySelector('[data-ended] a[data-how][href="/private-network.html"]'), root.querySelector('[data-ended]')?.innerHTML);
+    const failedReps = M.fetchImpl.calls.filter((c) => /\/api\/call\/outcome$/.test(c.url) && c.method === 'POST');
+    const failedBody = JSON.parse(failedReps[0]?.body || '{}');
     check('*** ...and it is counted, once, as a call that could not connect (counts only, note CV) ***',
-      M.fetchImpl.calls.filter((c) => /\/api\/call\/outcome$/.test(c.url) && c.method === 'POST').length === 1, JSON.stringify(M.fetchImpl.calls.map((c) => c.url)));
+      failedReps.length === 1 && failedBody.outcome === 'failed'
+      && failedBody.session === M.connect.made[0].sent.find((s) => s.kind === 'offer')?.session
+      && Object.keys(failedBody).sort().join() === 'outcome,session', JSON.stringify(failedReps));
     check('*** ...the camera and the microphone are let go ***', M.media.allTracks().length > 0 && M.media.allTracks().every((t) => t.stopped));
     const byes = M.connect.made[0].sent.filter((s) => s.kind === 'bye');
     check('*** ...and a bye goes out, once: "failed", naming the call ***',
@@ -627,9 +632,99 @@ try {
     check('*** connected in time: still in the call, nothing let go, no bye ***',
       M.page.state() === 'in-call' && M.media.allTracks().every((t) => !t.stopped)
       && !M.connect.made[0].sent.some((s) => s.kind === 'bye'), M.page.state());
-    check('...and it is counted, once, as a call that connected directly', M.fetchImpl.calls.filter((c) => /\/api\/call\/outcome$/.test(c.url)).length === 1);
+    const directReps = M.fetchImpl.calls.filter((c) => /\/api\/call\/outcome$/.test(c.url));
+    check('...and it is counted, once, as a call that connected directly',
+      directReps.length === 1 && JSON.parse(directReps[0].body || '{}').outcome === 'direct', JSON.stringify(directReps));
+    // ...and nothing more for it: a drop and a re-connect, then the call ends, still one report.
+    peers.last().fire('disconnected'); peers.last().fire('connected'); await sleep(5);
+    check('*** a call is counted ONCE: a drop and a reconnect add nothing ***',
+      M.fetchImpl.calls.filter((c) => /\/api\/call\/outcome$/.test(c.url)).length === 1);
     M.page.destroy(); S.t.destroy();
   }
+  // Row 2.167 (2026-11-01): a screen's Call panel places calls too (kiosk.js `dialOut`: a caller's transport of its
+  // own). It reports through the same watch as this page (call_outcome.js) - the END THAT PLACED THE CALL reports, the
+  // end that answered never does - so a call between two screens is counted once, by the calling screen.
+  section('*** counted once per call, by the end that placed it: this page AND a screen calling out (call_outcome.js) ***');
+  {
+    check('the rule, once: "failed" only for a call that could not connect',
+      failedEnding('unconnected', false) === 'failed' && failedEnding('stalled', false) === 'failed'
+      && failedEnding('stalled', true) === null && failedEnding('remote', false) === null && failedEnding('hangup', false) === null
+      && failedEnding('elsewhere', false) === null && failedEnding('destroyed', false) === null);
+    // A screen calling out: the transport the kiosk's dialOut makes (a 'driver'), watched exactly as the kiosk watches it.
+    const callOut = () => {
+      const clk = fakeClock();
+      const peers = fakePeer();
+      const room = fakeRoom();
+      const S = screenOn(room);
+      const link = room.join('driver');
+      const reps = [];
+      const fetchImpl = async (url, o) => { reps.push({ url, method: o.method, body: JSON.parse(o.body) }); return { ok: true, status: 200 }; };
+      const t = createCallTransport({ link, role: 'driver', PeerConnection: peers.PC, Stream: FakeStream,
+        setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+      const stop = watchCallOutcome(t, postCallOutcome({ fetchImpl, base: '', user: 'screen-owner@x' }));
+      const offerSession = () => link.sent.find((s) => s.kind === 'offer')?.session;
+      return { clk, peers, room, S, link, reps, t, stop, offerSession,
+        done() { stop(); try { t.destroy(); } catch { /* gone */ } try { S.t.destroy(); } catch { /* gone */ } } };
+    };
+    {
+      const C = callOut();
+      await C.t.call({ tracks: [track('audio')], from: { video: false } });
+      await settled(() => C.S.rings.length === 1);
+      await C.S.t.answer({});
+      await settled(() => C.t.__probe().answered === true);
+      check('(setup) the screen calling out rang the other screen, and it answered', C.S.rings.length === 1 && C.t.__probe().answered === true);
+      check('nothing counted before it connects', C.reps.length === 0);
+      C.peers.last().fire('connected');
+      check('*** it connects: counted once, "direct", with the call\'s own session - and nothing else ***',
+        C.reps.length === 1 && C.reps[0].url === CALL_OUTCOME_PATH && C.reps[0].method === 'POST'
+        && C.reps[0].body.outcome === 'direct' && C.reps[0].body.session === C.offerSession()
+        && Object.keys(C.reps[0].body).sort().join() === 'outcome,session', JSON.stringify(C.reps));
+      C.peers.last().fire('disconnected'); C.peers.last().fire('connected');
+      C.t.hangup();
+      check('*** a drop, a reconnect and the hang up add nothing: one report for the call ***', C.reps.length === 1, JSON.stringify(C.reps));
+      check('...and the screen that answered sent nothing of the kind (it is never watched)', !C.S.link.sent.some((s) => 'outcome' in s));
+      C.done();
+    }
+    {
+      const C = callOut();
+      await C.t.call({ tracks: [track('audio')], from: { video: false } });
+      await settled(() => C.S.rings.length === 1);
+      await C.S.t.answer({});
+      await settled(() => C.t.__probe().answered === true);
+      C.peers.last().fire('connecting');
+      C.clk.advance(ANSWER_CONNECT_MS); await sleep(5);
+      check('*** answered and it never connects: counted once, "failed", with the call\'s session ***',
+        C.reps.length === 1 && C.reps[0].body.outcome === 'failed' && C.reps[0].body.session === C.offerSession(), JSON.stringify(C.reps));
+      C.done();
+    }
+    {
+      const C = callOut();
+      await C.t.call({ tracks: [track('audio')], from: { video: false } });
+      await settled(() => C.S.rings.length === 1);
+      C.S.t.hangup('declined');
+      await settled(() => C.t.__probe().live === false);
+      check('*** declined: not a connection failure - nothing counted ***', C.t.__probe().live === false && C.reps.length === 0, JSON.stringify(C.reps));
+      C.done();
+    }
+    {
+      const C = callOut();
+      await C.t.call({ tracks: [track('audio')], from: { video: false } });
+      C.t.hangup('unanswered');
+      check('no answer (the caller gave up): nothing counted', C.reps.length === 0);
+      await C.t.call({ tracks: [track('audio')], from: { video: false } });
+      await settled(() => C.S.rings.length === 2);
+      await C.S.t.answer({});
+      await settled(() => C.t.__probe().answered === true);
+      C.peers.last().fire('connected');
+      check('*** a second call on the same transport is counted on its own, with its own session ***',
+        C.reps.length === 1 && C.reps[0].body.session === C.link.sent.filter((s) => s.kind === 'offer').at(-1)?.session, JSON.stringify(C.reps));
+      C.done();
+    }
+    let threw = false;
+    try { watchCallOutcome({ onConnection: () => () => {} }, () => {})(); watchCallOutcome(null, () => {})(); } catch { threw = true; }
+    check('a transport without the ending to listen to (an older one, a fake) is simply not counted', !threw);
+  }
+
   check('the words for it: could not connect directly, some networks block it, a private network fixes it',
     endText('unconnected', null, { answered: true }) === CALL_BLOCKED_TEXT && /private network/.test(CALL_BLOCKED_TEXT));
 

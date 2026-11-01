@@ -238,6 +238,7 @@ import {
   FOLLOW_MAIN_FIELD, mainOf,   // photos in step (2026-10-12): which panel people following see when more than one plays
 } from './play_sync.js';
 import { createCallTransport, CALL_TRANSPORT_READY } from './call_transport.js';
+import { watchCallOutcome, postCallOutcome } from './call_outcome.js';   // row 2.167: a Call panel's calls are counted
 import { createCallGroup } from './call_group.js';      // group calls (2026-10-09)
 import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
          // after a restart (row 2.70): one row, and a restart told from a reload
@@ -1945,6 +1946,10 @@ export async function mountKiosk(root, {
           callAs: personKnown.get().personId || personId || '', onPresence, onState });
         const transport = createCallTransport({ link, role: 'driver', config: (settings.get() || {}).call || {},
           onLog: (...a) => console.debug('call out:', ...a) });
+        // HOW OFTEN CALLS CANNOT CONNECT (2026-11-01): this screen PLACED the call, so it reports it once, "direct" or
+        // "failed", exactly as the caller page does (call_outcome.js argues which end reports: the caller, never the end
+        // that answered). Its listeners go with the transport the panel destroys.
+        watchCallOutcome(transport, postCallOutcome({ user }));
         return { link, transport };
       },
     } : {}),
