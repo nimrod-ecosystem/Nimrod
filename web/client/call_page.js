@@ -342,7 +342,7 @@ export async function mountCallPage(root, {
       <button type="button" class="cp-btn cp-big" data-start="audio">Audio call <span class="cp-sub">(sound only, no camera)</span></button>
       <a class="cp-btn cp-big" data-checkin-link hidden href="./checkin.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">Check in quietly
         <span class="cp-sub">(see if they are asleep first; the room hears nothing, and the screen shows you are checking in)</span></a>
-      <p class="cp-note" data-shown-as>The screen shows the call as from “${esc(shownAs)}”${myName ? '' : ' (you have not set the name your notes are signed with)'}.</p>
+      <p class="cp-note" data-shown-as>The screen shows the call under the name it knows you by on its People page, with your picture. If you are not on it, by the name whoever looks after it gave you, or else as from “${esc(shownAs)}”${myName ? '' : ' (you have not set the name your notes are signed with)'}.</p>
       <label class="cp-field"><span>Words chosen on the screen’s AAC board during the call</span>
         <select data-words-mode>
           <option value="speak"${wordsMode() === 'speak' ? ' selected' : ''}>Show them and read them out here</option>

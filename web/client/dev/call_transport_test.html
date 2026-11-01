@@ -1083,6 +1083,38 @@ try {
   }
 
   // =====================================================================================
+  section('*** who is calling, as the SERVER names them (row 2.167: "I show up as other") ***');
+  {
+    const link = fakeLink(); const { PC } = fakePeer();
+    const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream });
+    const rings = [], ringEv = [];
+    t.onIncoming((f) => rings.push(f));
+    t.onRing((e) => { if (e.type === 'ring') ringEv.push(e.from); });
+    const S1 = newCallSession();
+    link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: S1, by: 'acct-mike', byOwner: false,
+      byName: 'Dad', byPerson: 'p-dad', from: { name: 'Other', video: true, personId: 'p-forged', person_id: 'p-forged2' } });
+    const w = rings[0] || {};
+    check('*** the card shows the name the server found on the screen’s own people list, not the page’s word ***',
+      w.name === 'Dad', JSON.stringify(w));
+    check('*** ...and the caller’s card on that list, for the picture ***', w.personId === 'p-dad' && !('person_id' in w), JSON.stringify(w));
+    check('the rest of what the page said (video or audio) and the server’s caller are kept',
+      w.video === true && w.by === 'acct-mike' && w.byOwner === false && w.session === S1, JSON.stringify(w));
+    check('the screen’s own ring (the notice) hears the same caller', ringEv[0]?.name === 'Dad' && ringEv[0]?.personId === 'p-dad', JSON.stringify(ringEv));
+    t.hangup('declined');
+    link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: newCallSession(), by: 'acct-x',
+      from: { name: 'Robin', video: false, personId: 'p-forged' } });
+    const o = rings[1] || {};
+    check('an older server (no name stamped): the page’s own word stands, as before', o.name === 'Robin', JSON.stringify(o));
+    check('*** ...but never a picture the page claims: a person id is only ever the server’s ***', o.personId === null, JSON.stringify(o));
+    t.hangup('declined');
+    link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: newCallSession(), by: 'acct-y', byName: '   ',
+      byPerson: 'bad id!', from: { name: 'Sam' } });
+    const b = rings[2] || {};
+    check('a blank name or a malformed card from the server changes nothing', b.name === 'Sam' && b.personId === null, JSON.stringify(b));
+    t.destroy();
+  }
+
+  // =====================================================================================
   section('*** a signal is not a verb, and can never become one ***');
   {
     // The whole reason signals may travel both ways on a socket where verbs may not.

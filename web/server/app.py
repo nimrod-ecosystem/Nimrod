@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 import asyncio
 
 from authlib.integrations.starlette_client import OAuth
-from fastapi import Body, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -1728,6 +1728,42 @@ def _seer_name(row: dict, account: str) -> str:
         return ""
 
 
+def _caller_on_screen(owner: str, screen_person: str, caller: str, caller_person: str | None = None) -> dict:
+    """WHO IS CALLING, as the screen should show it (row 2.167, 2026-10-31): `{"byPerson": <card id or "">, "byName":
+    <name or "">}`, stamped on a call's offer beside `by`, never taken from the page. `caller_person`: which of the
+    caller's own people is calling (drive_socket checked it is theirs) - a screen calling as the person it is for;
+    None: the login itself, its first person.
+      byPerson  the caller's card on the owning login's people list (claims.caller_card), so the screen shows its
+                picture - the same card the screen's own People panel draws.
+      byName    that card's name AS THE SCREEN'S PERSON KNOWS THEM (claims.seen_name: their own label, else the login's
+                "I call them", else the name on the card); with no card, the owner's name for them on the screen's list,
+                else their own display name (_seer_name, the intercom's rule); '' when none of those exists, and the
+                screen then says "Someone".
+    The default "Me" a new login's first person carries is not a name (_inviter_name's rule): it would read as the
+    person at the screen. Fails empty: a lookup that breaks must never stop a call ringing."""
+    out = {"byPerson": "", "byName": ""}
+    try:
+        rows = store.people_rows(owner)
+        home = None
+        if caller != owner:
+            first = caller_person or store.first_person_id(caller)
+            me = store.person_row(first) if first else None
+            home = ((me or {}).get("home_id") or (me or {}).get("id")) if me else None
+        card = claims.caller_card(rows, owner=owner, caller=caller, caller_home=home,
+                                  caller_person=caller_person if caller == owner else None)
+        if card:
+            labels = store.person_labels(owner, screen_person)
+            name = claims.seen_name(card, card.get("home_name"), viewer_id=screen_person, own_label=labels.get(card["id"]))
+            out["byPerson"] = card["id"]
+            if name and name.strip().lower() != "me":
+                out["byName"] = name.strip()[:60]
+        if not out["byName"]:
+            out["byName"] = _seer_name(_person_row(owner, screen_person), caller)
+    except Exception as exc:
+        log.info("caller lookup failed: %s", exc)
+    return out
+
+
 def _screens_of(room) -> list:
     r = _rooms.get(room[0], room[1])
     return list(r.screens) if r else []
@@ -1982,11 +2018,23 @@ async def _lend(ws, room, msg) -> None:
 
 @app.websocket("/api/drive/{person_id}")
 async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "driver", follow: str = "",
-                       idle: str = "", screenId: str = "", screenName: str = ""):
+                       idle: str = "", screenId: str = "", screenName: str = "",
+                       call_as: str = Query("", alias="as")):
     if not ID_RE.match(person_id or "") or role not in ROLES:
         await ws.close(code=4400)
         return
     user = _tickets.redeem(t, person_id)
+    # row 2.167 (2026-10-31): WHICH OF THIS LOGIN'S PEOPLE IS CALLING - a screen's Call panel calls as the person the
+    # screen is for. Kept only for a driver, and only when that person is this login's own; anything else is the login
+    # itself (its first person), exactly as before. A page can name only its own login's people, never another's - and
+    # only a person this login IS or looks after (its first person, or a profile whose home is here): a card a
+    # connection put on this login is somebody else, and calling "as" it would show the call as theirs.
+    if role != "driver" or not call_as or not ID_RE.match(call_as) or not user:
+        call_as = ""
+    else:
+        _as = store.person_row(call_as)
+        if not _as or _as.get("account_id") != user or (_as.get("home_id") and call_as != store.first_person_id(user)):
+            call_as = ""
     # 2026-10-14 (a call is only a call): a DRIVER socket opens for anybody who may reach these screens - a call-only
     # grant included - and what it may then do is decided per message below. A SCREEN socket still needs what it always
     # needed (may drive): a call-only login is never one of the person's screens.
@@ -2193,6 +2241,11 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                     # (The silent check-in too, 2026-10-14: its notice names who is checking in by the SERVER's name.)
                     if sig.get("kind") == "offer" and sig.get("purpose") in ("intercom", "checkin"):
                         stamped["signal"]["byName"] = _seer_name(_person_row(room_key, person_id), user) or ""
+                    # row 2.167 (2026-10-31): a CALL's offer says who is calling as the screen knows them - the caller's
+                    # card among the owner's people (its name and, for its picture, its id). Before, only the page's own
+                    # words for itself reached the screen. A purpose-less offer is a call too (an older caller page).
+                    if sig.get("kind") == "offer" and sig.get("purpose") in (None, "call"):
+                        stamped["signal"].update(_caller_on_screen(room_key, person_id, user, call_as or None))
                     # 2026-10-25: an offer naming one screen (`toScreen`) rings that screen alone, and the rest of its
                     # call follows it there (drive.py ScreenTargets). Not online: nothing rings, and the caller is told.
                     targets, targeted = _screen_targets.route(arb_key, sig, room.screens)

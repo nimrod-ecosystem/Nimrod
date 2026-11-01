@@ -275,7 +275,15 @@ def stamp_signal(msg: dict, user: str) -> dict:
         return msg
     sig = dict(msg["signal"])
     sig["by"] = user
+    # The other fields only the server writes (app.py, beside `by`): whether the sender owns these screens, and who
+    # the screen should show (the intercom's and the check-in's name; a call's name and card, row 2.167). A page that
+    # sends one of its own has it removed here, so a field the server did not write this time is never the page's.
+    for k in SERVER_STAMPS:
+        sig.pop(k, None)
     return {"type": "signal", "signal": sig}
+
+
+SERVER_STAMPS = ("byOwner", "byName", "byPerson")
 
 
 # ---------------------------------------------------------------------------------------

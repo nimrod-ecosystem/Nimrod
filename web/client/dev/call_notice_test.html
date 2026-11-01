@@ -134,7 +134,7 @@ function fakeLink() {
 }
 
 // A notice on a fake transport, in a box of its own.
-function rig({ mode = 'notice', open = async () => true, dropIn = undefined } = {}) {
+function rig({ mode = 'notice', open = async () => true, dropIn = undefined, avatars = undefined } = {}) {
   const t = fakeTransport();
   const clock = fakeClock();
   const host = document.createElement('div');
@@ -151,6 +151,7 @@ function rig({ mode = 'notice', open = async () => true, dropIn = undefined } = 
     openCall: async (from, opts) => { t.calls.push('open'); opened.push({ from, opts }); return open(from, opts); },
     now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
     ...(dropIn !== undefined ? { dropIn } : {}),
+    ...(avatars !== undefined ? { avatars } : {}),
   });
   const el = () => host.querySelector('[data-call-notice]');
   const btn = (stop) => host.querySelector(`[data-cn-stop="${stop}"]`);
@@ -178,6 +179,32 @@ try {
     noticeText({ name: 'Ann', video: true }).who === 'Ann is calling' && noticeText({ name: 'Ann', video: true }).kind === 'Video call'
     && noticeText({ name: 'Bo' }).kind === 'Audio call' && noticeText({}).who === 'Someone is calling'
     && noticeText({ name: 'Ann', video: true }).announce === 'Video call from Ann.');
+
+  // =====================================================================================
+  section('*** who is calling: their name AND their picture, from the screen\'s own people (row 2.167) ***');
+  {
+    // A stand-in for the screen's avatar cache (avatar_display.js): `get` the row, `subscribe` for a late one.
+    const rows = {};
+    const subs = new Set();
+    const avatars = { get: (pid) => rows[pid] || null, subscribe(fn) { subs.add(fn); return () => subs.delete(fn); } };
+    const r = rig({ avatars });
+    r.t.ring({ name: 'Dad', video: true, personId: 'p-dad' });
+    check('the name the call came with (the server\'s, call_transport.js) is the one shown', /Dad is calling/.test(r.el().textContent), r.el().textContent);
+    check('no picture made yet: no picture slot, the words exactly as before', r.n.face() === null);
+    rows['p-dad'] = { show: 'picture', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' };   // the cache's view of a picture
+    for (const fn of [...subs]) fn('p-dad');
+    check('*** their picture arrives: it is drawn above their name ***',
+      /data-avatar-shown="picture"/.test(r.n.face() || '') && r.el().firstElementChild?.dataset.cnFace === '', String(r.n.face()).slice(0, 120));
+    for (const fn of [...subs]) fn('p-other');
+    check('somebody else\'s picture changing does not touch it', typeof r.n.face() === 'string');
+    r.n.decline();
+    check('it goes with the notice', r.n.face() === null);
+    r.t.ring({ name: 'Someone', video: false });
+    check('*** a caller the screen does not know: no picture, the generic word ***', r.n.face() === null && /Someone is calling/.test(r.el().textContent));
+    r.n.decline();
+    r.done();
+    check('...and the picture subscription goes with the notice', subs.size === 0);
+  }
 
   // =====================================================================================
   section('*** a ring with no Call panel: the notice ***');

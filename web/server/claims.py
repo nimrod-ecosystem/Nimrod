@@ -310,6 +310,40 @@ def seen_name(row: dict | None, home_name: str | None, *, viewer_id: str | None 
     return label or display_name(row, home_name)
 
 
+# --------------------------------------------------------------------------- who is calling (row 2.167, 2026-10-31)
+#
+# Mike, calling a screen from his phone: *"Where it shows who's calling I show up as other."* The ring
+# carried only the name the CALLER'S page said about itself (its login's notes signature, or "Someone"); the screen
+# never looked the caller up among its own people. So the server, which knows the caller's login for certain (`by`),
+# finds the caller's CARD on the list of the login that owns the screen, and the screen shows that card's name (as the
+# screen's own person knows them) and its picture.
+
+def caller_card(rows: list[dict] | None, *, owner: str, caller: str, caller_home: str | None,
+                caller_person: str | None = None) -> dict | None:
+    """The card on `owner`'s people list (`rows`, people_rows' order: the first is "you") that IS the login `caller`,
+    or None when they have no card there. PURE.
+      * the owner calling their own screens: the person calling (`caller_person`: a screen's Call panel calls as the
+        person it is for) when that is one of the rows, else their own first person - a login's first person is who
+        it is (the rule accept_invite already uses for the claimer);
+      * anybody else: the card whose profile is the caller's own (`caller_home`: the calling person's home, else that
+        person; the app works it out). Never another card they share with the owner - somebody calling must not be
+        shown as somebody else whose card they share."""
+    if not rows or not caller or not owner:
+        return None
+    if caller == owner:
+        if caller_person:
+            for r in rows:
+                if r.get("id") == caller_person:
+                    return r
+        return rows[0]
+    if not caller_home:
+        return None
+    for r in rows:
+        if r.get("home_id") and r.get("home_id") == caller_home:
+            return r
+    return None
+
+
 def row_kind(row: dict, *, first_person_id: str | None, source_is_their_first: bool = False) -> str:
     """What a row is TO THE ACCOUNT HOLDING IT. PURE.
       'you'       the account's first person

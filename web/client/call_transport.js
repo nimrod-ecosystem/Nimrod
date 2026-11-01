@@ -378,8 +378,8 @@ export const CALL_TRANSPORT_READY = 'call/transport-ready';
  * The transport.
  *
  * Implements exactly what `modules/call.js` asks for — `onIncoming`, `answer`, `hangup`,
- * `onEnded`, `destroy` — plus `call()` for the other end, which the module does not use
- * because a bedside screen never places a call.
+ * `onEnded`, `destroy` — plus `call()` for the other end: the caller page, and (row 2.167, 2026-10-31) a
+ * Call panel calling out, on a caller's transport of its own (kiosk.js `dialOut`), never the screen's.
  *
  * `link` is a connected drive socket (`connectDrive`); this file does not open one, because
  * the kiosk already has one and a second socket for the same pair of devices would be a
@@ -842,9 +842,19 @@ export function createCallTransport({
       // drops in by default) - written AFTER the page's `from`, so a page cannot claim it.
       const from = sig.from && typeof sig.from === 'object' ? { ...sig.from } : (sig.from ? sig.from : null);
       const byOwner = sig.byOwner === true;
+      // WHO THE SCREEN SHOWS (row 2.167, 2026-10-31). Mike: "Where it shows who's calling I show up as other." The
+      // name on the card was the CALLER PAGE'S word for itself; the screen never looked the caller up among its own
+      // people. The server now stamps the caller's card on this screen's people list (`byPerson`) and that card's
+      // name as this screen's person knows them (`byName`; app.py `_caller_on_screen`). Both are the server's - it
+      // removes any a page sends (drive.py stamp_signal) - so they are written OVER the page's `from`: its name
+      // only stands when the server had none (an older server), and its own `personId` never does.
+      const byName = typeof sig.byName === 'string' ? sig.byName.trim().slice(0, 60) : '';
+      const byPerson = typeof sig.byPerson === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(sig.byPerson) ? sig.byPerson : null;
+      const known = { ...(byName ? { name: byName } : {}), personId: byPerson };
       const who = from && typeof from === 'object'
-        ? { ...from, by: typeof sig.by === 'string' ? sig.by : null, byOwner, ...(session ? { session } : {}) }
-        : (typeof sig.by === 'string' ? { by: sig.by, byOwner, ...(session ? { session } : {}) } : from);
+        ? { ...from, ...known, by: typeof sig.by === 'string' ? sig.by : null, byOwner, ...(session ? { session } : {}) }
+        : (typeof sig.by === 'string' ? { ...known, by: sig.by, byOwner, ...(session ? { session } : {}) } : from);
+      if (who && typeof who === 'object') delete who.person_id;
       try { incomingCb?.(who); } catch (e) { log('onIncoming threw', e); }
       emit(ringCbs, { type: 'ring', from: who, session, panel });
       return;
@@ -1010,8 +1020,8 @@ export function createCallTransport({
     },
 
     /**
-     * Place a call. Used by the caller page (`call.html`, `call_page.js`), never by the bedside module —
-     * a screen never calls anybody. It is TAGGED
+     * Place a call. Used by the caller page (`call.html`, `call_page.js`) and by a Call panel calling out
+     * (row 2.167), each on a 'driver' transport of its own. It is TAGGED
      * (`purpose: 'call'`, a session) so the server can pick one answering screen; `session` reuses an
      * id (a caller re-offering the same call), otherwise a fresh one is made.
      */

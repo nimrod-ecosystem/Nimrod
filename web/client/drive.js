@@ -56,7 +56,7 @@ export const SIGNAL_KINDS = ['offer', 'answer', 'bye', 'ice'];
 // invitation or an ask for anything else is ignored.
 export const GAME_INVITE_GAMES = ['quiz_mix', 'word_builder'];
 
-const wsURL = (base, personId, ticket, role, follow = false, idle = false, device = '', deviceName = '') => {
+const wsURL = (base, personId, ticket, role, follow = false, idle = false, device = '', deviceName = '', callAs = '') => {
   const origin = base
     || (typeof location !== 'undefined' ? `${location.protocol}//${location.host}` : '');
   const scheme = origin.startsWith('https') ? 'wss' : 'ws';
@@ -68,7 +68,10 @@ const wsURL = (base, personId, ticket, role, follow = false, idle = false, devic
     // connected, not pressing (row 2.83): not counted as helping from the first presence either.
     + (!follow && idle && role === 'driver' ? '&idle=1' : '')
     // which device this SCREEN is (2026-10-25, drive.py ScreenTargets), so a call can ring it alone.
-    + (role === 'screen' && device ? `&screenId=${encodeURIComponent(device)}${deviceName ? `&screenName=${encodeURIComponent(deviceName)}` : ''}` : '');
+    + (role === 'screen' && device ? `&screenId=${encodeURIComponent(device)}${deviceName ? `&screenName=${encodeURIComponent(deviceName)}` : ''}` : '')
+    // WHICH OF THIS LOGIN'S PEOPLE IS CALLING (row 2.167, 2026-10-31): a screen calling from its Call panel calls as the
+    // person it is for. The server keeps it only when that person is this login's own (app.py drive_socket).
+    + (role === 'driver' && callAs ? `&as=${encodeURIComponent(callAs)}` : '');
 };
 
 export function connectDrive({
@@ -93,6 +96,9 @@ export function connectDrive({
   // WHICH DEVICE (2026-10-25, a SCREEN only; device_id.js): its id and name, so a call can ring this screen alone.
   device = '',
   deviceName = '',
+  // WHO IS CALLING (row 2.167, a DRIVER only): one of this login's own people, when a page calls as somebody other than
+  // the login's first person (a screen's Call panel calls as the person the screen is for). '' = the login itself.
+  callAs = '',
   // Seams, so the test needs no server and no real socket.
   fetchImpl = (typeof fetch !== 'undefined' ? fetch : null),
   SocketImpl = (typeof WebSocket !== 'undefined' ? WebSocket : null),
@@ -172,7 +178,7 @@ export function connectDrive({
     if (closed) return;
 
     try {
-      sock = new SocketImpl(wsURL(base, personId, ticket, role, follow, !driving, device, deviceName));
+      sock = new SocketImpl(wsURL(base, personId, ticket, role, follow, !driving, device, deviceName, callAs));
     } catch {
       setState('offline');
       retry();

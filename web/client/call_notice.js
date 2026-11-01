@@ -38,6 +38,7 @@
 import { CALLER_GIVE_UP_MS } from './call_page.js';
 import { CALL_BLOCKED_SHORT } from './private_network.js';   // 2026-10-26 (note CV): what fixes it, in words
 import { CALL_ANSWER_TOPIC, CALL_DECLINE_TOPIC } from './actions.js';
+import { avatarHtml } from './avatar_display.js';
 
 export const CALL_NOTICE_KEY = 'callNotice';
 export const CALL_NOTICE_MODES = Object.freeze(['notice', 'off']);
@@ -116,6 +117,9 @@ export function countdownText(left) {
  *   zIndex     the notice's depth (kiosk.js passes one above its menu)
  *   dropIn     (from) => seconds | null: for a caller allowed to drop in, how long to count down before it answers
  *              by itself (0 = at once); null = wait for Answer (everybody else, and the default). Read at each ring.
+ *   avatars    an avatar_display.js cache (the screen's), or a function returning it: the caller's picture above their name, when the server named
+ *              their card on this screen's people list (`from.personId`, row 2.167) and they have one. Absent, or no
+ *              picture: the notice is exactly the words it always was.
  */
 export function createCallNotice({
   transport,
@@ -128,6 +132,7 @@ export function createCallNotice({
   holdScan = null,
   zIndex = null,
   dropIn = () => null,
+  avatars = null,
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
@@ -164,6 +169,14 @@ export function createCallNotice({
     + 'box-sizing:border-box;padding:clamp(14px,3vmin,28px);border-radius:16px;text-align:center;'
     + 'background:var(--surface);color:var(--text);border:3px solid var(--focus);'
     + 'font:600 clamp(16px,2.6vmin,28px)/1.3 system-ui,-apple-system,Segoe UI,sans-serif';
+  // The caller's picture (row 2.167): a face you know before you can read the name. Sized in em of the notice's
+  // own text, so the person's text size carries it; 4em, argued: big enough to recognise across a bed, small
+  // enough that Decline and Answer stay on a phone-sized notice without scrolling. Empty: the slot is hidden.
+  const faceEl = doc.createElement('div');
+  faceEl.dataset.cnFace = '';
+  faceEl.hidden = true;
+  faceEl.setAttribute('aria-hidden', 'true');
+  faceEl.style.cssText = 'display:flex;justify-content:center;margin-bottom:.4em';
   const whoEl = doc.createElement('div');
   whoEl.dataset.cnWho = '';
   whoEl.setAttribute('aria-live', 'assertive');
@@ -192,7 +205,34 @@ export function createCallNotice({
   const declineBtn = mkBtn('decline', 'Decline');
   const answerBtn = mkBtn('answer', 'Answer');
   btns.append(declineBtn, answerBtn);
-  el.append(whoEl, kindEl, countEl, btns);
+  el.append(faceEl, whoEl, kindEl, countEl, btns);
+
+  const NOTICE_FACE_SIZE = '4em';
+  const facePid = () => String((who && who.personId) || '');
+  // The cache, asked for only when a ring names somebody (`avatars` may be the cache or a function returning it), so
+  // a screen reads no faces until a call needs one.
+  let faces = null;
+  let offFaces = null;
+  function faceCache() {
+    if (faces) return faces;
+    try { faces = typeof avatars === 'function' ? avatars() : avatars; } catch { faces = null; }
+    if (!faces || typeof faces.get !== 'function') { faces = null; return null; }
+    // A picture that arrives after the ring (the first read of that card) is painted in; nothing else changes.
+    try { offFaces = faces.subscribe?.((pid) => { if (pid && pid === facePid()) paintFace(); }) || null; }
+    catch { offFaces = null; }
+    return faces;
+  }
+  function paintFace() {
+    const pid = phase === 'idle' ? '' : facePid();
+    let html = '';
+    const cache = pid ? faceCache() : null;
+    if (cache) {
+      try { html = avatarHtml(cache.get(pid), { size: NOTICE_FACE_SIZE, animate: true, personId: pid }) || ''; }
+      catch (err) { console.error('call notice: face', err); html = ''; }
+    }
+    if (faceEl.innerHTML !== html) faceEl.innerHTML = html;
+    faceEl.hidden = !html;
+  }
 
   const noteEl = doc.createElement('div');
   noteEl.dataset.callNoticeNote = '';
@@ -248,6 +288,7 @@ export function createCallNotice({
     ringAt = null;
     lit = -1;
     el.hidden = true;
+    paintFace();
     paint();
     setHold(false);
     if (note) showNote(note);
@@ -276,6 +317,7 @@ export function createCallNotice({
     const t = noticeText(who, drop);
     whoEl.textContent = t.who;
     kindEl.textContent = t.kind;
+    paintFace();
     el.hidden = false;
     paint();
     setHold(true);
@@ -400,6 +442,8 @@ export function createCallNotice({
     note: () => (noteEl.hidden ? null : noteEl.textContent),
     // A drop-in caller's countdown: seconds left, or 0 when nothing is counting (2026-10-12).
     counting: () => (dropT != null ? dropLeft : 0),
+    // The caller's picture as drawn (row 2.167), or null when there is none.
+    face: () => (faceEl.hidden ? null : faceEl.innerHTML),
     element: () => el,
     verb,
     answer,
@@ -407,6 +451,7 @@ export function createCallNotice({
     destroy() {
       stopDrop();
       offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
+      try { offFaces?.(); } catch { /* gone */ } offFaces = null;
       if (ringT != null) { try { clearTimer(ringT); } catch { /* gone */ } ringT = null; }
       if (noteT != null) { try { clearTimer(noteT); } catch { /* gone */ } noteT = null; }
       phase = 'idle';

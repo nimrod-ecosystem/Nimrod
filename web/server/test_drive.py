@@ -205,6 +205,10 @@ check("*** a `by` the client wrote is OVERWRITTEN, so it cannot be forged ***",
 check("the rest of the signal is carried unchanged",
       stamped["signal"]["kind"] == "offer" and stamped["signal"]["sdp"] == "v=0" and stamped["type"] == "signal")
 check("the original message is not mutated (the stamp is a copy)", forged["signal"]["by"] == "someone-else")
+claimed = stamp_signal(parse_message({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "byOwner": True,
+                                                                   "byName": "Pat", "byPerson": "p1"}}), "eve")
+check("*** the other server-only fields a page writes (byOwner, byName, byPerson; row 2.167) are removed ***",
+      not any(k in claimed["signal"] for k in ("byOwner", "byName", "byPerson")), str(claimed))
 check("a verb passes through untouched (nothing but signals is stamped)",
       stamp_signal({"type": "verb", "verb": "select"}, "alice") == {"type": "verb", "verb": "select"})
 check("a pong passes through untouched", stamp_signal({"type": "pong"}, "alice") == {"type": "pong"})

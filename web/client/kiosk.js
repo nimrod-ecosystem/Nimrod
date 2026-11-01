@@ -5975,6 +5975,8 @@ export async function mountKiosk(root, {
         // countdown (`dropInSeconds`, 10 s by default); everybody else waits for Answer. null = wait.
         dropIn: (from) => (dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null)
           ? dropInSecondsOf(personRow || {}) : null),
+        // row 2.167: the caller's picture, from the card the server named (the same faces "Who this screen is for" draws).
+        avatars: () => whoAvatars(),
         zIndex: LAYERS.menus + 50,
       });
     } catch (err) { console.error('kiosk: call notice', err); callNotice = null; }
