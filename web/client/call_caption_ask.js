@@ -21,6 +21,25 @@
 // (CAPTION_ASK_SHOW_MS). Gone unanswered is a no for this call: NOTHING IS SENT WITHOUT A YES. A bedside screen whose person
 // cannot press anything therefore sends nothing, and shows the box only for that long. (CLAUDE.md: a screen must never
 // enter a state only an input can leave when the person in front of it cannot give that input.)
+// *** A SWITCH REACHES IT ON A SCREEN (2026-11-01). *** Until now only a pointer could: a switch user saw a question they
+// could not answer. While the box is up IT TAKES THE WALK (`verb`): next / prev light its buttons, select presses the lit
+// one, back says "No". Argued against the other reading, its buttons as more stops after Hang up:
+//   * after Hang up, the first `next` lights Hang up and every way to the box passes over it, so one select a beat early
+//     ENDS THE CALL; and in a call view with a talk board next / prev are the board's, so "after Hang up" is not even a
+//     place a switch can get to;
+//   * taking the walk, no single press can hang up while the box is up (Hang up is still the bar's, a pointer's, "hang
+//     up" said, and Back twice: the first Back says No and the box goes). The cost: for at most CAPTION_ASK_SHOW_MS the
+//     switch is the box's, not the board's or the game's; nothing on those is lost (their own lit place is kept), and
+//     when the box goes the walk is exactly what it was.
+// NOTHING IS LIT AT FIRST, so a stray select does nothing (as the incoming-call notice and the Call panel's faces). The
+// first next OR prev lights "Yes, this call" (the notice's own "from nothing, the first either way"): the remembered
+// answers, "Always" and "Never", are never one press from nothing. BACK IS "NO" FOR THIS CALL, never remembered: the
+// notice's Back is Decline for the same reason - it commits nothing and tells the other end now, where going without an
+// answer would leave them waiting CAPTION_ASK_WAIT_MS to be told nothing. ESCAPE, with the keyboard in the box, is the
+// same "No" (and goes no further: not the screen's menu as well). Walking it NEVER HOLDS IT: the box still goes by itself
+// on time, lit or not - reaching the buttons must not turn it into a gate. The buttons are ordinary buttons in the order
+// drawn, so Tab reaches them in that order; when the box goes with the keyboard in it, the keyboard goes back to where it
+// came from rather than to nowhere. The call page (a phone) uses none of the walk; only the keyboard part is shared.
 // *** A PERSON WHO CHOSE "OFF" IS NOT ASKED. *** Their own "Send subtitles of what I say on calls" set to off (not merely
 // never chosen) answers no without showing anything. Argued: FOR asking anyway, the asker may need them and a yes for one
 // call is a different question. AGAINST, and it wins: a person (or whoever set up a screen for somebody who cannot answer)
@@ -146,10 +165,14 @@ export const ASK_ANSWER_SAYS = Object.freeze({
   none: 'No answer about subtitles of what is said there.',
 });
 
+// What a switch's Back, and Escape in the box, answer (see the header): the plain no, for this call only.
+export const ASK_BACK_MEANS = 'no';
+
 /**
  * Show a request in `host` and wait for an answer. Never blocks anything: it is a box beside the call, and it goes by
  * itself after `showMs` (then `onAnswer(null)`: no answer, nothing sent). `canRemember` false (nobody to remember them
- * by): only Yes and No. Returns { el, close() } - close() removes it without answering.
+ * by): only Yes and No. Returns { el, close(), verb(v), lit() } - close() removes it without answering; verb('next' |
+ * 'prev' | 'select' | 'back') is a switch's walk (true when the box took the verb); lit() is the lit choice or null.
  */
 export function showAskPrompt(host, {
   words, canRemember = true, onAnswer = () => {}, showMs = CAPTION_ASK_SHOW_MS,
@@ -157,7 +180,7 @@ export function showAskPrompt(host, {
   className = 'call-ask', buttonClass = '', style = '',
 } = {}) {
   const doc = host?.ownerDocument || (typeof document !== 'undefined' ? document : null);
-  if (!host || !doc || !words) return { el: null, close() {} };
+  if (!host || !doc || !words) return { el: null, close() {}, verb: () => false, lit: () => null };
   const el = doc.createElement('section');
   el.className = className;
   el.dataset.captionAsk = '';
@@ -187,9 +210,24 @@ export function showAskPrompt(host, {
   host.append(el);
   let done = false;
   let timer = null;
+  let lit = -1;                 // the switch's lit button; -1 = nothing lit (a stray select does nothing)
+  let cameFrom = null;          // where the keyboard was before it came into the box
+  const buttons = () => [...row.querySelectorAll('[data-ask-answer]')];
+  // The lit look: the same 4px ring in the theme's scan colour that Hang up and the incoming-call notice's buttons use, so
+  // the box reads as part of the same walk.
+  const paint = () => {
+    buttons().forEach((b, i) => {
+      if (i === lit) { b.dataset.lit = '1'; b.style.boxShadow = '0 0 0 4px var(--scan-ring, var(--focus, #fff3d9))'; }
+      else { delete b.dataset.lit; b.style.boxShadow = ''; }
+    });
+  };
   const close = () => {
     if (timer != null) { try { clearTimer(timer); } catch { /* gone */ } timer = null; }
+    const hadKeys = (() => { try { return el.contains(doc.activeElement); } catch { return false; } })();
     try { el.remove(); } catch { /* gone */ }
+    // The keyboard was in the box: back to where it came from, not to nowhere (a removed button leaves it on the page).
+    if (hadKeys && cameFrom && cameFrom.isConnected) { try { cameFrom.focus({ preventScroll: true }); } catch { /* gone */ } }
+    cameFrom = null;
   };
   const finish = (choice) => {
     if (done) return;
@@ -201,8 +239,41 @@ export function showAskPrompt(host, {
     const b = e.target?.closest?.('[data-ask-answer]');
     if (b && ASK_CHOICES.includes(b.dataset.askAnswer)) finish(b.dataset.askAnswer);
   });
+  el.addEventListener('focusin', (e) => {
+    const from = e.relatedTarget;
+    if (from && !el.contains(from)) cameFrom = from;
+  });
+  // Escape with the keyboard in the box: "No" for this call, and the key goes no further (not the screen's menu too).
+  el.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || done) return;
+    e.preventDefault();
+    e.stopPropagation();
+    finish(ASK_BACK_MEANS);
+  });
+  /** A switch's walk while the box is up (see the header). True when the box took the verb. */
+  function verb(v) {
+    if (done) return false;
+    const n = buttons().length;
+    if (!n) return false;
+    if (v === 'next') lit = lit < 0 ? 0 : (lit + 1) % n;
+    else if (v === 'prev') lit = lit < 0 ? 0 : (lit - 1 + n) % n;      // from nothing, "Yes, this call" either way
+    else if (v === 'select') {
+      if (lit < 0) return true;                                        // nothing lit: a stray press does nothing
+      const c = buttons()[lit]?.dataset.askAnswer;
+      if (ASK_CHOICES.includes(c)) finish(c);
+      return true;
+    } else if (v === 'back') { finish(ASK_BACK_MEANS); return true; }
+    else return false;
+    paint();
+    return true;
+  }
   timer = setTimer(() => { timer = null; finish(null); }, showMs);
-  return { el, close: () => { done = true; close(); } };
+  return {
+    el,
+    close: () => { done = true; close(); },
+    verb,
+    lit: () => (done || lit < 0 ? null : (buttons()[lit]?.dataset.askAnswer || null)),
+  };
 }
 
 // ---- THE CALL PAGE'S OWN "ASK FOR SUBTITLES OF WHAT IS SAID THERE" ----

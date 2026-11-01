@@ -55,7 +55,7 @@ import { connectDrive } from '../drive.js';
 import { createBus } from '../bus.js';
 import { createProfilesClient } from '../profile.js';
 import { mountKiosk } from '../kiosk.js';
-import { verbTopic } from '../actions.js';
+import { verbTopic, CALL_NEXT_TOPIC, CALL_PREV_TOPIC, CALL_SELECT_TOPIC, CALL_BACK_TOPIC, CALL_HANGUP_TOPIC, MODULE_VERBS } from '../actions.js';
 import '../modules/call.js';
 import { connectGameRoom } from '../game_room.js';
 import { CAPTION_ASK_SHOW_MS } from '../call_caption_ask.js';   // row 2.144 step 3
@@ -376,6 +376,86 @@ try {
       h = attach(OFF, { live: () => alive }); h.answered(realTrack); alive = false; t.hear({ ask: true });
       check('a request after the call is over: nothing', !box() && t.answers.length === 0);
       h.stop();
+
+      // ---- A SWITCH REACHES IT (2026-11-01): while it is up, the box has the walk; nothing lit at first ----
+      const says = [];
+      const btn = (c) => box()?.querySelector(`[data-ask-answer="${c}"]`);
+      made.length = 0; t = mkT(); ans = store();
+      h = attach(OFF, { answers: ans, onAsking: (on) => says.push(on) }); h.answered(realTrack);
+      check('no request: nothing to walk (the host keeps its own walk)', h.asking() === false && h.askVerb('next') === false && says.length === 0);
+      t.hear({ ask: true });
+      check('*** a request up: the host is told, and it has the walk - with NOTHING lit ***',
+        h.asking() === true && says.join() === 'true' && h.probe().askLit === null && !box().querySelector('[data-lit]'));
+      check('*** a stray select with nothing lit does nothing: no answer, nothing started, the box still up ***',
+        h.askVerb('select') === true && t.answers.length === 0 && made.length === 0 && !!box());
+      check('*** next lights "Yes, this call", ringed like every scanned thing ***', h.askVerb('next') === true && h.probe().askLit === 'yes'
+        && btn('yes')?.dataset.lit === '1' && /4px/.test(btn('yes')?.style.boxShadow || ''), btn('yes')?.style.boxShadow);
+      h.askVerb('next');
+      check('next again: "Always" - two deliberate presses from nothing, never one', h.probe().askLit === 'always' && !btn('yes')?.dataset.lit);
+      h.askVerb('next'); h.askVerb('next');
+      check('...on through No to "Never", the last', h.probe().askLit === 'never');
+      h.askVerb('next');
+      check('...and round to the first again (one switch only goes one way)', h.probe().askLit === 'yes');
+      h.askVerb('prev');
+      check('prev goes back (from the first, round to the last)', h.probe().askLit === 'never');
+      h.askVerb('prev'); h.askVerb('prev'); h.askVerb('prev');
+      check('(setup) back on "Yes, this call"', h.probe().askLit === 'yes');
+      h.askVerb('select');
+      check('*** select on "Yes, this call" answers yes - the same as pressing it: this room\'s subtitles start, nothing remembered ***',
+        t.answers.join() === 'yes' && made.length === 1 && ans.sets.length === 0 && !box(), JSON.stringify(t.answers));
+      check('*** the box goes and the host is told: its own walk is back ***', h.asking() === false && says.join() === 'true,false'
+        && h.askVerb('next') === false);
+      h.stop();
+      check('the call ends with no request up: the host is not told again', says.join() === 'true,false');
+
+      made.length = 0; t = mkT(); says.length = 0;
+      h = attach(OFF, { answers: ans, askKey: 'by:acct-di', askName: 'Di', onAsking: (on) => says.push(on) }); h.answered(realTrack); t.hear({ ask: true });
+      h.askVerb('prev');
+      check('*** prev from nothing ALSO lights "Yes, this call" - "Never" is not one press away ***', h.probe().askLit === 'yes');
+      h.askVerb('back');
+      check('*** Back is "No" for this call: answered no, nothing remembered, nothing started, the box gone ***',
+        t.answers.join() === 'no' && !('by:acct-di' in ans.m) && made.length === 0 && !box() && says.join() === 'true,false');
+      h.stop();
+
+      made.length = 0; t = mkT(); says.length = 0;
+      h = attach(OFF, { onAsking: (on) => says.push(on) }); h.answered(realTrack); t.hear({ ask: true });
+      clock.advance(CAPTION_ASK_SHOW_MS - 1000);
+      h.askVerb('next');
+      clock.advance(1000);
+      check('*** walking it never holds it: lit at the last second, it still goes by itself on time, and NOTHING is sent ***',
+        !box() && t.answers.length === 0 && made.length === 0 && h.asking() === false && says.join() === 'true,false');
+      h.stop();
+
+      // The keyboard: ordinary buttons in the order drawn (Tab reaches them so), Escape is "No", and goes no further.
+      t = mkT();
+      h = attach(OFF, { answers: store() }); h.answered(realTrack); t.hear({ ask: true });
+      const bs = [...box().querySelectorAll('[data-ask-answer]')];
+      check('*** the keyboard: four ordinary buttons, in the order drawn, none taken out of the Tab order ***',
+        bs.map((b) => b.dataset.askAnswer).join() === 'yes,always,no,never' && bs.every((b) => b.tagName === 'BUTTON' && b.tabIndex === 0 && !b.disabled));
+      const outside = document.createElement('button');
+      outside.textContent = 'elsewhere';
+      host.append(outside);
+      outside.focus();
+      let cameFrom = null;
+      box().addEventListener('focusin', (e) => { cameFrom = e.relatedTarget; });
+      bs[2].focus();
+      // A page without the window's focus moves the keyboard but may not say where from: say it, as a Tab would.
+      if (document.activeElement === bs[2] && cameFrom !== outside) bs[2].dispatchEvent(new FocusEvent('focusin', { bubbles: true, relatedTarget: outside }));
+      const focusMoves = document.activeElement === bs[2] && cameFrom === outside;
+      let leaked = 0;
+      const onWin = (e) => { if (e.key === 'Escape') leaked += 1; };
+      window.addEventListener('keydown', onWin);
+      bs[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      window.removeEventListener('keydown', onWin);
+      check('*** Escape in the box: "No" for this call, and the key goes no further (not the screen\'s menu as well) ***',
+        t.answers.join() === 'no' && !box() && leaked === 0, JSON.stringify({ a: t.answers, leaked }));
+      if (focusMoves) {
+        check('...and the keyboard goes back to where it came from, not to nowhere', document.activeElement === outside, document.activeElement?.outerHTML);
+      } else {
+        skip('the keyboard going back to where it came from', 'focus does not move (or says where from) in this browser');
+      }
+      outside.remove();
+      h.stop();
     }
     host.innerHTML = '';
     host.style.cssText = '';
@@ -526,6 +606,89 @@ try {
     check('*** the call ends: the panel\'s subtitles go with it ***', inst.impl.__subtitles() === null && !host.querySelector('.subs')
       && capCbs.size === 0, JSON.stringify(inst.impl.__subtitles()));
     inst.destroy();
+    host.style.cssText = '';
+  }
+
+  // =====================================================================================
+  section('*** row 2.144 (2026-11-01): a SWITCH reaches the other end\'s request for subtitles on a Call panel ***');
+  {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    host.style.cssText = 'position:relative;width:480px;height:360px';
+    let realTrack = null;
+    try { const ac = new AudioContext(); realTrack = ac.createMediaStreamDestination().stream.getAudioTracks()[0]; } catch { realTrack = null; }
+    check('the panel\'s verbs: Back has its own topic (it hangs up unless a request is up)', MODULE_VERBS.call.back === CALL_BACK_TOPIC
+      && MODULE_VERBS.call.next === CALL_NEXT_TOPIC && MODULE_VERBS.call.select === CALL_SELECT_TOPIC);
+    if (!realTrack) {
+      skip('a switch on the request in a Call panel (answering needs a microphone track)', 'no audio track in this browser');
+    } else {
+      // A Call panel holding an answered call, with the host's ctx.callSubtitles as kiosk.js hands it (the shared helper).
+      const panel = () => {
+        const t = { answers: [], hangups: [], askCbs: new Set(),
+          claim: async () => true, answer: async () => true, onIncoming: () => () => {}, onEnded: () => () => {},
+          hangup(why) { t.hangups.push(why); }, remote: () => null, onRemote: () => () => {}, onCaptions: () => () => {},
+          sendCaption: () => true, sending: () => [], clipPlaying: () => false, askCaptions: () => true,
+          answerCaptions: (a) => { t.answers.push(a); return true; },
+          onCaptionAsks: (cb) => { t.askCbs.add(cb); return () => t.askCbs.delete(cb); },
+          hear: (m) => { for (const f of [...t.askCbs]) f(m); } };
+        const callSubtitles = (o) => attachCallSubtitles({ ...o,
+          plan: { captions: 'off', theirCaptions: 'theirs', ownCaptions: 'off', ownWhere: 'here', decided: { in: 'screen', out: 'screen' } },
+          makeCaptions: () => ({ start() {}, stop() {}, status: () => ({ state: 'listening' }) }) });
+        const bus = createBus();
+        const inst = mountModule('call', { mount: host, bus, instanceId: 'panel', state: { get: () => ({}), set() {}, subscribe: () => () => {} },
+          cameraOwner: { acquireTrack: async () => track('cam', 'video'), release() {} },
+          micOwner: { acquire: async () => new MediaStream([realTrack]), release() {}, status: () => ({}) },
+          callTransport: t, audio: null, output: null, callSubtitles });
+        inst.init();
+        return { t, bus, inst, box: () => host.querySelector('[data-caption-ask]'), lit: () => inst.impl.__subtitles()?.askLit || null,
+          phase: () => inst.impl.__probe().phase };
+      };
+      let p = panel();
+      await p.inst.impl.takeCall({ name: 'Ann', video: false }, { camera: false, theirVideo: false });
+      check('(setup) a call on the panel', p.phase() === 'connected');
+      p.bus.publish(CALL_NEXT_TOPIC);
+      check('during a call with no request, next lights nothing (a call is not a thing to browse - unchanged)', p.inst.impl.__lit() === null && !p.box());
+      p.t.hear({ ask: true });
+      check('(setup) the other end asks: the request is up in the panel', !!p.box() && host.contains(p.box()));
+      p.bus.publish(CALL_SELECT_TOPIC);
+      check('*** a stray select with nothing lit does nothing: no answer, the box still up, the call on ***',
+        p.t.answers.length === 0 && !!p.box() && p.phase() === 'connected' && p.lit() === null);
+      p.bus.publish(CALL_NEXT_TOPIC);
+      check('*** a switch\'s next reaches the box: "Yes, this call" lit ***', p.lit() === 'yes'
+        && p.box().querySelector('[data-ask-answer="yes"]')?.dataset.lit === '1');
+      p.bus.publish(CALL_NEXT_TOPIC); p.bus.publish(CALL_PREV_TOPIC);
+      check('...next / prev walk its buttons', p.lit() === 'yes');
+      p.bus.publish(CALL_SELECT_TOPIC);
+      await ticks();
+      check('*** select on "Yes, this call" answers yes; the box goes; the call goes on ***',
+        p.t.answers.join() === 'yes' && !p.box() && p.phase() === 'connected' && p.t.hangups.length === 0, JSON.stringify(p.t.answers));
+      p.bus.publish(CALL_NEXT_TOPIC); p.bus.publish(CALL_SELECT_TOPIC);
+      check('*** the walk is back to what it was: next and select reach nothing during the call, nothing answered twice ***',
+        p.inst.impl.__lit() === null && p.t.answers.join() === 'yes' && p.phase() === 'connected');
+      p.bus.publish(CALL_BACK_TOPIC);
+      check('...and Back hangs up, as always', p.phase() === 'idle' && p.t.hangups.join() === 'hangup', JSON.stringify(p.t.hangups));
+      p.inst.destroy();
+
+      p = panel();
+      await p.inst.impl.takeCall({ name: 'Ann', video: false }, { camera: false, theirVideo: false });
+      p.t.hear({ ask: true });
+      p.bus.publish(CALL_BACK_TOPIC);
+      await ticks();
+      check('*** Back while the request is up: its "No" for this call - the call is NOT hung up ***',
+        p.t.answers.join() === 'no' && !p.box() && p.phase() === 'connected' && p.t.hangups.length === 0, JSON.stringify({ a: p.t.answers, h: p.t.hangups }));
+      p.bus.publish(CALL_BACK_TOPIC);
+      check('...the next Back hangs up (Back, Back: the nearer thing first)', p.phase() === 'idle' && p.t.hangups.join() === 'hangup');
+      p.inst.destroy();
+
+      p = panel();
+      await p.inst.impl.takeCall({ name: 'Ann', video: false }, { camera: false, theirVideo: false });
+      p.t.hear({ ask: true });
+      p.bus.publish(CALL_HANGUP_TOPIC);
+      check('*** the bar\'s Hang up (or "hang up" said) with the request up still hangs up at once ***',
+        p.phase() === 'idle' && p.t.hangups.join() === 'hangup' && !p.box() && p.t.answers.length === 0);
+      p.inst.destroy();
+    }
+    host.innerHTML = '';
     host.style.cssText = '';
   }
 
@@ -846,6 +1009,57 @@ try {
       await settled(() => !k.callView() && !k.callScanHeld(), 4000) && !root.querySelector('[data-call-board]') && k.primaryType() === 'photos');
     check('*** LIVE: the call\'s game goes with the call ***', !root.querySelector('[data-call-game]') && k.callGame() === null);
     check('LIVE: the microphone is let go', await settled(() => callMedia(/^call:/).mic.length === 0, 4000), JSON.stringify(callMedia(/^call:/)));
+
+    // *** row 2.144 (2026-11-01): A SWITCH ANSWERS THE OTHER END'S REQUEST FOR SUBTITLES IN THE CALL VIEW. ***
+    // "Send subtitles of what is said here" back to off, so the screen is not already sending and the request shows.
+    k.menu.open();
+    try { k.menu.showTab?.('screen'); } catch { /* no tabs */ }
+    for (let i = 0; i < 3 && row(CALL_OWN_CAPTIONS_KEY)?.value !== 'off'; i++) {
+      k.menu.focusRow(`set:${CALL_OWN_CAPTIONS_KEY}`); k.menu.select();
+      await settled(() => row(CALL_OWN_CAPTIONS_KEY)?.value === 'off', 1500);
+    }
+    check('(setup) "Send subtitles of what is said here" is off again', row(CALL_OWN_CAPTIONS_KEY)?.value === 'off', row(CALL_OWN_CAPTIONS_KEY)?.value);
+    k.menu.close();
+    try { d.destroy(); } catch { /* gone */ }
+    d = createCallTransport({ link: ph, role: 'driver' });
+    const dEnded2 = [], asks2 = [];
+    d.onEnded((r, x) => dEnded2.push((x && x.why) || r));
+    d.onCaptionAsks((m) => asks2.push(m));
+    await d.call({ tracks: media ? media.getTracks() : [], from: { name: 'Tess', video: true } });
+    check('(setup) a second call rings', await settled(() => k.callNotice().showing(), 9000));
+    kbus.publish('call/answer');
+    check('(setup) answered into the call view, the talk board beside it', await settled(() => !!view()?.querySelector('[data-call-board] .ab-card'), 15000)
+      && await settled(() => d.__probe().words === 'open', 8000));
+    const askBox = () => view()?.querySelector('[data-caption-ask]');
+    const askBtn = (c) => askBox()?.querySelector(`[data-ask-answer="${c}"]`);
+    const cvNow2 = () => k.callView() || {};
+    check('*** LIVE: the caller asks; the screen (not sending, nothing remembered) shows the request in the call view ***',
+      d.askCaptions() === true && await settled(() => !!askBox(), 4000) && cvNow2().asking === true,
+      JSON.stringify({ asks: asks2, asking: cvNow2().asking }));
+    let bSel = 0, bNext = 0;
+    const offAsk = [kbus.subscribe('board/select#call:board', () => { bSel += 1; }), kbus.subscribe('board/next#call:board', () => { bNext += 1; })];
+    check('...nothing lit in it at first, and nothing else looks lit', cvNow2().askLit === null && !askBox().querySelector('[data-lit]')
+      && cvNow2().lit === -1 && !view().querySelector('[data-call-hangup]')?.dataset.lit);
+    kbus.publish(verbTopic('select'));
+    await sleep(150);
+    check('*** LIVE: a stray select with nothing lit does nothing: no answer, no board word, no hang-up ***',
+      !asks2.some((m) => m.answer) && bSel === 0 && dEnded2.length === 0 && !!askBox() && !!k.callView(), JSON.stringify({ asks2, bSel, dEnded2 }));
+    kbus.publish(verbTopic('next'));
+    await sleep(60);
+    check('*** LIVE: the switch\'s next reaches the request, not the board: "Yes, this call" lit ***',
+      cvNow2().askLit === 'yes' && askBtn('yes')?.dataset.lit === '1' && bNext === 0, JSON.stringify({ lit: cvNow2().askLit, bNext }));
+    kbus.publish(verbTopic('select'));
+    check('*** LIVE: select on "Yes, this call": the caller hears yes, and the request goes ***',
+      await settled(() => asks2.some((m) => m.answer === 'yes'), 4000) && !askBox() && cvNow2().asking === false && dEnded2.length === 0,
+      JSON.stringify(asks2));
+    kbus.publish(verbTopic('select'));
+    await sleep(120);
+    check('*** LIVE: the walk is back to what it was: a select is the board\'s again, and the call goes on ***',
+      bSel === 1 && dEnded2.length === 0 && !!k.callView(), JSON.stringify({ bSel, dEnded2 }));
+    offAsk.forEach((off) => off?.());
+    kbus.publish(verbTopic('back'));
+    check('(cleanup) Back hangs up the second call', await settled(() => dEnded2.at(-1) === 'hangup', 6000) && await settled(() => !k.callView(), 4000),
+      JSON.stringify(dEnded2));
   } catch (e) {
     check('live section ran', false, String((e && e.stack) || e));
   } finally {

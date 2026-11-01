@@ -5913,7 +5913,7 @@ export async function mountKiosk(root, {
     } catch { /* no router yet */ }
   }
   // While the call view shows: one stop, Hang up. Nothing is lit at first (a stray select does nothing);
-  // `back` hangs up, as it does on a Call panel (actions.js `call: { back: 'call/hangup' }`).
+  // `back` hangs up, as it does on a Call panel (actions.js `call: { back: 'call/back' }`, which hangs up there too).
   // call loadouts (2026-10-09): WITH A TALK BOARD in the call view, next / prev / select are the BOARD's (its own
   // scan and select, addressed to that one board - never a Board panel under the view), and `back` still hangs up.
   // Argued: the board is what a switch user is there to press during a call, and Hang up stays reachable by `back`,
@@ -5948,7 +5948,16 @@ export async function mountKiosk(root, {
   //     lit look, as before. (4px, the theme's scan-ring colour: the same width Hang up's lit look already uses, so the
   //     two stops look like one lap. Drawn inside the half - outline-offset -4px - because the half clips its edges.)
   // Without a game nothing here changes: `focus-next` / `focus-prev` are next / prev, as they always were in a call view.
+  //
+  // *** THE OTHER END ASKING FOR SUBTITLES (row 2.144, 2026-11-01): WHILE ITS BOX IS UP, IT HAS THE WALK. ***
+  // Before this a switch could not reach the box's buttons at all (it went by itself: a no). Now every verb here goes to
+  // the box while it is up (call_caption_ask.js argues it, against its buttons as more stops after Hang up): next / prev
+  // (and focus-next / focus-prev) light its buttons, nothing lit at first, select presses the lit one, back says "No" for
+  // this call. So no single press can end the call while it is asked, whatever was lit, board, game or Hang up.
+  // Hang up's (or the game's) lit look is put away meanwhile, so only one thing looks lit; `cv.at` is not touched, so when
+  // the box goes - answered, or by itself after its 30 s, which walking it never holds - the lap is exactly what it was.
   const callLap = (cv) => (cv?.game ? ['game', 'hangup'] : ['hangup']);
+  const callAsking = (cv) => { try { return !!cv?.subtitles?.asking?.(); } catch { return false; } };
   function callGameVerb(cv, v, meta) {
     const t = verbTarget(cv.game.type, v);
     if (!t) return false;
@@ -5959,6 +5968,11 @@ export async function mountKiosk(root, {
   function callViewVerb(raw, meta) {
     const cv = callView;
     if (!cv) return;
+    if (callAsking(cv)) {
+      cv.subtitles.askVerb(raw === 'focus-next' ? 'next' : raw === 'focus-prev' ? 'prev' : raw);
+      paintCallView(cv);
+      return;
+    }
     if (cv.game) {
       const lap = callLap(cv);
       if (raw === 'focus-next' || raw === 'focus-prev') {
@@ -5991,12 +6005,13 @@ export async function mountKiosk(root, {
   }
   function paintCallView(cv) {
     if (!cv?.hang) return;
-    const on = cv.at === 'hangup';
+    const asking = callAsking(cv);      // the subtitles request has the walk: its lit button is the only lit thing
+    const on = !asking && cv.at === 'hangup';
     if (on) cv.hang.dataset.lit = '1'; else delete cv.hang.dataset.lit;
     cv.hang.style.boxShadow = on ? '0 0 0 4px var(--scan-ring, var(--focus))' : '';
     const slot = cv.game?.slot;
     if (slot) {
-      const ring = cv.at === 'game' && callLap(cv).length > 1;
+      const ring = !asking && cv.at === 'game' && callLap(cv).length > 1;
       if (ring) slot.dataset.lit = '1'; else delete slot.dataset.lit;
       slot.style.outline = ring ? '4px solid var(--scan-ring, var(--focus))' : '';
       slot.style.outlineOffset = ring ? '-4px' : '';
@@ -6137,7 +6152,9 @@ export async function mountKiosk(root, {
     if (cv.boardSlot) mountCallBoard(cv).catch((err) => console.error('kiosk: call board', err));
     // row 2.144: the call's subtitles (callSubtitlesFor), in the call's half. Incoming ones start now; outgoing ones
     // once the call is answered (only then is there a microphone track going into it).
-    cv.subtitles = callSubtitlesFor({ host: area, transport: callTransportNow(), plan, from, live: () => callView === cv });
+    cv.subtitles = callSubtitlesFor({ host: area, transport: callTransportNow(), plan, from, live: () => callView === cv,
+      // The other end's request for subtitles takes the switch while it is up (callViewVerb): the lit look follows it.
+      onAsking: () => { if (callView === cv) paintCallView(cv); } });
     let took = false;
     try { took = await cv.inst.impl.takeCall(from, { ringStartedAt, camera: plan.camera, theirVideo: plan.theirVideo }); }
     catch (err) { console.error('kiosk: answering in the call view', err); took = false; }
@@ -6158,11 +6175,11 @@ export async function mountKiosk(root, {
   // Step 3 (2026-11-01, call_caption_ask.js): asking the other end, and answering its asking. Who they are (the account the
   // server stamped, else their card), the answers this screen's person said "Always" / "Never" to (their own row; none on
   // a screen with no person row - then only Yes and No are offered), and whether a speech program is known to be missing.
-  function callSubtitlesFor({ host, transport, plan, from, live }) {
+  function callSubtitlesFor({ host, transport, plan, from, live, onAsking = null }) {
     try {
       const askName = (from && typeof from.name === 'string' && from.name.trim()) || '';
       return attachCallSubtitles({
-        transport, host, plan, live,
+        transport, host, plan, live, onAsking,
         row: personRow || settings.get() || {},
         who: () => askName || 'On the call',
         recognizer: callCaptionRecognizer, flashLimit: flashLimitNow,
@@ -9397,9 +9414,11 @@ export async function mountKiosk(root, {
     // the call it answered while that is hosted over the panels (else null), and whether either has the scan.
     callNotice: () => callNotice,
     // (`lit`: 0 while Hang up is lit, else -1, as before; `stop`: the lit stop of its switch lap, and `lap` the stops -
-    // the game and Hang up while a game is open in it, else Hang up alone.)
-    callView: () => (callView ? { el: callView.box, lit: callView.at === 'hangup' ? 0 : -1, stop: callView.at,
-      lap: callLap(callView), controls: callView.inst?.impl?.controls?.() || null } : null),
+    // the game and Hang up while a game is open in it, else Hang up alone. `asking`: a request for subtitles is up and has
+    // the walk; `askLit`: its lit button, or null.)
+    callView: () => (callView ? { el: callView.box, lit: callView.at === 'hangup' && !callAsking(callView) ? 0 : -1, stop: callView.at,
+      lap: callLap(callView), controls: callView.inst?.impl?.controls?.() || null,
+      asking: callAsking(callView), askLit: callView.subtitles?.probe?.()?.askLit || null } : null),
     // "play this game together" (2026-10-12): the game opened in the call view for an ask, if any (the suites).
     callGame: () => (callView?.game ? { el: callView.game.slot, inst: callView.game.inst } : null),
     callScanHeld: () => callScanHeld,

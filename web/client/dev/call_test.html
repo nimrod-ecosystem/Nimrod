@@ -1383,9 +1383,11 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         dialList({ own: many }).length === DIAL_MAX_DEFAULT && dialList({ own: many, max: 4 }).length === 4
         && dialList({ own: many, max: 0 }).length === 11 && JSON.stringify(DIAL_MAX_CHOICES) === '[4,8,12,0]');
       check('nothing to read: nobody', dialList({}).length === 0 && dialList({ own: null, shared: null }).length === 0);
-      check('a switch walks the panel: next / prev / select, and back hangs up',
+      // row 2.144 (2026-11-01): Back has its own topic, so the panel can tell it from the bar's Hang up (it hangs up all the
+      // same - below - except while a request for subtitles is up, when it is that box's "No"; call_loadouts_test).
+      check('a switch walks the panel: next / prev / select, and back (its own topic) hangs up',
         MODULE_VERBS.call.next === CALL_NEXT_TOPIC && MODULE_VERBS.call.prev === CALL_PREV_TOPIC
-        && MODULE_VERBS.call.select === CALL_SELECT_TOPIC && MODULE_VERBS.call.back === 'call/hangup', JSON.stringify(MODULE_VERBS.call));
+        && MODULE_VERBS.call.select === CALL_SELECT_TOPIC && MODULE_VERBS.call.back === 'call/back', JSON.stringify(MODULE_VERBS.call));
     }
 
     // The host's half, faked: the screen's people, and `dialOut` - a caller's socket and transport of its own.
@@ -1504,6 +1506,20 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       check('...no second "bye" to a far end that already said no; the socket closes', h.log.hangups.length === 0 && h.log.closed === 1, JSON.stringify(h.log));
       r.clock.fireTimers();
       check('the words go after a while', r.impl.__endText() === '');
+      r.inst.destroy();
+    }
+    {
+      // row 2.144 (2026-11-01): a switch's Back is `call/back` now; with no request for subtitles up it hangs up as before.
+      const h = dialHost();
+      const r = rig({}, { extraCtx: h.ctx });
+      await sleep(20);
+      await r.impl.__dial({ id: 'p-dad', reach: 'p-dad', name: 'Dad' });
+      h.tx().cbs.answered?.({ session: 's', by: 'x' });
+      await sleep(10);
+      r.bus.publish('call/back');
+      await sleep(10);
+      check('*** a switch\'s Back (call/back) on a call hangs up, as Back always has ***',
+        r.impl.__probe().phase === 'idle' && JSON.stringify(h.log.hangups) === '["hangup"]', JSON.stringify(h.log.hangups));
       r.inst.destroy();
     }
     {

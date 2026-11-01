@@ -107,6 +107,11 @@ export const CALL_SELECT_TOPIC = 'call/select';
 export const CALL_NEXT_TOPIC = 'call/next';
 export const CALL_PREV_TOPIC = 'call/prev';
 export const CALL_OUTGOING_TOPIC = 'call/outgoing';
+// A SWITCH'S BACK ON THE CALL PANEL (row 2.144, 2026-11-01): its own topic, not `call/hangup`, because the panel must tell
+// a switch's Back from the bar's Hang up, a spoken "hang up" or a menu row, which all publish `call/hangup` and must
+// always hang up. It hangs up exactly as before - except while the other end's request for subtitles is up on the panel,
+// when Back is that box's "No" (call_caption_ask.js argues it: no single press ends a call while it is asked).
+export const CALL_BACK_TOPIC = 'call/back';
 
 export const SYSTEM_TOPICS = Object.freeze({
   fullscreen: 'system/fullscreen',
@@ -639,7 +644,7 @@ export const MODULE_VERBS = {
   // returns the panel to its own start screen; it is never read as a press and never reaches
   // the trial record. It is deliberately `back` rather than a tenth verb in the vocabulary:
   // `back` is already "Back or cancel", it is already bindable to whatever somebody likes,
-  // and `call` already uses it for exactly this shape (`back: 'call/hangup'` — leave the
+  // and `call` already uses it for exactly this shape (`back: 'call/back'`, its hang-up — leave the
   // thing you are in). A tenth verb would grow the binder for every module in the product to
   // give this one a word it already had.
   pressgame:     { select: 'pressgame/press', back: 'pressgame/exit' },
@@ -647,7 +652,9 @@ export const MODULE_VERBS = {
   // `next` / `prev` walk them and `select` calls the lit one; while a call rings `select` answers, as it always
   // did; while one is placed, the one stop is Hang up. `back` hangs up, as always. (Before, `next` had no meaning
   // here - a call is not a thing to browse - and it still does nothing during one.)
-  call:          { next: 'call/next', prev: 'call/prev', select: 'call/select', back: 'call/hangup' },
+  // Row 2.144 (2026-11-01): while the other end's request for subtitles is up on the panel, next / prev / select walk
+  // ITS buttons and `back` is its "No" - so `back` has its own topic (CALL_BACK_TOPIC), which hangs up otherwise.
+  call:          { next: 'call/next', prev: 'call/prev', select: 'call/select', back: 'call/back' },
   counter:       { select: { topic: 'counter/delta', payload: 1 },
                    up:     { topic: 'counter/delta', payload: 1 },
                    down:   { topic: 'counter/delta', payload: -1 } },

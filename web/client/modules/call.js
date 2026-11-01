@@ -97,7 +97,7 @@ import { registerModule } from '../module.js';
 import { connectionsFrom } from '../people_page.js';
 import { mayCall } from './profile.js';
 import { CALLER_GIVE_UP_MS, CONNECT_MS, PRESENCE_MS, endText } from '../call_page.js';
-import { CALL_SELECT_TOPIC, CALL_NEXT_TOPIC, CALL_PREV_TOPIC, CALL_OUTGOING_TOPIC } from '../actions.js';
+import { CALL_SELECT_TOPIC, CALL_NEXT_TOPIC, CALL_PREV_TOPIC, CALL_OUTGOING_TOPIC, CALL_BACK_TOPIC } from '../actions.js';
 import { CALL_BLOCKED_SHORT } from '../private_network.js';   // 2026-10-26 (note CV): what fixes it, in words
 import { MUSIC_GROUP } from '../audio_bus.js';
 import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
@@ -403,6 +403,13 @@ registerModule(
       const h = subs; subs = null;
       try { h?.stop?.(); } catch { /* gone */ }
     }
+    // THE OTHER END ASKING FOR SUBTITLES (row 2.144, 2026-11-01; call_caption_ask.js argues it): while its box is up on
+    // this panel, the switch is the box's - next / prev light its buttons (nothing lit at first), select presses the lit
+    // one, `back` (CALL_BACK_TOPIC) is its "No". The panel's own walk is not touched (during a call it has no stops), so
+    // when the box goes, answered or by itself, everything is as it was. `call/hangup` (the bar, "hang up" said) still
+    // hangs up at once: only a switch's Back changed meaning, and only while the box is up.
+    const asking = () => { try { return !!subs?.asking?.(); } catch { return false; } };
+    const askVerb = (v) => { try { return !!subs?.askVerb?.(v); } catch { return false; } };
 
     const AUDIO_ID = `call:${ctx.instanceId || 'call'}`;
     const CAM_ID = `call:${ctx.instanceId || 'call'}`;
@@ -550,6 +557,7 @@ registerModule(
       if (lit >= 0) { try { all[lit].scrollIntoView?.({ block: 'nearest' }); } catch { /* not in a page */ } }
     }
     function stepLit(dir) {
+      if (asking()) return askVerb(dir > 0 ? 'next' : 'prev');           // the request for subtitles has the walk
       if (phase === 'ringing' || phase === 'connected') return false;     // a call is not a thing to browse
       const n = stops().length;
       if (!n) { lit = -1; return false; }
@@ -558,6 +566,7 @@ registerModule(
       return true;
     }
     function pressLit() {
+      if (asking()) return askVerb('select');                              // its lit button, or nothing when none is lit
       if (phase === 'ringing') { answer(); return true; }                  // what `select` here has always done
       const b = lit >= 0 ? stops()[lit] : null;
       if (!b) return false;                                                // nothing lit: a stray press does nothing
@@ -1625,6 +1634,8 @@ registerModule(
         offs.push(bus.subscribe(CALL_NEXT_TOPIC, () => { stepLit(1); }));
         offs.push(bus.subscribe(CALL_PREV_TOPIC, () => { stepLit(-1); }));
         offs.push(bus.subscribe(CALL_SELECT_TOPIC, () => { pressLit(); }));
+        // A switch's Back: hang up, as always - or, while the other end's request for subtitles is up, its "No".
+        offs.push(bus.subscribe(CALL_BACK_TOPIC, () => { if (asking()) askVerb('back'); else end('hangup'); }));
         lastDialKey = `${cfg.dialContacts !== false}|${dialMaxNow()}`;
         loadContacts().catch((err) => console.error('call: contacts', err));
         // A live call's controls (the bar, the menu, a switch, a spoken "mute my mic").

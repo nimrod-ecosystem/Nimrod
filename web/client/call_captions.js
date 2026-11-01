@@ -134,12 +134,16 @@ export function createCallCaptions({
 //   `askKey` / `askName`: who the other end is (call_caption_ask.js askKeyOf) and what to call them. `answers`:
 //   `{ get(), set(map) }` over the remembered answers (this end's person's row), or null (then only Yes and No).
 //   `able()`: false when this computer is known to have no speech program (nothing could be made).
+//   A SWITCH REACHES THE BOX (2026-11-01, call_caption_ask.js argues it): while it is up `asking()` is true and the host
+//   hands its walk to `askVerb(v)` (next / prev / select / back) instead of its own; `onAsking(on)` says when the box comes
+//   and goes, so the host can put its own lit look away meanwhile and back after. The host's own walk is never changed.
 export function attachCallSubtitles({
   transport = null, host = null, plan = {}, row = {}, who = () => null, live = () => true,
   recognizer = undefined, flashLimit = undefined,
   makeSubtitles = createSubtitles, makeCaptions = createCallCaptions,
   askKey = '', askName = '', answers = null, able = () => true,
   setTimer = undefined, clearTimer = undefined, askShowMs = CAPTION_ASK_SHOW_MS,
+  onAsking = null,
 } = {}) {
   let subs = null;
   let captions = null;           // incoming, made here
@@ -155,6 +159,7 @@ export function attachCallSubtitles({
   const ableNow = () => { try { return able() !== false; } catch { return true; } };
   const timers = { ...(setTimer ? { setTimer } : {}), ...(clearTimer ? { clearTimer } : {}) };
   const rec = recognizer ? { recognizer } : {};
+  const tellAsking = (on) => { if (typeof onAsking === 'function') { try { onAsking(on); } catch (err) { console.error('call subtitles: asking', err); } } };
 
   function box() {
     if (subs || !host) return subs;
@@ -263,6 +268,7 @@ export function attachCallSubtitles({
         + 'box-shadow:0 2px 12px rgba(0,0,0,.25);font-size:clamp(15px,1.6vw,20px);line-height:1.35',
       onAnswer: (choice) => {
         prompt = null;
+        tellAsking(false);               // the host's own walk is back, as it was
         if (!ok()) return;
         const { answer, remember } = choiceMeans(choice);
         if (remember && answers && askKey) {
@@ -272,6 +278,8 @@ export function attachCallSubtitles({
         if (answer) reply(answer);       // gone unanswered: nothing is sent, and nothing is said back
       },
     });
+    if (prompt?.el) tellAsking(true);
+    else prompt = null;
   }
   try {
     offs.push(transport?.onCaptionAsks?.((m) => {
@@ -292,16 +300,22 @@ export function attachCallSubtitles({
     if (stopped) return;
     stopped = true;
     offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
+    const wasAsking = !!prompt;
     try { prompt?.close?.(); } catch { /* gone */ }
     try { captions?.stop(); } catch { /* gone */ }
     try { own?.stop(); } catch { /* gone */ }
     try { subs?.destroy?.(); } catch { /* gone */ }
     captions = null; own = null; subs = null; prompt = null; micTrack = null;
+    if (wasAsking) tellAsking(false);
   }
 
   return {
     answered, startOwn, askOther, stop, plan,
+    // A switch's walk while a request is up (see the header): whether it is up, and one verb for it.
+    asking: () => !!prompt,
+    askVerb: (v) => { try { return !!prompt?.verb?.(v); } catch (err) { console.error('call subtitles: a switch on the request', err); return false; } },
     // For the suites and the host: what is running now.
-    probe: () => ({ box: !!subs, incoming: !!captions, own: !!own, stopped, asked, answered: answeredWith, prompt: !!prompt }),
+    probe: () => ({ box: !!subs, incoming: !!captions, own: !!own, stopped, asked, answered: answeredWith, prompt: !!prompt,
+      askLit: prompt?.lit?.() || null }),
   };
 }
