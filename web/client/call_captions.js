@@ -24,6 +24,9 @@
 
 import { rankedRecognizer, enginePlanFrom } from './speech_engines.js';
 import { createSubtitles } from './subtitles.js';   // the caption box (attachCallSubtitles, below)
+// row 2.144 step 3: asking the other end for subtitles of its own voice, and answering its asking.
+import { answerFor, screenShouldAsk, askWords, showAskPrompt, choiceMeans, rememberedFor, withRemembered,
+  CAPTION_ASK_SHOW_MS } from './call_caption_ask.js';
 
 // The plan for the call's ear, from the screen's (or person's) speech row. Pure.
 //   mode 'here': local passes only (remote passes are dropped, and said in `skipped`).
@@ -120,18 +123,37 @@ export function createCallCaptions({
 // The caption box (subtitles.js) is made inside `host` on the first line to show, placed against `host` rather than the
 // window, and goes with `stop()`. `plan` is call_loadouts.js `callSubtitlesPlan` (the person's choice, else the screen's).
 // `live()`: false once the call this belongs to is over (anything still arriving does nothing).
+//
+// ASKING AND BEING ASKED (row 2.144 step 3, 2026-11-01; call_caption_ask.js argues all of it):
+//   ASKS    once the call is answered (`answered`), when this end wants subtitles of the other person and prefers theirs
+//           (screenShouldAsk). Whatever the answer, or none, its own (if any) keep going until theirs actually arrive.
+//   ASKED   the other end asks for subtitles of what is said here: already sending -> yes; cannot (no speech program
+//           known here, no microphone in the call) -> cannot; its person chose off, or said "Never" to this asker -> no;
+//           said "Always" -> yes; otherwise a box in `host` asks, and goes by itself (nothing is sent without a yes).
+//           A yes starts this end's own subtitles (as OUTGOING above) where the plan says they are worked out (`ownWhere`).
+//   `askKey` / `askName`: who the other end is (call_caption_ask.js askKeyOf) and what to call them. `answers`:
+//   `{ get(), set(map) }` over the remembered answers (this end's person's row), or null (then only Yes and No).
+//   `able()`: false when this computer is known to have no speech program (nothing could be made).
 export function attachCallSubtitles({
   transport = null, host = null, plan = {}, row = {}, who = () => null, live = () => true,
   recognizer = undefined, flashLimit = undefined,
   makeSubtitles = createSubtitles, makeCaptions = createCallCaptions,
+  askKey = '', askName = '', answers = null, able = () => true,
+  setTimer = undefined, clearTimer = undefined, askShowMs = CAPTION_ASK_SHOW_MS,
 } = {}) {
   let subs = null;
   let captions = null;           // incoming, made here
   let own = null;                // outgoing, made here
+  let micTrack = null;           // the microphone track the call was answered with (`answered`)
+  let asked = null;              // our asking: null (not asked) | 'sent' | the other end's answer
+  let prompt = null;             // their asking, while its box is up
+  let answeredWith = null;       // ...and what we said ('yes' | 'no' | 'cannot'), said again if they ask again this call
   let stopped = false;
   const offs = [];
   const ok = () => { if (stopped) return false; try { return live() !== false; } catch { return false; } };
   const name = () => { try { return who() || 'On the call'; } catch { return 'On the call'; } };
+  const ableNow = () => { try { return able() !== false; } catch { return true; } };
+  const timers = { ...(setTimer ? { setTimer } : {}), ...(clearTimer ? { clearTimer } : {}) };
   const rec = recognizer ? { recognizer } : {};
 
   function box() {
@@ -178,11 +200,18 @@ export function attachCallSubtitles({
    * text already. True when it started. NOT YET: a microphone changed mid-call is not followed.
    */
   function startOwn(track = null) {
-    if (!ok() || own || !plan.ownCaptions || plan.ownCaptions === 'off') return false;
+    if (track) micTrack = track;
+    if (!plan.ownCaptions || plan.ownCaptions === 'off') return false;
+    return startOwnAs(plan.ownCaptions, track);
+  }
+  const ownTrack = (track = null) => track || micTrack
+    || (transport?.sending?.() || []).find((x) => x && x.kind === 'audio') || null;
+  function startOwnAs(mode, track = null) {
+    if (!ok() || own) return false;
     try {
-      const t = track || (transport?.sending?.() || []).find((x) => x && x.kind === 'audio');
+      const t = ownTrack(track);
       if (!t || typeof MediaStream === 'undefined') return false;
-      own = makeCaptions({ row, mode: plan.ownCaptions, ...rec, sink: { caption: (c) => {
+      own = makeCaptions({ row, mode, ...rec, sink: { caption: (c) => {
         if (!ok() || !c || !c.text) return;
         if (transport?.clipPlaying?.()) return;
         try { transport?.sendCaption?.({ id: c.id, text: c.text, final: !!c.final }); } catch (err) { console.error('call subtitles: own', err); }
@@ -192,19 +221,87 @@ export function attachCallSubtitles({
     } catch (err) { console.error('call subtitles: own', err); own = null; return false; }
   }
 
+  // ---- ASKING THE OTHER END, AND ANSWERING ITS ASKING (row 2.144 step 3; see the header) ----
+  const ownWhere = plan.ownWhere === 'any' ? 'any' : 'here';
+  function askOther() {
+    if (!ok() || asked !== null) return false;
+    let oursCan = false;
+    try { oursCan = !!captions && ableNow() && captions.status?.()?.state !== 'no-recogniser'; } catch { oursCan = false; }
+    if (!screenShouldAsk(plan, oursCan)) return false;
+    let sent = false;
+    try { sent = !!transport?.askCaptions?.(); } catch (err) { console.error('call subtitles: asking', err); }
+    if (sent) asked = 'sent';
+    return sent;
+  }
+  function reply(answer) {
+    let a = answer;
+    if (a === 'yes' && !own && !startOwnAs(ownWhere)) a = 'cannot';
+    answeredWith = a;
+    try { transport?.answerCaptions?.(a); } catch (err) { console.error('call subtitles: answering', err); }
+  }
+  function heardAsk() {
+    if (!ok() || prompt) return;
+    if (answeredWith) {               // asked again this call (a reconnect): the same answer, nothing new started
+      try { transport?.answerCaptions?.(answeredWith); } catch (err) { console.error('call subtitles: answering', err); }
+      return;
+    }
+    let canMake = false;
+    try { canMake = !!ownTrack() && ableNow() && callCaptionPlan(row, ownWhere).passes.length > 0; } catch { canMake = false; }
+    let remembered = null;
+    try { remembered = rememberedFor(answers?.get?.(), askKey); } catch { remembered = null; }
+    const d = answerFor({ running: !!own, able: canMake, remembered,
+      chosenOff: plan.decided?.out === 'person' && plan.ownCaptions === 'off' });
+    if (d !== 'ask') { reply(d); return; }
+    if (!host) return;          // nowhere to ask: no answer, nothing sent
+    prompt = showAskPrompt(host, {
+      words: askWords({ name: askName, at: 'screen', where: ownWhere }),
+      canRemember: !!(askKey && answers && typeof answers.set === 'function'),
+      showMs: askShowMs, ...timers,
+      // Over the top of the call's own box, clear of the subtitles at the bottom; the call goes on under it.
+      style: 'position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(92%,640px);box-sizing:border-box;'
+        + 'z-index:3;padding:12px 14px;border-radius:12px;background:var(--surface,#fff);color:var(--text,#111);'
+        + 'box-shadow:0 2px 12px rgba(0,0,0,.25);font-size:clamp(15px,1.6vw,20px);line-height:1.35',
+      onAnswer: (choice) => {
+        prompt = null;
+        if (!ok()) return;
+        const { answer, remember } = choiceMeans(choice);
+        if (remember && answers && askKey) {
+          try { answers.set(withRemembered(answers.get?.(), askKey, remember, askName)); }
+          catch (err) { console.error('call subtitles: remembering an answer', err); }
+        }
+        if (answer) reply(answer);       // gone unanswered: nothing is sent, and nothing is said back
+      },
+    });
+  }
+  try {
+    offs.push(transport?.onCaptionAsks?.((m) => {
+      if (!ok() || !m) return;
+      if (m.answer) { if (asked !== null) asked = m.answer; return; }
+      if (m.ask) heardAsk();
+    }) || (() => {}));
+  } catch (err) { console.error('call subtitles: asks', err); }
+
+  /** The call is answered: this end's own subtitles start (when chosen), and the other end is asked (when wanted). */
+  function answered(track = null) {
+    const started = startOwn(track);
+    askOther();
+    return started;
+  }
+
   function stop() {
     if (stopped) return;
     stopped = true;
     offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
+    try { prompt?.close?.(); } catch { /* gone */ }
     try { captions?.stop(); } catch { /* gone */ }
     try { own?.stop(); } catch { /* gone */ }
     try { subs?.destroy?.(); } catch { /* gone */ }
-    captions = null; own = null; subs = null;
+    captions = null; own = null; subs = null; prompt = null; micTrack = null;
   }
 
   return {
-    startOwn, stop, plan,
+    answered, startOwn, askOther, stop, plan,
     // For the suites and the host: what is running now.
-    probe: () => ({ box: !!subs, incoming: !!captions, own: !!own, stopped }),
+    probe: () => ({ box: !!subs, incoming: !!captions, own: !!own, stopped, asked, answered: answeredWith, prompt: !!prompt }),
   };
 }

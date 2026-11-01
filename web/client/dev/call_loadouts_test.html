@@ -58,6 +58,7 @@ import { mountKiosk } from '../kiosk.js';
 import { verbTopic } from '../actions.js';
 import '../modules/call.js';
 import { connectGameRoom } from '../game_room.js';
+import { CAPTION_ASK_SHOW_MS } from '../call_caption_ask.js';   // row 2.144 step 3
 
 const out = document.getElementById('results');
 const root = document.getElementById('root');
@@ -227,6 +228,157 @@ try {
     check('a call that is over shows nothing more', !/after the call/.test(host.textContent));
     h.stop();
     host.innerHTML = '';
+  }
+
+  // =====================================================================================
+  section('*** row 2.144 step 3: a screen ASKS the other end for subtitles of its own voice, and ANSWERS its asking ***');
+  {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    host.style.cssText = 'position:relative;width:480px;height:360px';
+    let realTrack = null;
+    try { const ac = new AudioContext(); realTrack = ac.createMediaStreamDestination().stream.getAudioTracks()[0]; } catch { realTrack = null; }
+    // A clock the suite moves (the request's own wait), and a transport that records what crosses the words channel.
+    let now = 0, seq = 0, armed = [];
+    const clock = { setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: now + ms }); return id; },
+      clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+      advance(ms) { now += ms; const due = armed.filter((x) => x.at <= now); armed = armed.filter((x) => x.at > now); due.forEach((x) => x.fn()); } };
+    const mkT = () => {
+      const t = { asks: 0, answers: [], askCbs: new Set(), capCbs: new Set(), sent: [], stream: null,
+        remote: () => t.stream, onRemote: () => () => {}, onCaptions: (cb) => { t.capCbs.add(cb); return () => t.capCbs.delete(cb); },
+        sendCaption: (c) => { t.sent.push(c); return true; }, sending: () => [], clipPlaying: () => false,
+        askCaptions: () => { t.asks += 1; return true; }, answerCaptions: (a) => { t.answers.push(a); return true; },
+        onCaptionAsks: (cb) => { t.askCbs.add(cb); return () => t.askCbs.delete(cb); },
+        hear: (m) => { for (const f of [...t.askCbs]) f(m); } };
+      return t;
+    };
+    const made = [];
+    const makeCaptions = (o) => { const c = { o, stopped: false, start() {}, stop() { c.stopped = true; }, status: () => ({ state: c.state || 'listening' }) };
+      made.push(c); return c; };
+    const store = (start = {}) => { const s = { m: { ...start }, sets: [], get: () => s.m, set: (m) => { s.m = m; s.sets.push(m); } }; return s; };
+    const box = () => host.querySelector('[data-caption-ask]');
+    const press = (c) => box()?.querySelector(`[data-ask-answer="${c}"]`)?.click();
+    const attach = (plan, extra = {}) => attachCallSubtitles({ transport: t, host, plan, makeCaptions, who: () => 'Ann', askName: 'Ann',
+      askKey: 'by:acct-ann', setTimer: clock.setTimer, clearTimer: clock.clearTimer, ...extra });
+    const OFF = { captions: 'off', theirCaptions: 'theirs', ownCaptions: 'off', ownWhere: 'here', decided: { in: 'screen', out: 'screen' } };
+
+    // ---- ASKING ----
+    let t = mkT(); t.stream = new FakeStream([track('far')]);
+    let h = attach({ ...OFF, captions: 'here' });
+    check('nothing is asked before the call is answered', t.asks === 0);
+    h.answered(realTrack);
+    check('*** incoming wanted here, "theirs" preferred (Mike\'s rule): answered -> the other end is asked, once ***', t.asks === 1 && h.probe().asked === 'sent');
+    h.answered(realTrack); h.askOther();
+    check('...once per call, however often it is told', t.asks === 1);
+    t.hear({ answer: 'no' });
+    check('*** they say no: said in the probe, and this screen\'s own subtitles of them KEEP GOING ***', h.probe().asked === 'no' && made[0] && made[0].stopped === false);
+    h.stop();
+    t = mkT(); h = attach({ ...OFF }); h.answered(realTrack);
+    check('incoming not wanted here: nothing is asked', t.asks === 0);
+    h.stop();
+    t = mkT(); h = attach({ ...OFF, captions: 'here', theirCaptions: 'none' }); h.answered(realTrack);
+    check('"Do not show them": nothing is asked (theirs would not be shown)', t.asks === 0);
+    h.stop();
+    t = mkT(); t.stream = new FakeStream([track('far')]); h = attach({ ...OFF, captions: 'here', theirCaptions: 'ours' }); h.answered(realTrack);
+    check('"ours" while ours can run: nothing is asked', t.asks === 0);
+    h.stop();
+    t = mkT(); t.stream = new FakeStream([track('far')]); h = attach({ ...OFF, captions: 'here', theirCaptions: 'ours' }, { able: () => false }); h.answered(realTrack);
+    check('*** "ours" but no speech program here: the other end is asked ***', t.asks === 1);
+    h.stop();
+
+    // ---- BEING ASKED ----
+    if (!realTrack) {
+      skip('a screen answering a request (its own subtitles need a microphone track)', 'no audio track in this browser');
+    } else {
+      made.length = 0;
+      t = mkT(); let ans = store();
+      h = attach(OFF, { answers: ans });
+      h.answered(realTrack);
+      t.hear({ ask: true });
+      check('*** asked, nothing chosen: a request in plain words, with where the voice goes, inside the call\'s box ***',
+        !!box() && host.contains(box()) && /Ann asks for subtitles of what is said here/.test(box().textContent)
+        && /worked out on this computer/.test(box().textContent) && /No company hears the voice/.test(box().textContent), box()?.textContent);
+      check('...four answers: Yes, Always for Ann, No, Never for Ann - and it says it goes by itself',
+        [...box().querySelectorAll('[data-ask-answer]')].map((b) => b.textContent).join('|') === 'Yes, this call|Always for Ann|No|Never for Ann'
+        && /goes away by itself/.test(box().textContent));
+      check('*** NOTHING is sent while it is asked: no subtitles started, no answer ***', made.length === 0 && t.answers.length === 0 && h.probe().prompt === true);
+      clock.advance(CAPTION_ASK_SHOW_MS - 1);
+      check('still there just before its time', !!box());
+      clock.advance(1);
+      check('*** NOBODY ANSWERS: it goes by itself, and NOTHING is sent (no subtitles, no answer) ***', !box() && made.length === 0 && t.answers.length === 0
+        && h.probe().prompt === false && ans.sets.length === 0);
+      t.hear({ ask: true });
+      press('yes');
+      check('*** "Yes, this call": this room\'s subtitles start (on this computer) and the answer is yes ***',
+        !box() && made.length === 1 && made[0].o.mode === 'here' && t.answers.join() === 'yes' && ans.sets.length === 0, JSON.stringify({ n: made.length, a: t.answers }));
+      made[0].o.sink.caption({ id: 'r1', text: 'hello from the room' });
+      check('...and what is said here goes to them', t.sent.some((c) => c.text === 'hello from the room'));
+      t.hear({ ask: true });
+      check('asked again in the same call (a reconnect): the same answer, no second box', !box() && t.answers.join() === 'yes,yes' && made.length === 1);
+      h.stop();
+      check('the call ends: everything goes', made[0].stopped === true);
+
+      made.length = 0; t = mkT(); ans = store();
+      h = attach(OFF, { answers: ans }); h.answered(realTrack); t.hear({ ask: true }); press('always');
+      check('*** "Always for Ann": yes now, and remembered on the person\'s row for that caller (by the account the server stamped) ***',
+        t.answers.join() === 'yes' && made.length === 1 && JSON.stringify(ans.m) === JSON.stringify({ 'by:acct-ann': { answer: 'yes', name: 'Ann' } }), JSON.stringify(ans.m));
+      h.stop();
+      made.length = 0; t = mkT();
+      h = attach(OFF, { answers: ans }); h.answered(realTrack); t.hear({ ask: true });
+      check('*** next call, Ann asks: no box - yes at once, and this room\'s subtitles start ***', !box() && t.answers.join() === 'yes' && made.length === 1);
+      h.stop();
+      made.length = 0; t = mkT();
+      h = attach(OFF, { answers: ans, askKey: 'by:acct-bo', askName: 'Bo' }); h.answered(realTrack); t.hear({ ask: true });
+      check('...somebody else asking is still asked', !!box() && /Bo asks/.test(box().textContent) && t.answers.length === 0);
+      press('never');
+      check('*** "Never for Bo": no, and remembered ***', t.answers.join() === 'no' && made.length === 0 && ans.m['by:acct-bo']?.answer === 'no');
+      h.stop();
+      t = mkT();
+      h = attach(OFF, { answers: ans, askKey: 'by:acct-bo', askName: 'Bo' }); h.answered(realTrack); t.hear({ ask: true });
+      check('...next call, Bo asks: no, without a box', !box() && t.answers.join() === 'no' && made.length === 0);
+      h.stop();
+      t = mkT();
+      h = attach(OFF, { answers: ans, askKey: 'by:acct-cy', askName: 'Cy' }); h.answered(realTrack); t.hear({ ask: true }); press('no');
+      check('"No": no for this call, nothing remembered', t.answers.join() === 'no' && made.length === 0 && !('by:acct-cy' in ans.m)
+        && Object.keys(ans.m).length === 2);
+      h.stop();
+
+      t = mkT();
+      h = attach({ ...OFF, decided: { in: 'screen', out: 'person' } }); h.answered(realTrack); t.hear({ ask: true });
+      check('*** the person CHOSE "Send subtitles of what I say": off -> no, without a box (they answered already) ***', !box() && t.answers.join() === 'no' && made.length === 0);
+      h.stop();
+      t = mkT();
+      h = attach(OFF, { able: () => false }); h.answered(realTrack); t.hear({ ask: true });
+      check('*** no speech program known here: "cannot", without a box ***', !box() && t.answers.join() === 'cannot' && made.length === 0);
+      h.stop();
+      t = mkT();
+      h = attach(OFF); t.hear({ ask: true });
+      check('no microphone in the call: "cannot"', !box() && t.answers.join() === 'cannot');
+      h.stop();
+      t = mkT();
+      h = attach({ ...OFF, ownCaptions: 'here' }); h.answered(realTrack); const n0 = made.length; t.hear({ ask: true });
+      check('*** already sending them: yes, without a box, nothing started twice ***', !box() && t.answers.join() === 'yes' && made.length === n0);
+      h.stop();
+      made.length = 0; t = mkT();
+      h = attach({ ...OFF, ownWhere: 'any' }, { askKey: '' }); h.answered(realTrack); t.hear({ ask: true });
+      check('*** the row says "and the other computers": the request says so ***', /other computers in this screen’s voice settings/.test(box()?.textContent || ''));
+      check('...nobody to remember them by (no key) or nowhere to keep it: only Yes and No',
+        [...box().querySelectorAll('[data-ask-answer]')].map((b) => b.dataset.askAnswer).join() === 'yes,no');
+      press('yes');
+      check('...and a yes works them out where the row says', made[0]?.o.mode === 'any');
+      h.stop();
+      t = mkT();
+      h = attach(OFF); h.answered(realTrack); t.hear({ ask: true });
+      check('(setup) a request is up', !!box());
+      h.stop();
+      check('*** the call ends with a request up: it goes, and nothing is sent ***', !box() && t.answers.length === 0);
+      t = mkT(); let alive = true;
+      h = attach(OFF, { live: () => alive }); h.answered(realTrack); alive = false; t.hear({ ask: true });
+      check('a request after the call is over: nothing', !box() && t.answers.length === 0);
+      h.stop();
+    }
+    host.innerHTML = '';
+    host.style.cssText = '';
   }
 
   check('*** the board sits beside the call on a wide screen, under it on a tall one ***',
@@ -523,6 +675,14 @@ try {
     check('...corrected in place: the same line, final', await settled(() => theirSubs.some((c) => c.text === 'good to see you too' && c.final === true), 4000)
       && new Set(theirSubs.filter((c) => /good to see you/.test(c.text)).map((c) => c.id)).size === 1, JSON.stringify(theirSubs));
     check('...and nothing went to the screen\'s own caption box (it is the caller\'s to show)', !/good to see you/.test(subsText()), subsText());
+    // row 2.144 step 3 (2026-11-01): the caller ASKS for subtitles of what is said there, on the call's own words channel.
+    // This screen already sends them, so it says yes at once, with no box; and with "Captions on calls" off it asked nothing.
+    const askMsgs = [];
+    d.onCaptionAsks((m) => askMsgs.push(m));
+    check('LIVE: the screen, wanting no subtitles of the caller, asked the caller for nothing', !askMsgs.some((m) => m.ask));
+    check('*** LIVE: the caller asks; a screen already sending says yes at once, with no request on it ***',
+      d.askCaptions() === true && await settled(() => askMsgs.some((m) => m.answer === 'yes'), 4000) && !view()?.querySelector('[data-caption-ask]'),
+      JSON.stringify(askMsgs));
     // A switch in the call view drives THIS board, not one under it.
     let mine = 0, bare = 0;
     const offA = kbus.subscribe('board/select#call:board', () => { mine += 1; });

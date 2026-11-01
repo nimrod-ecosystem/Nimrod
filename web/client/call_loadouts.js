@@ -185,8 +185,9 @@ export function callTheirCaptionsOf(row) {
 //             browser's recogniser, which ALSO needs this device's own yes (call_outgoing_captions.js
 //             `captionsOutInForce`), because there the voice goes to the browser's maker.
 //   INCOMING  subtitles of the other person, made at my end - when they are not sending their own (the 'theirs' rule
-//             above). A screen only, for now: the call page cannot hear a call's sound to make them (call_captions.js
-//             header); "ask the other end" is step 3.
+//             above). And (step 3, 2026-11-01, call_caption_ask.js) my end ASKS the other end to send subtitles of its
+//             own voice, which it does only on its own yes. The call page cannot hear a call's sound to make any itself
+//             (call_captions.js header), so there asking is the whole of it.
 // What the other end SENDS is not this choice: it was made at their end, for this one, and is shown by the row above.
 //
 // *** BOTH OFF BY DEFAULT, argued (the proposal's argument): *** FOR on, somebody who needs subtitles finds them without
@@ -230,8 +231,9 @@ export const CALL_SUBS_IN_FIELD = Object.freeze({
   kind: 'toggle',
   level: 'standard',
   default: false,
-  note: 'Made on this computer by its speech program, when the other person is not sending their own. It follows you to '
-      + 'your screens. Nothing is kept.',
+  note: 'Made on this computer by its speech program, when the other person is not sending their own. The other person is '
+      + 'also asked to send subtitles of their own voice, if they do not already; they say yes or no. It follows you to '
+      + 'your screens and the call page. Nothing is kept.',
 });
 export const CALL_SUBS_PERSON_FIELDS = Object.freeze([CALL_SUBS_OUT_FIELD, CALL_SUBS_IN_FIELD]);
 
@@ -258,6 +260,9 @@ export function callSubtitlesPlan(screenRow, person) {
     ownCaptions: pout === null ? sout : pout ? where(sout) : 'off',
     theirCaptions: callTheirCaptionsOf(screenRow),
     decided: { in: pin === null ? 'screen' : 'person', out: pout === null ? 'screen' : 'person' },
+    // row 2.144 step 3: where subtitles of this room are worked out if the other end ASKS for them and gets a yes
+    // (call_caption_ask.js) - the screen's own row's answer to "where", even while its on/off says off.
+    ownWhere: where(sout),
   };
 }
 
@@ -302,6 +307,7 @@ export function callViewPlan(row, { width = 0, height = 0, boardAvailable = true
     captions: subs.captions,
     theirCaptions: subs.theirCaptions,
     ownCaptions: subs.ownCaptions,   // row 2.144 step 2
+    ownWhere: subs.ownWhere, decided: subs.decided,   // row 2.144 step 3 (asked for them; the person chose off)
     preset, slots: !board ? ['call'] : preset === 'side' ? ['board', 'call'] : ['call', 'board'],
     grid: { cols: p.cols, rows: p.rows },
   };

@@ -41,7 +41,11 @@ import { createCallAnnouncer } from './follow_sound.js';   // the hear half: a f
 import { createOutgoingCaptions, captionsOutInForce, captionsOutSupported, CAPTIONS_OUT_KEY, CAPTIONS_OUT_LABEL,
   CAPTIONS_OUT_NOTE, CAPTIONS_OUT_SAYS, CAPTIONS_OUT_ASK, CAPTIONS_OUT_FOLLOWS } from './call_outgoing_captions.js';   // row 2.144: subtitles of what I say
 // row 2.144 (2026-10-31): the PERSON's own "Send subtitles of what I say on calls", on their own row (call_loadouts.js).
-import { CALL_SUBS_OUT_KEY, CALL_SUBS_PERSON_ROW, personCallSubsOf } from './call_loadouts.js';
+import { CALL_SUBS_OUT_KEY, CALL_SUBS_IN_KEY, CALL_SUBS_PERSON_ROW, personCallSubsOf } from './call_loadouts.js';
+// row 2.144 step 3 (2026-11-01): asking the screen for subtitles of what is said there, and answering its asking.
+import { answerFor, askWords, showAskPrompt, choiceMeans, rememberedAnswers, rememberedFor, withRemembered, captionsInOn,
+  CAPTIONS_ASKED_DEVICE_KEY, CAPTIONS_IN_DEVICE_KEY, CAPTIONS_IN_LABEL, CAPTIONS_IN_NOTE, ASK_ANSWER_SAYS,
+  CAPTION_ASK_SHOW_MS, CAPTION_ASK_WAIT_MS } from './call_caption_ask.js';
 import { createState } from './state.js';
 import { playPath } from './game_together.js';   // the join page's address for a game's room (Quiz mix's as it always was)
 
@@ -262,6 +266,12 @@ export async function mountCallPage(root, {
   let youId = '';                      // row 2.144: this login's own "you" card (its first person), when the site says
   let personRow = null;                // ...and its row (state.js), once read; null = the choice stays on this device
   let theirs = null;                   // row 2.144: the latest subtitle the screen sent of what is said there { id, text }
+  // row 2.144 step 3 (call_caption_ask.js), per call: our asking the screen (null | 'sent' | its answer | 'none'), what we
+  // said to its asking (null | 'yes' | 'no' | 'cannot'), a yes for THIS call only, and the request's box while it is up.
+  let askedThere = null;
+  let answeredThere = null;
+  let grantedThisCall = false;
+  let askBox = null;
   let readTok = 0;
   let run = 0;
   // group calls (see the header): this page's group, the other screens it rang into the call (call id -> leg), the
@@ -362,6 +372,9 @@ export async function mountCallPage(root, {
       </label>
       <label class="cp-check"><input type="checkbox" data-captions-out${captionsOutOn() ? ' checked' : ''}${captionsOutSupported(win) ? '' : ' disabled'}> ${esc(CAPTIONS_OUT_LABEL)}</label>
       <p class="cp-note" data-captions-out-note>${esc(captionsOutNote())}</p>
+      <label class="cp-check"><input type="checkbox" data-captions-in${captionsInWanted() ? ' checked' : ''}> ${esc(CAPTIONS_IN_LABEL)}</label>
+      <p class="cp-note" data-captions-in-note>${esc(CAPTIONS_IN_NOTE)}${personRow ? ` ${esc(CAPTIONS_OUT_FOLLOWS)}` : ''}</p>
+      ${askedAnswersLine()}
       <p class="cp-note">To talk without video and hear the room, <a data-intercom-link href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead.</p>
       <p class="cp-note">During a call you can add more people: up to ${MESH_MAX_OTHERS.video} others on a video call,
         ${MESH_MAX_OTHERS.audio} on an audio call. Everybody connects straight to everybody else.</p>
@@ -481,6 +494,8 @@ export async function mountCallPage(root, {
           <button type="button" class="cp-btn cp-ctl cp-words-aloud" data-words-aloud aria-pressed="true">Read out loud</button>
         </section>
         <p class="cp-theirs" data-theirs hidden aria-live="polite"></p>
+        <p class="cp-note" data-theirs-note hidden></p>
+        <div data-caption-ask-box></div>
         <p class="cp-note cp-mine" data-mine hidden></p>
         <p class="cp-note" data-mine-note hidden></p>
         <div class="cp-stage">
@@ -814,8 +829,11 @@ export async function mountCallPage(root, {
       personRow = h;
     } catch (err) { console.error('call: the person’s subtitle choice', err); personRow = null; }
   }
+  // Running for this call: the choice above, or a yes given to the screen's asking for this call only (step 3).
+  function captionsOutNowOn() { return captionsOutOn() || grantedThisCall; }
   function syncCaptions() {
-    const should = captionsOutOn() && phase === 'in-call' && micOn && !heldForWords && !!transport && !!local;
+    askThere();
+    const should = captionsOutNowOn() && phase === 'in-call' && micOn && !heldForWords && !!transport && !!local;
     if (should && !outCaps) {
       const t = transport;
       try {
@@ -840,11 +858,18 @@ export async function mountCallPage(root, {
     const n = q('[data-mine-note]');
     if (n) { n.textContent = says; n.hidden = !says; }
     const b = q('[data-captions-out-btn]');
-    if (b) { const on = captionsOutOn(); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Subtitles of me: on' : 'Subtitles of me: off'; }
+    if (b) { const on = captionsOutNowOn(); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Subtitles of me: on' : 'Subtitles of me: off'; }
+  }
+  // The in-call button. Running only because of a yes for this call: off takes back that yes and nothing else (it was not
+  // a choice about every call). Otherwise it is the choice itself, as before.
+  function pressCaptionsOut() {
+    if (grantedThisCall && !captionsOutOn()) { grantedThisCall = false; syncCaptions(); return; }
+    setCaptionsOut(!captionsOutOn());
   }
   // One press says both: this device's yes (or no), and - where the person has a row - the person's own choice, which
   // their screens and the call page on their other devices follow.
   function setCaptionsOut(on) {
+    if (!on) grantedThisCall = false;
     put(CAPTIONS_OUT_KEY, on ? 'on' : 'off');
     if (personRow) { try { personRow.set({ [CALL_SUBS_OUT_KEY]: !!on }); } catch (err) { console.error('call: the person’s subtitle choice', err); } }
     const n = q('[data-captions-out-note]');
@@ -864,10 +889,81 @@ export async function mountCallPage(root, {
   }
   function paintTheirs() {
     const el = q('[data-theirs]');
-    if (!el) return;
-    const show = !!theirs && phase !== 'idle';
-    el.textContent = show ? `${target?.name || 'Them'}: ${theirs.text}` : '';
-    el.hidden = !show;
+    if (el) {
+      const show = !!theirs && phase !== 'idle';
+      el.textContent = show ? `${target?.name || 'Them'}: ${theirs.text}` : '';
+      el.hidden = !show;
+    }
+    // What came of asking for them (step 3): said only when it was not a yes, and only until a subtitle arrives.
+    const n = q('[data-theirs-note]');
+    if (n) {
+      const says = !theirs && phase !== 'idle' ? (ASK_ANSWER_SAYS[askedThere] || '') : '';
+      n.textContent = says; n.hidden = !says;
+    }
+  }
+
+  // ---- ASKING THE SCREEN, AND ANSWERING ITS ASKING (row 2.144 step 3, call_caption_ask.js argues it all) -------------
+  // ASKING: the person's "Make subtitles of the other person on calls" (or, not chosen yet, this device's tick). This page
+  // cannot hear a call's sound to make any, so it asks the screen, once per call, when the call is going. A "no", a
+  // "cannot", or nothing back within CAPTION_ASK_WAIT_MS is said in a line under the call; the call is not touched.
+  function personIn() { return personRow ? personCallSubsOf(personRow.get?.() || {}, 'in') : null; }
+  function captionsInWanted() { return captionsInOn(personIn(), get(CAPTIONS_IN_DEVICE_KEY, '')); }
+  function setCaptionsIn(on) {
+    put(CAPTIONS_IN_DEVICE_KEY, on ? 'on' : 'off');
+    if (personRow) { try { personRow.set({ [CALL_SUBS_IN_KEY]: !!on }); } catch (err) { console.error('call: the person’s subtitle choice', err); } }
+    syncCaptions();
+  }
+  function askThere() {
+    if (askedThere !== null || phase !== 'in-call' || !transport || !captionsInWanted()) return;
+    let sent = false;
+    try { sent = !!transport.askCaptions?.(); } catch (err) { console.error('call: asking for subtitles', err); }
+    if (!sent) return;
+    askedThere = 'sent';
+    const my = run;
+    later(() => { if (my === run && askedThere === 'sent') { askedThere = 'none'; paintTheirs(); } }, CAPTION_ASK_WAIT_MS);
+  }
+  // ANSWERING: the screen asks for subtitles of what is said HERE. This browser's recogniser would make them, and in Chrome
+  // that sends the voice to Google - so the request says so, and only this device's own yes (for this call, or "Always"
+  // for this screen, kept on this device) starts it. Already sending -> yes; no recogniser here -> cannot; the person chose
+  // "off", or "Never" for this screen -> no, without asking. The box goes by itself (CAPTION_ASK_SHOW_MS): no answer.
+  const askedKey = () => (target?.id ? `person:${target.id}` : '');
+  function askedAnswers() { return rememberedAnswers(get(CAPTIONS_ASKED_DEVICE_KEY, '')); }
+  function heardAskFromThere(m) {
+    if (!m || phase === 'idle') return;
+    if (m.answer) { if (askedThere !== null) { askedThere = m.answer; paintTheirs(); } return; }
+    if (!m.ask || askBox) return;
+    if (answeredThere) { try { transport?.answerCaptions?.(answeredThere); } catch { /* gone */ } return; }
+    const d = answerFor({ running: !!outCaps, able: captionsOutSupported(win) && !!local, chosenOff: personOut() === false,
+      remembered: rememberedFor(askedAnswers(), askedKey()) });
+    if (d !== 'ask') { replyThere(d); return; }
+    const box = q('[data-caption-ask-box]');
+    if (!box) return;
+    const name = target?.name || '';
+    askBox = showAskPrompt(box, {
+      words: askWords({ name, at: 'page' }), canRemember: !!askedKey(), showMs: CAPTION_ASK_SHOW_MS,
+      setTimer, clearTimer, className: 'cp-ask', buttonClass: 'cp-btn cp-ctl',
+      onAnswer: (choice) => {
+        askBox = null;
+        if (phase === 'idle') return;
+        const { answer, remember } = choiceMeans(choice);
+        if (remember) put(CAPTIONS_ASKED_DEVICE_KEY, JSON.stringify(withRemembered(askedAnswers(), askedKey(), remember, name)));
+        if (answer) replyThere(answer);
+      },
+    });
+  }
+  function replyThere(answer) {
+    if (answer === 'yes' && !outCaps) grantedThisCall = true;
+    answeredThere = answer;
+    try { transport?.answerCaptions?.(answer); } catch (err) { console.error('call: answering for subtitles', err); }
+    syncCaptions();
+  }
+  // The setup view: the answers kept on this device, and one button to forget them.
+  function askedAnswersLine() {
+    const m = askedAnswers();
+    const list = Object.values(m).map((v) => `${v.name || 'a screen'} (${v.answer === 'yes' ? 'always' : 'never'})`);
+    if (!list.length) return '';
+    return `<p class="cp-note" data-asked-answers>Your answers to screens asking for subtitles of what you say, kept on this
+      device: ${esc(list.join(', '))}. <button type="button" class="cp-btn cp-ctl" data-asked-forget>Forget them</button></p>`;
   }
 
   // ---- words from the screen's AAC board (WORDS_KEY above) -------------------------------------------
@@ -1087,6 +1183,8 @@ export async function mountCallPage(root, {
     offs.push(transport.onWords?.((w) => { if (my === run) heard(w); }) || (() => {}));
     // row 2.144: subtitles the screen made of what is said there.
     offs.push(transport.onCaptions?.((c) => { if (my === run) heardCaption(c); }) || (() => {}));
+    // ...and step 3: the screen asking for subtitles of what is said here, or answering our asking.
+    offs.push(transport.onCaptionAsks?.((m) => { if (my === run) heardAskFromThere(m); }) || (() => {}));
     offs.push(transport.onAnswered?.(() => { if (my !== run) return; answered = true; if (phase === 'ringing') setPhase('answered'); }));
     offs.push(transport.onConnection?.((st) => {
       if (my !== run) return;
@@ -1213,6 +1311,10 @@ export async function mountCallPage(root, {
     cams = [];
     said = []; heldForWords = false; readTok++;
     phase = 'idle';
+    // row 2.144 step 3: a yes for this call, our asking and our answer, and a request still up, all go with the call.
+    grantedThisCall = false; askedThere = null; answeredThere = null;
+    try { askBox?.close?.(); } catch { /* gone */ }
+    askBox = null;
     syncCaptions();                     // row 2.144: subtitles of me go with the call
     capsState = 'off';
     theirs = null;                      // ...and the screen's
@@ -1270,7 +1372,8 @@ export async function mountCallPage(root, {
     if (e.target.closest?.('[data-cam]')) { toggleCam(); return; }
     if (e.target.closest?.('[data-flip]')) { flip(); return; }
     if (e.target.closest?.('[data-words-aloud]')) { setWordsMode(wordsMode() === 'speak' ? 'show' : 'speak'); return; }
-    if (e.target.closest?.('[data-captions-out-btn]')) { setCaptionsOut(!captionsOutOn()); return; }
+    if (e.target.closest?.('[data-captions-out-btn]')) { pressCaptionsOut(); return; }
+    if (e.target.closest?.('[data-asked-forget]')) { put(CAPTIONS_ASKED_DEVICE_KEY, '{}'); renderSetup(); return; }
     if (e.target.closest?.('[data-game-join]')) { if (game) { game.playing = true; paintGame(); } return; }
     if (e.target.closest?.('[data-game-ask]')) { askForGame(e.target.closest('[data-game-ask]').dataset.gameAsk || GAME_ASK_GAME); return; }
     if (e.target.closest?.('[data-game-close]')) { closeGame(); return; }
@@ -1292,6 +1395,7 @@ export async function mountCallPage(root, {
   on(root, 'change', (e) => {
     if (e.target.closest?.('[data-words-mode]')) { setWordsMode(e.target.value); return; }
     if (e.target.closest?.('[data-captions-out]')) { setCaptionsOut(!!e.target.checked); return; }
+    if (e.target.closest?.('[data-captions-in]')) { setCaptionsIn(!!e.target.checked); return; }
     if (e.target.closest?.('[data-ring]')) { ringPick = e.target.value || ''; return; }
     if (!e.target.closest?.('[data-person]')) return;
     ringPick = '';
@@ -1333,6 +1437,9 @@ export async function mountCallPage(root, {
       // row 2.144: the person's own choice (true | false | null), whether this device must still say yes, and the row's id.
       person: personOut(), ask: captionsOutNow().ask, you: personRow ? youId : '' }),
     theirCaption: () => (theirs ? { ...theirs } : null),
+    // row 2.144 step 3: asking the screen, and answering its asking.
+    captionAsk: () => ({ wanted: captionsInWanted(), person: personIn(), asked: askedThere, answered: answeredThere,
+      granted: grantedThisCall, box: !!askBox, remembered: askedAnswers() }),
     micHeld: () => heldForWords,
     call: (want = 'video') => start(want),
     hangup: () => finish('The call ended.'),

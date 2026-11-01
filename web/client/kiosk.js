@@ -82,6 +82,8 @@ import { callViewPlan, boardPreset, CALL_OPENS_FIELD, CALL_CAPTIONS_FIELD, CALL_
 } from './call_loadouts.js';
 // row 2.144 (2026-10-31): every subtitle of a call, in the call view and in a Call panel on a dashboard alike.
 import { attachCallSubtitles } from './call_captions.js';
+// row 2.144 step 3 (2026-11-01): who asked for subtitles, and the answers this screen's person remembered for them.
+import { askKeyOf, rememberedAnswers, CALL_SUBS_ASKED_KEY } from './call_caption_ask.js';
 import { CALL_ENDED, CALL_INCOMING } from './modules/call.js';
 // 2026-10-04: the screen picks up a new version of the site by itself, at a quiet moment (version_watch.js).
 import {
@@ -4957,6 +4959,7 @@ export async function mountKiosk(root, {
         ...((sw.on || subsOn) ? voiceIdItems(r).map((it) => ({ ...it, ...t.devices(0) })) : [])] : []),
       ...(subs.length ? [{ kind: 'heading', id: 'subtitles-head', label: 'Subtitles', ...t.display(4) },
         ...subs.map((it) => ({ ...it, ...t.display(4) })),
+        ...callAskForgetItems().map((it) => ({ ...it, ...t.display(4) })),   // row 2.144 step 3
         ...(subsOn ? subtitleLearningItems().map((it) => ({ ...it, ...t.display(4) })) : [])] : []),
       ...(amp.length ? [{ kind: 'heading', id: 'amplify-head', label: 'Amplify the room', ...t.audio(3) },
         ...amp.map((it) => ({ ...it, ...t.audio(3) }))] : []),
@@ -6142,7 +6145,8 @@ export async function mountKiosk(root, {
     // After answering: the microphone track the call was answered with (call.js mutes by switching that very track
     // off, so mute stops them too; a board word's clip mixed in later goes out as a mixed track, and the subtitles
     // keep to the plain microphone under it).
-    if (callView === cv && took) cv.subtitles?.startOwn();
+    // Step 3: and the other end is asked for subtitles of its own voice, when this screen wants them (call_caption_ask.js).
+    if (callView === cv && took) cv.subtitles?.answered();
     return true;     // the module had the call: whatever became of it, it hung up its own way
   }
   // row 2.144 (2026-10-31): ALL OF A CALL'S SUBTITLES - made here of the caller, sent by the caller, made here of this
@@ -6151,15 +6155,40 @@ export async function mountKiosk(root, {
   //   `plan`   call_loadouts.js callSubtitlesPlan: the PERSON's own choice where they made one, else this screen's rows.
   //   `who`    the caller's name, as the call gave it.
   // The caption box goes in `host` (the call's half here; the panel itself on a dashboard). Neither may stop the call.
+  // Step 3 (2026-11-01, call_caption_ask.js): asking the other end, and answering its asking. Who they are (the account the
+  // server stamped, else their card), the answers this screen's person said "Always" / "Never" to (their own row; none on
+  // a screen with no person row - then only Yes and No are offered), and whether a speech program is known to be missing.
   function callSubtitlesFor({ host, transport, plan, from, live }) {
     try {
+      const askName = (from && typeof from.name === 'string' && from.name.trim()) || '';
       return attachCallSubtitles({
         transport, host, plan, live,
         row: personRow || settings.get() || {},
-        who: () => (from && typeof from.name === 'string' && from.name.trim()) || 'On the call',
+        who: () => askName || 'On the call',
         recognizer: callCaptionRecognizer, flashLimit: flashLimitNow,
+        askKey: askKeyOf(from), askName, answers: callAskAnswers(),
+        able: () => !noSpeechProgramHere(),
       });
     } catch (err) { console.error('kiosk: call subtitles', err); return null; }
+  }
+  function callAskAnswers() {
+    if (embedded || !personInputs) return null;
+    return {
+      get: () => (personInputs?.get?.() || {})[CALL_SUBS_ASKED_KEY] || {},
+      set: (m) => { try { personInputs?.set?.({ [CALL_SUBS_ASKED_KEY]: m }); } catch (err) { console.error('kiosk: subtitle answers', err); } },
+    };
+  }
+  // The answers remembered for people who asked, under the Subtitles heading, so an "Always" or a "Never" can be undone
+  // (shown only when there is one). One row forgets them all: the next time any of them asks, the screen asks again.
+  function callAskForgetItems() {
+    if (embedded || !personInputs) return [];
+    const m = rememberedAnswers((personRow || {})[CALL_SUBS_ASKED_KEY]);
+    const list = Object.values(m).map((v) => `${v.name || 'someone'} (${v.answer === 'yes' ? 'always' : 'never'})`);
+    if (!list.length) return [];
+    return [{ kind: 'item', id: 'call-subs-asked-forget',
+      label: 'Forget my answers to requests for subtitles on calls',
+      hint: `answered for: ${list.join(', ')}; they will be asked again`,
+      run: () => { try { personInputs?.set?.({ [CALL_SUBS_ASKED_KEY]: {} }); } catch (err) { console.error('kiosk: subtitle answers', err); } } }];
   }
   // The screen's "Captions on calls" / "Send subtitles of what is said here" once the person has made their own choice:
   // the row then decides only WHERE the words are worked out, and says so after its value (a row that went on saying

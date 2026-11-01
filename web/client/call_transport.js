@@ -281,6 +281,26 @@ export function parseCaption(data) {
   return { id, text: cleanWords(m.text), final: m.final === true };
 }
 
+// ---- ASKING THE OTHER END FOR SUBTITLES OF ITS OWN VOICE (row 2.144 step 3, 2026-11-01; call_caption_ask.js) -------------
+// `{ type: 'caption-ask' }` asks; `{ type: 'caption-ask', answer: 'yes' | 'no' | 'cannot' }` answers. One message type for
+// both, its own, so an older page ignores it (parseWords and parseCaption refuse it) and the asker simply hears nothing.
+// Unlike a subtitle these DO wait for the channel to open: a request is about this whole call, and the first second of a
+// call (when it is sent) is exactly when the channel is still opening. They go with the call like a word does.
+export const CAPTION_ASK_TYPE = 'caption-ask';
+const CAPTION_ANSWER_WORDS = ['yes', 'no', 'cannot'];   // call_caption_ask.js CAPTION_ANSWERS (kept in step by its suite)
+
+/** `{ ask: true }`, `{ answer }`, or null when the message is not one. Pure.
+ *  Anything over 200 characters is refused unread: the longest real one is under 50, so the bound only stops a page
+ *  from making this one parse a large message for nothing. */
+export function parseCaptionAsk(data) {
+  if (typeof data !== 'string' || data.length > 200) return null;
+  let m = null;
+  try { m = JSON.parse(data); } catch { return null; }
+  if (!m || typeof m !== 'object' || m.type !== CAPTION_ASK_TYPE) return null;
+  if (m.answer === undefined) return { ask: true };
+  return CAPTION_ANSWER_WORDS.includes(m.answer) ? { answer: m.answer } : null;
+}
+
 /** A fresh call id: "call-" + 16 hex, inside drive.py's session rules. */
 export function newCallSession(rand = null) {
   let s = '';
@@ -455,6 +475,7 @@ export function createCallTransport({
   const wordsQueue = [];
   const wordsCbs = new Set();
   const captionCbs = new Set();      // row 2.144: subtitles the other end made of its own voice
+  const captionAskCbs = new Set();   // row 2.144 step 3: the other end asking for them, or answering our asking
   // call loadouts (2026-10-09): a word WITH a clip waits for the clip to start (call_mix.js CLIP_WAIT_MS at most)
   // so its message can say whether its sound is in the call; words after it wait in line behind it, so the
   // order they were chosen in is the order they arrive. `callSeq` changes at every ending, so nothing still
@@ -483,7 +504,9 @@ export function createCallTransport({
       const w = parseWords(e?.data);
       if (w) { emit(wordsCbs, w); return; }
       const c = parseCaption(e?.data);
-      if (c) emit(captionCbs, c);
+      if (c) { emit(captionCbs, c); return; }
+      const a = parseCaptionAsk(e?.data);
+      if (a) emit(captionAskCbs, a);
     };
     ch.onclose = () => { if (words === ch) words = null; };
     if (ch.readyState === 'open') flushWords();
@@ -1112,6 +1135,25 @@ export function createCallTransport({
     },
     /** `cb({ id, text, final })` for each subtitle the other end sent of its own voice. Returns an unsubscribe. */
     onCaptions(cb) { if (typeof cb !== 'function') return () => {}; captionCbs.add(cb); return () => { captionCbs.delete(cb); }; },
+    /**
+     * ASK THE OTHER END for subtitles of its own voice (CAPTION_ASK_TYPE above), or ANSWER its asking ('yes' | 'no' |
+     * 'cannot'). Only in a live call; waits for the channel like a word, and goes with the call. Never to a group: the
+     * first connection only (row 2.144 step 4). True when it was sent or waits for the channel.
+     */
+    askCaptions() {
+      if (destroyed || !live) return false;
+      wordsQueue.push({ type: CAPTION_ASK_TYPE });
+      flushWords();
+      return true;
+    },
+    answerCaptions(answer) {
+      if (destroyed || !live || !CAPTION_ANSWER_WORDS.includes(answer)) return false;
+      wordsQueue.push({ type: CAPTION_ASK_TYPE, answer });
+      flushWords();
+      return true;
+    },
+    /** `cb({ ask: true })` when the other end asks; `cb({ answer })` when it answers ours. Returns an unsubscribe. */
+    onCaptionAsks(cb) { if (typeof cb !== 'function') return () => {}; captionAskCbs.add(cb); return () => { captionAskCbs.delete(cb); }; },
     // call loadouts (2026-10-09): the far end's stream, for captions (call_captions.js). `remote()` is the one now
     // (null outside a call); `onRemote(cb)` hears it each time a track arrives, and null when the call ends.
     remote: () => remoteStream,
@@ -1141,6 +1183,7 @@ export function createCallTransport({
       mixer = null;
       remoteCbs.clear();
       captionCbs.clear();
+      captionAskCbs.clear();
       // group calls: the transport lets go of the group's changes (the screen destroys the group itself).
       try { offGroup?.(); } catch { /* gone */ }
       legCbs.clear();

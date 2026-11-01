@@ -393,8 +393,10 @@ registerModule(
           live: () => subsSeq === mine && phase === 'connected' }) || null;
       } catch (err) { console.error('call: subtitles', err); subs = null; }
     }
+    // The call is answered: this room's own subtitles start (when chosen), and the other end is asked for subtitles of its
+    // own voice (when wanted; row 2.144 step 3, call_caption_ask.js).
     function startOwnSubs(micTrack) {
-      try { subs?.startOwn?.(micTrack || null); } catch (err) { console.error('call: subtitles of this room', err); }
+      try { subs?.answered?.(micTrack || null); } catch (err) { console.error('call: subtitles of this room', err); }
     }
     function stopSubs() {
       subsSeq += 1;

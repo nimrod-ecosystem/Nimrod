@@ -58,6 +58,10 @@
   .cp-theirs { margin:0; padding:8px 12px; border-radius:10px; background:var(--surface); font-size:clamp(20px, 5.5vw, 32px);
     line-height:1.25; font-weight:700; overflow-wrap:anywhere; }
   .cp-theirs[hidden] { display:none; }
+  /* THE SCREEN ASKING for subtitles of what is said here (row 2.144 step 3): a box beside the call, like a knock; it goes
+     by itself, and the call goes on under it. */
+  .cp-ask { padding:10px 12px; border-radius:12px; background:var(--surface); border:2px solid var(--accent); }
+  .cp-ask .cp-btn { min-height:44px; }
   .cp-controls { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; }
   .cp-ctl[aria-pressed="true"] { background:var(--text); color:var(--bg); border-color:var(--text); }
   .cp-hang { background:var(--accent-warm-deep); border-color:var(--accent-warm-deep); color:var(--on-accent-warm-deep); }
