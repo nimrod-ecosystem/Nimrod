@@ -430,6 +430,35 @@ export function prebuiltRecord(key, { personName = '' } = {}) {
   return rec;
 }
 
+/**
+ * (row 2.145 step 5, 2026-10-31) Which ready-made dashboard a dashboard was made from, from its settings doc's stamp
+ * (`prebuilt`, written first by the maker): { key, label }, or null for a dashboard somebody made themselves. PURE.
+ */
+export function prebuiltMadeFrom(doc) {
+  const key = doc && typeof doc === 'object' ? doc[PREBUILT_KEY] : null;
+  const base = typeof key === 'string' ? PREBUILT_DASHBOARDS[key] : null;
+  return base ? { key, label: base.title || base.label || key } : null;
+}
+
+/**
+ * (row 2.145 step 5) HOW THE READY-MADE DASHBOARD STARTS ONE OF ITS PANELS: the site's default for that panel's settings
+ * on a dashboard made from it (the editor's "Changed from the site default", site_defaults.js). `doc` is the dashboard's
+ * settings doc (its stamp and `prebuiltRefs`: ref -> instance id); `instanceId` a panel's id.
+ *   -> { key, label, ref, state } (`state`: the record's own starting settings, {} when it has none), or null when the
+ *      dashboard was not made from a ready-made one, or the panel is not one the maker made. PURE.
+ * A picture's or sign's start (`start`) is the profile game's, read with NO person's name: the words a sign was made with
+ * for one person are that person's own, so they show as changed from the site's, which is true.
+ */
+export function prebuiltStartOf(doc, instanceId) {
+  const made = prebuiltMadeFrom(doc);
+  if (!made || !instanceId) return null;
+  const refs = doc[PREBUILT_REFS_KEY] && typeof doc[PREBUILT_REFS_KEY] === 'object' ? doc[PREBUILT_REFS_KEY] : {};
+  const ref = Object.keys(refs).find((r) => refs[r] === instanceId);
+  if (!ref) return null;
+  const m = (prebuiltRecord(made.key)?.modules || []).find((x) => x.ref === ref);
+  return m ? { ...made, ref, state: m.state && typeof m.state === 'object' ? clone(m.state) : {} } : null;
+}
+
 /** The record's layout with module REFS turned into instance ids (`refs`: ref -> id), normalised the way
  *  every saved layout is -- so what is saved is exactly what layout.js would keep. */
 export function layoutFor(rec, refs = {}) {

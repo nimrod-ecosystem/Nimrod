@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the site default and a person’s own — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>the site default and a person’s own (row 2.145 step 5) — site_defaults.js and the ready-made starts</h1>
+<p>What the site’s default of a setting is (a ready-made dashboard’s start, else the module’s own), whether a value is
+changed from it (compared on the value in force), and the patch that puts it back (the key and the key it used to live
+under). Pure: no server, no page drawn.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { SITE_DEFAULT_WORDS, comparable, siteDefaultValue, isChanged, changedFields, putBackPatch, putBackAllPatch, undoPatchFor } from '../site_defaults.js';
+import { normalizeField, fieldValue } from '../settings_fields.js';
+import { prebuiltStartOf, prebuiltMadeFrom, prebuiltRecord, PREBUILT_KEY, PREBUILT_REFS_KEY } from '../dashboards.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+
+try {
+  section('the site default of a setting');
+  const style = normalizeField({ key: 'style', label: 'Style', kind: 'choice', default: 'plain', options: ['plain', 'plate'] });
+  const every = normalizeField({ key: 'intervalMs', label: 'Every', kind: 'choice', default: 5000, options: [5000, 15000, 60000],
+    legacy: { key: 'intervalSec', scale: 1000 } });
+  const ink = normalizeField({ key: 'ink', label: 'Ink', kind: 'choice', options: ['dark', 'light'],
+    defaultFrom: (v) => (v.style === 'plate' ? 'light' : 'dark') });
+  check('*** with no ready-made start: the module’s own default ***', siteDefaultValue(style, { style: 'plate' }) === 'plain');
+  check('*** with a ready-made start that sets it: the start’s value ***', siteDefaultValue(style, { style: 'plain' }, { style: 'plate' }) === 'plate');
+  check('...a start that does not set it: the module’s own', siteDefaultValue(style, {}, { other: 1 }) === 'plain');
+  check('a `defaultFrom` setting: computed from the OTHER settings as they are', siteDefaultValue(ink, { style: 'plate', ink: 'dark' }) === 'light');
+  check('the key it used to live under is not the site default (it is taken out too)', siteDefaultValue(every, { intervalSec: 60 }) === 5000);
+
+  section('changed means different in force');
+  check('*** a stored value that differs: changed ***', isChanged(style, { style: 'plate' }));
+  check('*** stored but the same as the default ("present" alone is not changed) ***', !isChanged(style, { style: 'plain' }));
+  check('absent, or null: not changed', !isChanged(style, {}) && !isChanged(style, { style: null }));
+  check('a number stored as text ("15000") is the same choice as 15000', !isChanged(every, { intervalMs: '5000' }) && isChanged(every, { intervalMs: '15000' }));
+  check('*** a value only in the OLD key (intervalSec 60 = 60000 ms) is changed ***', isChanged(every, { intervalSec: 60 }));
+  check('a `defaultFrom` row with nothing chosen is never changed (compared on the computed value)', !isChanged(ink, { style: 'plate' }));
+  check('...chosen against it: changed', isChanged(ink, { style: 'plate', ink: 'dark' }));
+  check('*** a ready-made start’s value, kept: not changed; the module’s default there: changed ***',
+    !isChanged(style, { style: 'plate' }, { style: 'plate' }) && isChanged(style, { style: 'plain' }, { style: 'plate' }));
+  const secret = normalizeField({ key: 'apiKey', label: 'Key', kind: 'text', secret: true, default: '' });
+  const ro = { ...normalizeField({ key: 'n', label: 'N', kind: 'choice', default: 'a', options: ['a', 'b'] }), readOnly: true };
+  check('*** a secret (a key) and a read-only row are never compared or put back ***', !comparable(secret) && !isChanged(secret, { apiKey: 'sk-x' })
+    && !comparable(ro) && J(putBackPatch(secret)) === '{}' && J(putBackPatch(ro)) === '{}');
+  check('changedFields: only the changed ones, in order', J(changedFields([style, every, ink], { style: 'plate', intervalMs: 5000 }).map((f) => f.key)) === J(['style']));
+
+  section('putting it back');
+  check('*** the module’s own default: the key AND its old key written null ***', J(putBackPatch(every)) === J({ intervalSec: null, intervalMs: null }));
+  check('...and with that patch applied, the default is in force', fieldValue(every, { intervalSec: 60, intervalMs: 15000, ...putBackPatch(every) }) === 5000);
+  check('*** a ready-made start: its own value written ***', J(putBackPatch(style, { style: 'plate' })) === J({ style: 'plate' }));
+  const vals = { style: 'plate', intervalSec: 60, other: 'kept' };
+  check('putBackAllPatch: every changed row in one patch, nothing else', J(putBackAllPatch([style, every, ink], vals)) === J({ style: null, intervalSec: null, intervalMs: null }));
+  check('undoPatchFor: what was there, and null for what was not', J(undoPatchFor(putBackAllPatch([style, every], vals), vals)) === J({ style: 'plate', intervalSec: 60, intervalMs: null }));
+  check('the words', SITE_DEFAULT_WORDS.changed === 'Changed from the site default' && SITE_DEFAULT_WORDS.putBack === 'Put back the site default');
+
+  section('a ready-made dashboard’s start (dashboards.js)');
+  const doc = { [PREBUILT_KEY]: 'start', [PREBUILT_REFS_KEY]: { profile: 'm1', settings: 'm2', nimrod: 'm3', devices: 'm4' } };
+  check('*** prebuiltMadeFrom: which one, by its stamp ***', J(prebuiltMadeFrom(doc)) === J({ key: 'start', label: prebuiltRecord('start').title }));
+  check('...none: a dashboard somebody made, or a stamp for nothing', prebuiltMadeFrom({}) === null && prebuiltMadeFrom({ [PREBUILT_KEY]: 'nope' }) === null && prebuiltMadeFrom(null) === null);
+  const st = prebuiltStartOf(doc, 'm2');
+  check('*** prebuiltStartOf: the record’s own starting settings for that panel ***', st && st.ref === 'settings' && J(st.state) === J({ startPage: 'sc-theme' }), J(st));
+  check('...a panel it starts with nothing: {}', J(prebuiltStartOf(doc, 'm1')?.state) === '{}');
+  check('...a panel the maker did not make (added later): null', prebuiltStartOf(doc, 'm9') === null);
+  st.state.startPage = 'changed';
+  check('...a copy: changing it changes nothing shipped', prebuiltStartOf(doc, 'm2').state.startPage === 'sc-theme');
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+const sum = document.getElementById('summary');
+sum.textContent = `${passed} passed, ${failed} failed`;
+sum.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

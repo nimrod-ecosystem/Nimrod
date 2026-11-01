@@ -30,7 +30,7 @@ import { mergeLayoutSave } from '../doc_merge.js';
 import { targetsOf, parseTyped, typedRange } from '../edit_mode.js';
 import { normalizeField, displayValue } from '../settings_fields.js';
 import { sceneRecipe } from '../room_doors.js';
-import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS, transformWhy } from '../editor.js';
+import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS, transformWhy, changedCount, madeFromReady, rootMadeFrom } from '../editor.js';
 import { buildTree, nodeIdFor, ROOT_ID, splitSelection, PLACED_TRANSFORM_FIELDS, TRANSFORM_ORDER, presentField, presentFields } from '../editor_targets.js';
 import '../modules/button.js';
 import '../modules/clock.js';
@@ -699,6 +699,68 @@ try {
     check('...movePagePart on a grid (side by side): false, nothing moved', grid.arr.movePagePart('b1', 1) === false && J(grid.arr.layout().slots) === J(['b1', 'v1']));
     check('...and a grid’s tree still has its cells', buildTree(grid.arr).list.some((n) => n.kind === 'cell') && !buildTree(grid.arr).list.some((n) => n.pagePart));
     grid.arr.destroy();
+  }
+
+  // ============================================================================================
+  // ROW 2.145 STEP 5 (2026-10-31): the site default and a person's own (5b: what is changed, and putting it back).
+  section('*** step 5b: the site default -- what is changed from it, said in words, and put back ***');
+  {
+    const sd = await make();
+    let e = sd.open();
+    const b1 = sd.arr.recFor('b1');
+    const help = () => e.el.querySelector('[data-se-help]')?.textContent || '';
+    const defHelp = () => sec(e, 'd')?.querySelector('[data-se-def-help]')?.textContent || '';
+    const changedRow = (k) => sec(e, 's')?.querySelector(`[data-em-changed="${k}"]`) || null;
+    check('the dashboard’s row says it was not made from a ready-made one, so each module’s own defaults are the site’s',
+      help().includes(EDITOR_WORDS.rootNotMade), help());
+    row(e, 'panel:b1').click();
+    check('*** the sign’s words (Ada) and its style (plate) say "Changed from the site default", with the site’s value; its font does not ***',
+      /Changed from the site default: Your words/.test(changedRow('label')?.textContent || '') && !!changedRow('style') && !changedRow('font')
+      && !!changedRow('label')?.querySelector('[data-em-default="label"]'), sec(e, 's')?.textContent.slice(0, 300));
+    check('*** the Site default section: how this module comes, and "2 settings here are changed" ***',
+      defHelp().includes(EDITOR_WORDS.siteDefaultModule) && defHelp().includes(changedCount(2)) && !!sec(e, 'd').querySelector('[data-se-d="back"]'), defHelp());
+    check('each row’s Put back is a switch stop', e.scan.stops().some((b) => b.dataset.emDefault === 'style'));
+    check('(before) nothing to undo on the sign’s settings', bar(e, 'undo').disabled && bar(e, 'undo').title === EDITOR_WORDS.noHistory);
+    sec(e, 's').querySelector('[data-em-default="style"]').click();
+    check('*** a row’s "Put back the site default" writes null: the module’s default is in force again, the words left alone ***',
+      b1.state.get().style === null && b1.state.get().label === 'Ada', J(b1.state.get()));
+    check('...the count follows (1), and the toolbar’s Undo is lit', await until(() => defHelp().includes(changedCount(1)) && !bar(e, 'undo').disabled), defHelp());
+    bar(e, 'undo').click();
+    check('*** Undo takes the put back back ***', b1.state.get().style === 'plate', J(b1.state.get()));
+    await until(() => defHelp().includes(changedCount(2)));
+    sec(e, 'd').querySelector('[data-se-d="back"]').click();
+    check('*** "Put back the site default" for the whole sign: both in one write, both null ***',
+      b1.state.get().style === null && b1.state.get().label === null, J(b1.state.get()));
+    check('...the section says everything is the site default, with no button', await until(() => defHelp().includes(EDITOR_WORDS.siteDefaultSame)
+      && !sec(e, 'd').querySelector('[data-se-d]') && !changedRow('label')), defHelp());
+    bar(e, 'undo').click();
+    check('...and Undo brings both back', b1.state.get().style === 'plate' && b1.state.get().label === 'Ada', J(b1.state.get()));
+    // A room piece keeps its own values (the room's recipe): not compared row by row.
+    await sd.roomReady();
+    e.close(); e = sd.open();
+    const piece = e.tree().list.find((n) => n.kind === 'piece' && n.panelId === ROOM_PANEL_ID);
+    if (piece) row(e, piece.id).click();
+    check('a room piece: its Site default section says it is part of the room’s, and no row is marked',
+      !!piece && defHelp() === EDITOR_WORDS.siteDefaultOwnValues && !sec(e, 's')?.querySelector('[data-em-changed]'), defHelp());
+    e.close();
+    // The in-panel card is unchanged: no site default lines there.
+    sd.arr.editPanel('b1', true);
+    check('*** the in-panel card (edit mode, no editor) draws no site default line ***', await until(() => !!sd.card())
+      && !sd.card().querySelector('[data-em-changed], [data-em-default]'));
+    sd.arr.editPanel('b1', false);
+    // A dashboard made from a ready-made one: the panel's start is the site default.
+    const start = { b1: { key: 'start', label: 'Start here', ref: 'sign', state: { label: 'Ada', style: 'plain' } } };
+    e = sd.open({ siteDefaults: { startOf: (id) => start[id] || null, madeFrom: () => ({ key: 'start', label: 'Start here' }) } });
+    check('*** made from a ready-made one: the dashboard’s row says so ***', help().includes(rootMadeFrom('Start here')), help());
+    row(e, 'panel:b1').click();
+    check('*** the sign’s start (words "Ada") is its site default: the words are not changed, the style is ***',
+      !changedRow('label') && !!changedRow('style') && defHelp().includes(madeFromReady('Start here')) && defHelp().includes(changedCount(1)), defHelp());
+    start.b1.state.label = 'Bea';
+    e.refresh();
+    sec(e, 's').querySelector('[data-em-default="label"]')?.click();
+    check('*** putting back to a ready-made start writes the start’s own value ("Bea"), not null ***', b1.state.get().label === 'Bea', J(b1.state.get()));
+    e.close();
+    sd.arr.destroy();
   }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

@@ -217,6 +217,10 @@ try {
   check('the inspector now shows the suggestion, the box holding it', /Begin the game/.test(sec(ed, 'w')?.querySelector('[data-se-draft]')?.textContent || '')
     && sec(ed, 'w').querySelector('[data-se-words]').value === 'Begin the game');
   check('"Copy changes (1)"', sec(ed, 'w').querySelector('[data-se-w="copy"]').textContent === 'Copy changes (1)');
+  // (row 2.145 step 5) The site's words are the site default: a suggestion says so, and the way back is named so.
+  check('*** step 5: a suggestion says "Changed from the site default."; its button is "Put back the site default" ***',
+    sec(ed, 'w').querySelector('[data-se-changed]')?.textContent === EDITOR_WORDS.wordsChanged
+    && sec(ed, 'w').querySelector('[data-se-w="back"]')?.textContent === 'Put back the site default');
   sec(ed, 'w').querySelector('[data-se-w="copy"]').click();
   await sleep(0);
   check('*** "Copy changes" copies exactly what the wording bar copies (changesText), and says so ***',
@@ -247,10 +251,11 @@ try {
   check('no stop is a text box', ed.scan.stops().every((b) => b.tagName !== 'TEXTAREA' && b.tagName !== 'INPUT'));
   let guard = 0;
   while (ed.scan.current()?.dataset?.seW !== 'back' && guard++ < 300) ed.scan.next();
-  check('*** a switch reaches "Put back the site\'s words" ***', ed.scan.current()?.dataset?.seW === 'back');
+  check('*** a switch reaches "Put back the site default" ***', ed.scan.current()?.dataset?.seW === 'back');
   ed.scan.select();
   check('*** ...and select puts them back: the change dropped, the element as it was, unmarked ***',
     readChanges().length === 0 && t.w('[data-go]').textContent === 'Start the game' && !t.w('[data-go]').hasAttribute('data-wording-changed'));
+  check('...and the inspector no longer says it is changed (step 5)', !sec(ed, 'w')?.querySelector('[data-se-changed]'));
   check('back from chosen words: the dashboard\'s row, the editor stays (true)', ed.scan.back() === true && ed.selected() === ROOT_ID && ed.isOpen());
   ed.scan.reset();
 

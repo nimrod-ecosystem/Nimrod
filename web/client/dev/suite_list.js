@@ -30,7 +30,9 @@ export const SUITES = [
   // row 2.145 step 3 (2026-10-31): the one editor's words -- text nodes in its tree; `?wording=1` is the editor, Words shown.
   'editor_words',
   // row 2.145 step 4 (2026-10-31): the one editor over any other page of the site -- its parts and their words (`?wording=1`).
-  'page_editor', 'video_quiz', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
+  'page_editor',
+  // row 2.145 step 5 (2026-10-31): the site default and a person's own -- what is changed from it, and putting it back.
+  'site_defaults', 'video_quiz', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
   // corner on hover (2026-10-09): a panel's ⤢ / ✎ corner shows only where somebody is pointing (panel_corners.js).
   'panel_corners',
   'marker', 'mic_owner', 'modules_catalog', 'output',

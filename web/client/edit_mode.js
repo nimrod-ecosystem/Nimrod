@@ -196,6 +196,12 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
         ...(typeof a.run === 'function' ? { run: a.run } : { href: a.href }), note: a.note ? String(a.note) : '' })),
     values: () => { try { return read() || {}; } catch { return {}; } },
     set: (key, value) => { try { write({ [key]: value }); return true; } catch (err) { console.error('edit mode: set', err); return false; } },
+    // (row 2.145 step 5, 2026-10-31) Several keys in ONE write: "Put back the site default" writes a setting and the key
+    // it used to live under together (site_defaults.js putBackPatch), so nothing reads half of it in between.
+    patch: (p) => { try { write({ ...(p || {}) }); return true; } catch (err) { console.error('edit mode: patch', err); return false; } },
+    // (step 5) Whether these settings are the panel's own row (its state), not a thing's own `values` (a room piece's
+    // place, kept in the room's recipe): only the panel's row is compared with the site's default settings.
+    stateRow: typeof target?.values !== 'function',
   };
 }
 
@@ -289,15 +295,31 @@ export function parseTyped(field, raw) {
  * Draw `sel`'s options into `host` (replacing what is there). `onDone`: the Done button. `level`: which
  * rows. Returns { refresh, destroy }. Every press writes through `sel.set` and redraws.
  * `typed` (row 2.145 step 2): a box between a number's ‹ and › to type it into (above). Off unless asked.
+ * `defaults` (row 2.145 step 5, 2026-10-31): THE SITE'S DEFAULT, per row -- off unless asked (the one editor asks; the
+ *   in-panel card and the builder's options panel draw exactly what they drew before). A row whose value differs from
+ *   the site's default says so under it, in words ("Changed from the site default: <its value>"), with a "Put back the
+ *   site default" button: a switch stop like every button. `{ changed(field, values), siteShown(field, values),
+ *   putBack(field), words: { changed, putBack } }` (site_defaults.js says what the site default is).
  */
-export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.level, doneLabel = 'Done', typed = false } = {}) {
+export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.level, doneLabel = 'Done', typed = false, defaults = null } = {}) {
   if (!host) return { refresh() {}, destroy() {} };
   const doc = host.ownerDocument || document;
   ensureEditCss(doc);
   let torn = false;
+  // (row 2.145 step 5) The site default under a changed row, or '' (never throws: a row is drawn either way).
+  const defWords = { changed: 'Changed from the site default', putBack: 'Put back the site default', ...(defaults?.words || {}) };
+  function defaultLine(r, vals) {
+    if (!defaults) return '';
+    let changed = false, shown = '';
+    try { changed = !!defaults.changed(r.field, vals); shown = changed ? String(defaults.siteShown?.(r.field, vals) ?? '') : ''; } catch { changed = false; }
+    if (!changed) return '';
+    return `<div class="em-def" data-em-changed="${esc(r.key)}"><span>${esc(defWords.changed)}${shown ? `: ${esc(shown)}` : ''}</span>`
+      + `<button type="button" class="em-btn" data-em-default="${esc(r.key)}" data-em-focus="${esc(r.key)}:d">${esc(defWords.putBack)}</button></div>`;
+  }
   function draw() {
     if (torn) return;
     const rows = optionRows(sel, { level });
+    const vals = defaults ? sel.values() : null;
     const keepFocus = doc.activeElement && host.contains(doc.activeElement) ? doc.activeElement.dataset.emFocus || null : null;
     host.innerHTML = `<div class="em-opts" role="group" aria-label="${esc(`Options: ${sel.label}`)}" data-em-opts>
       <div class="em-head">${onDone ? `<button type="button" class="em-btn em-done" data-em="done" data-em-focus="done">${esc(doneLabel)}</button>` : ''}
@@ -320,7 +342,7 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
                 + `<button type="button" class="em-btn" data-em-keep="${esc(r.key)}" data-em-focus="${esc(r.key)}:k" aria-label="${esc(`Keep ${r.label}`)}">✓</button>`
               : r.picture
                 ? `<button type="button" class="em-btn" data-em-pick="${esc(r.key)}" data-em-focus="${esc(r.key)}:p">Choose…</button>`
-                : `<small>${esc(r.why)}</small>`}</span></div>`).join('')
+                : `<small>${esc(r.why)}</small>`}</span>${defaultLine(r, vals)}</div>`).join('')
         : '<p class="em-none" data-em-none>Nothing to set on this one.</p>'}</div>${(sel.actions || []).map((a) => `<div class="em-act" data-em-act="${esc(a.id)}">
           ${a.note ? `<span class="em-v">${esc(a.note)}</span>` : ''}${a.run
             ? `<button type="button" class="em-btn" data-em-run="${esc(a.id)}" data-em-focus="act:${esc(a.id)}">${esc(a.label)}</button>`
@@ -342,6 +364,13 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
       return;
     }
     if (ds.emKeep) { keepText(ds.emKeep); return; }
+    // (row 2.145 step 5) "Put back the site default" on one row: the host writes it (site_defaults.js putBackPatch).
+    if (ds.emDefault) {
+      const f = rowField(ds.emDefault);
+      if (f && defaults?.putBack) { try { defaults.putBack(f); } catch (err) { console.error('edit mode: put back', err); } }
+      if (!torn) draw();
+      return;
+    }
     if (ds.emRun) {
       const a = (sel.actions || []).find((x) => x.id === ds.emRun && typeof x.run === 'function');
       try { a?.run(); } catch (err) { console.error('edit mode: action', err); }
@@ -451,6 +480,8 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
 // (44px each) the row's controls stay near 160px, inside the 340px inspector beside the label. AGAINST: a longer number
 // (a village's "1600" never shows: it is shown as a percent) scrolls inside the box. Refused, it is marked by SHAPE (a
 // dashed edge in the text's own colour) as the rings are, and the row says why in words.
+// THE SITE DEFAULT LINE (row 2.145 step 5, 2026-10-31): under its row, across it, in italics -- told from the row's own
+// value by shape and by its words, not by a colour -- at .85rem, the editor's own reason line's size (editor.js .se-why).
 const CSS_ID = 'em-css';
 export function ensureEditCss(doc = (typeof document !== 'undefined' ? document : null)) {
   if (!doc || doc.getElementById(CSS_ID)) return;
@@ -487,6 +518,7 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
 .em-num[aria-invalid="true"]{border:2px dashed var(--text)}
 .em-none{margin:4px 0;color:var(--text-soft,var(--text))}
 .em-act{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:8px}
+.em-def{grid-column:1/-1;grid-row:3;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:.85rem;font-style:italic}
 .em-act a.em-btn{display:inline-flex;align-items:center;text-decoration:none}
 .k-editc{position:absolute;right:56px;bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
   margin:0;padding:0;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);

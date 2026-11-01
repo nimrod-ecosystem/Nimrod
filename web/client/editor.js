@@ -37,6 +37,15 @@
 //     with each part's words under it (page_targets.js), changed exactly as a dashboard's site words are. Nothing on such a
 //     page is moved or taken out (it is written in the site's code), and the tools say so. This replaced the wording bar:
 //     one way to change the site's words, not two (wording_edit.js keeps the shared pieces only).
+// *** STEP 5 (2026-10-31): THE TWO LAYERS, THE SITE'S DEFAULT AND A PERSON'S OWN (site_defaults.js). *** Mike's go keeps the
+// site's defaults in the repo (row 2.145, DN 1). The inspector says what is changed from the site default, in words:
+//   * a panel's settings: each changed row says "Changed from the site default: <its value>" with a "Put back the site
+//     default" of its own (edit_mode.js renderOptions `defaults`), and a "Site default" section says how many are
+//     changed and puts them all back at once. The site default is how the ready-made dashboard this one was made from
+//     starts the panel (`siteDefaults.startOf`, dashboards.js prebuiltStartOf), else how its module comes. Putting back
+//     is one step the toolbar's Undo takes back (the settings have no other history).
+//   * the site's words: a suggestion is "Changed from the site default"; its button is "Put back the site default".
+// Nothing here changes what anybody else sees: the site's defaults are the code.
 //
 // *** HOW IT SITS ON WHAT IS THERE (nothing underneath it changes). ***
 //   * The selection IS edit mode's. A row chosen here is `arr.editPanel(id, true)` then `arr.editSelect(target)`; a
@@ -56,7 +65,10 @@
 // own wait with no press (kiosk.js `editIdleMs`). Every change is saved as it is made: closing loses nothing.
 
 import { openDashboardEditor } from './dashboard_editor.js';
-import { renderOptions, ensureEditCss, targetsOf, targetAt, EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC } from './edit_mode.js';
+import { renderOptions, ensureEditCss, targetsOf, targetAt, optionRows, EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC } from './edit_mode.js';
+import { displayValue } from './settings_fields.js';
+// (row 2.145 step 5) The site's default and a person's own: pure, no fetch.
+import { SITE_DEFAULT_WORDS, isChanged, changedFields, siteDefaultValue, putBackPatch, putBackAllPatch, undoPatchFor } from './site_defaults.js';
 import { buildTree, nodeForEditing, nodeIdFor, splitSelection, ROOT_ID } from './editor_targets.js';
 import { preset } from './layout.js';
 // (row 2.145 step 3) The words. wording_edit.js is imported for its shared pieces only (nothing starts on import).
@@ -96,12 +108,12 @@ export const EDITOR_WORDS = Object.freeze({
   showWords: 'Show the words',
   hideWords: 'Hide the words',
   wordsShown: 'Words shown. A press on words chooses them, and does not press anything while the words are shown.',
-  wordsTools: 'Words are changed in the inspector: "Use these words" or "Put back the site\'s words".',
+  wordsTools: 'Words are changed in the inspector: "Use these words" or "Put back the site default".',
   wordsTransform: 'Words have no place of their own.',
   siteWordsTitle: 'Site words',
   siteWordsHelp: 'Words the site shows here. A change is a suggestion: it shows here at once, is kept in this browser, and is copied for the site\'s next update. Nothing is saved to the site.',
-  wordsKeys: 'One line, up to 300 letters. Enter keeps them; Escape puts the box back. A switch cannot type here (there is no on-screen keyboard for this yet); "Put back the site\'s words" and "Copy changes" work with one.',
-  wordsEmpty: 'Type the new words first. To go back to the site\'s words, press "Put back the site\'s words".',
+  wordsKeys: 'One line, up to 300 letters. Enter keeps them; Escape puts the box back. A switch cannot type here (there is no on-screen keyboard for this yet); "Put back the site default" and "Copy changes" work with one.',
+  wordsEmpty: 'Type the new words first. To go back to the site’s words, press "Put back the site default".',
   wordsKept: 'Kept as a suggestion, and shown here. "Copy changes" copies it for the site\'s next update.',
   wordsKeptNotShown: 'Kept as a suggestion. These words are not on the screen now, so nothing here changed.',
   wordsSame: 'These are the site\'s words; no change is kept for them.',
@@ -118,7 +130,24 @@ export const EDITOR_WORDS = Object.freeze({
   pageSectionHelp: 'Moving or taking out a part of this page is not built: the page is written in the site’s code. Its words can be changed: Show the words.',
   pageTools: 'This page is written in the site’s code: only its words are changed here.',
   pageWordsHelp: 'Words pressed on the page that are not listed under its parts, and changes already kept for this page that are not on it now.',
+  // (row 2.145 step 5, 2026-10-31) The site's default and a person's own.
+  siteDefaultTitle: 'Site default',
+  siteDefaultModule: 'The site default is how this module comes.',
+  siteDefaultSame: 'Everything shown here is the site default.',
+  siteDefaultOwnValues: 'This is part of its room or scene, whose site default is the starting room or scene as a whole.',
+  putBackAll: 'Put back the site default',
+  putBackDone: 'The site default is back. Undo brings back what was there.',
+  putBackNothing: 'This is the site default already.',
+  putBackUndone: 'What was there before is back.',
+  rootNotMade: 'Not made from a ready-made dashboard: each panel’s settings are compared with how its module comes.',
+  wordsChanged: 'Changed from the site default.',
 });
+/** "2 settings here are changed from the site default." (row 2.145 step 5) */
+export const changedCount = (n) => `${n === 1 ? '1 setting here is' : `${n} settings here are`} changed from the site default.`;
+/** The site default's source, for a panel on a dashboard made from a ready-made one (row 2.145 step 5). */
+export const madeFromReady = (label) => `The site default is how the ready-made “${label}” dashboard starts it.`;
+/** The dashboard's own row, made from a ready-made one (row 2.145 step 5). */
+export const rootMadeFrom = (label) => `Made from the ready-made “${label}”: its panels’ settings are compared with how that one starts them.`;
 /** "Copied 2 changes. Send them to Code." -- the sentence the wording bar said (row 2.123), kept now that the editor is the one way in. */
 export const copiedWords = (n) => `Copied ${n === 1 ? '1 change' : `${n} changes`}. Send them to Code.`;
 
@@ -167,11 +196,14 @@ const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', dupl
  *               opens a page, never loads that file). Nothing in it is edit mode's; only words are changed.
  *   pageTargets { sections(root), rest(root), tree(root, { sections, words }) } (page_targets.js), with `pageRoot`
  *   list        (step 4) open with the list showing (default true); page_editor.js opens it hidden on a narrow screen
+ *   siteDefaults (step 5) where this dashboard's site defaults come from (injectable; the kiosk hands it in):
+ *               startOf(panelId) -> dashboards.js prebuiltStartOf for this dashboard, or null; madeFrom() -> { key, label }
+ *               of the ready-made dashboard it was made from, or null. Absent: every panel's module defaults.
  */
 export function openSceneEditor(opts = {}) {
   const { arr = null, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null,
     words: wordsAtOpen = false, clipboard = globalThis.navigator?.clipboard, now = () => new Date(),
-    pageRoot = null, pageTargets = null, list: listAtOpen = true } = opts;
+    pageRoot = null, pageTargets = null, list: listAtOpen = true, siteDefaults = null } = opts;
   const pageScope = !arr && !!pageRoot && typeof pageTargets?.tree === 'function';
   if (!arr && !pageScope) throw new Error('openSceneEditor: an arrangement (or a page and its targets) is required');
   const doc = mountIn?.ownerDocument || pageRoot?.ownerDocument || (typeof document !== 'undefined' ? document : null);
@@ -297,6 +329,10 @@ export function openSceneEditor(opts = {}) {
       t.redo = m.canRedo() ? on(() => m.redo()) : off(EDITOR_WORDS.nothingToRedo);
     } else if (group) {
       t.undo = off(EDITOR_WORDS.chooseFirst); t.redo = off(EDITOR_WORDS.chooseFirst);
+    } else if (putBackUndo && putBackUndo.nodeId === node.id) {
+      // (step 5) A "Put back the site default" just made on this thing: Undo takes it back (its settings have no other history).
+      t.undo = on(() => undoPutBack());
+      t.redo = off(EDITOR_WORDS.noRedo);
     } else {
       // (step 4) A part of a page: its own Undo if its module has one (a room's), else what moving it back is.
       t.undo = act('undo') ? on(() => act('undo').run()) : off(node.pagePart && !node.targetId ? EDITOR_WORDS.pageUndo : EDITOR_WORDS.noHistory);
@@ -325,6 +361,42 @@ export function openSceneEditor(opts = {}) {
     t.add = into ? on(() => addInto(into)) : off(EDITOR_WORDS.addHere);
     return t;
   }
+  // =====================================================================================================
+  // THE SITE'S DEFAULT (row 2.145 step 5). Putting back writes through the selection's own `patch` (the panel's row, one
+  // write), and remembers what was there for the toolbar's Undo -- one step, for the thing it was done on.
+  // =====================================================================================================
+  let putBackUndo = null;          // { nodeId, patch } -- the patch that puts back what was there
+  let renderTimer = null;
+  /** Draw everything again once the press that asked is done (a row's own listener has already drawn its rows). */
+  function laterRender() {
+    if (closed || renderTimer !== null) return;
+    renderTimer = win.setTimeout(() => { renderTimer = null; if (!closed) render(); }, 0);
+  }
+  /** Put `fields` of `node` (its selection `sel`) back to the site default. One field: only if it is changed. */
+  function putBack(node, sel, fields, start) {
+    if (closed || !node || !sel || typeof sel.patch !== 'function') return false;
+    const vals = safe(() => sel.values(), {}) || {};
+    const patch = fields.length === 1 ? (isChanged(fields[0], vals, start) ? putBackPatch(fields[0], start) : {})
+      : putBackAllPatch(fields, vals, start);
+    if (!Object.keys(patch).length) { note(EDITOR_WORDS.putBackNothing); return false; }
+    const before = undoPatchFor(patch, vals);
+    if (!sel.patch(patch)) return false;
+    putBackUndo = { nodeId: node.id, patch: before };
+    note(EDITOR_WORDS.putBackDone);
+    laterRender();
+    return true;
+  }
+  function undoPutBack() {
+    const u = putBackUndo;
+    putBackUndo = null;
+    const sel = u ? safe(() => tree?.nodes.get(u.nodeId)?.fields(), null) : null;
+    if (!sel?.patch?.(u.patch)) return false;
+    note(EDITOR_WORDS.putBackUndone);
+    return true;
+  }
+  /** The rows of `sel` shown at the menu's level, as fields: what "N changed" counts and "Put back" puts back. */
+  const shownFields = (sel) => safe(() => optionRows(sel, { level: levelNow() }).map((r) => r.field), []) || [];
+
   function addInto(panelId) {
     try { arr.editPanel(panelId, true); arr.editSelect(null); } catch (err) { console.error('editor: add', err); return; }
     const b = insEl.querySelector('[data-se-sec="s"] [data-em-focus="addPiece:1"]');
@@ -386,7 +458,8 @@ export function openSceneEditor(opts = {}) {
       recs: safe(() => arr.editRecs?.() || [], []) || [], profileName: safe(() => arr.profile()?.name, '') || '',
       scanner, page: page(), drafts: readChanges(), clicked,
     }) : null;
-    return safe(() => buildTree(arr, { placedModel: model(), words }), null);
+    const startOf = typeof siteDefaults?.startOf === 'function' ? (id) => siteDefaults.startOf(id) : null;
+    return safe(() => buildTree(arr, { placedModel: model(), words, startOf }), null);
   }
   /** Keep a built tree, and which row each listed element is (a press on words in the view finds its row by it). */
   function keepTree(next) {
@@ -436,7 +509,7 @@ export function openSceneEditor(opts = {}) {
     treeEl.innerHTML = tree.list.map((n) => `<button type="button" class="se-row" role="treeitem" data-se-node="${esc(n.id)}"
       data-se-kind="${esc(n.kind)}" aria-level="${n.depth + 1}" aria-selected="${n.id === selectedId}" style="--se-d:${n.depth}">${esc(n.label)}</button>`).join('');
   }
-  function section(key, sel, { typed = false } = {}) {
+  function section(key, sel, { typed = false, defaults = null } = {}) {
     const wrap = doc.createElement('section');
     wrap.className = 'se-sec';
     wrap.dataset.seSec = key;
@@ -445,7 +518,8 @@ export function openSceneEditor(opts = {}) {
     insEl.append(wrap);
     // (row 2.145 step 2) Transform's numbers can be TYPED as well as stepped: a box between ‹ and › (edit_mode.js
     // renderOptions `typed`). Never a switch stop (stops() below takes buttons and links only).
-    views.push(renderOptions(host, sel, { level: levelNow(), onDone: null, typed }));
+    // (step 5) `defaults`: each changed row says so and has its own "Put back the site default".
+    views.push(renderOptions(host, sel, { level: levelNow(), onDone: null, typed, defaults }));
   }
   function plain(key, title, text) {
     const wrap = doc.createElement('section');
@@ -475,6 +549,11 @@ export function openSceneEditor(opts = {}) {
       else {
         const L = safe(() => arr.layout(), null);
         if (L) help = `Laid out as “${preset(L.preset).label}”. ${preset(L.preset).page ? EDITOR_WORDS.pagePartsHelp : help}`;
+        // (step 5) Where its site default comes from: the ready-made dashboard it was made from, or each module's own.
+        if (!pageScope && (!node || node.kind === 'dashboard')) {
+          const made = safe(() => siteDefaults?.madeFrom?.(), null);
+          help = `${help} ${made?.label ? rootMadeFrom(made.label) : EDITOR_WORDS.rootNotMade}`;
+        }
       }
       head.innerHTML = `<strong class="em-title" data-se-title>${esc(node?.label || (pageScope ? 'This page' : 'This dashboard'))}</strong><p class="em-help" data-se-help>${esc(help)}</p>`;
       return;
@@ -489,9 +568,53 @@ export function openSceneEditor(opts = {}) {
     if (tf) section('t', tf, { typed: true });
     else plain('t', 'Transform', transformWhy(node, sel, { hasLayout: !!safe(() => arr.layout(), null) }));
     // ...then its own settings (and its buttons: Take it out, Copy as the default...).
-    if (split.settings && (split.settings.fields.length || (split.settings.actions || []).length)) section('s', split.settings);
+    // (step 5) Compared with the site's default when they are the panel's own row (node.defaults(), site_defaults.js).
+    const defs = safe(() => node.defaults?.(), null);
+    const settings = split.settings;
+    const cmp = defs && defs.stateRow && settings ? defs : null;
+    const rowDefaults = cmp ? {
+      words: SITE_DEFAULT_WORDS,
+      changed: (f, vals) => isChanged(f, vals, cmp.start),
+      siteShown: (f, vals) => displayValue(f, siteDefaultValue(f, vals, cmp.start)),
+      putBack: (f) => { putBack(node, settings, [f], cmp.start); },
+    } : null;
+    if (settings && (settings.fields.length || (settings.actions || []).length)) section('s', settings, { defaults: rowDefaults });
     // (step 3) A panel's own words: the same rows (its Words row is above), and what they are, in words.
     if (node.kind === WORDS_KINDS.own) plain('w', 'Words', EDITOR_WORDS.ownWords);
+    // (step 5) The site default, for this thing as a whole.
+    if (defs) drawSiteDefault(node, settings, defs);
+  }
+  /** (row 2.145 step 5) The "Site default" section: where the site default comes from, how many rows are changed from it,
+   *  and "Put back the site default" for all of them at once. A thing that keeps its own values (a room piece) says
+   *  whose site default it is part of. */
+  function drawSiteDefault(node, settings, defs) {
+    const wrap = doc.createElement('section');
+    wrap.className = 'se-sec';
+    wrap.dataset.seSec = 'd';
+    insEl.append(wrap);
+    fillSiteDefault(wrap, node, settings, defs);
+  }
+  function fillSiteDefault(wrap, node, settings, defs) {
+    let text = EDITOR_WORDS.siteDefaultOwnValues;
+    let n = 0;
+    if (defs.stateRow && settings) {
+      n = changedFields(shownFields(settings), safe(() => settings.values(), {}) || {}, defs.start).length;
+      text = `${defs.from?.label ? madeFromReady(defs.from.label) : EDITOR_WORDS.siteDefaultModule} ${n ? changedCount(n) : EDITOR_WORDS.siteDefaultSame}`;
+    }
+    wrap.innerHTML = `<div class="em-opts" role="group" aria-label="${esc(EDITOR_WORDS.siteDefaultTitle)}">
+      <strong class="em-title">${esc(EDITOR_WORDS.siteDefaultTitle)}</strong>
+      <p class="em-help" data-se-def-help>${esc(text)}</p>
+      ${n ? `<div class="em-act"><button type="button" class="em-btn" data-se-d="back" data-em-focus="dback">${esc(EDITOR_WORDS.putBackAll)}</button></div>` : ''}</div>`;
+  }
+  /** The "Site default" section drawn again in place (after a value changed in the rows above it). */
+  function refreshSiteDefault() {
+    const wrap = insEl.querySelector('[data-se-sec="d"]');
+    const node = tree?.nodes.get(selectedId);
+    if (!wrap || !node) return;
+    const defs = safe(() => node.defaults?.(), null);
+    if (!defs) return;
+    const sel = editingNow() ? safe(() => arr.editSelection(), null) : null;
+    fillSiteDefault(wrap, node, splitSelection(sel).settings, defs);
   }
 
   // =====================================================================================================
@@ -499,7 +622,8 @@ export function openSceneEditor(opts = {}) {
   // site's words as they are in the code (read-only), a box with the new words, and three buttons:
   //   Use these words        the change, into wording edit's draft list (wording_edit.js recordChange), and shown in
   //                          place at once (`showWordsInPlace`, marked while the words are shown)
-  //   Put back the site's words   the change dropped, the element as it was
+  //   Put back the site default   the change dropped, the element as it was (step 5's name for it: the site's words ARE
+  //                          the site default, and the button says so as every other one does)
   //   Copy changes (N)       the whole list, in the one copied format (`changesText`), for the site's next update
   // ONE LINE (wording_edit.js `norm`: the copied lines and the apply tool hold words on one line), so Enter keeps them and
   // there is no Shift+Enter. Up to LINE_MAX letters, as the original. Escape in the box with typing in it puts the box
@@ -527,11 +651,12 @@ export function openSceneEditor(opts = {}) {
     wrap.innerHTML = `<div class="em-opts" role="group" aria-label="Words">
       <strong class="em-title">Words</strong>
       <p class="em-help">The site's words: <q data-se-original>${esc(w.original)}</q></p>
-      ${draft ? `<p class="em-help" data-se-draft>Suggested: <q>${esc(draft.new)}</q>${notShown ? ' (not on the screen now)' : ''}</p>` : ''}
+      ${draft ? `<p class="em-help" data-se-draft>Suggested: <q>${esc(draft.new)}</q>${notShown ? ' (not on the screen now)' : ''}</p>
+      <p class="em-help em-def" data-se-changed>${esc(EDITOR_WORDS.wordsChanged)}</p>` : ''}
       <label class="se-wl">New words<textarea class="se-words" data-se-words data-em-focus="box" rows="3" maxlength="${LINE_MAX}" autocomplete="off">${esc(draft ? draft.new : w.original)}</textarea></label>
       <div class="em-act">
         <button type="button" class="em-btn" data-se-w="use" data-em-focus="use">Use these words</button>
-        <button type="button" class="em-btn" data-se-w="back" data-em-focus="back">Put back the site's words</button>
+        <button type="button" class="em-btn" data-se-w="back" data-em-focus="back">${esc(SITE_DEFAULT_WORDS.putBack)}</button>
         <button type="button" class="em-btn" data-se-w="copy" data-em-focus="copy">Copy changes (${count})</button>
       </div>
       <p class="em-help" data-se-words-help>${esc(EDITOR_WORDS.wordsKeys)}</p></div>`;
@@ -773,12 +898,23 @@ export function openSceneEditor(opts = {}) {
     if (!b || !box.contains(b)) return;
     if (scanKey !== null && keyOf(b)) scanKey = keyOf(b);
     queueMicrotask(() => { if (!closed) paint(); });
-    if (insEl.contains(b) && (b.matches('[data-em-run]') || b.matches('[data-em-step]'))) laterFollow();
+    // (step 5: a words box kept by its ✓ changes a value too -- the Site default section's count follows.)
+    if (insEl.contains(b) && (b.matches('[data-em-run]') || b.matches('[data-em-step]') || b.matches('[data-em-keep]'))) laterFollow();
   }, true);
-  // ...and a number typed and kept (Enter in a Transform box) the same.
+  // ...and a number typed and kept (Enter in a Transform box) the same. (step 5: and words kept by Enter in their box.)
   box.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('[data-em-num]') && insEl.contains(e.target)) laterFollow();
+    if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('[data-em-num], [data-em-text]') && insEl.contains(e.target)) laterFollow();
   }, true);
+  // (step 5) "Put back the site default" for everything changed on the chosen thing (the Site default section).
+  insEl.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('[data-se-d]') : null;
+    if (!b || !insEl.contains(b) || b.dataset.seD !== 'back') return;
+    activity();
+    const node = tree?.nodes.get(selectedId) || null;
+    const defs = node ? safe(() => node.defaults?.(), null) : null;
+    const settings = editingNow() ? splitSelection(safe(() => arr.editSelection(), null)).settings : null;
+    if (defs?.stateRow && settings) putBack(node, settings, shownFields(settings), defs.start);
+  });
   // (step 3) The Words section's buttons, and its box: Enter keeps the words; Escape with typing in it puts the box back
   // and is used up here (the editor's own Escape below ignores a key already used).
   insEl.addEventListener('click', (e) => {
@@ -820,6 +956,7 @@ export function openSceneEditor(opts = {}) {
       if (!next || sigOf(next) !== sigOf(tree) || (editing && id !== selectedId)) { render(); return; }
       keepTree(next);
       drawBar(tree.nodes.get(selectedId) || null, editing);
+      refreshSiteDefault();      // (step 5) its count of changed rows, as they are now
       paint();
     }, 0);
   }

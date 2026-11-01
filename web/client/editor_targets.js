@@ -269,10 +269,17 @@ export function splitSelection(sel) {
  *   arr          the arrangement (its `editRecs`, `layout`, `placed`, `profile`, `stageRec`)
  *   placedModel  the edit model of the placed panels (dashboard_editor.js), for their Transform; absent: none shown
  *   words        (row 2.145 step 3) editor_words.js `wordsSource(...)` while the editor's Words are shown; absent: no words
+ *   startOf      (row 2.145 step 5) (panelId) => how the ready-made dashboard this one was made from starts that panel
+ *                (dashboards.js prebuiltStartOf: { key, label, ref, state }), or null; absent: no ready-made start
  * Each node: { id, parent, label, kind, depth, panelId, targetId, wholeId, place, transform(), fields(), set(k, v),
- *   children() }. Never throws: a panel whose module will not list its things is a row with nothing under it.
+ *   children(), defaults() }. Never throws: a panel whose module will not list its things is a row with nothing under it.
+ * (step 5) defaults() -> { stateRow, start, from } for a panel or a thing in one, else null:
+ *   stateRow   its settings are the panel's own row (compared with the site's default, site_defaults.js); false for a
+ *              thing that keeps its own values (a room piece's place, in the room's recipe)
+ *   start      the ready-made start's settings for the panel ({} when it has none), or null: the module's own defaults
+ *   from       { key, label } of that ready-made dashboard, or null
  */
-export function buildTree(arr, { placedModel = null, words = null } = {}) {
+export function buildTree(arr, { placedModel = null, words = null, startOf = null } = {}) {
   const nodes = new Map();
   const list = [];
   const kids = new Map();
@@ -286,6 +293,7 @@ export function buildTree(arr, { placedModel = null, words = null } = {}) {
       transform: () => transformOf(node),
       fields: () => fieldsOf(node),
       set: (key, value) => { const s = fieldsOf(node); return s ? s.set(key, value) : false; },
+      defaults: () => defaultsOf(node),
     };
     if (nodes.has(node.id)) return nodes.get(node.id);    // one record in two places: listed once, first place wins
     nodes.set(node.id, node);
@@ -336,6 +344,18 @@ export function buildTree(arr, { placedModel = null, words = null } = {}) {
     const targets = safe(() => targetsOf(rec), []);
     const t = node.targetId ? targets.find((x) => x.id === node.targetId) : targets.find((x) => x.whole);
     return safe(() => selectionFor(rec, t || null), null);
+  }
+  /** (step 5) What the site's default is for this node's settings (see above). */
+  function defaultsOf(node) {
+    if (!node.panelId || !recById.has(node.panelId)) return null;
+    const sel = fieldsOf(node);
+    if (!sel) return null;
+    const got = typeof startOf === 'function' ? safe(() => startOf(node.panelId), null) : null;
+    return {
+      stateRow: sel.stateRow !== false,
+      start: got && got.state && typeof got.state === 'object' ? got.state : null,
+      from: got ? { key: got.key, label: got.label } : null,
+    };
   }
 
   const profile = safe(() => arr.profile(), null);

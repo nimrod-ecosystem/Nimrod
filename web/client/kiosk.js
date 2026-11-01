@@ -96,6 +96,7 @@ import {
   createDashboardMaker, PREBUILT_DASHBOARDS, DASHBOARD_GO_TOPIC, DASHBOARD_OFFERS_FIELD, offersOn,
   DASHBOARD_BARE_FIELD, DASHBOARD_BARE_KEY, bareNamesOn,
   dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, dashboardsSignature, LOCKED_KEY,
+  prebuiltStartOf, prebuiltMadeFrom,   // row 2.145 step 5: the site default of a panel on a dashboard made from a ready-made one
 } from './dashboards.js';
 import { createDashboardPicker } from './dashboard_picker.js';
 // Row 2.38: dashboards inside dashboards -- the live limit, the tray's wait, the trail and its breadcrumb.
@@ -3459,6 +3460,8 @@ export async function mountKiosk(root, {
       automation,
       // 2026-10-04: how a switch walks the Automation window follows the person's "How you choose things".
       chooseMode: () => { try { return chooseModeNow(); } catch { return chooseModeOf(null); } },
+      // (row 2.145 step 5) The doc as it is now: the one editor reads its ready-made stamp (dashboards.js) from it.
+      settingsNow: () => { try { return doc.get?.() || {}; } catch { return {}; } },
     };
   }
   function ownEditorClosed() {
@@ -3483,9 +3486,15 @@ export async function mountKiosk(root, {
     let ed = null;
     try {
       if (want === SCENE_EDITOR_KIND) {
+        const dashOpts = ownEditorOpts();
         ed = kEditor = openSceneEditor({
-          arr, bus, mountIn: kioskEl, dashOpts: ownEditorOpts(),
+          arr, bus, mountIn: kioskEl, dashOpts,
           words: !!words,
+          // (row 2.145 step 5) The site default of each panel: how the ready-made dashboard this one was made from starts it.
+          siteDefaults: {
+            startOf: (id) => prebuiltStartOf(dashOpts.settingsNow(), id),
+            madeFrom: () => prebuiltMadeFrom(dashOpts.settingsNow()),
+          },
           level: () => complexity(),
           notify: (text) => { try { output?.notify?.(text, { source: 'shell' }); } catch { /* the line still says it */ } },
           onClose: () => ownEditorClosed(),
