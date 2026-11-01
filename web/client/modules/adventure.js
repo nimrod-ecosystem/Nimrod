@@ -165,7 +165,10 @@ export function readHeard(text, choices = []) {
 const STYLE_ID = 'adventure-style';
 const CSS = `
 .adv{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;padding:12px 14px;box-sizing:border-box;overflow:auto;
-  background:var(--bg);color:var(--text);font-family:var(--font)}
+  background:var(--game-field, transparent);color:var(--text);font-family:var(--font)}
+/* SEE-THROUGH, LIKE EVERY OTHER PANEL (row 2.170's audit, after Solitaire's 2.169): this used to paint the page
+   background over the whole panel, a solid sheet the "Panel backgrounds" setting could not reach. The words sit on
+   the panel's own surface (on a clear panel they carry the kiosk's halo) and the buttons keep their own surface. */
 .adv h2{margin:0;font-size:1.3em}
 .adv-soft{color:var(--text-muted);margin:0}
 .adv button{min-height:48px;padding:8px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface-alt,var(--surface));

@@ -5,7 +5,7 @@
    declaration as the right place). The hooks a room or a theme sets:
      --floor-tile       a tile at rest     (fallback: the room's default floorboard brown, room_parts.js)
      --floor-tile-lit   a lit tile         (fallback: the theme's highlight)
-     --floor-grout      between the tiles  (fallback: the theme's surface-alt)
+     --floor-grout      between the tiles  (fallback: nothing, so the panel shows through; row 2.170)
    A lit tile is never told apart by colour alone: it also carries a big dot, and a hit writes
    "✓ Hit!" in it.
 
@@ -15,7 +15,7 @@
 .rh-wrap{
   --rh-tile: var(--floor-tile, #9a6a42);
   --rh-lit: var(--floor-tile-lit, var(--highlight, #f2c14e));
-  --rh-grout: var(--floor-grout, var(--surface-alt, #e8e2cf));
+  --rh-grout: var(--floor-grout, var(--game-field, transparent));
   --rh-ink: var(--text-strong, #1c1c1c);
   --rh-edge: var(--border, #c9c3ad);
   width:100%;height:100%;min-height:0;color:var(--text);
@@ -23,6 +23,10 @@
 .rh-wrap *{box-sizing:border-box}
 .rh{height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5rem;padding:.6rem;
   background:var(--rh-grout);font-family:var(--font);container-type:size}
+/* SEE-THROUGH, LIKE EVERY OTHER PANEL (row 2.170's audit, after Solitaire's 2.169). This used to paint the grout
+   colour over the whole panel, a solid sheet the "Panel backgrounds" setting (solid / veil / clear) could not reach.
+   The tiles carry their own face and a 3px edge, so they read on any of the three; `--game-field` is the same hook
+   brick breaker and Solitaire have, for a room that wants a field colour of its own. */
 .rh [hidden]{display:none !important}
 
 .rh-tiles{display:flex;gap:clamp(4px, 1.4cqw, 18px);align-items:center;justify-content:center;min-height:0;cursor:pointer;
