@@ -727,6 +727,28 @@ try {
     check('a destroyed table answers no verbs', true);
   }
 
+  // Row 2.169 (Mike, 2026-10-31): "Solitaire always has a solid background, even when it should be see through."
+  section('*** see-through: the table paints no background of its own, so the panel setting shows (row 2.169) ***');
+  {
+    const host = scratch(960, 540);
+    host.style.setProperty('--surface', 'rgb(4, 5, 6)');
+    host.style.setProperty('--surface-alt', 'rgb(7, 8, 9)');
+    const t = mount({ host });
+    await cssReady(host);
+    const bg = (sel) => getComputedStyle(host.querySelector(sel)).backgroundColor;
+    check('CONTROL: the stylesheet loaded (a card is sized by it)', host.querySelector('.sol-card')?.getBoundingClientRect().width > 40);
+    check('*** the table paints nothing: the panel\'s own background (solid / veil / clear) shows ***',
+      bg('.sol') === 'rgba(0, 0, 0, 0)', bg('.sol'));
+    check('...nor does the box around it', bg('.sol-wrap') === 'rgba(0, 0, 0, 0)', bg('.sol-wrap'));
+    check('...nor the columns', bg('.sol-cols') === 'rgba(0, 0, 0, 0)', bg('.sol-cols'));
+    check('the bar\'s buttons keep their own surface, so they read over a moving scene', bg('.sol-btn') === 'rgb(4, 5, 6)', bg('.sol-btn'));
+    host.style.setProperty('--game-field', 'rgb(10, 11, 12)');
+    check('a room that wants a table colour sets --game-field (the same hook brick breaker has)',
+      bg('.sol') === 'rgb(10, 11, 12)', bg('.sol'));
+    t.inst.destroy();
+    host.remove();
+  }
+
   // 2026-10-04: the three rings were three raw colours; now each is a measured role, so on a light theme two of
   // them can share a hue. This is what keeps them apart: shape, a marker, a lift -- and picked never takes the
   // cursor's colour. Every theme, as drawn off real elements.

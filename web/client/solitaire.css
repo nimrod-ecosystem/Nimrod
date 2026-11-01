@@ -33,7 +33,17 @@
   --sol-ch: calc(var(--sol-cw) * 1.4);
   --sol-rad: calc(var(--sol-cw) * .064);   /* the drawing's own corner: rx 16 on a 250-wide card */
   height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:var(--sol-gap);
-  padding:var(--sol-gap);background:var(--surface-alt);font-family:var(--font);
+  padding:var(--sol-gap);background:var(--game-field, transparent);font-family:var(--font);
+  /* *** SEE-THROUGH, LIKE EVERY OTHER PANEL (row 2.169; Mike, 2026-10-31: "Solitaire always has a solid background,
+     even when it should be see through"). *** The panel behind the table is the kiosk's `.k-mod`, and ITS background
+     is the screen's (or this panel's own) "Panel backgrounds" setting (kiosk.css `panelSurface`: solid / veil /
+     clear). This rule used to paint `--surface-alt` over the whole panel, a solid sheet no setting could reach --
+     the same cause brick breaker and brain games had (brickbreaker.css, 2026-10-02). Now the table paints nothing:
+     on a solid panel the panel's own surface shows, on veil and clear the theme or its scene does.
+     THE CARDS STAY READABLE ON ANY OF THE THREE without help: every card is Design's opaque drawing on its own stock
+     with its own edge and shadow; the bar's buttons and the stock's count chip carry the theme's --surface; the
+     rings sit on a --surface band; and on a clear panel kiosk.css gives every word the panel halo. `--game-field`
+     is the same hook brick breaker has, for a room that wants a table colour of its own. */
 }
 .sol [hidden]{display:none !important}
 
