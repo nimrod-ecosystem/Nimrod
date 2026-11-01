@@ -54,6 +54,7 @@ import page_visits
 import recommend
 import storage_line  # storage line (row 2.58): what the state and event routes refuse to keep
 import quota  # how much one login may keep (Mike, 2026-10-14: "some limit to keep the site free")
+import site_owner  # the one editor, step 5 (row 2.145): who may save the site's own defaults (NIMROD_SITE_OWNERS)
 from version import deploy_commit, safe_code_version
 
 log = logging.getLogger("nimrod")
@@ -426,9 +427,15 @@ def site_version(request: Request):
     return JSONResponse({"version": SITE_VERSION, "commit": DEPLOY_COMMIT}, headers=headers)
 
 
+def _site_owner_flag(request: Request, user: str) -> bool:
+    """`site_owner` on /api/whoami and /api/me (row 2.145 step 5): whether this person may queue a site default. It only
+    decides whether the editor draws its Save; every route that keeps one asks site_owner.py again (its rule 4)."""
+    return site_owner.is_site_owner(request, user)
+
+
 @app.get("/api/whoami")
-def whoami(user: str = Depends(current_user)):
-    return {"user": user}
+def whoami(request: Request, user: str = Depends(current_user)):
+    return {"user": user, "site_owner": _site_owner_flag(request, user)}
 
 
 # ---------------------------------------------------------------- profiles
@@ -3329,9 +3336,11 @@ def api_me(request: Request, user: str = Depends(current_user)):
     # `screen` (device key, 2026-10-09): THIS request was let in by a screen's own device key, not a person's sign-in.
     # kiosk.html's `?pair=key` reads it: a screen meant to hold its own key that is running on somebody's sign-in
     # instead shows the pairing code, so it gets a key before that sign-in runs out (screen_pair.js `shouldPair`).
+    # `site_owner` (row 2.145 step 5): one of the site's owners (NIMROD_SITE_OWNERS), signed in as a person, not a screen's
+    # key alone (site_owner.py). The editor draws "Save as the site default" only then; the save routes ask again.
     return {"user": user, "email": request.session.get("email"), "google": GOOGLE_OK,
             "display_name": _display_name(user), "signed_in": signed_in_here(request, user),
-            "screen": via_device_key(request)}
+            "screen": via_device_key(request), "site_owner": _site_owner_flag(request, user)}
 
 
 def _safe_next(path: str | None) -> str | None:

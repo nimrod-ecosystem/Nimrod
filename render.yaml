@@ -50,3 +50,9 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      # The site's owners (row 2.145 step 5, web/server/site_owner.py): account ids, as /api/me says them (`user`),
+      # separated by commas. Only they get "Save as the site default" in the editor, which queues an entry for Code to
+      # commit; nothing reaches visitors until a deploy. Unset or empty = NOBODY is an owner (fails closed). Set in the
+      # Render dashboard: no account id lives in this public repo.
+      - key: NIMROD_SITE_OWNERS
+        sync: false
