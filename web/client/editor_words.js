@@ -10,13 +10,16 @@
 //                modules/button.js `label`). They are already a row of the tree (edit mode's part) and already saved
 //                with the panel; step 3 only TAGS them (`ownLabel`), so they read as words. Nothing new is stored.
 //   'sitewords'  THE SITE'S WORDS: fixed text in the code, shown in a panel (a button's "Start", a heading). Found by
-//                the wording bar's own rule for "these words" (wording_edit.js `wordsElementAt`), inside each panel's
+//                wording edit's own rule for "these words" (wording_edit.js `wordsElementAt`), inside each panel's
 //                element. A change to them is wording edit's: a SUGGESTION, kept in this browser in the one draft list
 //                and copied for the site's next update (wording_edit.js `recordChange`, `changesText`). Nothing is
 //                written to the site, to the server, or to anybody else's screen.
 //   'wordsgroup' "Words on this screen": words outside the panels (the bar, the breadcrumb) once somebody PRESSES them
 //                with Words shown, and changes already in the draft list for this page that no panel shows now. The
-//                screen outside the panels is not scanned in step 3 (pages are step 4).
+//                screen outside the panels is not scanned in step 3.
+// (row 2.145 step 4, 2026-10-31) ANY OTHER PAGE OF THE SITE uses the same words, with each part of the page as a stand-in
+// panel record `{ id, el }` (page_targets.js): no module, so no own words (`ownTextsOf` is empty) -- every run of words
+// in it is the site's. The wording bar these used to share the rule with is gone: the editor is the one way in.
 //
 // *** NOT STEP 5 (said so this file is not read as more than it is). *** No per-person change of the site's words
 // re-applied at load, no "changed from the default", no "Reset to the default", no owner's "Save as the site default",
@@ -24,7 +27,7 @@
 //
 // *** WHAT IS NOT THE SITE'S WORDS (never listed), each for a reason: ***
 //   * the panel's own text settings' values (they are kind 'words', above), its title, the dashboard's name;
-//   * anything in the editor's box, the wording bar, edit mode's own Done and card, a panel's corners and handles;
+//   * anything in the editor's box (and its host over a page), edit mode's own Done and card, a panel's corners and handles;
 //   * boxes people type in (inputs, text areas, choices; contenteditable);
 //   * live words: a clock's time and date, anything marked `data-live-words` (a module saying "built while it runs"),
 //     `role="timer"` and `aria-live` regions (words that change by themselves are not copy in the code);
@@ -52,7 +55,7 @@ export const WORDS_KINDS = Object.freeze({ own: 'words', site: 'sitewords', grou
 const safe = (fn, fallback = null) => { try { const v = fn(); return v === undefined ? fallback : v; } catch { return fallback; } };
 const HAS_LETTER = /\p{L}/u;
 // Never the site's words: the editor, the bar, edit mode's own controls and a panel's corners, live and hidden things.
-const NOT_WORDS = '[data-scene-editor], #wording-edit-bar, .em-bar, .em-card, .em-handles, .k-editc, .k-promote, '
+const NOT_WORDS = '[data-scene-editor], [data-page-editor], .em-bar, .em-card, .em-handles, .k-editc, .k-promote, '
   + '[data-live-words], [role="timer"], [aria-live], [contenteditable="true"], [contenteditable=""], [hidden], svg';
 const NOT_WORDS_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'INPUT', 'TEXTAREA', 'SELECT', 'OPTION']);
 

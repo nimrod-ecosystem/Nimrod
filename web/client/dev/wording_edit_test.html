@@ -8,13 +8,15 @@
 <body>
 <h1>wording edit <span id="summary">running…</span></h1>
 <p>Mike, 2026-10-25: "Is there some sort of edit mode for me where I can just change things on the site like wording?"
-<code>?wording=1</code> on a page opens every click on words to be retyped in place; "Copy changes" copies
-<code>page / words / new words</code> lines for <code>export_site_text.py --apply-page-edits</code>.</p>
+<code>?wording=1</code> on a page opens the one editor with its words shown (row 2.145 step 4: page_editor_test.html);
+this file keeps the pieces it shares: the one draft list, "Copy changes" (<code>page / words / new words</code> lines for
+<code>export_site_text.py --apply-page-edits</code>), and the rule for which words a press means.</p>
 <div id="fixture"><button id="b1" type="button">Save the screen</button><p id="p1">Read <a href="#x" id="a1">the guide</a> first</p>
 <div id="big"><span>x</span> stray <div>many words</div></div><input id="in1" value="typed"></div>
 <div id="out"></div>
 <script type="module">
-import { wordingParam, withChange, changesText, wordsElementAt, startWordingEdit, wordingFromPage, ON_KEY, CHANGES_KEY,
+import * as WE from '../wording_edit.js';
+import { wordingParam, withChange, changesText, wordsElementAt, ON_KEY, CHANGES_KEY,
   IDLE_OFF_MS, COPY_HEAD, LINE_MAX, norm, readChanges, recordChange, showWordsInPlace, withoutWordingParam, forgetWordingOn } from '../wording_edit.js';
 
 const out = document.getElementById('out');
@@ -78,54 +80,17 @@ try {
   forgetWordingOn();
   check('forgetWordingOn forgets "it is on", starting nothing', localStorage.getItem(ON_KEY) === null && !document.getElementById('wording-edit-bar'));
 
-  section('*** on a page ***');
-  let timers = [];
-  const setTimer = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
-  const clearTimer = (h) => { if (timers[h - 1]) timers[h - 1].fn = null; };
-  const clip = { text: '', writeText: async (t) => { clip.text = t; } };
-  let pressed = 0;
-  const b1 = document.getElementById('b1');
-  b1.addEventListener('click', () => { pressed += 1; });
-  const w = startWordingEdit({ setTimer, clearTimer, clipboard: clip, now: () => new Date('2026-10-25T12:00:00Z') });
-  const bar = () => document.getElementById('wording-edit-bar');
-  check('*** turned on: its bar, saying what to do, with Copy changes and Done ***', !!bar() && /click any words/.test(bar().textContent)
-    && !!bar().querySelector('[data-we="copy"]') && !!bar().querySelector('[data-we="done"]'));
-  check('it is kept as on in this browser (so the next page has it too)', localStorage.getItem(ON_KEY) === '1');
-  check('(row 2.145 step 3) the bar says that on a dashboard this opens the editor with Words shown',
-    /On a dashboard, this opens the editor with Words shown\./.test(bar().textContent));
-  b1.click();
-  check('*** a click on a button\'s words opens them to retype, and the button does NOT press ***', pressed === 0 && !!bar().querySelector('textarea')
-    && bar().querySelector('textarea').value === 'Save the screen');
-  bar().querySelector('textarea').value = 'Keep this screen';
-  bar().querySelector('[data-we="save"]').click();
-  check('*** saved: the page shows the new words at once, marked as changed ***', b1.textContent === 'Keep this screen' && b1.hasAttribute('data-wording-changed'));
-  check('...and the change is listed and kept', J(w.changes()) === J([{ page: location.pathname, old: 'Save the screen', new: 'Keep this screen' }])
-    && JSON.parse(localStorage.getItem(CHANGES_KEY)).length === 1 && /1 change/.test(bar().textContent));
-  document.getElementById('p1').firstChild.parentElement.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-  bar().querySelector('textarea').value = 'Read the guide before you start';
-  bar().querySelector('[data-we="save"]').click();
-  check('a sentence with a link: the whole sentence is the change (the apply step says it is put in by hand)',
-    w.changes()[1]?.old === 'Read the guide first' && w.changes()[1]?.new === 'Read the guide before you start', J(w.changes()));
-  b1.click();
-  bar().querySelector('[data-we="cancel"]').click();
-  check('"Leave them" closes it with nothing changed', !bar().querySelector('textarea') && w.changes().length === 2);
-  bar().querySelector('[data-we="copy"]').click();
-  await new Promise((r) => setTimeout(r, 0));
-  check('*** "Copy changes" copies every change, ready for --apply-page-edits ***', clip.text.startsWith(COPY_HEAD)
-    && clip.text.includes(`${location.pathname}\tSave the screen\tKeep this screen`) && /Copied 2 changes/.test(bar().textContent), J(clip.text));
-  check(`it turns itself off after ${IDLE_OFF_MS / 60000} minutes with no change (not a gate)`, timers.some((t) => t.fn && t.ms === IDLE_OFF_MS));
-  timers.filter((t) => t.fn && t.ms === IDLE_OFF_MS).forEach((t) => t.fn());
-  check('*** ...and then: no bar, not on, the button presses again, the changes kept to copy later ***', !bar() && localStorage.getItem(ON_KEY) === null
-    && (b1.click(), pressed === 1) && JSON.parse(localStorage.getItem(CHANGES_KEY)).length === 2);
-  const w2 = startWordingEdit({ setTimer, clearTimer, clipboard: clip });
-  check('turned on again: the kept changes are still there', w2.changes().length === 2);
-  bar().querySelector('[data-we="done"]').click();
-  check('*** Done turns it off ***', !bar() && localStorage.getItem(ON_KEY) === null);
-  localStorage.setItem(ON_KEY, '1');
-  check('?wording=0 on a page turns it off without starting it', wordingFromPage({ location: { search: '?wording=0' }, document }) === null
-    && localStorage.getItem(ON_KEY) === null && !bar());
-  check('a page without it, and not left on: nothing happens', wordingFromPage({ location: { search: '' }, document }) === null && !bar());
-  check('names nobody', !/cici|her screen/i.test(await (await fetch('../wording_edit.js')).text()));
+  // (row 2.145 step 4, 2026-10-31) THE WORDING BAR IS GONE: the one editor is the one way in (page_editor.js on a page,
+  // kiosk.js on a dashboard). Its checks on a page moved to page_editor_test.html; this file keeps the shared pieces.
+  section('*** the bar is gone: this file draws nothing and starts nothing ***');
+  check('*** no bar to start: neither startWordingEdit nor wordingFromPage is exported any more ***',
+    !('startWordingEdit' in WE) && !('wordingFromPage' in WE));
+  const src = await (await fetch('../wording_edit.js')).text();
+  check('...and nothing in it draws a bar or listens on the page', !/wording-edit-bar|addEventListener|createElement/.test(src));
+  check('importing it drew nothing', !document.getElementById('wording-edit-bar') && !document.getElementById('wording-edit-css'));
+  check(`the idle close is still ${IDLE_OFF_MS / 60000} minutes (the page editor uses it)`, IDLE_OFF_MS === 20 * 60 * 1000);
+  check('the copied format\'s header is unchanged (the apply tool reads it)', COPY_HEAD === '# nimrod wording changes (site words edited in place)');
+  check('names nobody', !/cici|her screen/i.test(src));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 } finally {

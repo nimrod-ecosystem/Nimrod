@@ -789,19 +789,20 @@ export function mountThemePicker(selectEl, { onChange = null } = {}) {
   });
 }
 
-// WORDING EDIT (row 2.123): `?wording=1` on any page that loads this file turns on changing the site's words in place
-// (wording_edit.js), and it stays on in that browser until Done or `?wording=0`. Loaded only then: a page nobody asked
-// it of never fetches the file.
+// CHANGING THE SITE'S WORDS (row 2.123): `?wording=1` on any page that loads this file opens the one editor over the
+// page with its words shown (row 2.145 step 4, 2026-10-31: page_editor.js -- it replaced the wording bar, which did the
+// same job its own way), and it stays open in that browser, page to page, until Done, Escape, `?wording=0` or twenty
+// minutes with nobody using it. Loaded only then: a page nobody asked it of never fetches the editor.
 // (row 2.145 step 3, 2026-10-31) EXCEPT ON A PAGE THAT SAYS IT IS A DASHBOARD (`<meta name="nimrod-wording"
-// content="editor">`, kiosk.html): there `?wording=1` opens the one editor with its Words shown (kiosk.js), and the bar
-// is never started here -- not by the address, and NOT BY A STORED "on". That stored "on" was a bug on a bedside screen:
-// the kiosk reloads itself (a new version, the recovery ladder), and every reload brought the bar back over it, taking
+// content="editor">`, kiosk.html): there `?wording=1` opens the one editor over the dashboard (kiosk.js), and nothing is
+// started here -- not by the address, and NOT BY A STORED "on". That stored "on" was a bug on a bedside screen: the kiosk
+// reloads itself (a new version, the recovery ladder), and every reload brought the wording bar back over it, taking
 // presses on words for up to twenty minutes with nobody there who had asked for it.
-/** Whether this page load starts the wording bar (wording_edit.js). PURE (row 2.145 step 3).
- *   search      the page's location.search
+/** Whether this page load opens the page editor (page_editor.js). PURE (row 2.145 steps 3 and 4).
+ *   search      the page's location.search (`?wording=0` too: page_editor.js forgets a kept "on" then, opening nothing)
  *   stored      what is kept as "it is on" in this browser ('1': on)
- *   editorPage  the page says it is a dashboard (the meta above): the editor's Words, never the bar */
-export function wordingBarWanted({ search = '', stored = null, editorPage = false } = {}) {
+ *   editorPage  the page says it is a dashboard (the meta above): the kiosk's own editor, never this */
+export function pageEditorWanted({ search = '', stored = null, editorPage = false } = {}) {
   if (editorPage) return false;
   return /[?&]wording(=|&|$)/.test(String(search || '')) || stored === '1';
 }
@@ -809,8 +810,8 @@ if (typeof window !== 'undefined' && window.location && typeof document !== 'und
   let stored = null;
   try { stored = window.localStorage?.getItem('nimrod.wording.on') ?? null; } catch { stored = null; }
   const editorPage = document.querySelector?.('meta[name="nimrod-wording"]')?.getAttribute('content') === 'editor';
-  if (wordingBarWanted({ search: window.location.search || '', stored, editorPage })) {
-    const go = () => import('./wording_edit.js').then((m) => m.wordingFromPage(window)).catch((err) => console.error('theme: wording edit', err));
+  if (pageEditorWanted({ search: window.location.search || '', stored, editorPage })) {
+    const go = () => import('./page_editor.js').then((m) => m.pageEditorFromPage(window)).catch((err) => console.error('theme: the page editor', err));
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go, { once: true }); else go();
   }
 }

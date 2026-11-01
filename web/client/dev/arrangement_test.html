@@ -56,7 +56,8 @@ const M = {
 
 // Everything the shell would hand over, faked and recorded.
 // `content(def, host)`: what a fake module draws in its host, after its id (the move tests put a playing iframe there).
-function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false, content = null } = {}) {
+// `layoutStore` (row 2.145 step 4): where a change the arrangement saves itself goes (the kiosk's ownLayoutStore).
+function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false, content = null, layoutStore = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
@@ -96,6 +97,7 @@ function make({ modules = [], failTypes = [], embedded = false, throwingGetters 
     runtime: throwingGetters ? thrower('runtime') : () => ({ router }),
     health: throwingGetters ? thrower('health') : () => ({ forget: (id) => log.forgot.push(id) }),
     profileId: throwingGetters ? thrower('profileId') : () => ids.profileId,
+    ...(layoutStore ? { layoutStore } : {}),
   });
   arr.setProfile({ id: 'scr-A', name: 'A', modules });
   return { arr, log, bus, kioskEl, stageEl, mirrorEl, clockEl, ambientEl, settings, storage, ids,
@@ -224,7 +226,9 @@ try {
       // 2026-10-18 (row 2.109): a switch kept until the dashboard is saved.
       'unsavedSwitches', 'saveSwitches', 'revertSwitches', 'savedTypeOf',
       // 2026-10-31 (row 2.145 step 1, deliberately): the records edit mode can edit, for the one editor's tree (editor_test drives it).
-      'editRecs'];
+      'editRecs',
+      // 2026-10-31 (row 2.145 step 4, deliberately): a part of a page moved, for the one editor's "Place on the page" (below, editor_test).
+      'movePagePart'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),
@@ -319,6 +323,41 @@ try {
     q.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); q.arr.partition();
     await q.arr.mountLayout();
     check('any other layout is exactly as before: not a page, no heights', !q.stageEl.hasAttribute('data-page') && !cells(q.stageEl)[0].style.height);
+    check('(row 2.145 step 4) movePagePart on any other layout: refused, nothing moved', q.arr.movePagePart('p1', 1) === false
+      && J(q.arr.layout().slots) === J(['p1', 't1']));
+  }
+  // Row 2.145 step 4 (2026-10-31): a part of a page moved up or down, in place, and saved.
+  section('*** movePagePart: a part of a page moved among the others, in place, saved ***');
+  {
+    let saved = { preset: 'page', slots: ['p1', null, 't1', 'w1'], extra: 'kept' };
+    const saves = [];
+    const t = make({ modules: [M.p1, M.t1, M.w1], content: playing,
+      layoutStore: { get: () => saved, save: (next, base) => { saves.push({ next, base }); saved = next; } } });
+    t.arr.resolve(saved); t.arr.partition();
+    await t.arr.mountLayout();
+    await until(() => loaded(snapshot(t, ['p1', 't1', 'w1'])));
+    const before = snapshot(t, ['p1', 't1', 'w1']);
+    const filled = () => t.arr.layout().slots.filter(Boolean);
+    const cellOf = (id) => t.arr.recFor(id).el.closest('.k-cell');
+    const pCell = cellOf('p1');
+    check('the first part to the bottom: moved', t.arr.movePagePart('p1', 2) === true && J(filled()) === J(['t1', 'w1', 'p1']), J(t.arr.layout().slots));
+    check('*** ...its cell (and so its height) went with it, and NOTHING was mounted again or restarted ***',
+      cellOf('p1') === pCell && restarted(t, before).length === 0 && t.log.mounts.length === 3, J(restarted(t, before)));
+    check('...the cells numbered again in page order; the empty one still takes no room', J(cells(t.stageEl).map((c) => c.dataset.slot)) === J(['0', '1', '2', '3', '4', '5', '6', '7'])
+      && J(cells(t.stageEl).map((c) => c.dataset.kind || '')) === J(['', 'trivia', 'wordforge', 'photos', '', '', '', '']) && cells(t.stageEl)[0].style.display === 'none',
+      J(cells(t.stageEl).map((c) => c.dataset.kind || '-')));
+    check('*** ...the switch lap follows the page (slot order) ***', J(t.arr.slotRecs.map((r) => r.id)) === J(['t1', 'w1', 'p1'])
+      && J(t.arr.focusRing().map((m) => m.id)) === J(['t1', 'w1', 'p1']));
+    check('*** ...saved with its base: the slots in the new order, everything else on the layout kept ***',
+      saves.length === 1 && J(saves[0].next.slots.filter(Boolean)) === J(['t1', 'w1', 'p1']) && saves[0].next.extra === 'kept'
+      && saves[0].base?.slots?.[0] === 'p1', J(saves[0]));
+    check('to the top (0), and a place past the end lands on the last', t.arr.movePagePart('p1', 0) && J(filled()) === J(['p1', 't1', 'w1'])
+      && t.arr.movePagePart('t1', 99) && J(filled()) === J(['p1', 'w1', 't1']), J(filled()));
+    const n = saves.length;
+    check('to where it already is: true, nothing saved', t.arr.movePagePart('w1', 1) === true && saves.length === n);
+    check('refused: a panel that is not a part, and a place that is not a number', t.arr.movePagePart('nope', 0) === false
+      && t.arr.movePagePart('p1', 'top') === false && saves.length === n);
+    check('*** after every move, still nothing restarted ***', restarted(t, before).length === 0, J(restarted(t, before)));
   }
 
   section('one panel that will not start is one broken rectangle');

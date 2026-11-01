@@ -28,6 +28,15 @@
 // update -- "Use these words", "Put back the site's words", "Copy changes"). While they are shown, a press on words in
 // the view CHOOSES them and presses nothing (a capture on the window, ahead of edit mode's); words outside the panels
 // join "Words on this screen" when pressed. Not step 5: nothing is re-applied at load, nothing written to the site.
+// *** STEP 4 (2026-10-31): PAGES. *** Two halves of the proposal's "Pages (the scrolling layout's sections) as targets":
+//   * A DASHBOARD LAID OUT AS A PAGE (the layout "A page that scrolls"): its parts are rows straight under the dashboard,
+//     in page order, with a Transform of where each is on the page and how tall (editor_targets.js pagePartTransformSel;
+//     the move is arrangement.js movePagePart, in place and saved). No cell rows: a page's cells are not places.
+//   * ANY OTHER PAGE OF THE SITE (`?wording=1`, page_editor.js): the same editor, opened with a `pageRoot` and no
+//     arrangement (the PAGE SCOPE below). Its tree is the page and its parts -- header, links, main, sections, footer --
+//     with each part's words under it (page_targets.js), changed exactly as a dashboard's site words are. Nothing on such a
+//     page is moved or taken out (it is written in the site's code), and the tools say so. This replaced the wording bar:
+//     one way to change the site's words, not two (wording_edit.js keeps the shared pieces only).
 //
 // *** HOW IT SITS ON WHAT IS THERE (nothing underneath it changes). ***
 //   * The selection IS edit mode's. A row chosen here is `arr.editPanel(id, true)` then `arr.editSelect(target)`; a
@@ -52,7 +61,7 @@ import { buildTree, nodeForEditing, nodeIdFor, splitSelection, ROOT_ID } from '.
 import { preset } from './layout.js';
 // (row 2.145 step 3) The words. wording_edit.js is imported for its shared pieces only (nothing starts on import).
 // FOR importing it here, at load: one draft list and one rule, not a copy. AGAINST: the kiosk now fetches that small file
-// on every load (it is pure functions; the bar itself still starts only on a page that asks for it, theme.js).
+// on every load (it is pure functions, and since step 4 it draws nothing at all: the editor is the one way in).
 import { wordsElementAt, norm, readChanges, recordChange, showWordsInPlace, changesText, LINE_MAX } from './wording_edit.js';
 import { createWordsScanner, wordsSource, WORDS_KINDS } from './editor_words.js';
 
@@ -101,8 +110,16 @@ export const EDITOR_WORDS = Object.freeze({
   noCopy: 'This browser would not copy them.',
   screenWordsHelp: 'Words outside the panels: with the words shown, press words on the screen to list them here. Changes already kept for this page that are not on the screen now are here too.',
   ownWords: 'These words are this panel\'s own setting, kept with it (its Words row). They are not the site\'s words.',
+  // (row 2.145 step 4, 2026-10-31) A dashboard laid out as a page, and any other page of the site.
+  pagePartsHelp: 'Its parts are listed in order, top first. Choose one to change its place on the page or its height.',
+  pageUndo: 'Moving a part back is a press the other way; there is no history for it yet.',
+  pagePartDelete: 'A part of the page is not taken out from here yet.',
+  pageRootHelp: 'This page is written in the site’s code. Its words can be changed here: choose them in the list, or press them on the page while the words are shown.',
+  pageSectionHelp: 'Moving or taking out a part of this page is not built: the page is written in the site’s code. Its words can be changed: Show the words.',
+  pageTools: 'This page is written in the site’s code: only its words are changed here.',
+  pageWordsHelp: 'Words pressed on the page that are not listed under its parts, and changes already kept for this page that are not on it now.',
 });
-/** "Copied 2 changes. Send them to Code." -- the wording bar's own sentence (wording_edit.js), so the two say one thing. */
+/** "Copied 2 changes. Send them to Code." -- the sentence the wording bar said (row 2.123), kept now that the editor is the one way in. */
 export const copiedWords = (n) => `Copied ${n === 1 ? '1 change' : `${n} changes`}. Send them to Code.`;
 
 /**
@@ -122,7 +139,8 @@ export function transformWhy(node, sel = null, { hasLayout = true } = {}) {
 const LEVELS = ['essential', 'standard', 'advanced'];
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const safe = (fn, fallback = null) => { try { const v = fn(); return v === undefined ? fallback : v; } catch { return fallback; } };
-const GROUPISH = new Set(['dashboard', 'cell', 'group']);
+// (step 4: a page and its parts too -- chosen here, nothing on them is edit mode's.)
+const GROUPISH = new Set(['dashboard', 'cell', 'group', 'page', 'pagesection']);
 // (step 3) The site's words and "Words on this screen": chosen HERE, like a group (edit mode is left), since they are no
 // panel's settings. A panel's own words ('words') are edit mode's part, chosen through it as before.
 const WORDS_LOCAL = new Set([WORDS_KINDS.site, WORDS_KINDS.group]);
@@ -144,12 +162,19 @@ const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', dupl
  *   onActivity() somebody chose something (a press in the view counts): the host's "nobody answering" wait restarts
  *   words       (row 2.145 step 3) open with the words shown (`?wording=1`, kiosk.js). Default false: a person turns them on.
  *   clipboard   where "Copy changes" writes (default the browser's); `now()` dates the copied lines. For the suite.
+ *   pageRoot    (row 2.145 step 4) THE PAGE SCOPE: no arrangement, a page of the site instead (page_editor.js). Its tree is
+ *               the page's parts and their words (`pageTargets`, page_targets.js -- handed in, so the kiosk, which never
+ *               opens a page, never loads that file). Nothing in it is edit mode's; only words are changed.
+ *   pageTargets { sections(root), rest(root), tree(root, { sections, words }) } (page_targets.js), with `pageRoot`
+ *   list        (step 4) open with the list showing (default true); page_editor.js opens it hidden on a narrow screen
  */
 export function openSceneEditor(opts = {}) {
-  const { arr, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null,
-    words: wordsAtOpen = false, clipboard = globalThis.navigator?.clipboard, now = () => new Date() } = opts;
-  if (!arr) throw new Error('openSceneEditor: an arrangement is required');
-  const doc = mountIn?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+  const { arr = null, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null,
+    words: wordsAtOpen = false, clipboard = globalThis.navigator?.clipboard, now = () => new Date(),
+    pageRoot = null, pageTargets = null, list: listAtOpen = true } = opts;
+  const pageScope = !arr && !!pageRoot && typeof pageTargets?.tree === 'function';
+  if (!arr && !pageScope) throw new Error('openSceneEditor: an arrangement (or a page and its targets) is required');
+  const doc = mountIn?.ownerDocument || pageRoot?.ownerDocument || (typeof document !== 'undefined' ? document : null);
   if (!doc) throw new Error('openSceneEditor: there is no page to draw on');
   const levelNow = () => { const v = safe(() => (typeof level === 'function' ? level() : level), 'standard'); return LEVELS.includes(v) ? v : 'standard'; };
   let closed = false;
@@ -175,7 +200,8 @@ export function openSceneEditor(opts = {}) {
 
   // ---- the placed panels' edit model: the edit windows' own, with no window open ----
   let placed = null;
-  try {
+  // (step 4) A page has no placed panels: no model.
+  if (!pageScope) try {
     const { onClose: _c, mountIn: _m, host: _h, windows: _w, onChange: hostChange, ...rest } = dashOpts || {};   // eslint-disable-line no-unused-vars
     placed = openDashboardEditor({
       ...rest, arr, host: doc.createElement('div'), windows: [], onClose: null,
@@ -208,7 +234,7 @@ export function openSceneEditor(opts = {}) {
       <span class="se-why" data-se-why></span>
     </div>
     <div class="se-main">
-      <div class="se-tree" role="tree" aria-label="What is on this dashboard" data-se-tree></div>
+      <div class="se-tree" role="tree" aria-label="${pageScope ? 'What is on this page' : 'What is on this dashboard'}" data-se-tree></div>
       <div class="se-gap" aria-hidden="true"></div>
       <div class="se-ins" aria-label="Inspector" data-se-ins></div>
     </div>`;
@@ -218,6 +244,12 @@ export function openSceneEditor(opts = {}) {
   const insEl = box.querySelector('[data-se-ins]');
   const statusEl = box.querySelector('[data-se-status]');
   const whyEl = box.querySelector('[data-se-why]');
+  // (step 4) Opened with the list put away (page_editor.js, on a narrow screen): "Show the list" brings it back.
+  if (!listAtOpen) {
+    treeEl.hidden = true;
+    const lb = barEl.querySelector('[data-se="list"]');
+    if (lb) { lb.setAttribute('aria-expanded', 'false'); lb.textContent = 'Show the list'; }
+  }
 
   function note(text) {
     lastNote = String(text || '');
@@ -225,8 +257,11 @@ export function openSceneEditor(opts = {}) {
     if (lastNote) { try { notify?.(lastNote); } catch { /* the line still says it */ } }
   }
   const activity = () => { try { onActivity?.(); } catch (err) { console.error('editor: activity', err); } };
-  const editingNow = () => safe(() => arr.editing(), null);
-  const recOf = (id) => safe(() => (arr.editRecs?.() || []).find((r) => r && r.id === id), null);
+  const editingNow = () => (pageScope ? null : safe(() => arr.editing(), null));
+  // (step 4) What words are looked for in: the arrangement's panels, or a page's parts (and the rest of it) as last drawn.
+  let pageRecs = [];
+  const recsNow = () => (pageScope ? pageRecs : safe(() => arr.editRecs?.() || [], []) || []);
+  const recOf = (id) => recsNow().find((r) => r && r.id === id) || null;
   const leaveEditMode = () => { const e = editingNow(); if (e) { try { arr.editPanel(e.id, false); } catch (err) { console.error('editor: leaving edit mode', err); } } };
 
   // =====================================================================================================
@@ -247,6 +282,8 @@ export function openSceneEditor(opts = {}) {
       const w = off(EDITOR_WORDS.wordsTools);
       return { undo: w, redo: w, add: w, duplicate: w, delete: w };
     }
+    // (step 4) A page of the site: nothing on it is moved, copied or taken out from here.
+    if (pageScope) { const p = off(EDITOR_WORDS.pageTools); return { undo: p, redo: p, add: p, duplicate: p, delete: p }; }
     const sel = editing ? safe(() => arr.editSelection(), null) : null;
     const act = (id) => (sel?.actions || []).find((a) => a.id === id && typeof a.run === 'function') || null;
     const m = model();
@@ -261,7 +298,8 @@ export function openSceneEditor(opts = {}) {
     } else if (group) {
       t.undo = off(EDITOR_WORDS.chooseFirst); t.redo = off(EDITOR_WORDS.chooseFirst);
     } else {
-      t.undo = act('undo') ? on(() => act('undo').run()) : off(EDITOR_WORDS.noHistory);
+      // (step 4) A part of a page: its own Undo if its module has one (a room's), else what moving it back is.
+      t.undo = act('undo') ? on(() => act('undo').run()) : off(node.pagePart && !node.targetId ? EDITOR_WORDS.pageUndo : EDITOR_WORDS.noHistory);
       t.redo = off(EDITOR_WORDS.noRedo);
     }
     // Delete
@@ -273,6 +311,7 @@ export function openSceneEditor(opts = {}) {
         if (!m.remove(id)) note('It is locked, so it was not taken out.');
       });
     } else if (act('remove')) t.delete = on(() => act('remove').run());
+    else if (node.kind === 'panel' && node.pagePart) t.delete = off(EDITOR_WORDS.pagePartDelete);
     else if (node.kind === 'panel' && !node.place) t.delete = off(EDITOR_WORDS.slotDelete);
     else t.delete = off(EDITOR_WORDS.cannotTakeOut);
     // Duplicate
@@ -315,6 +354,8 @@ export function openSceneEditor(opts = {}) {
     if (GROUPISH.has(n.kind) || WORDS_LOCAL.has(n.kind)) {
       chosenLocal = n.id;
       if (editingNow()) leaveEditMode();    // edit mode's `edit/ended` draws it again
+      // (step 4) A part of a page chosen in the list is brought into view on the page (the view is the page itself).
+      if (n.kind === 'pagesection' && n.el?.isConnected) { try { n.el.scrollIntoView?.({ block: 'nearest' }); } catch { /* not laid out */ } }
       render();
       return true;
     }
@@ -333,6 +374,14 @@ export function openSceneEditor(opts = {}) {
   // =====================================================================================================
   /** The tree as it is now: with the words while they are shown (step 3), else exactly steps 1 and 2's. */
   function buildNow() {
+    if (pageScope) {
+      // (step 4) A page: its parts found again on every draw (a part opened or shown since is in it), each a stand-in
+      // panel record { id, el } for the words, plus the rest of the page. page_targets.js never throws.
+      const sections = safe(() => pageTargets.sections(pageRoot), []) || [];
+      pageRecs = [...sections, ...[safe(() => pageTargets.rest?.(pageRoot), null)].filter(Boolean)];
+      const pageWords = wordsOn ? wordsSource({ recs: pageRecs, profileName: '', scanner, page: page(), drafts: readChanges(), clicked }) : null;
+      return safe(() => pageTargets.tree(pageRoot, { sections, words: pageWords }), null);
+    }
     const words = wordsOn ? wordsSource({
       recs: safe(() => arr.editRecs?.() || [], []) || [], profileName: safe(() => arr.profile()?.name, '') || '',
       scanner, page: page(), drafts: readChanges(), clicked,
@@ -369,16 +418,18 @@ export function openSceneEditor(opts = {}) {
   }
   function drawBar(node, editing) {
     const t = toolsFor(node, editing);
-    const why = [];
+    const why = new Map();      // a reason -> the tools it is for
     for (const id of TOOLS) {
       const b = barEl.querySelector(`[data-se="${id}"]`);
       if (!b) continue;
       b.disabled = !t[id].on;
       b.title = t[id].on ? TOOL_LABELS[id] : t[id].why;
-      if (!t[id].on) why.push(`${TOOL_LABELS[id]}: ${t[id].why}`);
+      if (!t[id].on) why.set(t[id].why, [...(why.get(t[id].why) || []), TOOL_LABELS[id]]);
     }
-    // The reasons, said once in a line (a disabled button cannot be pressed to ask why).
-    whyEl.textContent = why.join('  ');
+    // The reasons, said once in a line (a disabled button cannot be pressed to ask why). (row 2.145 step 4: a reason
+    // several tools share is said once, after their names -- on a page all five share one, and five copies of it took
+    // half a phone's screen.)
+    whyEl.textContent = [...why].map(([text, names]) => `${names.join(', ')}: ${text}`).join('  ');
     statusEl.textContent = lastNote;
   }
   function drawTree() {
@@ -418,11 +469,14 @@ export function openSceneEditor(opts = {}) {
         const panel = node.children()[0];
         help = panel ? `${panel.label}. ${EDITOR_WORDS.cellHelp}` : EDITOR_WORDS.emptyCell;
       } else if (node?.kind === 'group') help = EDITOR_WORDS.groupHelp;
+      // (step 4) A page of the site, and one of its parts.
+      else if (node?.kind === 'page') help = EDITOR_WORDS.pageRootHelp;
+      else if (node?.kind === 'pagesection') help = EDITOR_WORDS.pageSectionHelp;
       else {
         const L = safe(() => arr.layout(), null);
-        if (L) help = `Laid out as “${preset(L.preset).label}”. ${help}`;
+        if (L) help = `Laid out as “${preset(L.preset).label}”. ${preset(L.preset).page ? EDITOR_WORDS.pagePartsHelp : help}`;
       }
-      head.innerHTML = `<strong class="em-title" data-se-title>${esc(node?.label || 'This dashboard')}</strong><p class="em-help" data-se-help>${esc(help)}</p>`;
+      head.innerHTML = `<strong class="em-title" data-se-title>${esc(node?.label || (pageScope ? 'This page' : 'This dashboard'))}</strong><p class="em-help" data-se-help>${esc(help)}</p>`;
       return;
     }
     const sel = safe(() => arr.editSelection(), null);
@@ -430,7 +484,8 @@ export function openSceneEditor(opts = {}) {
     const split = splitSelection(sel);
     // TRANSFORM first: a placed panel's (the edit model's), else a piece's own rows, else why it has none. Both are
     // presented one way (editor_targets.js presentTransform), and its numbers take typing (step 2).
-    const tf = node.place && !node.targetId ? safe(() => node.transform(), null) : split.transform;
+    // (step 4) ...or a part of a page's: its place on the page and its height (editor_targets.js pagePartTransformSel).
+    const tf = (node.place || node.pagePart) && !node.targetId ? safe(() => node.transform(), null) : split.transform;
     if (tf) section('t', tf, { typed: true });
     else plain('t', 'Transform', transformWhy(node, sel, { hasLayout: !!safe(() => arr.layout(), null) }));
     // ...then its own settings (and its buttons: Take it out, Copy as the default...).
@@ -445,7 +500,7 @@ export function openSceneEditor(opts = {}) {
   //   Use these words        the change, into wording edit's draft list (wording_edit.js recordChange), and shown in
   //                          place at once (`showWordsInPlace`, marked while the words are shown)
   //   Put back the site's words   the change dropped, the element as it was
-  //   Copy changes (N)       the whole list, as the wording bar copies it (`changesText`), for the site's next update
+  //   Copy changes (N)       the whole list, in the one copied format (`changesText`), for the site's next update
   // ONE LINE (wording_edit.js `norm`: the copied lines and the apply tool hold words on one line), so Enter keeps them and
   // there is no Shift+Enter. Up to LINE_MAX letters, as the original. Escape in the box with typing in it puts the box
   // back and is used up there (the editor stays); in a box with nothing new, it is Escape as anywhere in the editor.
@@ -457,7 +512,7 @@ export function openSceneEditor(opts = {}) {
   }
   function drawWords(node, head) {
     if (node.kind === WORDS_KINDS.group) {
-      head.innerHTML = `<strong class="em-title" data-se-title>${esc(node.label)}</strong><p class="em-help" data-se-help>${esc(EDITOR_WORDS.screenWordsHelp)}</p>`;
+      head.innerHTML = `<strong class="em-title" data-se-title>${esc(node.label)}</strong><p class="em-help" data-se-help>${esc(pageScope ? EDITOR_WORDS.pageWordsHelp : EDITOR_WORDS.screenWordsHelp)}</p>`;
       return;
     }
     const w = node.words || {};
@@ -530,8 +585,8 @@ export function openSceneEditor(opts = {}) {
   // WORDS SHOWN, AND A PRESS ON WORDS IN THE VIEW (row 2.145 step 3).
   // While the words are shown, a press on words anywhere outside the editor's box CHOOSES them and presses nothing: a
   // capture listener on the WINDOW (it runs before edit mode's, which is on the panel's box) takes the press, the
-  // pointer-down that comes before it and the mouse-down, as the wording bar does. Which words: the wording bar's own
-  // rule (wording_edit.js `wordsElementAt`). Then:
+  // pointer-down that comes before it and the mouse-down, as the wording bar did. Which words: wording edit's own rule
+  // (wording_edit.js `wordsElementAt`). Then:
   //   * words listed under a panel: that row;
   //   * a panel's own words (a sign's): its row, through edit mode, as a press in edit mode would choose it;
   //   * words inside a panel that are not listed (a clock's time, words over the cap, words the panel built since the
@@ -541,7 +596,7 @@ export function openSceneEditor(opts = {}) {
   // Words hidden: nothing is listened to; steps 1 and 2 exactly.
   // =====================================================================================================
   function panelAt(t) {
-    const recs = safe(() => arr.editRecs?.() || [], []) || [];
+    const recs = recsNow();
     const holding = recs.filter((r) => r && r.el && typeof r.el.contains === 'function' && r.el.contains(t));
     return holding.find((r) => holding.every((o) => o === r || !r.el.contains(o.el))) || null;
   }
@@ -553,12 +608,18 @@ export function openSceneEditor(opts = {}) {
   }
   function wordsHit(t) {
     const el = wordsElementAt(t);
-    if (!el || box.contains(el) || el.closest?.('#wording-edit-bar')) return null;
+    if (!el || box.contains(el)) return null;
     const rec = panelAt(t);
     const find = () => leafByEl.get(el) || ownWordsAt(t, rec);
     let id = find();
     if (id) return { id };
-    if (rec) { render(); id = find(); return id ? { id } : null; }
+    if (rec) {
+      render(); id = find();
+      if (id) return { id };
+      // (step 4) On a page of the site, words not listed under its part (past its first 30, or put there since) are
+      // still the site's words: they join the list when pressed. In a dashboard's panel, the press is the panel's.
+      if (!pageScope) return null;
+    }
     const shown = norm(el.textContent);
     if (!shown || shown.length > LINE_MAX || !HAS_LETTER.test(shown) || el.closest?.('[data-live-words], [role="timer"], [aria-live], [hidden]')) return null;
     return { add: el };
@@ -793,7 +854,7 @@ export function openSceneEditor(opts = {}) {
     closed = true;
     doc.removeEventListener('keydown', onKey);
     // (step 3) The words' watch and the window's listeners go with it. Words changed in place stay as they are shown (the
-    // change is kept to copy), as the wording bar leaves them; their mark goes with the words being shown.
+    // change is kept to copy), as the wording bar left them; their mark goes with the words being shown.
     for (const ev of VIEW_PRESSES) win.removeEventListener(ev, onViewPress, true);
     try { scanner?.destroy(); } catch { /* gone */ }
     scanner = null;

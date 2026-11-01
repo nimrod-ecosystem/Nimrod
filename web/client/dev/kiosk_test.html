@@ -4642,7 +4642,7 @@ const toTab = (m, id) => {
         launch: { search: '', navType: 'reload' } });
       await sleep(300);
       check('*** a wording "on" kept in this browser opens NOTHING on a dashboard: no editor, no wording bar ***',
-        !sk.editView() && !document.getElementById('wording-edit-bar'));
+        !sk.editView() && !document.getElementById('wording-edit-bar') && !document.querySelector('[data-page-editor]'));
       sk.destroy();
       sroot.remove();
       try { if (keptOn === null) localStorage.removeItem('nimrod.wording.on'); else localStorage.setItem('nimrod.wording.on', keptOn); } catch { /* no store */ }
@@ -5180,6 +5180,28 @@ const toTab = (m, id) => {
     check('*** a dashboard laid out as a page: its parts stacked, the clock as tall as the screen (its own row), the calculator half ***',
       await settled(() => cellOfType('clock')?.style.height === '100vh' && cellOfType('calculator')?.style.height === '50vh', 8000),
       `${cellOfType('clock')?.style.height} / ${cellOfType('calculator')?.style.height}`);
+    // (row 2.145 step 4, 2026-10-31) THE ONE EDITOR ON A PAGE: a part moved up, in place and saved through the kiosk's own
+    // store; its height set from the editor, on the row the kiosk sizes the cell from.
+    const savedSlots = async () => { const r = createState({ url: pProfiles.stateURL(ps.id, 'settings'), user: USER }); await r.load().catch(() => {});
+      const v = ((r.get() || {}).kiosk?.layout?.slots || []).filter(Boolean); r.destroy(); return v; };
+    const J = (v) => JSON.stringify(v);
+    const pollP = async (fn, ms = 8000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(100); } return false; };
+    const calcCell = cellOfType('calculator');
+    const ped = pk.openEditView('scene');
+    check('(setup, step 4) the one editor on the page: the parts are its rows, in page order',
+      !!ped && J(ped.tree().list.filter((n) => n.pagePart).map((n) => n.panelId)) === J([a.id, b.id]), J(ped?.tree().list.map((n) => n.id)));
+    ped.choose(`panel:${b.id}`);
+    ped.el.querySelector('[data-se-sec="t"] [data-em-step="-1"][data-em-key="order"]')?.click();
+    check('*** step 4: ‹ on Place moves the calculator above the clock -- the same cell, nothing reloaded -- and it is saved ***',
+      await pollP(async () => J(await savedSlots()) === J([b.id, a.id])) && cellOfType('calculator') === calcCell
+      && proot.querySelector('.k-grid[data-page] .k-cell')?.dataset.kind === 'calculator', J(await savedSlots()));
+    ped.el.querySelector('[data-se-sec="t"] [data-em-step="1"][data-em-key="pageHeight"]')?.click();
+    check('*** step 4: › on Height in the editor: the calculator’s cell grows to three quarters of the screen ***',
+      await settled(() => cellOfType('calculator')?.style.height === '75vh', 4000), cellOfType('calculator')?.style.height);
+    await sleep(600);
+    check('...and the screen did not rebuild under the person editing (the editor is still open, the cell the same)',
+      ped.isOpen() && cellOfType('calculator') === calcCell);
+    pk.closeEditView();
     pk.destroy();
     proot.remove();
   } catch (e) {

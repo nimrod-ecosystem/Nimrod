@@ -76,6 +76,9 @@ const SEEDS = { b1: { label: 'Ada', style: 'plate' } };
 // (step 2) Town in a cell, beside a sign: no room behind them. Town's edits go to its own panel row (no person here).
 const TOWN_LAYOUT = () => ({ preset: 'side', slots: ['t1', 'b1'] });
 const TOWN_MODULES = [{ id: 't1', type: 'town' }, { id: 'b1', type: 'button' }];
+// (step 4) A dashboard laid out as a page: three parts with an empty slot between the first two.
+const PAGE_LAYOUT = () => ({ preset: 'page', slots: ['b1', null, 'k2', 'b3'] });
+const PAGE_MODULES = [{ id: 'b1', type: 'button' }, { id: 'k2', type: 'clock' }, { id: 'b3', type: 'button' }];
 
 /** A real arrangement, mounted, saving into one doc the way the kiosk does (doc_merge.js mergeLayoutSave, both writers). */
 async function make({ layout = LAYOUT, modules = MODULES } = {}) {
@@ -640,6 +643,62 @@ try {
     const c = copyItem(r, fi);
     check('copyItem: a copy last, beside it, nothing else moved', c.index === r.items.length && c.recipe.items.length === r.items.length + 1
       && Math.abs(c.recipe.items.at(-1).x - r.items[fi].x) === 8 && J(c.recipe.items.slice(0, -1)) === J(r.items));
+  }
+
+  // ============================================================================================
+  // ROW 2.145 STEP 4 (2026-10-31): a dashboard laid out as "A page that scrolls" -- its parts as targets.
+  section('*** step 4: a dashboard laid out as a page -- its parts in order, their place and height ***');
+  {
+    const pg = await make({ layout: PAGE_LAYOUT, modules: PAGE_MODULES });
+    const filled = () => (pg.arr.layout().slots || []).filter(Boolean);
+    const savedFilled = () => (pg.doc.kiosk.layout.slots || []).filter(Boolean);
+    const cellOf = (id) => pg.arr.recFor(id)?.el?.closest('.k-cell') || null;
+    let e = pg.open();
+    const parts = e.tree().list.filter((n) => n.parent === ROOT_ID);
+    check('*** the parts are rows straight under the dashboard, in page order, "Part k of the page: <title>"; no cell rows, no empty slot ***',
+      J(parts.map((n) => [n.id, n.pagePart])) === J([['panel:b1', 1], ['panel:k2', 2], ['panel:b3', 3]])
+      && parts.every((n) => n.kind === 'panel' && /^Part \d of the page: /.test(n.label)) && !e.tree().list.some((n) => n.kind === 'cell'),
+      J(parts.map((n) => `${n.id} ${n.label}`)));
+    check('the dashboard’s row says how it is laid out and what to do', /A page that scrolls/.test(e.el.querySelector('[data-se-help]')?.textContent || '')
+      && (e.el.querySelector('[data-se-help]')?.textContent || '').includes(EDITOR_WORDS.pagePartsHelp));
+    check('a part’s own things are still under it (the sign’s words)', e.tree().nodes.get('panel:b1/words')?.parent === 'panel:b1');
+    row(e, 'panel:k2').click();
+    check('*** chosen: its Transform is "Place on the page" (a number, typed too) and "Height on the page" ***',
+      J(keysOf(e)) === J(['order', 'pageHeight']) && labelOf(e, 'order') === 'Place on the page' && labelOf(e, 'pageHeight') === 'Height on the page'
+      && shownOf(e, 'order') === '2' && !!boxOf(e, 'order') && !boxOf(e, 'pageHeight'), `${J(keysOf(e))} ${shownOf(e, 'order')}`);
+    check('...the tools say a part is not taken out from here, and moving it back is a press the other way',
+      bar(e, 'delete').disabled && bar(e, 'delete').title === EDITOR_WORDS.pagePartDelete && bar(e, 'undo').title === EDITOR_WORDS.pageUndo);
+    const k2 = pg.arr.recFor('k2'), k2el = k2.el, k2cell = cellOf('k2'), saves0 = pg.saves.length;
+    sec(e, 't').querySelector('[data-em-step="1"][data-em-key="order"]').click();
+    check('*** › on Place: it moves down one, the SAME panel (not mounted again), its cell moved with it ***',
+      J(filled()) === J(['b1', 'b3', 'k2']) && pg.arr.recFor('k2') === k2 && k2.el === k2el && cellOf('k2') === k2cell && k2el.isConnected, J(filled()));
+    check('...the cells numbered again in their new order, and the switch lap follows', J([...pg.kioskEl.querySelectorAll('.k-stage > .k-cell')].map((c) => c.dataset.slot))
+      === J(['0', '1', '2', '3', '4', '5', '6', '7']) && J(pg.arr.slotRecs.map((r) => r.id)) === J(['b1', 'b3', 'k2'])
+      && Number(cellOf('k2').dataset.slot) > Number(cellOf('b3').dataset.slot));
+    check('*** ...and saved where the edit view saves (the layout’s slots, in the new order) ***', pg.saves.length > saves0 && J(savedFilled()) === J(['b1', 'b3', 'k2']),
+      J(pg.doc.kiosk.layout.slots));
+    check('...the list follows: it is "Part 3" now, still chosen', await until(() => (row(e, 'panel:k2')?.textContent || '').startsWith('Part 3 of the page')
+      && e.selected() === 'panel:k2' && shownOf(e, 'order') === '3'), row(e, 'panel:k2')?.textContent);
+    sec(e, 't').querySelector('[data-em-step="1"][data-em-key="order"]').click();
+    check('*** › on the last place goes round to the top (one switch reaches every place) ***', J(filled()) === J(['k2', 'b1', 'b3']), J(filled()));
+    typeInto(e, 'order', '2');
+    check('*** a place typed: 2 -> second ***', J(filled()) === J(['b1', 'k2', 'b3']) && J(savedFilled()) === J(['b1', 'k2', 'b3']), J(filled()));
+    const savesT = pg.saves.length;
+    typeInto(e, 'order', '9');
+    check('*** a place that is not there (9 of 3) is refused, nothing moved or saved ***', J(filled()) === J(['b1', 'k2', 'b3']) && pg.saves.length === savesT
+      && /Between 1 and 3/.test(shownOf(e, 'order')), shownOf(e, 'order'));
+    sec(e, 't').querySelector('[data-em-step="1"][data-em-key="pageHeight"]').click();
+    check('*** › on Height: written to the panel’s own row (where the menu’s row writes it; the kiosk sizes the cell from it) ***',
+      k2.state.get().pageHeight === 75 && shownOf(e, 'pageHeight') === 'Three quarters', `${k2.state.get().pageHeight} ${shownOf(e, 'pageHeight')}`);
+    e.close();
+    check('*** a part of a page moved is refused on any other layout ***', (() => {
+      const r = pg.arr.movePagePart('nope', 0) === false; return r;
+    })());
+    pg.arr.destroy();
+    const grid = await make();
+    check('...movePagePart on a grid (side by side): false, nothing moved', grid.arr.movePagePart('b1', 1) === false && J(grid.arr.layout().slots) === J(['b1', 'v1']));
+    check('...and a grid’s tree still has its cells', buildTree(grid.arr).list.some((n) => n.kind === 'cell') && !buildTree(grid.arr).list.some((n) => n.pagePart));
+    grid.arr.destroy();
   }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

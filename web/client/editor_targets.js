@@ -43,9 +43,20 @@
 // A 'sitewords' node belongs to no panel's settings (`panelId` null, its panel in `owner`): fields() is null, set() does
 // nothing -- its words are changed through the draft list, in the inspector (editor.js). The id is the ORIGINAL words,
 // so it stays the same while a change is shown in place and after a reload (a change is not shown again at load).
+//
+// *** A DASHBOARD LAID OUT AS A PAGE (row 2.145 step 4, 2026-10-31). *** The proposal's "Pages (the scrolling layout's
+// sections) as targets": on the layout preset "A page that scrolls" (layout.js `page`) a cell is not a place on the screen
+// -- it is a part of the page, stacked in order, and an empty one takes no room. So there are no cell rows:
+//   dash
+//     panel:<id>               each FILLED part, in page order ('panel', `pagePart`: 1 is the top), labelled
+//                              "Part 2 of the page: Photos"; its own things and words under it as anywhere
+//   (placed panels and the room after, as on any dashboard)
+// Its Transform is where it is on the page: "Place on the page" (1 to the number of parts; ‹ up, › down, typed in the box
+// like any number) and "Height on the page" (layout.js PAGE_HEIGHT_FIELD, the same row the menu has). `pagePartTransformSel`.
+// The words and the parts of every OTHER page of the site are page_targets.js's (the editor opened over a page).
 import { targetsOf, selectionFor } from './edit_mode.js';
 import { normalizeField } from './settings_fields.js';
-import { preset } from './layout.js';
+import { preset, isPagePreset, PAGE_HEIGHT_FIELD, PAGE_HEIGHT_KEY, pageHeightOf } from './layout.js';
 import { PLACES, SURFACES, PLACE_LABELS, SURFACE_LABELS, EDIT_DEFAULTS as MODEL_DEFAULTS } from './edit_model.js';
 import { getManifest } from './module.js';
 import { ROOM_PANEL_ID } from './arrangement.js';
@@ -113,6 +124,58 @@ export function placedTransformSel(model, id, { title = '' } = {}) {
 }
 
 // =====================================================================================================
+// A PART OF A PAGE'S TRANSFORM (row 2.145 step 4, 2026-10-31): where it is on the page, and how tall.
+//   Place on the page   1 (the top) to the number of parts, step 1. ‹ moves it up, › down; › on the last goes round to
+//                       the top (settings_fields.js stepValue), so one switch reaches every place. Written through
+//                       `arr.movePagePart` (arrangement.js: the cell moved in place, the order saved where the edit view
+//                       saves). No new number: its range is the parts that are there.
+//   Height on the page  layout.js PAGE_HEIGHT_FIELD, as it is (its five heights, its level): the same row the menu's
+//                       panel tab has, written to the same place (the panel's own row, `pageHeight`), which the kiosk
+//                       applies to the cell. One row, two ways to reach it -- not a second copy of the rule.
+// =====================================================================================================
+export const PAGE_ORDER_KEY = 'order';
+/** The filled parts of a page, in order (their ids), or null when the arrangement is not laid out as a page. PURE. */
+export function pageParts(layout) {
+  if (!layout || !isPagePreset(layout.preset) || !Array.isArray(layout.slots)) return null;
+  return layout.slots.filter(Boolean);
+}
+/** A part of a page's Transform as a selection (edit_mode.js's shape), or null when `id` is not a part of a page. */
+export function pagePartTransformSel(arr, id, { title = '' } = {}) {
+  if (!arr || !id) return null;
+  const parts = pageParts(safe(() => arr.layout(), null));
+  if (!parts || !parts.includes(id)) return null;
+  const recNow = () => safe(() => (arr.editRecs?.() || []).find((r) => r && r.id === id), null);
+  const fields = presentFields([
+    normalizeField({ key: PAGE_ORDER_KEY, label: 'Place on the page', kind: 'number', min: 1, max: parts.length, step: 1,
+      level: 'essential', default: 1, note: '‹ moves it up, › down' }),
+    normalizeField(PAGE_HEIGHT_FIELD),
+  ].filter(Boolean));
+  return {
+    panelId: id, type: 'pagepart', title, target: null, label: 'Transform', help: '',
+    fields,
+    transformKeys: [PAGE_ORDER_KEY, PAGE_HEIGHT_KEY],
+    actions: [],
+    values: () => {
+      const now = pageParts(safe(() => arr.layout(), null)) || [];
+      const st = safe(() => recNow()?.state?.get?.(), null) || {};
+      return { [PAGE_ORDER_KEY]: now.indexOf(id) + 1, [PAGE_HEIGHT_KEY]: pageHeightOf(st[PAGE_HEIGHT_KEY]) };
+    },
+    set: (key, value) => {
+      try {
+        if (key === PAGE_ORDER_KEY) return typeof arr.movePagePart === 'function' && arr.movePagePart(id, Number(value) - 1) !== false;
+        if (key === PAGE_HEIGHT_KEY) {
+          const rec = recNow();
+          if (!rec?.state?.set) return false;
+          rec.state.set({ [PAGE_HEIGHT_KEY]: pageHeightOf(value) });
+          return true;
+        }
+        return false;
+      } catch (err) { console.error('editor: a part of the page', err); return false; }
+    },
+  };
+}
+
+// =====================================================================================================
 // ONE TRANSFORM, HOWEVER EACH THING KEEPS ITS NUMBERS (row 2.145 step 2, 2026-10-31).
 // Mike's "editing a scene in Godot or Blender": a thing's place, size and turn read the same whatever it is. Underneath
 // they are kept four ways, and none of them changes here (each owner keeps its own units, bounds and rounding):
@@ -140,7 +203,9 @@ export function placedTransformSel(model, id, { title = '' } = {}) {
 //     layer and where it sits. Each keeps its own words for up and down ("Nearer or further" on a floor, "Higher or
 //     lower" on a wall, "Up or down" for a panel): they say which way a press moves it, which one word could not.
 // =====================================================================================================
-export const TRANSFORM_ORDER = Object.freeze(['x', 'y', 'size', 'scale', 'rotate', 'rot', 'facing', 'wall', 'layer', 'place', 'surface']);
+// (row 2.145 step 4: a part of a page's two rows last -- they are never shown beside the others, only in this order.)
+export const TRANSFORM_ORDER = Object.freeze(['x', 'y', 'size', 'scale', 'rotate', 'rot', 'facing', 'wall', 'layer', 'place', 'surface',
+  'order', 'pageHeight']);
 const TURN_KEYS = new Set(['rotate', 'rot']);
 const orderOf = (k) => { const i = TRANSFORM_ORDER.indexOf(k); return i < 0 ? TRANSFORM_ORDER.length : i; };
 
@@ -229,13 +294,14 @@ export function buildTree(arr, { placedModel = null, words = null } = {}) {
     return node;
   }
   /** The panel's row, then its things under it. */
-  function addPanel(rec, parent, depth, place = null) {
+  function addPanel(rec, parent, depth, place = null, { pagePart = null, of = 0 } = {}) {
     if (!rec || !rec.id || nodes.has(nodeIdFor(rec.id))) return;
     const room = rec.id === ROOM_PANEL_ID;
     const targets = safe(() => targetsOf(rec), []);
     const whole = targets.find((t) => t.whole) || null;
-    add({ id: nodeIdFor(rec.id), parent, depth, label: titleOf(rec), kind: room ? 'room' : 'panel', panelId: rec.id,
-      wholeId: whole ? whole.id : null, place });
+    // (step 4) A part of a page says where it is on the page: "Part 2 of the page: Photos".
+    add({ id: nodeIdFor(rec.id), parent, depth, label: pagePart ? `Part ${pagePart} of the page: ${titleOf(rec)}` : titleOf(rec),
+      kind: room ? 'room' : 'panel', panelId: rec.id, wholeId: whole ? whole.id : null, place, pagePart, parts: pagePart ? of : 0 });
     for (const t of targets) {
       if (t.whole) continue;
       // (step 2: a thing with a Transform of its own -- a village's or Town's piece -- is a 'piece' like a room's; a
@@ -259,6 +325,8 @@ export function buildTree(arr, { placedModel = null, words = null } = {}) {
     if (node.place && !node.targetId && placedModel && safe(() => placedModel.item(node.panelId), null)) {
       return placedTransformSel(placedModel, node.panelId, { title: node.label });
     }
+    // (step 4) A part of a page: its place on the page and its height.
+    if (node.pagePart && !node.targetId) return pagePartTransformSel(arr, node.panelId, { title: node.label });
     if (node.targetId) return splitSelection(fieldsOf(node)).transform;
     return null;
   }
@@ -273,9 +341,15 @@ export function buildTree(arr, { placedModel = null, words = null } = {}) {
   const profile = safe(() => arr.profile(), null);
   add({ id: ROOT_ID, label: profile?.name || 'This dashboard', kind: 'dashboard' });
   const layout = safe(() => arr.layout(), null);
+  const parts = pageParts(layout);
+  if (parts) {
+    // (step 4) Laid out as a page: its parts in page order, straight under the dashboard; an empty slot is no part.
+    // Numbered among the FILLED slots (a part that would not start is still a part on the page, so it keeps its number).
+    parts.forEach((id, i) => { if (recById.has(id)) addPanel(recById.get(id), ROOT_ID, 1, null, { pagePart: i + 1, of: parts.length }); });
+  }
   if (layout && Array.isArray(layout.slots)) {
     const p = preset(layout.preset);
-    layout.slots.forEach((slotId, i) => {
+    if (!parts) layout.slots.forEach((slotId, i) => {
       const rec = slotId ? recById.get(slotId) : null;
       const cellId = `cell:${i}`;
       add({ id: cellId, parent: ROOT_ID, depth: 1, kind: 'cell',

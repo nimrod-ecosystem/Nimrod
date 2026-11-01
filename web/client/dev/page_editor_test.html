@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the one editor over a page (row 2.145 step 4) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #fx{position:fixed;left:0;top:0;width:900px;height:600px;visibility:hidden;pointer-events:none}
+  iframe{width:900px;height:600px;border:0;visibility:hidden;position:fixed;left:0;top:0}
+</style>
+</head>
+<body>
+<h1>the one editor over a page (row 2.145 step 4) — <code>?wording=1</code> on any page is the editor, its words shown</h1>
+<p>The proposal's step 4: a page's parts (its landmarks) are the tree, each part's words under it, changed through the one
+draft list as on a dashboard. It replaced the wording bar. No server needed, except the last section (real pages in a frame).</p>
+<div id="fx">
+  <header id="hd"><h1>Fixture page</h1><a href="#x" id="hlink">Sign in</a></header>
+  <nav aria-label="Pages"><a href="#a" id="nav1">The modules</a></nav>
+  <main id="mn">
+    <section id="s1"><h2>First part</h2><p id="p1">Words in the first part</p><button id="btn" type="button">Press me</button>
+      <section id="s1a"><h3>Inner part</h3><p>Inner words</p>
+        <section id="s1a1"><h4>Third</h4><p>Third words</p><section id="deep"><p>Deep words</p></section></section>
+      </section>
+    </section>
+    <section id="s2" hidden><p>Hidden part words</p></section>
+    <p id="mainwords">Main own words</p>
+  </main>
+  <p id="loose">Loose words</p>
+  <aside id="as"><span aria-live="polite">Live words</span><svg width="10" height="10"><text x="0" y="9">Drawn</text></svg><input value="typed"></aside>
+  <section id="many" aria-label="Many words"></section>
+  <footer id="ft"><p>Footer words</p></footer>
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+// ---- OFF BY DEFAULT: importing the page editor and its targets drew nothing (checked before anything is opened) ----
+import { openPageEditor, pageEditorFromPage, PAGE_EDITOR_Z } from '../page_editor.js';
+import { pageSections, pageRest, buildPageTree, partLabel, PAGE_REST_ID, PAGE_SECTION_DEPTH } from '../page_targets.js';
+const drewAtImport = !!document.querySelector('[data-page-editor], [data-scene-editor]') || !!document.getElementById('se-css');
+import { EDITOR_WORDS, copiedWords } from '../editor.js';
+import { wordsSource, wordsNodeId, WORDS_GROUP_ID, PANEL_WORDS_MAX } from '../editor_words.js';
+import { CHANGES_KEY, ON_KEY, IDLE_OFF_MS, readChanges, changesText, withChange } from '../wording_edit.js';
+import { ROOT_ID } from '../editor_targets.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const until = async (fn, ms = 4000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(25); } return false; };
+const clean = () => { try { localStorage.removeItem(CHANGES_KEY); localStorage.removeItem(ON_KEY); } catch { /* none */ } };
+const fx = document.getElementById('fx');
+const many = document.getElementById('many');
+for (let i = 1; i <= PANEL_WORDS_MAX + 5; i += 1) { const p = document.createElement('p'); p.textContent = `Line number ${i}`; many.append(p); }
+const key = (el, k) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+const leafOf = (tree, words) => tree.list.find((n) => n.kind === 'sitewords' && n.words.original === words) || null;
+const texts = (tree, parent) => tree.list.filter((n) => n.parent === parent && n.kind === 'sitewords').map((n) => n.words.original);
+
+try {
+  clean();
+  // ============================================================================================
+  section('off by default');
+  check('*** importing the page editor, its targets and the editor drew nothing ***', !drewAtImport);
+  {
+    const kioskSrc = await (await fetch('../kiosk.js')).text();
+    const editorSrc = await (await fetch('../editor.js')).text();
+    check('*** the kiosk never loads the page editor or its targets at start (a dashboard does not need them) ***',
+      !/from '\.\/page_(editor|targets)\.js'/.test(kioskSrc) && !/from '\.\/page_targets\.js'/.test(editorSrc)
+      && /import\('\.\/page_editor\.js'\)/.test(kioskSrc), 'kiosk.js / editor.js import lines');
+  }
+
+  // ============================================================================================
+  section('*** the parts of a page: its landmarks, nested, named ***');
+  const secs = pageSections(fx);
+  const byEl = (id) => secs.find((s) => s.el === document.getElementById(id)) || null;
+  check('the parts in the order on the page: header, nav, main, its section, the one inside, aside, the long one, footer',
+    J(secs.map((s) => s.el.id || s.el.tagName)) === J(['hd', 'NAV', 'mn', 's1', 's1a', 'as', 'many', 'ft']),
+    J(secs.map((s) => s.el.id || s.el.tagName)));
+  check('*** nested parts nest: main 1, its section 2, the one inside 3 (paths say where) ***',
+    byEl('mn')?.depth === 1 && byEl('s1')?.depth === 2 && byEl('s1')?.parentId === byEl('mn')?.id && byEl('s1a')?.depth === 3
+    && byEl('s1a')?.parentId === byEl('s1')?.id && byEl('s1a')?.id === `pagesection:${byEl('mn').path}.0.0`, J(secs.map((s) => [s.id, s.depth])));
+  check(`*** deeper than ${PAGE_SECTION_DEPTH} levels is not a part of its own (its words stay with the part holding it) ***`,
+    !byEl('s1a1') && !byEl('deep'));
+  check('a hidden part is not a part', !byEl('s2'));
+  check('*** named: its own heading, its aria-label, else what it is ***',
+    byEl('hd')?.label === 'Fixture page' && secs[1]?.label === 'Pages' && byEl('mn')?.label === 'The main part' && byEl('s1')?.label === 'First part'
+    && byEl('s1a')?.label === 'Inner part' && byEl('as')?.label === 'Beside the main part' && byEl('many')?.label === 'Many words'
+    && byEl('ft')?.label === 'The bottom of the page', J(secs.map((s) => s.label)));
+  {
+    const d = document.createElement('div');
+    d.innerHTML = '<header></header><nav></nav><footer></footer><section></section><aside aria-labelledby="lbl"></aside><p id="lbl">Named elsewhere</p>';
+    check('...the names of parts with nothing to say for themselves, and aria-labelledby',
+      J([...d.children].slice(0, 5).map((x) => partLabel(x))) === J(['The top of the page', 'The links', 'The bottom of the page', 'A part of the page', 'Beside the main part']),
+      J([...d.children].slice(0, 5).map((x) => partLabel(x))));
+    fx.append(d);
+    check('...aria-labelledby is read from the page', partLabel(d.querySelector('aside')) === 'Named elsewhere');
+    d.remove();
+  }
+
+  // ============================================================================================
+  section('*** the tree: the page, its parts, the words under the part they belong to ***');
+  {
+    const recs = [...secs, pageRest(fx)];
+    const words = wordsSource({ recs, page: location.pathname, drafts: [], clicked: [] });
+    const tr = buildPageTree(fx, { sections: secs, words, title: 'Fixture' });
+    check('the root: "This page: <its name>", a page', tr.root?.id === ROOT_ID && tr.root.kind === 'page' && tr.root.label === 'This page: Fixture');
+    check('every part a row, under its parent part, depth as nested', secs.every((s) => tr.nodes.get(s.id)?.kind === 'pagesection'
+      && tr.nodes.get(s.id).parent === (s.parentId || ROOT_ID) && tr.nodes.get(s.id).depth === s.depth));
+    check('*** a part’s words, its heading included, NOT those of the part inside it ***',
+      J(texts(tr, byEl('s1').id)) === J(['First part', 'Words in the first part', 'Press me']), J(texts(tr, byEl('s1').id)));
+    check('*** ...the third level holds the words of the parts too deep to list ***',
+      J(texts(tr, byEl('s1a').id)) === J(['Inner part', 'Inner words', 'Third', 'Third words', 'Deep words']), J(texts(tr, byEl('s1a').id)));
+    check('main’s own words under main', J(texts(tr, byEl('mn').id)) === J(['Main own words']), J(texts(tr, byEl('mn').id)));
+    check('*** not listed: live words, drawn words, a box’s words, a hidden part’s words ***',
+      texts(tr, byEl('as').id).length === 0 && !tr.list.some((n) => n.kind === 'sitewords' && /Hidden part words|Live words|Drawn|typed/.test(n.words.original)));
+    check(`a part holds its first ${PANEL_WORDS_MAX} runs of words only`, texts(tr, byEl('many').id).length === PANEL_WORDS_MAX);
+    check('*** "The rest of the page": words in no part ***', tr.nodes.get(PAGE_REST_ID)?.label === 'The rest of the page'
+      && J(texts(tr, PAGE_REST_ID)) === J(['Loose words']), J(texts(tr, PAGE_REST_ID)));
+    check('words are rows of the one shape: no settings, set does nothing', tr.list.filter((n) => n.kind !== 'page').every((n) => n.fields() === null && n.set('x', 1) === false && n.transform() === null));
+    check('the order drawn: each part, then its words, then the parts inside it',
+      tr.list.findIndex((n) => n.id === byEl('s1a').id) > tr.list.findIndex((n) => n === leafOf(tr, 'Press me')));
+    const plain = buildPageTree(fx, { title: 'Fixture' });
+    check('words not shown: the parts only, no "rest" row', !plain.list.some((n) => n.kind === 'sitewords') && !plain.nodes.has(PAGE_REST_ID)
+      && plain.list.filter((n) => n.kind === 'pagesection').length === secs.length);
+    const bare = document.createElement('div');
+    bare.innerHTML = '<p>Only words</p><p>And more</p>';
+    fx.append(bare);
+    const bt = buildPageTree(bare, { words: wordsSource({ recs: [pageRest(bare)], page: '/x' }), title: '' });
+    check('*** a page with no parts: its words straight under the page’s row ***', bt.root.label === 'This page' && J(texts(bt, ROOT_ID)) === J(['Only words', 'And more']));
+    bare.remove();
+    check('never throws: no root is a page with nothing in it', buildPageTree(null).list.length === 1 && pageSections(null).length === 0);
+  }
+
+  // ============================================================================================
+  section('*** opened over the page: the editor, its words shown ***');
+  let timers = [];
+  const setTimer = (fn, ms) => { const h = { fn, ms, cleared: false }; timers.push(h); return h; };
+  const clearTimer = (h) => { if (h) h.cleared = true; };
+  const live = () => timers.filter((h) => !h.cleared && h.ms === IDLE_OFF_MS);
+  const clip = { text: '', writeText: async (x) => { clip.text = x; } };
+  let pressed = 0;
+  const btn = document.getElementById('btn');
+  btn.addEventListener('click', () => { pressed += 1; });
+  const ed = openPageEditor({ win: window, setTimer, clearTimer, clipboard: clip, now: () => new Date('2026-10-31T12:00:00Z') });
+  const host = () => document.querySelector('[data-page-editor]');
+  check('*** opened: a host over the whole page, at the top of every layer, holding the editor ***',
+    !!ed && !!host() && host().style.position === 'fixed' && Number(host().style.zIndex) === PAGE_EDITOR_Z && host().contains(ed.el) && ed.el.hasAttribute('data-scene-editor'));
+  check('...its words shown, its list called what is on this page, Done its first button',
+    ed.words() === true && ed.el.querySelector('[data-se-tree]')?.getAttribute('aria-label') === 'What is on this page'
+    && ed.el.querySelector('button')?.dataset.se === 'done');
+  check('...kept as open in this browser (the next page opens it too), and no wording bar anywhere',
+    localStorage.getItem(ON_KEY) === '1' && !document.getElementById('wording-edit-bar'));
+  check('opened again: the same one, not a second', openPageEditor({ win: window, setTimer, clearTimer }) === ed && document.querySelectorAll('[data-page-editor]').length === 1);
+  check('*** the editor itself is never a part of the page or its words ***', !ed.tree().list.some((n) => n.kind === 'sitewords' && ed.el.contains(n.words.el))
+    && !pageSections(document.body).some((s) => host().contains(s.el)));
+  check('the page’s row says what can be done here', (ed.el.querySelector('[data-se-help]')?.textContent || '') === EDITOR_WORDS.pageRootHelp);
+  check('*** every tool says the page is written in the site’s code ***', ['undo', 'redo', 'add', 'duplicate', 'delete']
+    .every((k) => ed.el.querySelector(`[data-se="${k}"]`)?.disabled && ed.el.querySelector(`[data-se="${k}"]`).title === EDITOR_WORDS.pageTools));
+  check('*** ...said ONCE in the line, after the five tools’ names (not five times over a phone’s screen) ***',
+    ed.el.querySelector('[data-se-why]')?.textContent === `Undo, Redo, Add, Duplicate, Delete: ${EDITOR_WORDS.pageTools}`, ed.el.querySelector('[data-se-why]')?.textContent);
+  check(`it closes itself after ${IDLE_OFF_MS / 60000} minutes with nobody using it`, live().length === 1);
+
+  // ---- a part chosen ----
+  const s1id = pageSections(document.body).find((s) => s.el.id === 's1')?.id;
+  ed.el.querySelector(`[data-se-node="${CSS.escape(s1id)}"]`)?.click();
+  check('*** a part chosen: its name, and that moving it is not built (the page is the site’s code), its words can be changed ***',
+    ed.selected() === s1id && ed.el.querySelector('[data-se-title]')?.textContent === 'First part'
+    && (ed.el.querySelector('[data-se-help]')?.textContent || '') === EDITOR_WORDS.pageSectionHelp);
+  check('...and choosing restarted the wait', live().length === 1 && timers.length >= 2);
+
+  // ---- a press on words in the view ----
+  pressed = 0;
+  const pd = new PointerEvent('pointerdown', { bubbles: true, cancelable: true });
+  btn.dispatchEvent(pd);
+  btn.click();
+  const pressId = wordsNodeId(s1id, 'Press me');
+  check('*** a press on a button’s words chooses them and does NOT press it ***', pd.defaultPrevented && pressed === 0 && ed.selected() === pressId,
+    `${pressed} ${ed.selected()}`);
+  check('...the inspector: the site’s words, a box, the three buttons', ed.el.querySelector('[data-se-original]')?.textContent === 'Press me'
+    && ['use', 'back', 'copy'].every((k) => !!ed.el.querySelector(`[data-se-w="${k}"]`)));
+  ed.useWords('Push  me');
+  check('*** "Use these words": into the one draft list (this page, its original words), shown in place, marked ***',
+    J(readChanges()) === J(withChange([], { page: location.pathname, old: 'Press me', now: 'Push me' })) && btn.textContent === 'Push me'
+    && btn.hasAttribute('data-wording-changed') && document.documentElement.hasAttribute('data-se-words-shown'), J(readChanges()));
+  check('...the row keeps its id (its original words), still chosen', ed.selected() === pressId && /Push me/.test(ed.el.querySelector(`[data-se-node="${CSS.escape(pressId)}"]`)?.textContent || ''));
+  await ed.copyWords();
+  check('*** "Copy changes": the one copied format, for the site’s next update ***',
+    clip.text === changesText(readChanges(), '2026-10-31') && clip.text.includes(`${location.pathname}\tPress me\tPush me`)
+    && (ed.el.querySelector('[data-se-status]')?.textContent || '') === copiedWords(1), J(clip.text));
+  // ---- words past a part's first 30, pressed ----
+  const last = many.lastElementChild;
+  last.click();
+  const lastId = wordsNodeId('screen', last.textContent);
+  check('*** words past a part’s first 30, pressed: they join "More words on this page", chosen, and press nothing ***',
+    ed.tree().nodes.get(WORDS_GROUP_ID)?.label === 'More words on this page' && ed.tree().nodes.get(lastId)?.parent === WORDS_GROUP_ID && ed.selected() === lastId,
+    `${ed.selected()} ${J(ed.tree().list.filter((n) => n.parent === WORDS_GROUP_ID).map((n) => n.id))}`);
+  ed.choose(WORDS_GROUP_ID);
+  check('...that group says what it holds', (ed.el.querySelector('[data-se-help]')?.textContent || '') === EDITOR_WORDS.pageWordsHelp,
+    ed.el.querySelector('[data-se-help]')?.textContent);
+  ed.choose(lastId);
+  // ---- Escape, Done ----
+  key(document.body, 'Escape');
+  check('*** Escape with words chosen: back to the page’s row, the editor stays ***', ed.isOpen() && ed.selected() === ROOT_ID);
+  key(document.body, 'Escape');
+  check('*** a second Escape closes it: the host gone, not kept open, the wait cleared ***', !ed.isOpen() && !host()
+    && localStorage.getItem(ON_KEY) === null && live().length === 0);
+  check('...the change is still kept to copy, and shown as it was left; the button presses again', readChanges().length === 1
+    && (btn.click(), pressed === 1) && !document.documentElement.hasAttribute('data-se-words-shown'));
+
+  // ============================================================================================
+  section('*** the idle close, the list put away, and the address ***');
+  timers = [];
+  const ed2 = openPageEditor({ win: window, setTimer, clearTimer, list: false });
+  check('*** opened with the list put away (as on a narrow screen): "Show the list" brings it back ***',
+    ed2.el.querySelector('[data-se-tree]')?.hidden === true && ed2.el.querySelector('[data-se="list"]')?.textContent === 'Show the list'
+    && (ed2.el.querySelector('[data-se="list"]').click(), ed2.el.querySelector('[data-se-tree]')?.hidden === false));
+  const before = timers.length;
+  ed2.el.querySelector('[data-se="done"]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  check('a press in the editor restarts the wait', live().length === 1 && timers.length === before + 1);
+  live()[0].fn();
+  check('*** the wait run out: closed, nothing kept open, the changes kept ***', !ed2.isOpen() && !host() && localStorage.getItem(ON_KEY) === null && readChanges().length === 1);
+  const ed3 = openPageEditor({ win: window, setTimer, clearTimer });
+  ed3.el.querySelector('[data-se="done"]').click();
+  check('*** Done closes it, and forgets it is open ***', !ed3.isOpen() && !host() && localStorage.getItem(ON_KEY) === null);
+  localStorage.setItem(ON_KEY, '1');
+  check('*** ?wording=0: forgets a kept "on", opens nothing ***', pageEditorFromPage({ location: { search: '?wording=0' }, document }) === null
+    && localStorage.getItem(ON_KEY) === null && !host());
+  check('nothing asked, nothing kept: nothing opens', pageEditorFromPage({ location: { search: '' }, document }) === null && !host());
+  localStorage.setItem(ON_KEY, '1');
+  const ed4 = pageEditorFromPage(window);
+  check('*** a kept "on" opens it on the next page (as the bar did), its words shown ***', !!ed4 && ed4.isOpen() && ed4.words() && !!host());
+  ed4.close();
+  check('names nobody: its files and every word the editor says', !/cici|her screen/i.test(
+    await (await fetch('../page_editor.js')).text() + await (await fetch('../page_targets.js')).text() + J(EDITOR_WORDS)));
+
+  // ============================================================================================
+  section('*** real pages of the site, in a frame (needs the server) ***');
+  async function framed(url, ms = 12000) {
+    const f = document.createElement('iframe');
+    f.src = url;
+    document.body.append(f);
+    await until(() => f.contentDocument?.readyState === 'complete', ms);
+    return f;
+  }
+  clean();
+  for (const page of ['/join.html', '/landing.html']) {
+    const f0 = await framed(page);
+    await sleep(800);
+    check(`${page} with nothing asked: no editor`, !f0.contentDocument.querySelector('[data-page-editor], [data-scene-editor]'));
+    f0.remove();
+    const f1 = await framed(`${page}?wording=1`);
+    const opened = await until(() => !!f1.contentDocument.querySelector('[data-page-editor] [data-scene-editor]'), 12000);
+    const pe = f1.contentWindow.__nimrodPageEditor;
+    const rows = pe?.tree?.().list || [];
+    check(`*** ${page}?wording=1: the editor over it, words shown, and no wording bar ***`, opened && pe?.words?.() === true
+      && !f1.contentDocument.getElementById('wording-edit-bar'), String(opened));
+    if (page === '/landing.html') {
+      check('...the landing page’s parts are in its list (its links, its main part and sections, its bottom)',
+        rows.filter((n) => n.kind === 'pagesection').length >= 5 && rows.some((n) => n.kind === 'sitewords'),
+        J(rows.filter((n) => n.kind === 'pagesection').map((n) => n.label)));
+    } else check('...the join page’s words are listed', rows.some((n) => n.kind === 'sitewords'), J(rows.map((n) => n.label)));
+    try { pe?.close?.(); } catch { /* gone */ }
+    f1.remove();
+    clean();
+  }
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+} finally {
+  clean();
+  try { document.querySelectorAll('[data-page-editor]').forEach((n) => n.remove()); } catch { /* gone */ }
+}
+const sum = document.getElementById('summary');
+sum.textContent = `${passed} passed, ${failed} failed`;
+sum.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

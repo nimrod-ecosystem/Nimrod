@@ -108,8 +108,9 @@ import { watchCorners } from './panel_corners.js';
 // Row 2.38, the map editor: the edit view on a screen the kiosk mounts itself, and the map window.
 import { openDashboardEditor } from './dashboard_editor.js';
 import { openSceneEditor, SCENE_EDITOR_KIND } from './editor.js';   // row 2.145 step 1: the one editor (openEditView('scene'))
-// row 2.145 step 3: `?wording=1` opens it with its words shown (below the first mount); the bar where it cannot.
-import { wordingParam, withoutWordingParam, forgetWordingOn, startWordingEdit } from './wording_edit.js';
+// row 2.145 step 3: `?wording=1` opens it with its words shown (below the first mount); step 4: where it cannot (a
+// dashboard module's own path), the page editor over the screen (page_editor.js, loaded only then).
+import { wordingParam, withoutWordingParam, forgetWordingOn } from './wording_edit.js';
 import { mountMapWindow } from './edit_windows.js';
 import { mapLoader } from './dashboard_map.js';
 import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
@@ -9067,17 +9068,19 @@ export async function mountKiosk(root, {
     try { await showScreen(keepPlace.id); } catch (err) { console.error('kiosk: back to where it was', err); }
   }
   // *** `?wording=1` ON A DASHBOARD: THE ONE EDITOR, ITS WORDS SHOWN (row 2.145 step 3, 2026-10-31). *** The proposal's
-  // step 3 ("`?wording=1` becomes 'the editor, Words shown'"). kiosk.html tells theme.js not to start the wording bar here
-  // (its `nimrod-wording` meta); this opens the editor instead, once the dashboard is up.
+  // step 3 ("`?wording=1` becomes 'the editor, Words shown'"). kiosk.html tells theme.js not to open its page editor here
+  // (its `nimrod-wording` meta; step 4); this opens the editor over the dashboard instead, once the dashboard is up.
   //   * ONLY WHEN THE ADDRESS ASKS. A wording "on" kept in this browser is NEVER honoured here: a bedside screen reloads
   //     itself (a new version, the recovery ladder), and the kept "on" used to bring the wording bar back over it after
   //     every reload, taking presses on words for up to twenty minutes with nobody there who asked. Nothing opens unless
   //     a person opens it.
   //   * THE PARAMETER IS TAKEN OUT OF THE ADDRESS AT ONCE (as `boot=1` is, above), so this page's own reloads do not
   //     open the editor again. `?wording=0` is taken out too, and forgets a kept "on" (for the other pages).
-  //   * Not on an embed (a page holding a preview has its own address, and the bar, theme.js). And on a dashboard
-  //     whose own module edits it (`dash.impl.edit`: the edit windows, not the one editor -- step 1), the wording bar
-  //     is started here instead, as the address asked: what that path had before this step.
+  //   * Not on an embed (a page holding a preview has its own address, and its own page editor, theme.js). And on a
+  //     dashboard whose own module edits it (`dash.impl.edit`: the edit windows, not the one editor -- step 1), the page
+  //     editor is opened over the screen instead (row 2.145 step 4: page_editor.js, the same editor over the whole page,
+  //     words only), as the address asked. It used to be the wording bar there; the bar is gone (one way, not two).
+  //     Loaded only then, so a screen nobody asks it of never fetches it.
   if (!embedded && !torn) {
     const asked = wordingParam(launchSearch);
     if (asked !== null) {
@@ -9085,8 +9088,9 @@ export async function mountKiosk(root, {
         try { const next = withoutWordingParam(location.href); if (next !== location.href) history.replaceState(history.state, '', next); } catch { /* the reload opens it once more; Done closes it */ }
       }
       if (asked === false) forgetWordingOn();
-      else if (dash?.impl?.edit) startWordingEdit({ doc: document });
-      else openEditView(SCENE_EDITOR_KIND, { words: true });
+      else if (dash?.impl?.edit) {
+        import('./page_editor.js').then((m) => { if (!torn) m.openPageEditor({ win: window }); }).catch((err) => console.error('kiosk: the page editor', err));
+      } else openEditView(SCENE_EDITOR_KIND, { words: true });
     }
   }
   // The row's list of dashboards, read once now (the tray keeps it current after). Not on an embed (no other screens).

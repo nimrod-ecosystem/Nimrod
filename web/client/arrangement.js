@@ -1427,6 +1427,51 @@ export function createArrangement({
     if (scan !== undefined) entry.scan = scan;
     return movePlaced(id, entry);
   }
+  // =================================================================================================
+  // *** A PART OF A PAGE MOVED UP OR DOWN (row 2.145 step 4, 2026-10-31: "Pages (the scrolling layout's sections) as
+  // targets"). *** On a dashboard laid out as a page that scrolls (layout.js `page`), the one editor's "Place on the page"
+  // moves one part among the others. `toIndex` is its new place among the FILLED slots (0 is the top): an empty slot
+  // takes no room on a page (layout.js pageCellStyle), so it is not a place anybody can see or choose.
+  //   IN PLACE: the part's CELL is moved (`moveKeeping`), so its height (on the cell, kiosk.js) goes with it and nothing
+  //   is mounted again -- a video in it carries on. The cells are numbered again in their new order (`data-slot`), the
+  //   slots and the switch lap follow (`slotRecs` stays in slot order, as `backToGrid` keeps it), and the change is saved
+  //   where the edit view saves (`layoutStore`, with its base: the kiosk's 09-12 watch is told, so nothing reloads).
+  //   Refused (false) on any other layout: a grid's cells are places on the screen, and moving a panel between them is
+  //   the edit windows' work, not this.
+  // =================================================================================================
+  function movePagePart(id, toIndex) {
+    if (!layout || !isPagePreset(layout.preset) || !id) return false;
+    const to0 = Math.round(Number(toIndex));
+    if (!Number.isFinite(to0)) return false;
+    const cellsNow = () => [...stageEl.querySelectorAll(':scope > .k-cell[data-slot]')];
+    const all = cellsNow();
+    const cell = slotRecs.find((r) => r.id === id)?.el?.closest?.('.k-cell') || null;
+    if (!cell || !all.includes(cell)) return false;
+    const filled = all.filter((c) => layout.slots[Number(c.dataset.slot)]);
+    const from = filled.indexOf(cell);
+    if (from < 0) return false;
+    const to = Math.max(0, Math.min(filled.length - 1, to0));
+    if (to === from) return true;
+    const rest = filled.filter((c) => c !== cell);
+    // Before the part now at that place; to the bottom, straight after the last part (an empty cell after it stays after).
+    const before = to < rest.length ? rest[to] : rest[rest.length - 1].nextSibling;
+    moveKeeping(stageEl, cell, before);
+    const was = layout.slots.slice();
+    const order = cellsNow();
+    const slots = order.map((c) => was[Number(c.dataset.slot)] ?? null);
+    order.forEach((c, i) => c.setAttribute('data-slot', String(i)));
+    layout = { ...layout, slots };
+    const slotOf = (r) => Number(r.el?.closest?.('.k-cell')?.dataset.slot);
+    slotRecs.sort((a, b) => slotOf(a) - slotOf(b));
+    const base = savedBase();
+    if (base) {
+      // Ids a saved list keeps past the preset's count (withPreset: kept for a switch back to a bigger layout) stay.
+      const extra = (Array.isArray(base.slots) ? base.slots.slice(slots.length) : []).filter((s) => !s || !slots.includes(s));
+      saveLayout({ ...base, slots: [...slots, ...extra] }, base);
+    }
+    afterMove(id);
+    return true;
+  }
   const offPlaceVerb = typeof bus?.subscribe === 'function' ? bus.subscribe(PLACE_REQUEST_TOPIC, (p) => {
     const q = p && typeof p === 'object' ? p : null;
     const id = q && typeof q.id === 'string' ? q.id : null;
@@ -2466,6 +2511,8 @@ export function createArrangement({
     // The records edit mode can edit -- the panels, then the room (row 2.145 step 1, 2026-10-31: the one editor's scene
     // tree, editor_targets.js, is built from exactly these, so a row in it is always one `editPanel` accepts).
     editRecs: () => editPanels(),
+    // (row 2.145 step 4) A part of a page moved among the others, in place and saved (above). False on any other layout.
+    movePagePart,
     // The room's slots (room_scene.js `slots()`), while the scene is a mounted room; an empty Map otherwise.
     roomSlots: () => { try { return roomScene?.slots?.() || new Map(); } catch { return new Map(); } },
     // ---- the mirror/clock corners ----
