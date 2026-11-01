@@ -39,6 +39,8 @@ import { withCallRule } from '../rules.js';
 import '../modules/call.js';
 import { CALL_TRANSPORT_READY, createCallTransport, ANSWER_CONNECT_MS } from '../call_transport.js';
 import { DEFAULT_RECORD } from '../avatar.js';
+import { dialList, DIAL_MAX_DEFAULT, DIAL_MAX_CHOICES } from '../modules/call.js';
+import { CALL_SELECT_TOPIC, CALL_NEXT_TOPIC, CALL_PREV_TOPIC, CALL_OUTGOING_TOPIC, MODULE_VERBS } from '../actions.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -87,7 +89,9 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
                           // 2026-10-12 (Mike): a call answers by itself ONLY for a caller who may drop in. Most of
                           // this suite tests the countdown and the answer path, so its rig's caller may drop in;
                           // the section "calls wait to be answered" turns this off (and leaves it out entirely).
-                          dropIn = true, lendScreen = null, personRow = null } = {}) {
+                          dropIn = true, lendScreen = null, personRow = null,
+                          // row 2.167, calling out: anything else the host hands the panel (profiles, dialOut, personId).
+                          extraCtx = {} } = {}) {
   const clock = fakeClock();
   const host = document.createElement('div');
   document.getElementById('host').append(host);
@@ -126,6 +130,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
     ...(dropIn === null ? {} : { mayDropIn: typeof dropIn === 'function' ? dropIn : () => dropIn }),
     ...(lendScreen ? { lendScreen } : {}),
     ...(personRow ? { personRow: () => personRow } : {}),
+    ...extraCtx,
     state: { get: () => saved, set: () => Promise.resolve(), subscribe: () => () => {},
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
   });
@@ -1354,6 +1359,254 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         /connection was lost/i.test(r.host.textContent) && x.byes().length === 1 && x.byes()[0].reason === 'connection-lost',
         JSON.stringify([r.host.textContent.slice(0, 120), x.byes()]));
       r.inst.destroy(); x.t.destroy();
+    }
+
+    // =====================================================================================
+    section('*** calling out: the people this screen can call, one press each (row 2.167) ***');
+    {
+      const own = [
+        { id: 'p-self', name: 'Robin', reach: 'p-self' },
+        { id: 'p-dad', name: 'Dad', reach: 'p-dad' },
+        { id: 'p-sam', name: 'Sam', reach: 'p-sam-home' },     // on their own login: the call goes where they are
+        { id: 'p-gone', name: 'Lee', reach: 'p-lee-home' },    // ...and nobody shared that with this login
+      ];
+      const shared = [{ person_id: 'p-sam-home', name: 'Sam' }];
+      const l = dialList({ own, shared, selfId: 'p-self' });
+      check('*** the list: this login’s people, in the People page’s order, each where a call reaches them ***',
+        JSON.stringify(l) === JSON.stringify([{ id: 'p-dad', reach: 'p-dad', name: 'Dad' }, { id: 'p-sam', reach: 'p-sam-home', name: 'Sam' }]),
+        JSON.stringify(l));
+      check('never the person the screen is for (calling yourself rings this very room)', !l.some((c) => c.id === 'p-self'));
+      check('never somebody this login may not call (the People panel’s own rule, mayCall)', !l.some((c) => c.id === 'p-gone'));
+      check('somebody reachable two ways is offered once', l.filter((c) => c.reach === 'p-sam-home').length === 1);
+      const many = Array.from({ length: 11 }, (_, i) => ({ id: `p${i}`, name: `P${i}`, reach: `p${i}` }));
+      check(`the default is ${DIAL_MAX_DEFAULT}, and a choice of 4 / 8 / 12 / everybody`,
+        dialList({ own: many }).length === DIAL_MAX_DEFAULT && dialList({ own: many, max: 4 }).length === 4
+        && dialList({ own: many, max: 0 }).length === 11 && JSON.stringify(DIAL_MAX_CHOICES) === '[4,8,12,0]');
+      check('nothing to read: nobody', dialList({}).length === 0 && dialList({ own: null, shared: null }).length === 0);
+      check('a switch walks the panel: next / prev / select, and back hangs up',
+        MODULE_VERBS.call.next === CALL_NEXT_TOPIC && MODULE_VERBS.call.prev === CALL_PREV_TOPIC
+        && MODULE_VERBS.call.select === CALL_SELECT_TOPIC && MODULE_VERBS.call.back === 'call/hangup', JSON.stringify(MODULE_VERBS.call));
+    }
+
+    // The host's half, faked: the screen's people, and `dialOut` - a caller's socket and transport of its own.
+    function dialHost({ screens = 1, own = null, linkUp = true } = {}) {
+      const log = { dialed: [], calls: [], hangups: [], destroyed: 0, closed: 0, reads: 0, viewer: undefined };
+      const people = own || [
+        { id: 'p-self', name: 'Robin', reach: 'p-self' },
+        { id: 'p-dad', name: 'Dad', reach: 'p-dad' },
+        { id: 'p-sam', name: 'Sam', reach: 'p-sam' },
+      ];
+      let tx = null;
+      const profiles = {
+        people: async (viewer) => { log.reads++; log.viewer = viewer; return people; },
+        sharedWithMe: async () => [],
+      };
+      const dialOut = ({ personId, onPresence, onState }) => {
+        log.dialed.push(personId);
+        const cbs = {};
+        tx = {
+          cbs,
+          onEnded(cb) { cbs.ended = cb; return () => { if (cbs.ended === cb) cbs.ended = null; }; },
+          onAnswered(cb) { cbs.answered = cb; return () => { if (cbs.answered === cb) cbs.answered = null; }; },
+          onConnection(cb) { cbs.conn = cb; return () => {}; },
+          onRemote(cb) { cbs.remote = cb; return () => {}; },
+          call: async (o) => { log.calls.push(o); return true; },
+          hangup: (why) => { log.hangups.push(why); },
+          destroy: () => { log.destroyed++; },
+        };
+        const link = { state: () => (linkUp ? 'connected' : 'connecting'), close: () => { log.closed++; } };
+        if (linkUp) { onState?.('connected'); onPresence?.({ screens, drivers: 1 }); }
+        return { link, transport: tx };
+      };
+      return { log, ctx: { profiles, dialOut, personId: 'p-self' }, tx: () => tx };
+    }
+    const outs = (r) => { const got = []; r.bus.subscribe(CALL_OUTGOING_TOPIC, (p) => got.push(p && p.state)); return got; };
+
+    {
+      const r = rig({});
+      await sleep(10);
+      check('*** a host that cannot place calls (no dialOut): no list, the panel exactly as before ***',
+        !r.host.querySelector('.call-dial') && !r.host.querySelector('[data-dial-none]') && r.impl.__contacts() === null);
+      r.inst.destroy();
+    }
+    {
+      const h = dialHost();
+      const r = rig({}, { extraCtx: h.ctx });
+      await sleep(20);
+      const faces = [...r.host.querySelectorAll('[data-dial]')].map((b) => b.dataset.dial);
+      check('*** with no call on, the panel offers the people this screen can call ***',
+        JSON.stringify(faces) === '["p-dad","p-sam"]' && /Call someone/.test(r.host.textContent), JSON.stringify(faces));
+      check('read as the screen’s own person (their own names for people first)', h.log.viewer === 'p-self', String(h.log.viewer));
+      check('each face is named for a screen reader', r.host.querySelector('[data-dial="p-dad"]')?.getAttribute('aria-label') === 'Call Dad');
+      check('nothing was dialled by showing them', h.log.dialed.length === 0);
+      // THE SWITCH: nothing lit at first, so a stray press calls nobody.
+      r.bus.publish(CALL_SELECT_TOPIC);
+      await sleep(10);
+      check('*** a stray select with nothing lit calls nobody ***', h.log.dialed.length === 0 && r.impl.__probe().phase === 'idle');
+      r.bus.publish(CALL_NEXT_TOPIC);
+      check('next lights the first face', r.impl.__lit() === 'dial:p-dad', String(r.impl.__lit()));
+      r.bus.publish(CALL_NEXT_TOPIC); r.bus.publish(CALL_NEXT_TOPIC);
+      check('...and walks on to the example button, the last stop', r.impl.__lit() === 'demo', String(r.impl.__lit()));
+      r.bus.publish(CALL_NEXT_TOPIC);
+      check('...and round to the first again', r.impl.__lit() === 'dial:p-dad');
+      check('the lit one is ringed, like every scanned thing', r.host.querySelector('[data-dial="p-dad"]')?.dataset.lit === '1');
+      r.bus.publish(CALL_PREV_TOPIC);
+      check('prev goes back', r.impl.__lit() === 'demo');
+      r.bus.publish(CALL_PREV_TOPIC); r.bus.publish(CALL_PREV_TOPIC);
+      const states = outs(r);
+      r.bus.publish(CALL_SELECT_TOPIC);
+      await sleep(30);
+      check('*** select calls the lit person - one call, to where they are reached ***',
+        JSON.stringify(h.log.dialed) === '["p-dad"]', JSON.stringify(h.log.dialed));
+      check('*** it rings: their name and face, "Ringing…", and the way out on the screen ***',
+        r.impl.__probe().phase === 'dialing' && /Dad/.test(r.host.textContent) && /Ringing/.test(r.host.textContent)
+        && !!r.host.querySelector('[data-dial-hangup]'), r.host.textContent.slice(0, 120));
+      check('*** the camera as a CLONE and the microphone, through the same arbiters as an answered call ***',
+        r.camLog.some((c) => c[0] === 'acquireTrack') && !r.camLog.some((c) => c[0] === 'acquire')
+        && r.micLog.some((c) => c[0] === 'acquire'), JSON.stringify([r.camLog, r.micLog]));
+      const placed = h.log.calls[0] || {};
+      check('the call goes out with this room’s camera, as video, and no name of the page’s own (the server names the caller)',
+        placed.tracks?.includes(r.track) && placed.from?.video === true && !('name' in (placed.from || {})), JSON.stringify(placed.from));
+      check('*** the screen hears it is calling out (a call to it meanwhile is refused as busy) ***', states.includes('dialing'), JSON.stringify(states));
+      check('a call this panel placed is not "call/incoming": nothing switches the screen for it',
+        !r.published.some(([t]) => t === CALL_INCOMING));
+      check('while it rings, the one stop is Hang up', (() => { r.bus.publish(CALL_NEXT_TOPIC); return r.impl.__lit() === 'hangup'; })(), String(r.impl.__lit()));
+      h.tx().cbs.answered?.({ session: 's', by: 'x' });
+      await sleep(10);
+      check('*** answered: the far end takes the stage, the same view as a call received ***',
+        r.impl.__probe().phase === 'connected' && !!r.host.querySelector('video.call-remote') && r.impl.controls().live === true);
+      check('the screen hears it is connected (voice recording holds for it, as for any call)', states.at(-1) === 'connected', JSON.stringify(states));
+      const stream = new MediaStream();             // a real (empty) one: a <video> refuses anything else
+      h.tx().cbs.remote?.(stream);
+      check('their picture goes into the element on the stage', r.host.querySelector('video.call-remote')?.srcObject === stream);
+      r.bus.publish('call/hangup');
+      await sleep(10);
+      check('*** hang up: the far end is told, the socket and the transport go ***',
+        JSON.stringify(h.log.hangups) === '["hangup"]' && h.log.destroyed === 1 && h.log.closed === 1, JSON.stringify(h.log));
+      check('*** ...and the camera and the microphone are let go ***',
+        r.camLog.some((c) => c[0] === 'release') && r.micLog.some((c) => c[0] === 'release'), JSON.stringify([r.camLog, r.micLog]));
+      check('back to the list, nothing said (the person hung up), the screen told it is idle',
+        r.impl.__probe().phase === 'idle' && !!r.host.querySelector('[data-dial]') && r.impl.__endText() === '' && states.at(-1) === 'idle');
+      check('no "call/ended" for it either (nothing switched the screen to it)', !r.published.some(([t]) => t === CALL_ENDED));
+      r.inst.destroy();
+    }
+    {
+      const h = dialHost();
+      const r = rig({}, { extraCtx: h.ctx });
+      await sleep(20);
+      r.host.querySelector('[data-dial="p-sam"]').click();
+      await sleep(30);
+      check('*** one press with a finger calls them ***', JSON.stringify(h.log.dialed) === '["p-sam"]' && r.impl.__probe().phase === 'dialing');
+      h.tx().cbs.ended?.('remote', { why: 'declined' });
+      await sleep(10);
+      check('*** they declined: said on the screen, in the caller page’s own words ***',
+        r.impl.__probe().phase === 'idle' && /declined/i.test(r.host.textContent) && r.impl.__endText() === 'The call was declined.', r.impl.__endText());
+      check('...no second "bye" to a far end that already said no; the socket closes', h.log.hangups.length === 0 && h.log.closed === 1, JSON.stringify(h.log));
+      r.clock.fireTimers();
+      check('the words go after a while', r.impl.__endText() === '');
+      r.inst.destroy();
+    }
+    {
+      const h = dialHost();
+      const r = rig({}, { extraCtx: h.ctx });
+      await sleep(20);
+      await r.impl.__dial({ id: 'p-dad', reach: 'p-dad', name: 'Dad' });
+      r.clock.fireTimers();
+      await sleep(10);
+      check('*** nobody answers in the caller’s whole wait: "No answer.", and the screens rung are told to stop ***',
+        r.impl.__probe().phase === 'idle' && r.impl.__endText() === 'No answer.' && JSON.stringify(h.log.hangups) === '["unanswered"]',
+        JSON.stringify([r.impl.__endText(), h.log.hangups]));
+      r.inst.destroy();
+    }
+    {
+      const h = dialHost({ screens: 0 });
+      const r = rig({}, { extraCtx: h.ctx });
+      await sleep(20);
+      await r.impl.__dial({ id: 'p-dad', reach: 'p-dad', name: 'Dad' });
+      check('*** none of their screens on: said, and the camera and microphone never opened ***',
+        r.impl.__probe().phase === 'idle' && /None of Dad’s screens are on/.test(r.impl.__endText())
+        && !r.camLog.some((c) => c[0] === 'acquireTrack') && !r.micLog.some((c) => c[0] === 'acquire') && h.log.closed === 1,
+        JSON.stringify([r.impl.__endText(), r.camLog]));
+      r.inst.destroy();
+    }
+    {
+      const h = dialHost();
+      const r = rig({ dialMode: 'audio' }, { extraCtx: h.ctx });
+      await sleep(20);
+      await r.impl.__dial({ id: 'p-dad', reach: 'p-dad', name: 'Dad' });
+      check('"Calls from here are: audio": the camera is never opened, and the call says so',
+        !r.camLog.some((c) => c[0] === 'acquireTrack') && h.log.calls[0]?.from?.video === false);
+      r.impl.__end('hangup');
+      r.inst.destroy();
+    }
+    {
+      const h = dialHost();
+      const r = rig({ dialContacts: false }, { extraCtx: h.ctx });
+      await sleep(20);
+      check('*** "Call your people from here": off, and the panel only answers (nobody is even read) ***',
+        !r.host.querySelector('.call-dial') && h.log.reads === 0 && r.impl.__contacts() === null);
+      r.bus.publish(CALL_NEXT_TOPIC); r.bus.publish(CALL_SELECT_TOPIC);
+      await sleep(10);
+      check('...and no press calls anybody', h.log.dialed.length === 0);
+      r.inst.destroy();
+    }
+    {
+      const h = dialHost({ own: [{ id: 'p-self', name: 'Robin', reach: 'p-self' }] });
+      const r = rig({}, { extraCtx: h.ctx });
+      await sleep(20);
+      check('nobody to call yet: it says where people come from', !!r.host.querySelector('[data-dial-none]') && /People page/.test(r.host.textContent));
+      r.inst.destroy();
+    }
+    {
+      const many = [{ id: 'p-self', name: 'Robin', reach: 'p-self' },
+        ...Array.from({ length: 10 }, (_, i) => ({ id: `p${i}`, name: `P${i}`, reach: `p${i}` }))];
+      const r8 = rig({}, { extraCtx: dialHost({ own: many }).ctx });
+      const r4 = rig({ dialMax: 4 }, { extraCtx: dialHost({ own: many }).ctx });
+      const rAll = rig({ dialMax: 0 }, { extraCtx: dialHost({ own: many }).ctx });
+      const rBad = rig({ dialMax: 'lots' }, { extraCtx: dialHost({ own: many }).ctx });
+      await sleep(30);
+      const n = (r) => r.host.querySelectorAll('[data-dial]').length;
+      check(`"How many people to show": ${DIAL_MAX_DEFAULT} by default, 4, everybody - and anything else is the default`,
+        n(r8) === DIAL_MAX_DEFAULT && n(r4) === 4 && n(rAll) === 10 && n(rBad) === DIAL_MAX_DEFAULT, `${n(r8)} ${n(r4)} ${n(rAll)} ${n(rBad)}`);
+      [r8, r4, rAll, rBad].forEach((r) => r.inst.destroy());
+    }
+    {
+      const h = dialHost();
+      const r = rig({ declineSeconds: null }, { extraCtx: h.ctx, dropIn: false });
+      await sleep(20);
+      await r.impl.__incoming({ name: 'Ann' });
+      r.bus.publish(CALL_SELECT_TOPIC);
+      await sleep(20);
+      check('*** while a call RINGS, select answers it - what select on this panel has always done ***',
+        r.impl.__probe().phase === 'connected' && h.log.dialed.length === 0);
+      r.impl.__end('hangup');
+      r.inst.destroy();
+    }
+    {
+      const h = dialHost();
+      const r = rig({}, { extraCtx: h.ctx });
+      await sleep(20);
+      await r.impl.__dial({ id: 'p-dad', reach: 'p-dad', name: 'Dad' });
+      await r.impl.__incoming({ name: 'Ann' });
+      check('a call reaching the panel while it is calling out is not rung over it',
+        r.impl.__probe().phase === 'dialing' && r.impl.__outgoing()?.name === 'Dad');
+      r.inst.destroy();
+      check('*** the panel taken away mid-call: hung up, its socket closed ***',
+        JSON.stringify(h.log.hangups) === '["hangup"]' && h.log.closed === 1 && h.log.destroyed === 1, JSON.stringify(h.log));
+    }
+    {
+      // A caller's link that never comes up: said, and nothing opened.
+      const h = dialHost({ linkUp: false });
+      const r = rig({}, { extraCtx: h.ctx });
+      await sleep(20);
+      const p = r.impl.__dial({ id: 'p-dad', reach: 'p-dad', name: 'Dad' });
+      await sleep(10);
+      r.clock.fireTimers();
+      await p;
+      check('the site cannot be reached: said, and the camera and microphone never opened',
+        r.impl.__probe().phase === 'idle' && /Could not reach the site/.test(r.impl.__endText())
+        && !r.camLog.some((c) => c[0] === 'acquireTrack') && h.log.closed === 1, r.impl.__endText());
+      r.inst.destroy();
     }
 
     document.getElementById('summary').textContent =

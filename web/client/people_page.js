@@ -38,7 +38,8 @@ export const ACTION_LABELS = Object.freeze({
 
 // The reasons, in plain words. Exported so the suite holds the page to them.
 export const WHY = Object.freeze({
-  callOnScreen: 'Calls are made from a phone or computer, not from this screen.',
+  // row 2.167 (2026-10-31): a screen can call its people from a Call panel now; the cards here still do not.
+  callOnScreen: 'Calls are made from the Call panel, or from a phone or computer.',
   callNotAllowed: 'You can call once whoever looks after their screen shares it with you.',
   checking: 'Checking…',
   messageOnScreen: 'Messages are sent from a phone or computer, not from this screen.',

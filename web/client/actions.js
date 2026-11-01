@@ -98,6 +98,15 @@ export const CALL_RING_ACTIONS = [
   { id: 'call/decline', label: 'Call: decline', topic: CALL_DECLINE_TOPIC, group: 'Calls' },
   { id: 'call/hang-up', label: 'Call: hang up', topic: CALL_HANGUP_TOPIC, group: 'Calls' },
 ];
+// *** CALLING OUT FROM THE CALL PANEL (row 2.167, 2026-10-31). *** The panel's own walk: `next` / `prev` light one of
+// the people it can call, `select` presses what is lit - or, while a call rings, answers it (what `select` on this
+// panel has always done, so `call/answer` keeps meaning only "answer"; a spoken "answer" never calls anybody).
+// CALL_OUTGOING_TOPIC: the panel says when it is calling out ({ state: 'dialing' | 'connected' | 'idle' }), so the
+// screen refuses a call to it as busy meanwhile and treats a connected one as a call (kiosk.js).
+export const CALL_SELECT_TOPIC = 'call/select';
+export const CALL_NEXT_TOPIC = 'call/next';
+export const CALL_PREV_TOPIC = 'call/prev';
+export const CALL_OUTGOING_TOPIC = 'call/outgoing';
 
 export const SYSTEM_TOPICS = Object.freeze({
   fullscreen: 'system/fullscreen',
@@ -633,10 +642,11 @@ export const MODULE_VERBS = {
   // thing you are in). A tenth verb would grow the binder for every module in the product to
   // give this one a word it already had.
   pressgame:     { select: 'pressgame/press', back: 'pressgame/exit' },
-  // ANSWER and HANG UP, and nothing else. A call is not a thing to browse: `next` on a
-  // call has no meaning, and a verb that does nothing is a press somebody spent effort on
-  // for no result.
-  call:          { select: 'call/answer', back: 'call/hangup' },
+  // ANSWER and HANG UP - and, since row 2.167 (2026-10-31), the people the panel can CALL: with no call on,
+  // `next` / `prev` walk them and `select` calls the lit one; while a call rings `select` answers, as it always
+  // did; while one is placed, the one stop is Hang up. `back` hangs up, as always. (Before, `next` had no meaning
+  // here - a call is not a thing to browse - and it still does nothing during one.)
+  call:          { next: 'call/next', prev: 'call/prev', select: 'call/select', back: 'call/hangup' },
   counter:       { select: { topic: 'counter/delta', payload: 1 },
                    up:     { topic: 'counter/delta', payload: 1 },
                    down:   { topic: 'counter/delta', payload: -1 } },

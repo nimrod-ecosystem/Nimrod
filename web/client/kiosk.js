@@ -67,7 +67,7 @@ import {
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, QUICK_SWAP_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
-  PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC, CALL_HANGUP_TOPIC,
+  PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC, CALL_HANGUP_TOPIC, CALL_OUTGOING_TOPIC,
 } from './actions.js';
 // 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
 // over the panels by the Call module (`openCallView`). `CALL_ENDED` is that module's own "the call is over".
@@ -223,7 +223,7 @@ import { mountInputRuntime, INPUTS_KEY, RECORD_VERSION } from './input_runtime.j
 import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS, isTyping, keyControl, KEYBOARD_DEVICE } from './input_keyboard.js';
-import { attachDriveToBus } from './drive.js';
+import { attachDriveToBus, connectDrive } from './drive.js';
 // watching along (row 2.79): what this screen plays, to the people following it - only when its owner turns it on.
 import {
   createPlaySender, PLAY_NOW_TOPIC, FOLLOW_FIELD, FOLLOW_BEAT_FIELD, followOf, beatOf, noticeWords,
@@ -843,6 +843,9 @@ export async function mountKiosk(root, {
   let drive = null;
   let playSender = null;         // watching along (row 2.79, play_sync.js): built with `drive`, below
   let callTransport = null;
+  // A Call panel CALLING OUT (row 2.167; modules/call.js `dial`): 'idle' | 'dialing' | 'connected', from its own word on
+  // the bus (CALL_OUTGOING_TOPIC). Read by the transport's `busy` and by `onCallLive` below.
+  let dialingOut = 'idle';
   let callGroup = null;          // group calls (2026-10-09; call_group.js): the group this screen's call may grow into
   // "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12): the game panels that take an ask (ctx.onGameAsk).
   const gameAskSubs = new Set();
@@ -1042,7 +1045,7 @@ export async function mountKiosk(root, {
       callTransport = createCallTransport({
         group: callGroup,
         link: drive,
-        role: 'screen',              // a bedside screen answers; it never places a call
+        role: 'screen',              // the screen's own socket answers; a Call panel places calls on its own (`dialOut`)
         // ICE comes from the person's own settings when they have any, and falls back to
         // public STUN. NO TURN RELAY IS CONFIGURED and there is no UI to add one yet —
         // so a call works wherever a direct path exists and fails honestly where it does
@@ -1051,7 +1054,8 @@ export async function mountKiosk(root, {
         onLog: (...a) => console.debug('call:', ...a),
         // A NEW call while an intercom is open: refused as busy only if the person's row chose that
         // (intercom.js `callDuringIntercom`, default 'ring' - argued there).
-        busy: () => callRefusedForIntercom(),
+        // ...and while a Call panel here is CALLING OUT (row 2.167): refused as busy, never rung over that call.
+        busy: () => callRefusedForIntercom() || dialingOut !== 'idle',
       });
       // A call going live (answered) or ending: voice recording holds for it, and an open intercom
       // gives the room to it. See `onCallLive`.
@@ -1910,6 +1914,22 @@ export async function mountKiosk(root, {
     // server checks this screen answered that call and lends it to that call's own caller (screen_access.py).
     lendScreen: ({ session, on = true, what = 'see', length = null } = {}) => (drive && typeof drive.lend === 'function'
       ? drive.lend({ what, session, on, length: length ?? lendLengthOf(personRow || {}) }) : Promise.resolve(null)),
+    // CALLING OUT FROM A CALL PANEL (row 2.167, Mike 2026-10-31: "You should be able to make calls to your contacts
+    // through the call module"). A caller's socket to the person called - its own, because this screen's socket is its
+    // own person's room - CALLING AS the person this screen is for (the far end names them, app.py `_caller_on_screen`),
+    // and a caller's transport on it. Connected, not pressing (`idle`): a call never makes that screen say "helping".
+    // The panel closes both when the call ends. Only on a real screen: not on a page showing one (Home, the modules
+    // page), not on a local backend (no site to call through) - there the panel offers no calls.
+    ...(!makeState && !embedded ? {
+      dialOut: ({ personId: target, onPresence = null, onState = null } = {}) => {
+        if (!target || torn) return null;
+        const link = connectDrive({ personId: target, role: 'driver', user, idle: true,
+          callAs: personKnown.get().personId || personId || '', onPresence, onState });
+        const transport = createCallTransport({ link, role: 'driver', config: (settings.get() || {}).call || {},
+          onLog: (...a) => console.debug('call out:', ...a) });
+        return { link, transport };
+      },
+    } : {}),
     // "PLAY THIS GAME TOGETHER", asked from a call (2026-10-12; routeGameAsk below): a game panel that can open a room on
     // the call listens here, and returns true when it took the ask. The ask has already met the person's input gate.
     onGameAsk: (fn) => {
@@ -5960,6 +5980,14 @@ export async function mountKiosk(root, {
       } catch (err) { console.error('kiosk: call verb', err); }
     }));
   }
+  // A Call panel calling out (row 2.167): a call to this screen meanwhile is refused as busy (the transport's `busy`),
+  // and one that connects is a call like any other - voice recording holds, an intercom or a check-in gives way.
+  offsScreen.push(bus.subscribe(CALL_OUTGOING_TOPIC, (p) => {
+    const next = p && (p.state === 'dialing' || p.state === 'connected') ? p.state : 'idle';
+    const was = dialingOut;
+    dialingOut = next;
+    if ((was === 'connected') !== (next === 'connected')) onCallLive(next === 'connected');
+  }));
   function attachCallNotice() {
     if (callNotice || torn || embedded || typeof document === 'undefined') return;
     const t = callTransportNow();
@@ -6043,7 +6071,8 @@ export async function mountKiosk(root, {
       // Its own record, so an answer from the notice is recorded with its ring-to-answer time, as a panel's is.
       cv.events = eventsFor(CALL_VIEW_ROW);
       cv.inst = mountModule('call', extendCtx(childCtx({ id: CALL_VIEW_ID, type: 'call' }), {
-        mount: slot, state: cv.state, events: cv.events,
+        // It hosts the call it was handed and closes with it: no list of people to call (row 2.167) in this view.
+        mount: slot, state: cv.state, events: cv.events, dialOut: null,
       }));
       await cv.state.load?.().catch?.(() => {});
       if (callView !== cv) return false;

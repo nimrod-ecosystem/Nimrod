@@ -77,8 +77,27 @@
 // Who is calling is judged on `from.by`, the account the SERVER stamped on the call (drive.py
 // stamp_signal), through the host's `ctx.mayDropIn` - never on a name the caller's page sent.
 // AND A CALL CAN LEND "SEE THIS SCREEN" TO THE CALLER until it ends (tech-support style, `ctx.lendScreen`).
+//
+// *** AND IT CALLS OUT (row 2.167, Mike 2026-10-31: "You should be able to make calls to your contacts through the
+// call module."). *** With no call on, the panel lists the people this screen may call - the screen's own People list
+// (the same cards, the same faces, the same "may this login call them" rule as the People panel: people_page.js
+// `connectionsFrom`, profile.js `mayCall`) - and ONE PRESS on a face calls them. The call is hosted HERE, on this
+// panel, exactly like an answered one: the far end full stage, this room in the corner, the camera and microphone
+// through the same arbiters, the same controls and the same Hang up. The host makes the connection (`ctx.dialOut`: a
+// caller's socket to the person called, calling AS the person this screen is for, so the far end names them).
+//   * This retires "a bedside screen never places a call" (kiosk.js, call_transport.js, profile.js said it) for this
+//     panel - deliberately, at Mike's word. The People and Profile cards on a screen still do not call.
+//   * A SWITCH reaches every face: `next` / `prev` light one (nothing is lit at first, so a stray press calls nobody),
+//     `select` calls the lit one; while calling, the one stop is Hang up, and `back` hangs up as always.
+//   * IT ENDS BY ITSELF: nobody answering is "No answer." after the caller's own wait (call_page.js CALLER_GIVE_UP_MS),
+//     so a call placed by a stray press never sits on the screen.
+//   * While this screen is calling out, a call to it is refused as busy (kiosk.js), not rung over the top.
 
 import { registerModule } from '../module.js';
+import { connectionsFrom } from '../people_page.js';
+import { mayCall } from './profile.js';
+import { CALLER_GIVE_UP_MS, CONNECT_MS, PRESENCE_MS, endText } from '../call_page.js';
+import { CALL_SELECT_TOPIC, CALL_NEXT_TOPIC, CALL_PREV_TOPIC, CALL_OUTGOING_TOPIC } from '../actions.js';
 import { CALL_BLOCKED_SHORT } from '../private_network.js';   // 2026-10-26 (note CV): what fixes it, in words
 import { MUSIC_GROUP } from '../audio_bus.js';
 import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
@@ -132,6 +151,37 @@ export const CALL_DECLINE = 'call/decline';
 // call-outcome log, matching what was actually asked for.
 export const ANSWER_KIND = 'answer';
 
+// ---- CALLING OUT (row 2.167): the three numbers and choices, each a setting with its default argued ----------------
+// HOW MANY PEOPLE THE PANEL OFFERS TO CALL: 8 by default. FOR 8: on a switch, the last face is at most 8 presses
+// from nothing lit; 8 faces sit in two rows of four in a quarter-screen panel at a size you can recognise across a
+// room; and the list is in the People page's own order, so the people somebody put first are the ones shown. AGAINST:
+// a household with more people than that cannot reach the rest from here - "12" and "Everybody" are one setting away,
+// and the panel scrolls. Fewer (4) for a screen whose person should only ever reach their closest people.
+export const DIAL_MAX_CHOICES = Object.freeze([4, 8, 12, 0]);   // 0 = everybody this screen may call
+export const DIAL_MAX_DEFAULT = 8;
+/** The people this panel offers to call, in the People page's order. PURE.
+ *   own     /api/people rows (as the screen's person sees them: `name`, `reach`)
+ *   shared  /api/drive/shared rows
+ *   selfId  the person the screen is for (never offered: calling yourself rings this very room)
+ *   max     how many (0 = all)
+ * -> [{ id, reach, name }]: `id` is their card (its face), `reach` where the call goes (claims.reach_id). Only people
+ * this login may call (profile.js mayCall - the People panel's own rule); the server still checks every ring. */
+export function dialList({ own = [], shared = [], selfId = '', max = DIAL_MAX_DEFAULT } = {}) {
+  const ownRows = Array.isArray(own) ? own : [];
+  const sharedRows = Array.isArray(shared) ? shared : [];
+  const rows = new Map(ownRows.filter((r) => r && r.id).map((r) => [r.id, r]));
+  const out = [];
+  for (const p of connectionsFrom({ own: ownRows, shared: sharedRows, selfId })) {
+    const r = p.via === 'account' ? rows.get(p.id) : null;
+    const reach = String((r && r.reach) || p.id);
+    if (!reach || reach === selfId || out.some((x) => x.reach === reach)) continue;
+    if (mayCall(reach, { own: ownRows, shared: sharedRows }) !== true) continue;
+    out.push({ id: p.id, reach, name: p.name });
+  }
+  const n = Number(max);
+  return Number.isFinite(n) && n > 0 ? out.slice(0, Math.round(n)) : out;
+}
+
 // press-to-answer is deliberately absent from the default: see the header.
 const DEFAULTS = {
   // Seconds of announced countdown before a call from somebody who MAY DROP IN answers (2026-10-12: only
@@ -151,6 +201,10 @@ const DEFAULTS = {
   // screen is for. It is one setting, and everything the example draws is labelled as an
   // example on every frame -- see `demoFrame`.
   demo: true,
+  // CALLING OUT (row 2.167; see the header and DIAL_* below for each argument).
+  dialContacts: true,
+  dialMax: DIAL_MAX_DEFAULT,
+  dialMode: 'video',
 };
 
 const SETTINGS = [
@@ -183,6 +237,28 @@ const SETTINGS = [
     offLabel: 'No. Just say there is no call',
     note: 'The example never rings anybody. It never opens the camera or the microphone. It '
         + 'is labeled as an example the whole time. Turn it off on a screen somebody lives with.' },
+  // CALLING OUT (row 2.167). ON by default, at Mike's word ("You should be able to make calls to your contacts
+  // through the call module"). The person who wants it OFF: whoever looks after a screen where a stray touch should
+  // never ring anybody - a switch needs two deliberate presses (light, then select), but a finger needs one. So it is
+  // one setting here, essential, not buried.
+  { key: 'dialContacts', label: 'Call your people from here', default: true, level: 'essential',
+    onLabel: 'Yes. Show the people this screen can call', offLabel: 'No. This panel only answers calls',
+    note: 'One press on a face calls them. It rings their screens, and a call nobody answers ends by itself.' },
+  { key: 'dialMax', label: 'How many people to show', kind: 'choice', default: DIAL_MAX_DEFAULT, level: 'standard',
+    options: [
+      { value: 4, label: 'Four' },
+      { value: 8, label: 'Eight' },
+      { value: 12, label: 'Twelve' },
+      { value: 0, label: 'Everybody this screen can call' },
+    ],
+    note: 'In the order of the People page, so the people put first are the ones shown.' },
+  // VIDEO by default, argued: this panel was built to show the far end full stage, and the camera is already open for
+  // the corner picture. Audio for a household that prefers it, or a screen with no camera.
+  { key: 'dialMode', label: 'Calls from here are', kind: 'choice', default: 'video', level: 'standard',
+    options: [
+      { value: 'video', label: 'Video calls' },
+      { value: 'audio', label: 'Audio calls' },
+    ] },
   { key: 'showSelf', label: 'Show a second view of this camera', default: false,
     level: 'advanced',
     note: 'Off, because the picture-in-picture already shows it. Only useful on a screen '
@@ -291,6 +367,14 @@ registerModule(
     let demoTick = null;
     let demoLeft = 0;
     const offs = [];
+    // ---- CALLING OUT (row 2.167; see the header) ----
+    let contacts = null;         // dialList rows; null = not read (no people here, or not yet)
+    let lit = -1;                // the switch's stop: an index into stops(); -1 = nothing lit (a stray press does nothing)
+    let out = null;              // the call this panel placed: { contact, link, transport, offs, answered, connected, stream }
+    let outSeq = 0;              // which placed call this is: anything that outlives its call does nothing
+    let outNote = '';            // 'Connecting…' / 'Ringing…' while it is placed
+    let lastEndText = '';        // why a placed call ended, said for a moment (like END_MESSAGES for a call received)
+    let lastDialKey = '';        // the dial settings the list was last read for
 
     const AUDIO_ID = `call:${ctx.instanceId || 'call'}`;
     const CAM_ID = `call:${ctx.instanceId || 'call'}`;
@@ -299,8 +383,9 @@ registerModule(
     const el = (sel) => root?.querySelector(sel);
 
     // *** THE CALLER'S AVATAR, WHEN THE CALL SAYS WHO THEY ARE (row 2.37 item 5; wired 2026-09-30). ***
-    // Only when a person id came with the call (`from.personId`) - nothing sends one yet, so today every
-    // call shows the initial exactly as before. The face is drawn in the initial's own circle, so a card
+    // Only when a person id came with the call (`from.personId`) - since row 2.167 (2026-10-31) the SERVER's: the
+    // caller's card on this screen's people list (call_transport.js `byPerson`); a call it could not place on the
+    // list shows the initial exactly as before. The face is drawn in the initial's own circle, so a card
     // with one and a card without are the same shape. Its size is the circle: 2.2em of the circle's own
     // font (10cqmin) is its 22cqmin, and it scales with the panel like everything else here (a fixed
     // 4em would be twice the circle). It MOVES (a big face you look at - avatar_display.js's argument),
@@ -317,7 +402,11 @@ registerModule(
         // other people's own avatars are shown here. Absent (another host): the cache's own defaults.
         avatars = createAvatarCache({ makePersonState: ctx.makePersonState, user: ctx.user || null,
           ...(typeof ctx.avatarContext === 'function' ? { context: () => ctx.avatarContext() } : {}) });
-        offAvatars = avatars.subscribe((pid) => { if (pid && pid === callerId()) paintFace(); });
+        offAvatars = avatars.subscribe((pid) => {
+          if (pid && pid === callerId()) paintFace();
+          // ...and a face on the list of people to call (row 2.167), redrawn where it is.
+          else if (pid && phase === 'idle' && !demo && (contacts || []).some((c) => c.id === pid)) render();
+        });
       } catch (err) { console.error('call: avatars', err); avatars = null; }
       return avatars;
     }
@@ -346,10 +435,18 @@ registerModule(
           + (lastEndReason
             ? `<div class="call-endmsg">${esc(END_MESSAGES[lastEndReason])}</div>`
             : '')
+          + (lastEndText ? `<div class="call-endmsg" data-dial-end>${esc(lastEndText)}</div>` : '')
+          + dialHtml()
           + (cfg.demo !== false
-            ? '<button type="button" class="call-demo-btn" data-demo>See what a call looks '
+            ? '<button type="button" class="call-demo-btn" data-demo data-stop="demo">See what a call looks '
               + 'like</button>'
             : '');
+      } else if (phase === 'dialing') {
+        // A call this panel placed, not yet answered: who, what is happening, and the way out - on the screen the whole
+        // time (it also ends by itself: CALLER_GIVE_UP_MS).
+        stage.innerHTML = personCard({ ...who, note: outNote || 'Calling…' }, face())
+          + '<div class="call-actions"><button type="button" class="call-btn" data-dial-hangup data-stop="hangup">'
+          + 'Hang up</button></div>';
       } else if (phase === 'ringing') {
         const counting = remaining > 0;
         stage.innerHTML = personCard({ ...who, note: `${who?.name || 'Someone'} is calling` }, face())
@@ -388,6 +485,228 @@ registerModule(
       root.dataset.phase = phase;
       paintTiles();                 // group calls: everybody else in the call, beside whoever rang
       renderLend();
+      attachOut();                  // a call this panel placed: the far end into the element just drawn
+      paintLit();
+    }
+
+    // ---- CALLING OUT (row 2.167; see the header) -------------------------------------------------------------------
+    const dialOn = () => cfg.dialContacts !== false && typeof ctx.dialOut === 'function';
+    const dialMaxNow = () => (DIAL_MAX_CHOICES.includes(Number(cfg.dialMax)) ? Number(cfg.dialMax) : DIAL_MAX_DEFAULT);
+    const DIAL_FACE_SIZE = '1em';   // of the face circle's own font: the circle IS the size (see the style)
+    function dialFace(c) {
+      const cache = avatarCache();
+      const html = cache && c.id ? avatarHtml(cache.get(c.id), { size: DIAL_FACE_SIZE, animate: false, personId: c.id }) : '';
+      return html || `<span class="call-dial-initial">${esc((String(c.name || '').trim()[0] || '?').toUpperCase())}</span>`;
+    }
+    function dialHtml() {
+      if (!dialOn() || contacts === null) return '';
+      if (!contacts.length) {
+        return '<div class="call-dial-none" data-dial-none>Nobody to call from here yet. The people this screen may '
+          + 'call, from the People page, show here.</div>';
+      }
+      return '<div class="call-dial" role="group" aria-label="Call someone"><div class="call-dial-h">Call someone</div>'
+        + `<div class="call-dial-list">${contacts.map((c) => `<button type="button" class="call-dial-btn" data-dial="${esc(c.id)}"
+            data-stop="dial:${esc(c.id)}" aria-label="${esc(`Call ${c.name}`)}"><span class="call-dial-face" aria-hidden="true">${dialFace(c)}</span>
+            <span class="call-dial-name">${esc(c.name)}</span></button>`).join('')}</div></div>`;
+    }
+    // THE SWITCH'S STOPS, in the order drawn: each face, then the example button; while calling out, Hang up alone.
+    function stops() {
+      return root ? [...root.querySelectorAll('[data-stage] [data-stop]')] : [];
+    }
+    function paintLit() {
+      const all = stops();
+      if (lit >= all.length) lit = all.length ? all.length - 1 : -1;
+      all.forEach((b, i) => {
+        if (i === lit) b.dataset.lit = '1'; else delete b.dataset.lit;
+      });
+      if (lit >= 0) { try { all[lit].scrollIntoView?.({ block: 'nearest' }); } catch { /* not in a page */ } }
+    }
+    function stepLit(dir) {
+      if (phase === 'ringing' || phase === 'connected') return false;     // a call is not a thing to browse
+      const n = stops().length;
+      if (!n) { lit = -1; return false; }
+      lit = lit < 0 ? (dir > 0 ? 0 : n - 1) : (lit + dir + n) % n;
+      paintLit();
+      return true;
+    }
+    function pressLit() {
+      if (phase === 'ringing') { answer(); return true; }                  // what `select` here has always done
+      const b = lit >= 0 ? stops()[lit] : null;
+      if (!b) return false;                                                // nothing lit: a stray press does nothing
+      b.click();
+      return true;
+    }
+
+    async function loadContacts() {
+      if (!dialOn() || !ctx.profiles || typeof ctx.profiles.people !== 'function') { contacts = null; return; }
+      const self = (() => { try { return ctx.personId || ''; } catch { return ''; } })();
+      let own = null;
+      // Read AS the screen's own person (their own names for people first), as the People panel reads them; refused
+      // (an older server), the login's names.
+      try { own = (await ctx.profiles.people(self || undefined)) || []; }
+      catch { try { own = (await ctx.profiles.people()) || []; } catch { own = null; } }
+      let shared = [];
+      if (typeof ctx.profiles.sharedWithMe === 'function') {
+        try { const r = await ctx.profiles.sharedWithMe(); shared = Array.isArray(r) ? r : []; } catch { shared = []; }
+      }
+      contacts = own === null ? null : dialList({ own, shared, selfId: self, max: dialMaxNow() });
+      if (phase === 'idle' && !demo) render();
+    }
+
+    function publishOutgoing() {
+      const s = out ? (phase === 'connected' ? 'connected' : 'dialing') : 'idle';
+      try { bus.publish(CALL_OUTGOING_TOPIC, { state: s }); } catch (err) { console.error('call: outgoing', err); }
+    }
+    // The far end's stream, into the element the connected view drew (the element is redrawn only when its kind
+    // changes, so this is the same one all call).
+    function attachOut() {
+      if (!out || phase !== 'connected' || !root) return;
+      const v = root.querySelector('.call-remote');
+      if (v && out.stream && v.srcObject !== out.stream) {
+        try { v.srcObject = out.stream; v.play?.()?.catch?.(() => {}); } catch { /* a fake stream */ }
+      }
+    }
+
+    /** Call `contact` ({ id, reach, name }) from this panel. Resolves true when the call was placed (it rings). */
+    async function dial(contact) {
+      if (phase !== 'idle' || out || !contact || !dialOn()) return false;
+      stopDemo();
+      lastEndText = '';
+      if (lastEndTimer != null) { clearTimer(lastEndTimer); lastEndTimer = null; }
+      lastEndReason = null;
+      const my = ++outSeq;
+      const video = cfg.dialMode !== 'audio';
+      who = { name: contact.name, personId: contact.id, video, outgoing: true };
+      phase = 'dialing';
+      outNote = 'Connecting…';
+      lit = -1;
+      let presence = null;
+      let up = false;
+      const waits = new Set();
+      const poke = () => { for (const w of [...waits]) w(); };
+      let made = null;
+      try {
+        made = ctx.dialOut({
+          personId: contact.reach,
+          onPresence: (p) => { presence = p || null; poke(); },
+          onState: (s) => {
+            const was = up;
+            up = s === 'connected';
+            // The socket came back mid-call: only a call whose connection is failing is offered again (the caller
+            // page's rule; call_transport.js re-offers once per drop).
+            if (up && !was && my === outSeq && out?.answered) {
+              try { if (out.transport.__probe?.().stalling) out.transport.reconnect?.(); } catch { /* gone */ }
+            }
+            poke();
+          },
+        });
+      } catch (err) { console.error('call: dial', err); made = null; }
+      if (!made || !made.link || !made.transport) {
+        render();
+        endOut('The call could not be placed from here.');
+        return false;
+      }
+      out = { contact, link: made.link, transport: made.transport, offs: [], answered: false, connected: false,
+              stream: null, timer: null };
+      render();
+      publishOutgoing();
+      // Wait for a condition, or the time to run out (the caller page's own CONNECT_MS / PRESENCE_MS, argued there).
+      const waitFor = (cond, ms) => new Promise((resolve) => {
+        if (cond()) { resolve(true); return; }
+        let t = null;
+        const done = (v) => { waits.delete(check); if (t != null) clearTimer(t); resolve(v); };
+        const check = () => { if (my !== outSeq) done(false); else if (cond()) done(true); };
+        waits.add(check);
+        t = setTimer(() => done(cond()), ms);
+      });
+      const linkUp = () => up || made.link.state?.() === 'connected';
+      if (!(await waitFor(linkUp, CONNECT_MS))) {
+        if (my === outSeq) endOut('Could not reach the site. Check the connection and try again.');
+        return false;
+      }
+      await waitFor(() => presence != null, PRESENCE_MS);
+      if (my !== outSeq) return false;
+      if (presence && presence.screens === 0) {
+        endOut(`None of ${contact.name}’s screens are on right now, so nothing would ring.`);
+        return false;
+      }
+      // The camera and the microphone, through the same arbiters as an answered call (a CLONE of the camera; the
+      // screen's chosen microphone), only now that something will ring.
+      ctl = { mic: true, speaker: true, theirVideo: true, myVideo: video };
+      takeSpeaker(true);
+      const [track, mic] = await Promise.all([video ? takeCamera() : Promise.resolve(null), takeMic()]);
+      if (my !== outSeq) return false;
+      let micTrack = null;
+      try { micTrack = mic?.getAudioTracks?.()?.[0] || null; } catch { micTrack = null; }
+      const t = out.transport;
+      out.offs.push(t.onEnded?.((reason, info) => {
+        if (my !== outSeq) return;
+        const why = info && info.why;
+        // A call that was answered and then hung up normally needs no words; anything else says what happened.
+        const plain = out?.answered && reason === 'remote' && (!why || why === 'hangup' || why === 'ended');
+        endOut(plain ? '' : endText(reason, why, { answered: !!out?.answered, connected: !!out?.connected }), { bye: null });
+      }) || (() => {}));
+      out.offs.push(t.onAnswered?.(() => {
+        if (my !== outSeq || !out) return;
+        out.answered = true;
+        if (out.timer != null) { clearTimer(out.timer); out.timer = null; }
+        phase = 'connected';
+        render();
+        applyControls();
+        publishControls();
+        publishOutgoing();
+        watchMicSound(micTrack);
+      }) || (() => {}));
+      out.offs.push(t.onConnection?.((st) => { if (my === outSeq && out && st === 'connected') out.connected = true; }) || (() => {}));
+      out.offs.push(t.onRemote?.((s) => { if (my === outSeq && out) { out.stream = s || null; attachOut(); } }) || (() => {}));
+      outNote = 'Ringing…';
+      render();
+      let sent = false;
+      try {
+        sent = await t.call({ tracks: [track, micTrack].filter(Boolean), from: { video }, remoteVideo: null });
+      } catch (err) { console.error('call: place', err); sent = false; }
+      if (my !== outSeq) return false;
+      if (!sent) { endOut('The call could not be placed. Check the connection and try again.'); return false; }
+      // Nobody replied in the caller's whole wait: "No answer.", and the screens rung are told to stop.
+      out.timer = setTimer(() => {
+        if (my !== outSeq || !out || out.answered) return;
+        endOut('No answer.', { bye: 'unanswered' });
+      }, CALLER_GIVE_UP_MS);
+      return true;
+    }
+
+    /** The placed call is over (or never started). `text`: what to say for a moment ('' nothing). `bye`: the reason
+     *  the far end is told ('hangup', 'unanswered'), or null when it already knows (it ended the call itself). The
+     *  transport's listeners go first, so its own report of this ending does not end it a second time. */
+    function endOut(text = '', { bye = 'hangup' } = {}) {
+      const o = out;
+      outSeq += 1;
+      out = null;
+      outNote = '';
+      if (o) {
+        if (o.timer != null) { try { clearTimer(o.timer); } catch { /* gone */ } }
+        o.offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
+        if (bye) { try { o.transport.hangup?.(bye); } catch { /* gone */ } }
+        try { o.transport.destroy?.(); } catch { /* gone */ }
+        try { o.link.close?.(); } catch { /* gone */ }
+      }
+      const was = phase;
+      phase = 'idle';
+      who = null;
+      lit = -1;
+      dropCamera();
+      dropMic();
+      takeSpeaker(false);
+      ctl = { mic: true, speaker: true, theirVideo: true, myVideo: true };
+      if (lastEndTimer != null) { clearTimer(lastEndTimer); lastEndTimer = null; }
+      lastEndText = text || '';
+      if (lastEndText) lastEndTimer = setTimer(() => { lastEndText = ''; lastEndTimer = null; render(); }, 8000);
+      render();
+      applyControls();
+      publishControls();
+      if (o || was !== 'idle') publishOutgoing();
+      // Somebody may have been added or taken off meanwhile: the list is read again for the next call.
+      loadContacts().catch(() => {});
     }
 
     // ---- A TEMPORARY "SEE THIS SCREEN" FOR THE CALLER (Mike, 2026-10-12) ---------------------------------------
@@ -809,6 +1128,9 @@ registerModule(
     }
 
     async function incoming(from) {
+      // Calling out (row 2.167): the screen refuses a call to it as busy meanwhile (kiosk.js); one that reaches the
+      // panel anyway is not rung over the call being placed.
+      if (out) return;
       // A REAL CALL TAKES THE SCREEN BACK IMMEDIATELY. Somebody looking at the example when
       // her daughter rings must see her daughter, not a demonstration with a real call queued
       // behind it.
@@ -968,6 +1290,9 @@ registerModule(
     };
 
     function end(reason = 'ended') {
+      // A call this panel PLACED ends its own way (row 2.167): its own socket and transport, no `call/ended` (nothing
+      // switched the screen to it), and the far end told why. Hang up here, by a press or `back`, needs no words.
+      if (out) { endOut('', { bye: reason === 'destroyed' ? 'hangup' : reason }); return; }
       clearRing();
       const was = phase;
       phase = 'idle';
@@ -1031,6 +1356,13 @@ registerModule(
     }
 
     return {
+      // Calling out (row 2.167), for the suites: the list, what is lit, and call one.
+      __contacts: () => (contacts ? contacts.map((c) => ({ ...c })) : null),
+      __lit: () => { const b = lit >= 0 ? stops()[lit] : null; return b ? b.dataset.stop : null; },
+      __dial: (c) => dial(c),
+      __outgoing: () => (out ? { name: out.contact.name, reach: out.contact.reach, answered: out.answered, note: outNote } : null),
+      __endText: () => lastEndText,
+      __reloadContacts: () => loadContacts(),
       __probe: () => ({ phase, who, hasOutgoing: !!outgoing, ringArmed: !!ringTimer,
                         counting: !!tickTimer, remaining, cfg: { ...cfg },
                         demo, demoLeft, lent: !!lent, lentDrive: !!lentDrive,
@@ -1097,6 +1429,26 @@ registerModule(
           + '.m-call .call-hint{opacity:.6;max-width:34ch;'
           + 'font:400 2.2cqmin/1.35 system-ui,sans-serif}'
           + '.m-call .call-idle{opacity:.45;font:400 3cqmin system-ui,sans-serif}'
+          // Calling out (row 2.167): the people this screen can call, a face and a name each, big enough to read
+          // across a room; the lit one ringed like every other scanned thing. `safe center`: a long list scrolls
+          // from its top rather than being cut off above it.
+          + '.m-call [data-stage]{overflow:auto;justify-content:safe center}'
+          + '.m-call .call-dial{display:flex;flex-direction:column;align-items:center;gap:1.5cqmin;width:100%}'
+          + '.m-call .call-dial-h{font:600 3cqmin/1.2 system-ui,sans-serif;opacity:.85}'
+          + '.m-call .call-dial-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(max(96px,20cqmin),1fr));'
+          + 'gap:2cqmin;width:100%;max-width:96cqmin}'
+          + '.m-call .call-dial-btn{display:flex;flex-direction:column;align-items:center;gap:1cqmin;min-height:44px;'
+          + 'padding:1.4cqmin;border-radius:2cqmin;cursor:pointer;background:rgba(255,255,255,.06);color:#e8f0ea;'
+          + 'border:1px solid rgba(232,240,234,.35);font:600 max(14px,2.6cqmin)/1.2 system-ui,sans-serif}'
+          + '.m-call .call-dial-btn:focus-visible{outline:3px solid #fff3d9;outline-offset:2px}'
+          + '.m-call [data-stop][data-lit]{outline:4px solid var(--scan-ring,#fff3d9);outline-offset:3px}'
+          + '.m-call .call-dial-face{width:12cqmin;height:12cqmin;min-width:40px;min-height:40px;font-size:max(40px,12cqmin);'
+          + 'border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;'
+          + 'background:rgba(255,255,255,.10);color:#fff3d9}'
+          + '.m-call .call-dial-face .nav-av{margin:0!important}'
+          + '.m-call .call-dial-initial{font-size:.45em;font-weight:600}'
+          + '.m-call .call-dial-name{overflow-wrap:anywhere;text-align:center}'
+          + '.m-call .call-dial-none{opacity:.7;max-width:40ch;font:400 max(13px,2.2cqmin)/1.35 system-ui,sans-serif}'
           // The ringing card's Decline / Answer (2026-10-12), and the "see this screen" bar under a live call.
           + '.m-call .call-actions{display:flex;gap:2cqmin;justify-content:center;flex-wrap:wrap}'
           + '.m-call .call-btn{min-height:44px;min-width:7em;padding:1.2cqmin 2.6cqmin;border-radius:2cqmin;'
@@ -1173,6 +1525,14 @@ registerModule(
           // The ringing card's own buttons (2026-10-12): Decline, and Answer.
           if (e.target.closest('[data-call-decline]')) { decline(); return; }
           if (e.target.closest('[data-call-answer]')) { answer(); return; }
+          // Calling out (row 2.167): one press on a face calls them; Hang up while it is placed.
+          const d = e.target.closest('[data-dial]');
+          if (d) {
+            const c = (contacts || []).find((x) => x.id === d.dataset.dial);
+            if (c) dial(c).catch((err) => console.error('call: dial', err));
+            return;
+          }
+          if (e.target.closest('[data-dial-hangup]')) { end('hangup'); return; }
           const ls = e.target.closest('[data-lend-start]');
           if (ls) { setLend(true, ls.dataset.lendStart === 'drive' ? 'drive' : 'see'); return; }
           const lx = e.target.closest('[data-lend-stop]');
@@ -1212,6 +1572,9 @@ registerModule(
           // it away now rather than at the next mount.
           if (cfg.demo === false) stopDemo();
           render();
+          // Calling out (row 2.167): turned on or off, or a different number of people - the list is read again.
+          const dialKey = `${cfg.dialContacts !== false}|${dialMaxNow()}`;
+          if (dialKey !== lastDialKey) { lastDialKey = dialKey; loadContacts().catch(() => {}); }
         }) || (() => {}));
 
         // Driven by the world, not by this module deciding things.
@@ -1219,6 +1582,13 @@ registerModule(
         offs.push(bus.subscribe(CALL_ANSWER, () => answer()));
         offs.push(bus.subscribe(CALL_HANGUP, () => end('hangup')));
         offs.push(bus.subscribe(CALL_DECLINE, () => decline()));
+        // The panel's own walk (row 2.167; actions.js MODULE_VERBS.call): the people it can call, and Hang up while
+        // calling out. `select` while a call rings answers it, as it always did.
+        offs.push(bus.subscribe(CALL_NEXT_TOPIC, () => { stepLit(1); }));
+        offs.push(bus.subscribe(CALL_PREV_TOPIC, () => { stepLit(-1); }));
+        offs.push(bus.subscribe(CALL_SELECT_TOPIC, () => { pressLit(); }));
+        lastDialKey = `${cfg.dialContacts !== false}|${dialMaxNow()}`;
+        loadContacts().catch((err) => console.error('call: contacts', err));
         // A live call's controls (the bar, the menu, a switch, a spoken "mute my mic").
         offs.push(bus.subscribe(CALL_CONTROL_TOPIC, (p) => { onControl(p); }));
         // The panel's volume changed (the bar's Call − / +, the menu, another device): the bars show it.
@@ -1234,6 +1604,9 @@ registerModule(
       onHide() {},
 
       destroy() {
+        // A call this panel PLACED goes with it: hung up, its own socket closed (row 2.167).
+        if (out) { try { endOut('', { bye: 'hangup' }); } catch { /* gone */ } }
+        outSeq += 1;
         // A call still going when the panel goes is HUNG UP -- not left open with nothing on screen
         // to end it. (This used to happen by destroying the transport, which also killed it for
         // every later call panel on this screen: the transport is the screen's, built once, and

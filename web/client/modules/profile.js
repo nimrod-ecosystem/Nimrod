@@ -13,9 +13,10 @@
 //                     cannot be shown, and the picker says so rather than pretending.
 //   Dimmed, never hidden (Design's rule, home_profile.js): a button that cannot act says why.
 //
-// *** CALL: A SCREEN NEVER PLACES A CALL; A PERSON'S OWN BROWSER CAN. *** (kiosk.js: "a bedside screen answers;
-// it never places a call".) Calls are placed from call.html (call_page.js, 2d87fe7) on a phone or computer,
-// signed in to the caller's own account. So:
+// *** CALL: THIS CARD NEVER PLACES A CALL FROM A SCREEN; A PERSON'S OWN BROWSER CAN. *** Calls are placed from
+// call.html (call_page.js, 2d87fe7) on a phone or computer, signed in to the caller's own account - and, since
+// 2026-10-31 (row 2.167, Mike: "You should be able to make calls to your contacts through the call module"), from a
+// screen's Call panel (modules/call.js), which hosts the whole call on the screen. Not from this card. So:
 //   - on a SCREEN (this panel inside the real kiosk, `onScreen` below) Call stays DIMMED and says where calls
 //     are placed. It does not open call.html there: that would turn the screen into a caller, and a page
 //     somebody cannot leave on their own.
@@ -79,7 +80,8 @@ export const LOG_SHOWN = 20;            // the last turns drawn; the chat keeps 
 export const REMOVE_ARM_MS = 6000;
 
 // The Call button's reasons, in words (Design's rule: dimmed, never hidden, says why).
-export const CALL_ON_SCREEN = 'Calls are placed from a phone or a computer, at /call.html. A screen answers calls; it does not place them.';
+// row 2.167 (2026-10-31): a screen places calls from its Call panel (modules/call.js), never from this card.
+export const CALL_ON_SCREEN = 'On a screen, calls are placed from the Call panel. Elsewhere, from a phone or a computer, at /call.html.';
 export const CALL_NOT_ALLOWED = 'This account may not call them. Whoever looks after their screens can share them with you, on their Remote tab.';
 export const CALL_CHECKING = 'Checking whether this account may call them…';
 export const CALL_HELP = 'A video or audio call to their screens, from this phone or computer.';
