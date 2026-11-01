@@ -379,7 +379,7 @@ try {
     await t.arr.mountLayout();
     const e = t.stageEl.querySelector('[data-empty]');
     check('everything failed: it says what could not start',
-      e && e.textContent === 'Nothing on this screen could start (photos, trivia). Press Home to check it.', e?.textContent);
+      e && e.textContent === 'Nothing on this screen could start (photos, trivia). Press Dashboards to check it.', e?.textContent);
     const t2 = make({ modules: [M.p1, M.t1] });
     t2.arr.resolve({ preset: 'side', slots: ['p1', 't1'] });
     t2.arr.setProfile({ id: 'scr-A', modules: [] });      // the modules went; the arrangement stayed
@@ -387,7 +387,7 @@ try {
     await t2.arr.mountLayout();
     const e2 = t2.stageEl.querySelector('[data-empty]');
     check('slots whose modules are gone: it says they were removed',
-      e2 && e2.textContent === 'The panels on this screen were removed. Press Home to add some again.', e2?.textContent);   // site text second pass 2026-10-13
+      e2 && e2.textContent === 'The panels on this screen were removed. Press Dashboards to add some again.', e2?.textContent);   // site text second pass 2026-10-13
   }
 
   section('showPrimary: the one-at-a-time stage');
@@ -461,7 +461,7 @@ try {
     await t.arr.applyModules();                          // only wordforge, and it fails
     const e = t.stageEl.querySelector('[data-empty]');
     check('*** the sentence names only THIS screen’s failed panels ***',
-      e && e.textContent === 'Nothing on this screen could start (wordforge). Press Home to check it.', e?.textContent);
+      e && e.textContent === 'Nothing on this screen could start (wordforge). Press Dashboards to check it.', e?.textContent);
   }
 
   section("recovery's hands");

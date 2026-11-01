@@ -561,7 +561,7 @@ const NODES = [
     id: 'change-dashboard', title: 'Changing a dashboard',
     say: 'A dashboard is one screenful: the modules on it, where they sit, and what is behind them. Change this '
       + 'one with the edit bar (Scene, Add, Change), or start another from an example. Your dashboards are '
-      + 'one press away from the Home button on the bar.',
+      + 'one press away from the Dashboards button on the bar.',
     choices: withKeys([
       { label: 'A scene (a collection of dashboards)', to: 'change-scene' },
       { label: 'The tutorial dashboard', to: 'tutorial' },

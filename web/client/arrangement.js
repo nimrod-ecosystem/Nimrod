@@ -527,10 +527,10 @@ export function createArrangement({
       // and it is the third piece of stale copy this session -- after Lessons pointing at a
       // settings panel that was never built, and the catalog claiming lessons to watch.
       empty.textContent = failedSlots.length
-        ? `Nothing on this screen could start (${failedSlots.join(', ')}). Press Home to check it.`
+        ? `Nothing on this screen could start (${failedSlots.join(', ')}). Press Dashboards to check it.`
         : layout.slots.length
-          ? 'The panels on this screen were removed. Press Home to add some again.'
-          : 'Nothing has been added to this screen yet. Press Home to add something.';
+          ? 'The panels on this screen were removed. Press Dashboards to add some again.'
+          : 'Nothing has been added to this screen yet. Press Dashboards to add something.';
       stageEl.append(empty);
     }
 

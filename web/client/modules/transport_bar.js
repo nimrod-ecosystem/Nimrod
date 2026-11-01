@@ -45,13 +45,13 @@ import {
   sitOutWakePress, paintSave, paintSwap,
 } from '../transport_bar.js';
 import {
-  SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
+  SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
   SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE,
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC, QUICK_SWAP_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
-import { BAR_KEY_HIDDEN, onModuleControl } from '../bar_toggle.js';
+import { BAR_KEY_HIDDEN, BAR_TOGGLE_TOPIC, onModuleControl } from '../bar_toggle.js';
 
 // How near the pointer has to come to bring a tucked bar back: the kiosk's own rule for its bar
 // (kiosk.js BAR_REVEAL_MARGIN_PX, Mike 2026-09-20: "pop up when you put your cursor near"), not a new
@@ -62,7 +62,11 @@ const REVEAL_MARGIN_PX = 140;
 // other screens to go Home to, and never the camera as an overlay), the same rule kiosk.css applies to
 // the plain bar there.
 const BUTTONS = [
-  { act: 'home', verb: SHELL_HOME, label: '⌂ Home', title: 'your screens', embed: false },
+  // ⌂ Home and ▦ Dashboards (row 2.172, Mike 2026-11-01: the old Home "should be renamed 'Dashboards'. There should be a
+  // new home button that actually takes you to your home page"). The picker keeps its act, 'home', which the menu, the
+  // tray and every suite already call it by; only its words changed.
+  { act: 'gohome', verb: SHELL_GO_HOME, label: '⌂ Home', title: 'your Home page', embed: false },
+  { act: 'home', verb: SHELL_HOME, label: '▦ Dashboards', title: 'your dashboards', embed: false },
   { act: 'back', verb: SHELL_PREV, label: '◂ Back', title: 'back — the one before this' },
   // Pause / Play (2026-10-02): the selected panel's, between Back and Next where a transport has it. The
   // shell says whether it can and which way it is (SHELL_STATE `playPause`); dimmed until it says so.
@@ -88,6 +92,9 @@ const BUTTONS = [
     title: 'pause the music and video so you can talk (voices and speech are still heard)' },
   { act: 'settings', verb: SHELL_MENU, label: '⚙', title: 'settings' },
   { act: 'fs', verb: SHELL_FULLSCREEN, label: '⛶', title: 'full screen' },
+  // ▾ Hide (row 2.171, Mike 2026-11-01: "a hide button/hotkey for when it get's in the way of other UI"): the same
+  // press as the T key (bar_toggle.js), with its quiet period. A swipe up from the bottom brings the bar back at any time.
+  { act: 'hidebar', verb: BAR_TOGGLE_TOPIC, label: '▾ Hide', title: 'hide this bar (T). Swipe up from the bottom, or press T, to bring it back' },
 ];
 
 registerModule(

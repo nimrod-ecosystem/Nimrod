@@ -46,6 +46,7 @@ import { isBarSwipe, BAR_SWIPE_MS } from '../bar_toggle.js';   // the swipe up f
 import { PLAY_STATE_TOPIC } from '../game_start.js';
 import { CALL_CONTROLS_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
+import { barGroupOf } from '../transport_bar.js';
 
 const USER = 'bartoggle-' + Math.floor(Math.random() * 1e6);
 const root = document.getElementById('root');
@@ -271,7 +272,21 @@ const mouseNearBar = async (bar) => {
     check('*** S opens it (the picker moved off H), with the bar it hangs off ***', picker()?.hidden === false && shown(), bar().className);
     await key('s');
     check('S again puts it away', picker()?.hidden !== false);
-    check('the Home button says (S)', /\(S\)/.test(bar().querySelector('[data-act="home"]')?.title || ''));
+    check('the Dashboards button says (S)', /\(S\)/.test(bar().querySelector('[data-act="home"]')?.title || ''));
+
+    // ROW 2.172: the picker is "Dashboards"; a new ⌂ Home goes to your Home page. ROW 2.171: ▾ Hide is T as a button.
+    check('*** the picker\'s button reads "Dashboards", with ⌂ Home beside it, before it ***',
+      /Dashboards/.test(bar().querySelector('[data-act="home"]')?.textContent || '')
+      && /Home/.test(bar().querySelector('[data-act="gohome"]')?.textContent || '')
+      && !!(bar().querySelector('[data-act="gohome"]').compareDocumentPosition(bar().querySelector('[data-act="home"]')) & Node.DOCUMENT_POSITION_FOLLOWING));
+    if (!shown()) await key('t');
+    bar().querySelector('[data-act="hidebar"]').click();
+    await sleep(30);
+    check('*** ▾ Hide on the bar hides it, with the same quiet period as T ***', !shown() && k.barToggle().hiddenByKey && !k.barToggle().mayPopUp, J(k.barToggle()));
+    await tap();
+    check('...a touch does not bring it straight back', !shown());
+    await key('t');
+    check('...and T brings it back', shown());
 
     // Bound to anything: a switch.
     k.runtime.input.addBinding({ id: 'test/bar-switch', actionId: BAR_TOGGLE_ACTION, device: 'switch:1', control: 'a', edge: 'press', role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0 });
@@ -373,6 +388,34 @@ const mouseNearBar = async (bar) => {
       kioskEl().dataset.plainBar === 'summoned' && !plain().classList.contains('k-bar-hidden'), kioskEl().dataset.plainBar);
     await key('t');
     check('T with the plain bar summoned puts the bars away', kioskEl().dataset.plainBar === 'off' && tb().dataset.tucked === '1', kioskEl().dataset.plainBar);
+    await key('t');
+    check('(T brings it back)', tb().dataset.tucked !== '1');
+    // ROW 2.171 / 2.172 on the placed bar too.
+    check('*** the placed bar: ⌂ Home, ▦ Dashboards, and ▾ Hide in the last group with ⚙ and ⛶ ***',
+      /Home/.test(tb().querySelector('[data-act="gohome"]')?.textContent || '') && /Dashboards/.test(tb().querySelector('[data-act="home"]')?.textContent || '')
+      && barGroupOf(tb().querySelector('[data-act="hidebar"]')) === 'menu');
+    tb().querySelector('[data-act="hidebar"]').click();
+    await sleep(30);
+    check('*** its ▾ Hide puts it away as T does ***', tb().dataset.tucked === '1' && k.barToggle().hiddenByKey, J(k.barToggle()));
+    k.destroy(); root.innerHTML = '';
+  }
+
+  // =====================================================================================
+  section('*** ⌂ Home goes to your Home page (row 2.172); a screen\'s own key, to its first dashboard ***');
+  {
+    const p = await screenWith('BT-home');
+    const opened = [];
+    let k = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), openPage: (u) => opened.push(u) });
+    await until(() => !!root.querySelector('.k-controls [data-act="gohome"]'));
+    root.querySelector('.k-controls [data-act="gohome"]').click();
+    check('*** signed in in a browser: the Home page, /home ***', J(opened) === J(['/home']), J(opened));
+    k.destroy(); root.innerHTML = '';
+    opened.length = 0;
+    k = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), screenKey: true, openPage: (u) => opened.push(u) });
+    await until(() => !!root.querySelector('.k-controls [data-act="gohome"]'));
+    root.querySelector('.k-controls [data-act="gohome"]').click();
+    await sleep(50);
+    check('*** a screen let in by its own key: no page opened (it stays on its dashboards, going to its first) ***', opened.length === 0, J(opened));
     k.destroy(); root.innerHTML = '';
   }
 

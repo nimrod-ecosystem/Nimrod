@@ -595,7 +595,8 @@ export function barScanModeOf(v, chooseMode = 'point') {
 // so a press is never sent to the wrong holder.
 const CHECK_MS = 1000;
 export const BAR_GROUP_NAMES = Object.freeze({
-  page: 'this page', panels: 'the panels', call: 'this call', transport: 'the controls', menu: 'help, settings and full screen',
+  page: 'this page', panels: 'the panels', call: 'this call', transport: 'the controls',
+  menu: 'help, settings, full screen and hide',
 });
 
 /** Which group a bar button belongs to (both bars: the plain one and the placed module). */
@@ -605,7 +606,7 @@ export function barGroupOf(el) {
   if (el.closest('.tb-host')) return 'page';
   if (el.closest('[data-mods], .tb-mods')) return 'panels';
   const a = el.dataset?.act;
-  if (a === 'help' || a === 'settings' || a === 'fs') return 'menu';
+  if (a === 'help' || a === 'settings' || a === 'fs' || a === 'hidebar') return 'menu';
   return 'transport';
 }
 function isStop(el) {

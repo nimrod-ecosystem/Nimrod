@@ -311,7 +311,7 @@ try {
     await boot(f, { preset: 'full', slots: [null], placed: [{ id: 'w1', place: 'screen' }] });
     const e = f.stageEl.querySelector('[data-empty]');
     check('...but when every placed module failed, it says what could not start',
-      e && e.textContent === 'Nothing on this screen could start (wordforge). Press Home to check it.', e?.textContent);
+      e && e.textContent === 'Nothing on this screen could start (wordforge). Press Dashboards to check it.', e?.textContent);
     t.arr.setProfile({ id: 'scr-B', modules: [M.p1] });
     t.arr.resolve({ preset: 'full', slots: ['p1'] });
     await t.arr.applyModules();

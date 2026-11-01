@@ -316,10 +316,11 @@ function unreachableChips() {
 
     const home = root.querySelector('[data-act="home"]');
     check('the bar still has the button', !!home);
-    // Mike's call, 2026-09-06: the LABEL is "Home", not "Screens" — people see "Screens" and
-    // ask what screens means. Asserted rather than left to a reading of the source, because a
-    // word somebody chose deliberately is a word that should not drift back.
-    check('...and it is labelled Home', /home/i.test(home.textContent), home.textContent.trim());
+    // Mike's call, 2026-09-06: the LABEL was "Home", not "Screens" — people see "Screens" and ask what screens means.
+    // Mike, 2026-11-01 (row 2.172): it "should be renamed 'Dashboards'", and a new ⌂ Home goes to your Home page.
+    // Asserted rather than left to a reading of the source: a word somebody chose deliberately should not drift back.
+    check('...and it is labelled Dashboards (row 2.172), with ⌂ Home its own button', /dashboards/i.test(home.textContent)
+      && /home/i.test(root.querySelector('[data-act="gohome"]')?.textContent || ''), home.textContent.trim());
     check('the picker starts closed', root.querySelector('[data-screens]')?.hidden === true);
 
     // *** WHAT THIS LOOKS LIKE WHEN IT FAILS, SO NOBODY READS IT AS A MYSTERY. ***

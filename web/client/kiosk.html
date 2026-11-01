@@ -297,7 +297,8 @@ function offerCat(kiosk) {
     const profiles = createProfilesClient({ user: who.user });
     const profileId = await ensureProfile(profiles, who.user, wantProfile);
     // reloadSwitch (row 2.89, screen_switch.js): a person changing dashboard gets the dashboards page's own load.
-    const kiosk = await mountKiosk(root, { user: who.user, profileId, profiles, reloadSwitch: true, siteOwner: who.siteOwner === true });
+    const kiosk = await mountKiosk(root, { user: who.user, profileId, profiles, reloadSwitch: true, siteOwner: who.siteOwner === true,
+    screenKey: who.screen === true });   // row 2.172: a screen's own key has no Home page; its Home is its first dashboard
     boot.remove();
     offerTour(kiosk);
   } catch (e) {

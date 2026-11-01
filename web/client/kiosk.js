@@ -61,7 +61,7 @@ import {
   moveOldBarToggleKey,   // T for the bar (row 2.72)
 } from './bar_toggle.js';
 import {
-  SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
+  SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME, SHELL_MIRROR,
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
   PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE,
 } from './shell_verbs.js';
@@ -404,6 +404,11 @@ export async function mountKiosk(root, {
   // reads -- no request of its own). Only the one editor reads it, to draw "Save as the site default"; the server asks
   // again on every save. A screen's own key is never an owner (web/server/site_owner.py), so a bedside screen has it false.
   siteOwner = false,
+  // ROW 2.172 (2026-11-01): let in by this screen's own key (/api/me `screen`, which kiosk.html already reads), not a
+  // person's sign-in. ⌂ Home then goes to the screen's first dashboard: a screen has no Home page of its own (goHomePage).
+  screenKey = false,
+  // Where ⌂ Home's page is opened (a seam, so a suite can see it asked without leaving the page).
+  openPage = (url) => { if (typeof location !== 'undefined') location.href = url; },
   // RECOVERY SEAMS. All three exist so the test can walk the whole ladder without anything
   // actually happening - a suite that reloads the page cannot report its own results, and
   // one that reboots a machine is not a suite anybody will run twice.
@@ -602,7 +607,11 @@ export async function mountKiosk(root, {
                word. He was given the argument against it — a button called Home that does not
                take you home reads oddly — and chose Home anyway, which is his to choose.
                The title says what it actually does, which is where the precision belongs. -->
-          <button data-act="home" title="your screens, and the way out (S)">⌂ Home</button>
+          <!-- ROW 2.172 (Mike, 2026-11-01): "The current Home button on the transport bar should be renamed
+               Dashboards. There should be a new home button that actually takes you to your home page." The
+               picker keeps its act, home, which the menu, the tray and the suites call it by. See goHomePage. -->
+          <button data-act="gohome" title="your Home page">⌂ Home</button>
+          <button data-act="home" title="your dashboards, and the way out (S)">▦ Dashboards</button>
           <!-- BACK. The reverse of Next, and until now there was nothing here — see
                prevInPrimary below for why this waited on nothing new: photos, personal,
                educational, youtube, wordforge, trivia and interstitials already
@@ -645,6 +654,8 @@ export async function mountKiosk(root, {
             title="pause the music and video so you can talk (voices and speech are still heard)">Hush</button>
           <button data-act="settings" title="settings (Esc or M)">⚙</button>
           <button data-act="fs" title="full screen (F)">⛶</button>
+          <!-- ROW 2.171: the T key as a button, with its quiet period (bar_toggle.js). -->
+          <button data-act="hidebar" title="hide this bar (T). Swipe up from the bottom, or press T, to bring it back">▾ Hide</button>
         </div>
       </div>
       <!-- The screen picker. A STRIP above the transport bar, not a scrim over the screen:
@@ -3051,6 +3062,18 @@ export async function mountKiosk(root, {
     if (profileId === homeProfileId) { screenStack.length = 0; drawCrumbs(); return profileId; }
     return switchScreen(homeProfileId, { remember: false, home: true });
   }
+  /** ⌂ HOME ON THE BAR (row 2.172): "your home page". Signed in in a browser: the Home page (/home), where signing in
+   *  lands. A screen let in by its own key, signed out, or a preview on another page: this screen's first dashboard, the
+   *  Home the breadcrumb, the tray and "go home" already mean. ARGUED: FOR one destination everywhere (simpler to learn).
+   *  AGAINST, and it decides it: a paired screen and a signed-out visitor have no Home page (it asks them to sign in), and
+   *  a care screen sent off its dashboards strands whoever is at it. [Guess, on Mike's list: he said "home page".] */
+  function homePageUrl() { return !embedded && user && !screenKey ? '/home' : null; }
+  function goHomePage() {
+    const url = homePageUrl();
+    if (!url) { goHomeScreen().catch(() => {}); return; }
+    if (lockRefuses('leaving for your Home page')) return;
+    try { openPage(url); } catch (err) { console.error('kiosk: home page', err); }
+  }
   async function goHomeInPlace() {
     const got = await showScreen(homeProfileId, { remember: false });
     if (got) { screenStack.length = 0; drawCrumbs(); }
@@ -3721,6 +3744,9 @@ export async function mountKiosk(root, {
   });
 
   controlsEl.querySelector('[data-act="home"]').addEventListener('click', () => toggleScreens());
+  controlsEl.querySelector('[data-act="gohome"]').addEventListener('click', () => goHomePage());
+  // ▾ Hide (row 2.171): the T key's press, so its quiet period and every way back are the same (bar_toggle.js).
+  controlsEl.querySelector('[data-act="hidebar"]').addEventListener('click', () => bus.publish(BAR_TOGGLE_TOPIC, { from: 'bar' }));
   controlsEl.querySelector('[data-act="back"]').addEventListener('click', prevInPrimary);
   controlsEl.querySelector('[data-act="next"]').addEventListener('click', nextInPrimary);
   const panelBtn = controlsEl.querySelector('[data-act="panel"]');
@@ -8562,6 +8588,7 @@ export async function mountKiosk(root, {
     // (On a real screen the picker gets the plain bar's own "what if nobody answers": it puts itself
     // away with the bar's auto-hide unless somebody keeps touching the screen. An embed's bar stays.)
     on(SHELL_HOME, () => { toggleScreens(); if (!embedded && screensOpen) poke(); });
+  on(SHELL_GO_HOME, () => goHomePage());   // row 2.172: a placed bar's ⌂ Home
     on(SHELL_MIRROR, () => { toggleMirrorFull(); });
     on(SHELL_HELP, () => { explainHelp(); });
     on(PLAIN_BAR_SHOW, () => { summonPlainBar(); });
