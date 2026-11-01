@@ -44,9 +44,11 @@ import { createOutgoingCaptions, captionsOutInForce, captionsOutSupported, CAPTI
 // row 2.144 (2026-10-31): the PERSON's own "Send subtitles of what I say on calls", on their own row (call_loadouts.js).
 import { CALL_SUBS_OUT_KEY, CALL_SUBS_IN_KEY, CALL_SUBS_PERSON_ROW, personCallSubsOf } from './call_loadouts.js';
 // row 2.144 step 3 (2026-11-01): asking the screen for subtitles of what is said there, and answering its asking.
-import { answerFor, askWords, showAskPrompt, choiceMeans, rememberedAnswers, rememberedFor, withRemembered, captionsInOn,
-  CAPTIONS_ASKED_DEVICE_KEY, CAPTIONS_IN_DEVICE_KEY, CAPTIONS_IN_LABEL, CAPTIONS_IN_NOTE, ASK_ANSWER_SAYS,
+import { answerFor, askWords, rememberedAnswers, rememberedFor, withRemembered, captionsInOn, createAskDesk, askAnswerSays,
+  CAPTIONS_ASKED_DEVICE_KEY, CAPTIONS_IN_DEVICE_KEY, CAPTIONS_IN_LABEL, CAPTIONS_IN_NOTE,
   CAPTION_ASK_SHOW_MS, CAPTION_ASK_WAIT_MS } from './call_caption_ask.js';
+// row 2.144 step 4: the subtitle box's own line limit, for the lines of several people on this page (see `heardCaption`).
+import { SUBTITLES_DEFAULTS } from './subtitles.js';
 import { createState } from './state.js';
 import { playPath } from './game_together.js';   // the join page's address for a game's room (Quiz mix's as it always was)
 
@@ -266,13 +268,17 @@ export async function mountCallPage(root, {
   let capsState = 'off';
   let youId = '';                      // row 2.144: this login's own "you" card (its first person), when the site says
   let personRow = null;                // ...and its row (state.js), once read; null = the choice stays on this device
-  let theirs = null;                   // row 2.144: the latest subtitle the screen sent of what is said there { id, text }
-  // row 2.144 step 3 (call_caption_ask.js), per call: our asking the screen (null | 'sent' | its answer | 'none'), what we
-  // said to its asking (null | 'yes' | 'no' | 'cannot'), a yes for THIS call only, and the request's box while it is up.
-  let askedThere = null;
-  let answeredThere = null;
-  let grantedThisCall = false;
-  let askBox = null;
+  let theirs = null;                   // row 2.144: the latest subtitle anybody sent of what is said there { id, text, name }
+  // row 2.144 steps 3 and 4 (call_caption_ask.js), per call and PER PERSON. An "end" is one other person in the call:
+  // 'primary' (the screen this page rang), `leg:<call id>` (a screen rung in, its own call), `peer:<id>` (anybody met
+  // through the group). Our asking each (absent | 'sent' | their answer | 'none'), the yeses we gave for THIS call only
+  // (subtitles of me go to those, and to everybody when "Send subtitles of what I say" is on), and the subtitles each sent.
+  const askedOf = new Map();
+  const grantedTo = new Set();
+  let groupAsked = false;
+  const heardLines = new Map();         // end -> { name, id, text, at }
+  let askDesk = null;                   // row 2.144 step 4: everybody asking for subtitles of me, one box (createAskDesk)
+  let lineSeq = 0;
   let readTok = 0;
   let run = 0;
   // group calls (see the header): this page's group, the other screens it rang into the call (call id -> leg), the
@@ -607,9 +613,14 @@ export async function mountCallPage(root, {
 
   function wireGroup(my) {
     if (!group) return;
-    offs.push(group.onChange(() => { if (my !== run) return; paintGroup(); checkAlone(); }));
+    offs.push(group.onChange(() => { if (my !== run) return; paintGroup(); pruneEnds(); checkAlone(); syncCaptions(); }));
     // Words from any screen's AAC board in the call, with whose board it was.
     offs.push(group.onWords((w) => { if (my === run) heard(w); }));
+    // row 2.144 step 4: subtitles each person sent of their own voice, labelled by the connection they came on; their
+    // asking for ours, or their answer to ours. A person met through the group carries no card this page knows, so
+    // nothing can be remembered for them (only Yes and No).
+    offs.push(group.onCaptions?.((c) => { if (my === run && c?.peer) heardCaption(c, `peer:${c.peer}`, c.name); }) || (() => {}));
+    offs.push(group.onCaptionAsks?.((m) => { if (my === run && m?.peer) heardAskFrom(`peer:${m.peer}`, m.name || '', '', m); }) || (() => {}));
     offs.push(group.onJoined(() => {
       if (my !== run) return;
       if (phase === 'knocking') { connected = true; answered = true; setPhase('in-call'); }
@@ -627,6 +638,7 @@ export async function mountCallPage(root, {
   function primaryLeft(text) {
     primaryGone = true;
     note = text;
+    forgetEnd('primary');                // row 2.144 step 4
     const t = transport;
     transport = null;
     try { t?.destroy?.(); } catch { /* gone */ }
@@ -676,17 +688,22 @@ export async function mountCallPage(root, {
           : why === 'declined' ? `${person.name} declined.` : `${person.name} did not answer.`;
       endLeg(session, text);
     }));
-    leg.offs.push(t.onAnswered?.(() => { if (my === run) { leg.answered = true; paintGroup(); tellCall(); } }) || (() => {}));
+    leg.offs.push(t.onAnswered?.(() => { if (my === run) { leg.answered = true; paintGroup(); tellCall(); syncCaptions(); } }) || (() => {}));
     leg.offs.push(t.onConnection?.((st) => {
       if (my !== run) return;
       if (st === 'connected') leg.answered = true;
       leg.state = st;
       paintGroup();
       tellCall();
+      syncCaptions();                   // row 2.144 step 4: subtitles of me reach them, and they are asked for theirs
     }) || (() => {}));
     leg.offs.push(t.onRemote?.((s) => { if (my === run && s) { leg.stream = s; paintGroup(); } }) || (() => {}));
     // Words from that screen's AAC board, with whose board it was.
     leg.offs.push(t.onWords?.((w) => { if (my === run && w) heard({ ...w, name: person.name }); }) || (() => {}));
+    // row 2.144 step 4: that screen's subtitles of what is said there, its asking for ours, its answer to ours - each
+    // labelled and answered as that person, on that call.
+    leg.offs.push(t.onCaptions?.((c) => { if (my === run) heardCaption(c, `leg:${session}`, person.name); }) || (() => {}));
+    leg.offs.push(t.onCaptionAsks?.((m) => { if (my === run) heardAskFrom(`leg:${session}`, person.name, `person:${person.id}`, m); }) || (() => {}));
     paintGroup();
     let sent = false;
     try {
@@ -706,6 +723,7 @@ export async function mountCallPage(root, {
     const leg = legs.get(session);
     if (!leg) return;
     legs.delete(session);
+    forgetEnd(`leg:${session}`);         // row 2.144 step 4: their lines, our asking, our yes, a request of theirs
     for (const off of leg.offs.splice(0)) { try { off?.(); } catch { /* gone */ } }
     try { if (leg.transport?.__probe?.().live) leg.transport.hangup('hangup'); } catch { /* gone */ }
     try { leg.transport?.destroy?.(); } catch { /* gone */ }
@@ -797,8 +815,8 @@ export async function mountCallPage(root, {
   // Off by default (the file argues why). They run only while the call is going AND this
   // device's microphone is on: the browser's recogniser listens to the microphone itself, not to the call, so muting
   // the call must stop them too, or "Mute" would still send what was said, as text. Likewise while a board word is
-  // read out here (heldForWords): that is this device's own voice, not the caller's. To the first screen only for now;
-  // a group call's other screens get none yet (row 2.144 step 4).
+  // read out here (heldForWords): that is this device's own voice, not the caller's. In a group call, to everybody in it
+  // (row 2.144 step 4, `sendMine` below).
   // WHOSE CHOICE (2026-10-31; call_loadouts.js CALL_SUBS_OUT_KEY argues the precedence): the PERSON's, on their own "you"
   // row, once they have made one - and this device's own yes besides, because this browser's recogniser may send the
   // voice to its maker (`captionsOutInForce`). Not chosen yet, or no row to keep it on (an older site, a row that could
@@ -821,16 +839,37 @@ export async function mountCallPage(root, {
       personRow = h;
     } catch (err) { console.error('call: the person’s subtitle choice', err); personRow = null; }
   }
-  // Running for this call: the choice above, or a yes given to the screen's asking for this call only (step 3).
-  function captionsOutNowOn() { return captionsOutOn() || grantedThisCall; }
+  // Running for this call: the choice above, or a yes given to somebody's asking for this call only (steps 3 and 4).
+  function captionsOutNowOn() { return captionsOutOn() || grantedTo.size > 0; }
+  // Anybody in the call to send them to: the first screen, a screen rung in, or somebody met through the group (a page
+  // that joined by knocking has no first screen at all).
+  function anyoneThere() {
+    if (transport) return true;
+    if ([...legs.values()].some((l) => l.transport && l.answered)) return true;
+    try { return (group?.tiles?.() || []).length > 0; } catch { return false; }
+  }
+  // GROUP CALLS (row 2.144 step 4): what I say goes to EVERYBODY in the call when "Send subtitles of what I say" is on, and
+  // otherwise only to the people who asked and got a yes this call - "nothing is sent without a yes", per person. One
+  // recogniser either way (it hears this microphone once); only where its lines go differs.
+  function sendMine(c) {
+    const all = captionsOutOn();
+    let n = 0;
+    const to = (t, key) => { if (t && (all || grantedTo.has(key))) { try { if (t.sendCaption?.(c)) n += 1; } catch (err) { console.error('call: subtitles of me', err); } } };
+    to(transport, 'primary');
+    for (const [session, l] of legs) to(l.transport, `leg:${session}`);
+    if (group) {
+      const peers = all ? null : [...grantedTo].filter((k) => k.startsWith('peer:')).map((k) => k.slice(5));
+      if (peers === null || peers.length) { try { n += group.sendCaption?.(c, peers) || 0; } catch (err) { console.error('call: subtitles of me (group)', err); } }
+    }
+    return n > 0;
+  }
   function syncCaptions() {
     askThere();
-    const should = captionsOutNowOn() && phase === 'in-call' && micOn && !heldForWords && !!transport && !!local;
+    const should = captionsOutNowOn() && phase === 'in-call' && micOn && !heldForWords && anyoneThere() && !!local;
     if (should && !outCaps) {
-      const t = transport;
       try {
         outCaps = makeOutgoingCaptions({ view: win, setTimer, clearTimer,
-          send: (c) => t?.sendCaption?.(c) || false,
+          send: (c) => sendMine(c),
           onMine: (c) => { mine = c.text; paintMine(); },
           onState: (s) => { capsState = s; paintMine(); } });
         outCaps?.start?.();
@@ -852,16 +891,16 @@ export async function mountCallPage(root, {
     const b = q('[data-captions-out-btn]');
     if (b) { const on = captionsOutNowOn(); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Subtitles of me: on' : 'Subtitles of me: off'; }
   }
-  // The in-call button. Running only because of a yes for this call: off takes back that yes and nothing else (it was not
-  // a choice about every call). Otherwise it is the choice itself, as before.
+  // The in-call button. Running only because of yeses for this call: off takes back those yeses and nothing else (they were
+  // not a choice about every call). Otherwise it is the choice itself, as before.
   function pressCaptionsOut() {
-    if (grantedThisCall && !captionsOutOn()) { grantedThisCall = false; syncCaptions(); return; }
+    if (grantedTo.size && !captionsOutOn()) { grantedTo.clear(); syncCaptions(); return; }
     setCaptionsOut(!captionsOutOn());
   }
   // One press says both: this device's yes (or no), and - where the person has a row - the person's own choice, which
   // their screens and the call page on their other devices follow.
   function setCaptionsOut(on) {
-    if (!on) grantedThisCall = false;
+    if (!on) grantedTo.clear();
     put(CAPTIONS_OUT_KEY, on ? 'on' : 'off');
     if (personRow) { try { personRow.set({ [CALL_SUBS_OUT_KEY]: !!on }); } catch (err) { console.error('call: the person’s subtitle choice', err); } }
     const n = q('[data-captions-out-note]');
@@ -869,35 +908,88 @@ export async function mountCallPage(root, {
     syncCaptions();
   }
 
-  // ---- SUBTITLES THE SCREEN SENDS of what is said there (row 2.144 step 2's other half, 2026-10-31) -----------------
+  // ---- SUBTITLES THE OTHER END SENDS of what is said there (row 2.144 step 2's other half, 2026-10-31) -------------
   // A screen whose person (or row) turned on "Send subtitles of what I say" sends them on the call's words channel; they
   // were made THERE, for this end (Mike: "computed at whoever's end has them turned on"), so they are shown here as they
-  // come, as the screen shows a caller's (call_loadouts.js 'theirs'). One line, the latest, corrected in place under its
-  // id - the same as the speaker's own line beside it. Nothing is kept; it goes with the call.
-  function heardCaption(c) {
-    if (!c || !c.text) return;
-    theirs = { id: c.id, text: c.text };
+  // come, as the screen shows a caller's (call_loadouts.js 'theirs'). Nothing is kept; it goes with the call.
+  // GROUP CALLS (row 2.144 step 4): ONE LINE PER PERSON - their latest, corrected in place under its id, labelled with their
+  // name as this page knows them (the card it rang, or the server's name for somebody met through the group; never a name
+  // inside the message). Newest last, and AT MOST SUBTITLES_DEFAULTS.lines (3) people's lines: the screen's own box's
+  // default, so a phone shows as much as a screen does by default and no new number is made up. FOR more: a call can hold
+  // up to MESH_MAX_OTHERS.audio (5) others. AGAINST, and it wins: a phone's width under a video has room for a few short
+  // lines, and the people dropped are the ones who spoke longest ago; their line comes back the moment they speak.
+  function heardCaption(c, key = 'primary', name = '') {
+    if (!c || !c.text || phase === 'idle') return;
+    const who = (typeof name === 'string' && name.trim()) || (key === 'primary' ? (target?.name || 'Them') : 'Someone on the call');
+    theirs = { id: c.id, text: c.text, name: who };
+    heardLines.set(key, { name: who, id: c.id, text: c.text, at: ++lineSeq });
+    const keep = SUBTITLES_DEFAULTS.lines;
+    while (heardLines.size > keep) {
+      let oldest = null;
+      for (const [k, l] of heardLines) if (!oldest || l.at < oldest[1].at) oldest = [k, l];
+      heardLines.delete(oldest[0]);
+    }
     paintTheirs();
   }
   function paintTheirs() {
     const el = q('[data-theirs]');
     if (el) {
-      const show = !!theirs && phase !== 'idle';
-      el.textContent = show ? `${target?.name || 'Them'}: ${theirs.text}` : '';
-      el.hidden = !show;
+      const list = phase !== 'idle' ? [...heardLines.values()].sort((a, b) => a.at - b.at) : [];
+      el.replaceChildren(...list.map((l) => {
+        const s = doc.createElement('span');
+        s.dataset.theirsLine = '';
+        s.style.display = 'block';
+        s.textContent = `${l.name}: ${l.text}`;
+        return s;
+      }));
+      el.hidden = list.length === 0;
     }
-    // What came of asking for them (step 3): said only when it was not a yes, and only until a subtitle arrives.
+    // What came of asking (steps 3 and 4): said only when it was not a yes, and only until that person's subtitles arrive.
+    // One person asked: in the words it always had; several: each by name.
     const n = q('[data-theirs-note]');
     if (n) {
-      const says = !theirs && phase !== 'idle' ? (ASK_ANSWER_SAYS[askedThere] || '') : '';
-      n.textContent = says; n.hidden = !says;
+      const asked = phase !== 'idle' ? [...askedOf.entries()] : [];
+      const several = asked.length > 1;
+      const says = asked.filter(([k, a]) => !heardLines.has(k) && a !== 'sent' && a !== 'yes')
+        .map(([k, a]) => askAnswerSays(a, several ? endName(k) : '')).filter(Boolean);
+      n.textContent = says.join(' '); n.hidden = says.length === 0;
     }
   }
+  // An end's name as this page knows it.
+  function endName(key) {
+    if (key === 'primary') return target?.name || '';
+    if (key.startsWith('leg:')) return legs.get(key.slice(4))?.person?.name || '';
+    if (key.startsWith('peer:')) { try { return group?.nameOf?.(key.slice(5)) || ''; } catch { return ''; } }
+    return '';
+  }
+  // The connection to one end (its asking and answering go there), or null.
+  function endTransport(key) {
+    if (key === 'primary') return transport;
+    if (key.startsWith('leg:')) return legs.get(key.slice(4))?.transport || null;
+    return null;
+  }
+  // Somebody left (a screen rung in hung up, the first screen left while others stayed, a group member went): their line,
+  // our asking, our yes to them, and a request of theirs still in the box all go.
+  function forgetEnd(key) {
+    heardLines.delete(key);
+    askedOf.delete(key);
+    grantedTo.delete(key);
+    try { askDesk?.gone(key); } catch { /* none */ }
+    paintTheirs();
+  }
+  function pruneEnds() {
+    let here = new Set();
+    try { here = new Set((group?.tiles?.() || []).map((t) => `peer:${t.peer}`)); } catch { here = new Set(); }
+    const known = new Set([...heardLines.keys(), ...askedOf.keys(), ...grantedTo, ...(askDesk?.waiting() || [])]);
+    for (const k of known) if (k.startsWith('peer:') && !here.has(k)) forgetEnd(k);
+  }
 
-  // ---- ASKING THE SCREEN, AND ANSWERING ITS ASKING (row 2.144 step 3, call_caption_ask.js argues it all) -------------
+  // ---- ASKING EACH OTHER PERSON, AND ANSWERING EACH ONE'S ASKING (row 2.144 steps 3 and 4, call_caption_ask.js) -------
   // ASKING: the person's "Make subtitles of the other person on calls" (or, not chosen yet, this device's tick). This page
-  // cannot hear a call's sound to make any, so it asks the screen, once per call, when the call is going. A "no", a
-  // "cannot", or nothing back within CAPTION_ASK_WAIT_MS is said in a line under the call; the call is not touched.
+  // cannot hear a call's sound to make any, so it asks each other person, once per call, when the call is going: the first
+  // screen and each screen rung in on their own calls (each waits CAPTION_ASK_WAIT_MS for an answer, then says it heard
+  // none), and everybody met through the group (call_group.js asks each as their connection comes, so this page does not
+  // see when; their no or cannot is said, their silence is not). The call is never touched.
   function personIn() { return personRow ? personCallSubsOf(personRow.get?.() || {}, 'in') : null; }
   function captionsInWanted() { return captionsInOn(personIn(), get(CAPTIONS_IN_DEVICE_KEY, '')); }
   function setCaptionsIn(on) {
@@ -905,50 +997,62 @@ export async function mountCallPage(root, {
     if (personRow) { try { personRow.set({ [CALL_SUBS_IN_KEY]: !!on }); } catch (err) { console.error('call: the person’s subtitle choice', err); } }
     syncCaptions();
   }
-  function askThere() {
-    if (askedThere !== null || phase !== 'in-call' || !transport || !captionsInWanted()) return;
+  function askEnd(key, t) {
+    if (askedOf.has(key) || !t) return;
     let sent = false;
-    try { sent = !!transport.askCaptions?.(); } catch (err) { console.error('call: asking for subtitles', err); }
+    try { sent = !!t.askCaptions?.(); } catch (err) { console.error('call: asking for subtitles', err); }
     if (!sent) return;
-    askedThere = 'sent';
+    askedOf.set(key, 'sent');
     const my = run;
-    later(() => { if (my === run && askedThere === 'sent') { askedThere = 'none'; paintTheirs(); } }, CAPTION_ASK_WAIT_MS);
+    later(() => { if (my === run && askedOf.get(key) === 'sent') { askedOf.set(key, 'none'); paintTheirs(); } }, CAPTION_ASK_WAIT_MS);
   }
-  // ANSWERING: the screen asks for subtitles of what is said HERE. This browser's recogniser would make them, and in Chrome
+  function askThere() {
+    if (phase !== 'in-call' || !captionsInWanted()) return;
+    askEnd('primary', transport);
+    for (const [session, l] of legs) if (l.answered) askEnd(`leg:${session}`, l.transport);
+    if (!groupAsked && group?.id?.()) {
+      try { groupAsked = !!group.askCaptions?.(); } catch (err) { console.error('call: asking for subtitles (group)', err); }
+    }
+  }
+  // ANSWERING: somebody asks for subtitles of what is said HERE. This browser's recogniser would make them, and in Chrome
   // that sends the voice to Google - so the request says so, and only this device's own yes (for this call, or "Always"
-  // for this screen, kept on this device) starts it. Already sending -> yes; no recogniser here -> cannot; the person chose
-  // "off", or "Never" for this screen -> no, without asking. The box goes by itself (CAPTION_ASK_SHOW_MS): no answer.
+  // for that person, kept on this device) starts it, and sends them to that person. Already sending to them -> yes; no
+  // recogniser here -> cannot; the person chose "off", or "Never" for them -> no, without asking. The box goes by itself
+  // (CAPTION_ASK_SHOW_MS): no answer. Several asking at once: one box naming them all (call_caption_ask.js argues it).
   const askedKey = () => (target?.id ? `person:${target.id}` : '');
   function askedAnswers() { return rememberedAnswers(get(CAPTIONS_ASKED_DEVICE_KEY, '')); }
-  function heardAskFromThere(m) {
+  askDesk = createAskDesk({
+    host: () => q('[data-caption-ask-box]'), live: () => phase !== 'idle', setTimer, clearTimer, showMs: CAPTION_ASK_SHOW_MS,
+    className: 'cp-ask', buttonClass: 'cp-btn cp-ctl',
+    words: (names) => askWords({ names, at: 'page' }),
+    decide: ({ key, rememberKey }) => answerFor({ running: !!outCaps && (captionsOutOn() || grantedTo.has(key)),
+      able: captionsOutSupported(win) && !!local, chosenOff: personOut() === false,
+      remembered: rememberKey ? rememberedFor(askedAnswers(), rememberKey) : null }),
+    reply: (key, answer, again) => {
+      if (answer === 'yes' && !again && !captionsOutOn()) grantedTo.add(key);
+      const t = endTransport(key);
+      try {
+        if (t) t.answerCaptions?.(answer);
+        else if (key.startsWith('peer:')) group?.answerCaptions?.(key.slice(5), answer);
+      } catch (err) { console.error('call: answering for subtitles', err); }
+      if (!again) syncCaptions();
+      return answer;
+    },
+    remember: (askers, r) => {
+      let m = askedAnswers();
+      for (const a of askers) m = withRemembered(m, a.rememberKey, r, a.name);
+      put(CAPTIONS_ASKED_DEVICE_KEY, JSON.stringify(m));
+    },
+  });
+  function heardAskFrom(key, name, rememberKey, m) {
     if (!m || phase === 'idle') return;
-    if (m.answer) { if (askedThere !== null) { askedThere = m.answer; paintTheirs(); } return; }
-    if (!m.ask || askBox) return;
-    if (answeredThere) { try { transport?.answerCaptions?.(answeredThere); } catch { /* gone */ } return; }
-    const d = answerFor({ running: !!outCaps, able: captionsOutSupported(win) && !!local, chosenOff: personOut() === false,
-      remembered: rememberedFor(askedAnswers(), askedKey()) });
-    if (d !== 'ask') { replyThere(d); return; }
-    const box = q('[data-caption-ask-box]');
-    if (!box) return;
-    const name = target?.name || '';
-    askBox = showAskPrompt(box, {
-      words: askWords({ name, at: 'page' }), canRemember: !!askedKey(), showMs: CAPTION_ASK_SHOW_MS,
-      setTimer, clearTimer, className: 'cp-ask', buttonClass: 'cp-btn cp-ctl',
-      onAnswer: (choice) => {
-        askBox = null;
-        if (phase === 'idle') return;
-        const { answer, remember } = choiceMeans(choice);
-        if (remember) put(CAPTIONS_ASKED_DEVICE_KEY, JSON.stringify(withRemembered(askedAnswers(), askedKey(), remember, name)));
-        if (answer) replyThere(answer);
-      },
-    });
+    if (m.answer) {
+      if (askedOf.has(key) || (key.startsWith('peer:') && groupAsked)) { askedOf.set(key, m.answer); paintTheirs(); }
+      return;
+    }
+    if (m.ask) askDesk?.heard({ key, name, rememberKey });
   }
-  function replyThere(answer) {
-    if (answer === 'yes' && !outCaps) grantedThisCall = true;
-    answeredThere = answer;
-    try { transport?.answerCaptions?.(answer); } catch (err) { console.error('call: answering for subtitles', err); }
-    syncCaptions();
-  }
+  function heardAskFromThere(m) { heardAskFrom('primary', target?.name || '', askedKey(), m); }
   // The setup view: the answers kept on this device, and one button to forget them.
   function askedAnswersLine() {
     const m = askedAnswers();
@@ -1305,9 +1409,9 @@ export async function mountCallPage(root, {
     said = []; heldForWords = false; readTok++;
     phase = 'idle';
     // row 2.144 step 3: a yes for this call, our asking and our answer, and a request still up, all go with the call.
-    grantedThisCall = false; askedThere = null; answeredThere = null;
-    try { askBox?.close?.(); } catch { /* gone */ }
-    askBox = null;
+    // row 2.144 step 4: per person - every yes, every asking, every line, and the box naming anybody still asking.
+    grantedTo.clear(); askedOf.clear(); groupAsked = false; heardLines.clear();
+    try { askDesk?.close(); } catch { /* gone */ }
     syncCaptions();                     // row 2.144: subtitles of me go with the call
     capsState = 'off';
     theirs = null;                      // ...and the screen's
@@ -1431,8 +1535,16 @@ export async function mountCallPage(root, {
       person: personOut(), ask: captionsOutNow().ask, you: personRow ? youId : '' }),
     theirCaption: () => (theirs ? { ...theirs } : null),
     // row 2.144 step 3: asking the screen, and answering its asking.
-    captionAsk: () => ({ wanted: captionsInWanted(), person: personIn(), asked: askedThere, answered: answeredThere,
-      granted: grantedThisCall, box: !!askBox, remembered: askedAnswers() }),
+    // `asked` / `answered` / `granted`: the first screen, as before; `askedBy` / `answeredBy` / `grantedTo`: per person
+    // (row 2.144 step 4); `waiting`: who the box names now.
+    captionAsk: () => ({ wanted: captionsInWanted(), person: personIn(), asked: askedOf.get('primary') ?? null,
+      answered: askDesk?.answered('primary') ?? null, granted: grantedTo.size > 0, box: !!askDesk?.asking(),
+      remembered: askedAnswers(), askedBy: Object.fromEntries(askedOf), grantedTo: [...grantedTo], waiting: askDesk?.waiting() || [],
+      answeredBy: Object.fromEntries([...new Set(['primary', ...[...legs.keys()].map((s) => `leg:${s}`),
+        ...(() => { try { return (group?.tiles?.() || []).map((t) => `peer:${t.peer}`); } catch { return []; } })()])]
+        .map((k) => [k, askDesk?.answered(k) ?? null]).filter(([, v]) => v)) }),
+    // row 2.144 step 4: every person's subtitle line now, oldest first.
+    theirLines: () => [...heardLines.entries()].sort((a, b) => a[1].at - b[1].at).map(([key, l]) => ({ key, name: l.name, id: l.id, text: l.text })),
     micHeld: () => heldForWords,
     call: (want = 'video') => start(want),
     hangup: () => finish('The call ended.'),

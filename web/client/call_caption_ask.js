@@ -51,7 +51,29 @@
 // else's.
 // *** THE ROUTE IS THE CALL'S OWN WORDS CHANNEL *** (call_transport.js `askCaptions` / `answerCaptions` / `onCaptionAsks`),
 // end to end, never the server; a page that does not know the message ignores it, and the asker then simply hears nothing.
-// Group calls: not yet (row 2.144 step 4).
+//
+// *** GROUP CALLS (row 2.144 step 4, 2026-11-01). *** Each other person is asked ONCE, on their own connection (the call that
+// rang: call_transport.js; everybody else: call_group.js `askCaptions`, which also asks whoever joins later), and each is
+// answered on their own connection, PER PERSON: what is decided without a box (already sending to them, remembered,
+// chosen off, cannot) is decided for each, and a yes to one person sends subtitles to that person only (call_captions.js,
+// call_page.js keep who said yes) - "nothing is sent without a yes" holds per person, not per call.
+// MORE THAN ONE REQUEST AT ONCE: ONE BOX, NOT A QUEUE (`createAskDesk`, below). Argued:
+//   FOR a queue (one box per asker, one after another): every person gets their own four answers.
+//   AGAINST, and it wins: a group call starts with everybody asking at once, so a queue is several boxes in a row over the
+//   call - up to MESH_MAX_OTHERS.audio (5) of them, two and a half minutes for a bedside screen that cannot answer any,
+//   with a switch's walk taken the whole time. One box that NAMES everybody asking ("Sam and Robin ask...") is up once.
+//   Its answer goes to each of them, one by one, on their own connections; "Always" / "Never" are remembered for each of
+//   them that can be remembered. The cost: one answer for everybody in the box. Somebody who wants yes for one and no for
+//   another says "No" here and turns them on for the one ("Send subtitles of what I say" on, or answer that one's next
+//   request); it is a rare want against a common cost.
+// A SECOND REQUEST WHILE THE BOX IS UP joins it: the words name both, and the box's own time starts again, so the person
+// just named gets the same CAPTION_ASK_SHOW_MS to be read as the first. STILL NEVER A GATE: each other person asks at most
+// once per call, so the box can be held up at most once per other person (a group's cap, MESH_MAX_OTHERS), and it still
+// goes by itself; a switch keeps its place in it (the lit choice stays lit while the words change).
+// REMEMBERED ANSWERS NEED SOMEBODY TO REMEMBER: the call that rang carries who placed it (`askKeyOf`); a person met through
+// the group is named by the server but carries no account a page can see, so for them only Yes and No are offered, and a
+// box naming any such person offers only Yes and No (an "Always" that silently remembered half the people named would be
+// a button that lies). NOT YET: the server stamping an account on group members (drive.py; not this change).
 
 // How long a request stays on the answering screen or page before it goes away by itself. 30 s, argued: the first seconds
 // of a call are greetings and settling the phone, so a box that left after 10 would often be gone before anybody looked at
@@ -138,14 +160,31 @@ export function screenShouldAsk(plan, oursCan = true) {
   return true;                                                               // 'theirs': the speaker's own are better
 }
 
-/** The words of a request. `at`: 'screen' (made by the speech program) | 'page' (the browser's recogniser). Pure. */
-export function askWords({ name = '', at = 'screen', where = 'here' } = {}) {
-  const who = (typeof name === 'string' && name.trim()) || 'The person on the call';
-  const short = (typeof name === 'string' && name.trim()) || 'them';
+/** Names as one phrase: 'Sam', 'Sam and Robin', 'Sam, Robin and Ann'. Blanks are dropped. Pure. */
+export function askNames(names) {
+  const list = (Array.isArray(names) ? names : [names]).map((n) => (typeof n === 'string' ? n.trim() : '')).filter(Boolean);
+  if (list.length <= 1) return list[0] || '';
+  return `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`;
+}
+
+/**
+ * The words of a request. `at`: 'screen' (made by the speech program) | 'page' (the browser's recogniser). Pure.
+ * `names` (group calls, row 2.144 step 4): everybody asking at once; `name` is the one asker, as before. Anybody unnamed in
+ * a list is "someone else on the call".
+ */
+export function askWords({ name = '', names = null, at = 'screen', where = 'here' } = {}) {
+  let list = Array.isArray(names) ? names.map((n) => (typeof n === 'string' && n.trim()) || 'someone else on the call') : [name];
+  if (list.length > 1) list = [...new Set(list)];
+  const one = list.length <= 1;
+  const named = askNames(list);
+  const who = named || 'The person on the call';
+  const short = named || 'them';
+  const asks = one ? 'asks' : 'ask';
   const text = at === 'page'
-    ? `${who} asks for subtitles of what you say. Your browser would turn what you say into words and send them to that `
-      + 'screen. In Chrome that means Google’s speech service hears your voice. Nothing is kept.'
-    : `${who} asks for subtitles of what is said here. They would be worked out on `
+    ? `${who} ${asks} for subtitles of what you say. Your browser would turn what you say into words and send them to `
+      // To them by name: in a group call the one asking may be another caller's page rather than a screen.
+      + `${named || 'the person asking'}. In Chrome that means Google’s speech service hears your voice. Nothing is kept.`
+    : `${who} ${asks} for subtitles of what is said here. They would be worked out on `
       + (where === 'any' ? 'this computer and the other computers in this screen’s voice settings' : 'this computer')
       + ` and sent to ${short} as words. No company hears the voice, and nothing is kept.`;
   return {
@@ -193,16 +232,26 @@ export function showAskPrompt(host, {
   p.style.margin = '0';
   const row = doc.createElement('div');
   row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px';
-  for (const c of ASK_CHOICES) {
-    if (!canRemember && (c === 'always' || c === 'never')) continue;
-    const b = doc.createElement('button');
-    b.type = 'button';
-    b.dataset.askAnswer = c;
-    if (buttonClass) b.className = buttonClass;
-    else b.style.cssText = 'font:inherit;padding:.45em .9em;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';
-    b.textContent = words[c];
-    row.append(b);
+  // The buttons, drawn again by `update` (group calls: a second asker joined the box). A button that stays keeps its element,
+  // so a keyboard on it stays on it.
+  function drawButtons(w, remember) {
+    const have = new Map([...row.querySelectorAll('[data-ask-answer]')].map((b) => [b.dataset.askAnswer, b]));
+    const want = ASK_CHOICES.filter((c) => remember || (c !== 'always' && c !== 'never'));
+    for (const [c, b] of have) if (!want.includes(c)) b.remove();
+    for (const c of want) {
+      let b = have.get(c);
+      if (!b) {
+        b = doc.createElement('button');
+        b.type = 'button';
+        b.dataset.askAnswer = c;
+        if (buttonClass) b.className = buttonClass;
+        else b.style.cssText = 'font:inherit;padding:.45em .9em;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';
+      }
+      b.textContent = w[c];
+      row.append(b);            // in ASK_CHOICES order, whether new or kept
+    }
   }
+  drawButtons(words, canRemember);
   const away = doc.createElement('p');
   away.textContent = words.away;
   away.style.cssText = 'margin:6px 0 0;opacity:.75;font-size:.85em';
@@ -267,12 +316,138 @@ export function showAskPrompt(host, {
     paint();
     return true;
   }
-  timer = setTimer(() => { timer = null; finish(null); }, showMs);
+  const arm = () => {
+    if (timer != null) { try { clearTimer(timer); } catch { /* gone */ } }
+    timer = setTimer(() => { timer = null; finish(null); }, showMs);
+  };
+  arm();
+  /**
+   * New words for the same box (group calls: somebody else asked while it was up, call_caption_ask.js header). The lit
+   * choice stays lit if it is still offered (else nothing is lit: a select then does nothing); `restart` gives the box its
+   * whole time again. Never answers anything.
+   */
+  function update(w, { canRemember: remember = canRemember, restart = false } = {}) {
+    if (done || !w) return false;
+    const litChoice = lit >= 0 ? buttons()[lit]?.dataset.askAnswer : null;
+    p.textContent = w.text;
+    drawButtons(w, remember);
+    lit = litChoice ? buttons().findIndex((b) => b.dataset.askAnswer === litChoice) : -1;
+    paint();
+    if (restart) arm();
+    return true;
+  }
   return {
     el,
     close: () => { done = true; close(); },
     verb,
+    update,
     lit: () => (done || lit < 0 ? null : (buttons()[lit]?.dataset.askAnswer || null)),
+  };
+}
+
+/** What the asker's call page says about one answer that was not a yes; `name` when more than one was asked. Pure. */
+export function askAnswerSays(answer, name = '') {
+  const who = typeof name === 'string' ? name.trim() : '';
+  if (!who) return ASK_ANSWER_SAYS[answer] || '';
+  if (answer === 'no') return `${who} chose not to send subtitles of what is said there.`;
+  if (answer === 'cannot') return `${who} cannot send subtitles of what is said there (that end has nothing that can make them).`;
+  if (answer === 'none') return `No answer from ${who} about subtitles of what is said there.`;
+  return '';
+}
+
+// ---- EVERYBODY ASKING, IN ONE BOX (row 2.144 step 4, group calls; the header argues one box over a queue) ----------------
+/**
+ * One end's desk for requests from the other people in a call. Each asker is a `key` (which connection), a `name` (as this
+ * end knows them) and a `rememberKey` (askKeyOf, '' when nobody can be remembered by it).
+ *   decide({ key, rememberKey })      'yes' | 'no' | 'cannot' | 'ask'  (answerFor, for THAT asker)
+ *   reply(key, answer, again)         send it on that asker's connection; may start things on a yes (not when `again`, a
+ *                                     repeat to somebody who asked twice). Returns what was actually sent ('yes' that could
+ *                                     not start is 'cannot'), or null when nothing could be.
+ *   remember(askers, 'yes' | 'no')    keep an Always / Never for each asker with a rememberKey
+ *   words(names)                      the box's words for these names (askWords)
+ *   host                              the element the box goes in, or a function returning it (a page that redraws)
+ * Returns { heard(asker), asking(), verb(v), lit(), answered(key), waiting(), close() }.
+ */
+export function createAskDesk({
+  host = null, decide = () => 'ask', reply = () => null, remember = null, words = (names) => askWords({ names }),
+  showMs = CAPTION_ASK_SHOW_MS, setTimer = undefined, clearTimer = undefined,
+  className = 'call-ask', buttonClass = '', style = '', onAsking = null, live = () => true,
+} = {}) {
+  const answered = new Map();       // key -> what was said to them this call (said again if they ask again)
+  let waiting = [];                 // askers named in the box now
+  let prompt = null;
+  const ok = () => { try { return live() !== false; } catch { return false; } };
+  const hostNow = () => { try { return typeof host === 'function' ? host() : host; } catch { return null; } };
+  const tell = (on) => { if (typeof onAsking === 'function') { try { onAsking(on); } catch (err) { console.error('subtitles: asking', err); } } };
+  const timers = { ...(setTimer ? { setTimer } : {}), ...(clearTimer ? { clearTimer } : {}) };
+  const canRemember = () => typeof remember === 'function' && waiting.length > 0 && waiting.every((a) => !!a.rememberKey);
+  const namesNow = () => waiting.map((a) => a.name);
+
+  function settle(key, answer) {
+    let sent = null;
+    try { sent = reply(key, answer, false); } catch (err) { console.error('subtitles: answering', err); sent = null; }
+    if (sent) answered.set(key, sent);
+  }
+  function chose(choice) {
+    const list = waiting;
+    waiting = [];
+    prompt = null;
+    tell(false);
+    if (!ok()) return;
+    const { answer, remember: r } = choiceMeans(choice);
+    if (r && typeof remember === 'function') {
+      const keep = list.filter((a) => a.rememberKey);
+      if (keep.length) { try { remember(keep, r); } catch (err) { console.error('subtitles: remembering an answer', err); } }
+    }
+    if (answer) for (const a of list) settle(a.key, answer);     // gone unanswered: nothing is sent to anybody named
+  }
+
+  return {
+    /** Somebody asked. Returns what happened: 'again' | 'waiting' | 'yes' | 'no' | 'cannot' | 'ask' | 'nowhere' | 'over'. */
+    heard({ key, name = '', rememberKey = '' } = {}) {
+      if (!ok() || !key) return 'over';
+      if (answered.has(key)) {
+        try { reply(key, answered.get(key), true); } catch (err) { console.error('subtitles: answering', err); }
+        return 'again';
+      }
+      if (waiting.some((a) => a.key === key)) return 'waiting';
+      let d = 'ask';
+      try { d = decide({ key, rememberKey }); } catch (err) { console.error('subtitles: deciding', err); d = 'ask'; }
+      if (d !== 'ask') { settle(key, d); return d; }
+      const where = prompt ? null : hostNow();
+      if (!prompt && !where) return 'nowhere';            // nowhere to ask: no answer, nothing sent
+      waiting.push({ key, name: typeof name === 'string' ? name : '', rememberKey: rememberKey || '' });
+      if (prompt) { prompt.update(words(namesNow()), { canRemember: canRemember(), restart: true }); return 'ask'; }
+      prompt = showAskPrompt(where, { words: words(namesNow()), canRemember: canRemember(), showMs, ...timers,
+        className, buttonClass, style, onAnswer: (choice) => chose(choice) });
+      if (prompt?.el) tell(true);
+      else { prompt = null; waiting = []; return 'nowhere'; }
+      return 'ask';
+    },
+    asking: () => !!prompt,
+    verb: (v) => { try { return !!prompt?.verb?.(v); } catch (err) { console.error('subtitles: a switch on the request', err); return false; } },
+    lit: () => prompt?.lit?.() || null,
+    /** What was said to this asker this call, or null. */
+    answered: (key) => answered.get(key) ?? null,
+    /** The keys named in the box now. */
+    waiting: () => waiting.map((a) => a.key),
+    /** Somebody left: out of the box (it goes if they were the only one), and forgotten. */
+    gone(key) {
+      answered.delete(key);
+      if (!waiting.some((a) => a.key === key)) return;
+      waiting = waiting.filter((a) => a.key !== key);
+      if (!prompt) return;
+      if (waiting.length) prompt.update(words(namesNow()), { canRemember: canRemember() });
+      else { const p = prompt; prompt = null; try { p.close(); } catch { /* gone */ } tell(false); }
+    },
+    /** The call is over: the box goes without answering, and everything is forgotten. */
+    close() {
+      const was = !!prompt;
+      const p = prompt;
+      prompt = null; waiting = []; answered.clear();
+      try { p?.close?.(); } catch { /* gone */ }
+      if (was) tell(false);
+    },
   };
 }
 

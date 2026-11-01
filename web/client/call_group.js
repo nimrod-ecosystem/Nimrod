@@ -24,8 +24,21 @@
 // (call_mix.js) is swapped onto every connection's audio at once (`swap`).
 //
 // THE CAP (MESH_MAX_OTHERS, below) is the server's too (drive.py; test_call_groups.py checks the two agree).
+//
+// SUBTITLES IN A GROUP CALL (row 2.144 step 4, 2026-11-01). The same words channel carries the two-person call's subtitle
+// messages (call_transport.js CAPTION_TYPE, CAPTION_ASK_TYPE), so here, per connection:
+//   * `sendCaption(c, to)` - a subtitle of this device's own voice, to every other person or only to the peers in `to`
+//     (who said yes to being sent them; call_captions.js decides). Never queued, as on the two-person call: one that
+//     could not go now is stale by the time the channel opens.
+//   * `askCaptions()` - ask EACH other person once for subtitles of their own voice: everybody here now, and everybody who
+//     joins later in this call. Queued like a word (the first second of a connection is when it is asked).
+//   * `answerCaptions(peer, answer)` - answer ONE person's asking, on their own connection only.
+//   * `onCaptions` / `onCaptionAsks` - what arrives, with `peer` and `name`: the server's name for that member (drive.py
+//     CallGroups writes every name a group shows; a page never names itself). THE RECEIVING END LABELS a subtitle by the
+//     connection it came on, never by anything inside the message, so nobody can put somebody else's name on their words.
 
-import { iceServers, gatheringDone, WORDS_LABEL, WORDS_QUEUE_MAX, parseWords, cleanWords, STALL_MS } from './call_transport.js';
+import { iceServers, gatheringDone, WORDS_LABEL, WORDS_QUEUE_MAX, parseWords, cleanWords, STALL_MS,
+  CAPTION_TYPE, CAPTION_ASK_TYPE, CAPTION_ANSWER_WORDS, parseCaption, parseCaptionAsk } from './call_transport.js';
 
 // HOW MANY OTHER PEOPLE ONE DEVICE IS IN A MESH CALL WITH. A default, argued in drive.py MESH_MAX_OTHERS:
 //   video 3 others (4 people) - a Raspberry Pi 400 drawing the screen can decode two or three small videos
@@ -97,6 +110,9 @@ export function createCallGroup({
   const wordsCbs = new Set();
   const refusedCbs = new Set();
   const joinedCbs = new Set();
+  const captionCbs = new Set();       // row 2.144 step 4: subtitles another person made of their own voice
+  const askCbs = new Set();           // ...and their asking for ours, or answering our asking
+  let askAll = false;                 // this device asked for subtitles: everybody here, and everybody who joins, is asked
   const log = (...a) => { try { onLog?.(...a); } catch { /* a logger must not break a call */ } };
   const emit = (set, ...a) => { for (const cb of [...set]) { try { cb(...a); } catch (e) { log('group listener threw', e); } } };
   const changed = () => emit(changeCbs, view());
@@ -142,7 +158,12 @@ export function createCallGroup({
     ch.onmessage = (e) => {
       if (m.words !== ch || destroyed) return;
       const w = parseWords(e?.data);
-      if (w) emit(wordsCbs, { ...w, peer: m.peer, name: m.name });
+      if (w) { emit(wordsCbs, { ...w, peer: m.peer, name: m.name }); return; }
+      // row 2.144 step 4: subtitles and the asking for them, labelled by the connection they came on.
+      const c = parseCaption(e?.data);
+      if (c) { emit(captionCbs, { ...c, peer: m.peer, name: m.name }); return; }
+      const a = parseCaptionAsk(e?.data);
+      if (a) emit(askCbs, { ...a, peer: m.peer, name: m.name });
     };
     ch.onclose = () => { if (m.words === ch) m.words = null; };
     if (ch.readyState === 'open') flush(m);
@@ -154,6 +175,18 @@ export function createCallGroup({
       try { ch.send(JSON.stringify(m.queue[0])); } catch (e) { log('group words: send failed', e); return; }
       m.queue.shift();
     }
+  }
+  function enqueue(m, msg) {
+    m.queue.push(msg);
+    while (m.queue.length > WORDS_QUEUE_MAX) m.queue.shift();
+    flush(m);
+  }
+  // row 2.144 step 4: ask one member for subtitles of their own voice, once per member (a member who leaves and comes back
+  // is a new member, and asked again). Not those reached by a call that rang: that call asks them itself.
+  function askOne(m) {
+    if (!m || m.asked || viaCall(m)) return;
+    m.asked = true;
+    enqueue(m, { type: CAPTION_ASK_TYPE });
   }
 
   function makePc(m) {
@@ -237,7 +270,7 @@ export function createCallGroup({
     if (old) closePeer(old);
     const m = { peer: v.peer, name: typeof v.name === 'string' ? v.name : 'Someone', role: v.role === 'screen' ? 'screen' : 'driver',
       leg: typeof v.leg === 'string' ? v.leg : null, session: typeof v.session === 'string' ? v.session : null,
-      pc: null, words: null, queue: [], stream: null, state: 'new', offerer: false, tries: 0, stall: null };
+      pc: null, words: null, queue: [], stream: null, state: 'new', offerer: false, tries: 0, stall: null, asked: false };
     members.set(m.peer, m);
     return m;
   }
@@ -248,6 +281,7 @@ export function createCallGroup({
     deferred.clear();
     toOffer.clear();
     knocks.clear();
+    askAll = false;
     gid = null; me = null; myLeg = null; kind = 'video'; max = MESH_MAX_OTHERS.video + 1;
   }
 
@@ -263,7 +297,7 @@ export function createCallGroup({
         max = Number.isFinite(msg.max) ? msg.max : MESH_MAX_OTHERS[kind] + 1;
         myLeg = typeof msg.leg === 'string' ? msg.leg : null;
         knocking = null;
-        for (const v of msg.members || []) addMember(v);
+        for (const v of msg.members || []) { const m = addMember(v); if (askAll) askOne(m); }
         // THE JOINER ANSWERS; those already there offer (see the header). So nothing is offered from here.
         emit(joinedCbs, view());
         changed();
@@ -279,6 +313,8 @@ export function createCallGroup({
           if (!isReady) toOffer.add(m.peer);
           else offerTo(m).catch((e) => { log('group offer failed', e); });
         }
+        if (askAll) askOne(m);       // row 2.144 step 4: somebody joining later is asked too, once
+
         changed();
         return;
       }
@@ -407,6 +443,48 @@ export function createCallGroup({
       }
       return n;
     },
+    // ---- subtitles (row 2.144 step 4; see the header) ----
+    /**
+     * A subtitle of this device's own voice `{ id, text, final }` to every mesh member (`to` null) or only those whose peer
+     * id is in `to`. Now or never: only on a channel that is open. Returns how many it went to.
+     */
+    sendCaption({ id, text, final = false } = {}, to = null) {
+      if (destroyed || !gid) return 0;
+      const cid = typeof id === 'string' ? id.replace(/[^\w:.-]/g, '').slice(0, 40) : '';
+      const t = cleanWords(text);
+      if (!cid || !t) return 0;
+      const only = Array.isArray(to) || to instanceof Set ? new Set(to) : null;
+      const data = JSON.stringify({ type: CAPTION_TYPE, id: cid, text: t, final: final === true });
+      let n = 0;
+      for (const m of members.values()) {
+        if (viaCall(m) || (only && !only.has(m.peer))) continue;
+        const ch = m.words;
+        if (!ch || ch.readyState !== 'open') continue;
+        try { ch.send(data); n += 1; } catch (e) { log('group caption: send failed', e); }
+      }
+      return n;
+    },
+    /** Ask each other person once for subtitles of their own voice: those here now, and anybody joining this call later. */
+    askCaptions() {
+      if (destroyed || !gid) return false;
+      askAll = true;
+      for (const m of members.values()) askOne(m);
+      return true;
+    },
+    /** Answer ONE person's asking ('yes' | 'no' | 'cannot'), on their connection only. */
+    answerCaptions(peer, answer) {
+      if (destroyed || !gid || !CAPTION_ANSWER_WORDS.includes(answer)) return false;
+      const m = members.get(peer);
+      if (!m || viaCall(m)) return false;
+      enqueue(m, { type: CAPTION_ASK_TYPE, answer });
+      return true;
+    },
+    /** `cb({ id, text, final, peer, name })` for each subtitle another person sent of their own voice. */
+    onCaptions(cb) { if (typeof cb !== 'function') return () => {}; captionCbs.add(cb); return () => { captionCbs.delete(cb); }; },
+    /** `cb({ ask: true, peer, name })` when somebody asks; `cb({ answer, peer, name })` when somebody answers our asking. */
+    onCaptionAsks(cb) { if (typeof cb !== 'function') return () => {}; askCbs.add(cb); return () => { askCbs.delete(cb); }; },
+    /** The server's name for a member, or null. */
+    nameOf: (peer) => members.get(peer)?.name ?? null,
     setReady,
     /** Ask to join the call the person this socket is for is in (drive.py CallGroups.knock). Callers only. */
     knock() { if (destroyed || role !== 'driver') return false; knocking = 'asking'; changed(); return send({ op: 'knock' }); },
@@ -424,7 +502,7 @@ export function createCallGroup({
       leave();
       destroyed = true;
       try { off?.(); } catch { /* gone */ }
-      changeCbs.clear(); wordsCbs.clear(); refusedCbs.clear(); joinedCbs.clear();
+      changeCbs.clear(); wordsCbs.clear(); refusedCbs.clear(); joinedCbs.clear(); captionCbs.clear(); askCbs.clear();
     },
   };
 }

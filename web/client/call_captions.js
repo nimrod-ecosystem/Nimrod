@@ -25,7 +25,7 @@
 import { rankedRecognizer, enginePlanFrom } from './speech_engines.js';
 import { createSubtitles } from './subtitles.js';   // the caption box (attachCallSubtitles, below)
 // row 2.144 step 3: asking the other end for subtitles of its own voice, and answering its asking.
-import { answerFor, screenShouldAsk, askWords, showAskPrompt, choiceMeans, rememberedFor, withRemembered,
+import { answerFor, screenShouldAsk, askWords, rememberedFor, withRemembered, createAskDesk,
   CAPTION_ASK_SHOW_MS } from './call_caption_ask.js';
 
 // The plan for the call's ear, from the screen's (or person's) speech row. Pure.
@@ -137,6 +137,33 @@ export function createCallCaptions({
 //   A SWITCH REACHES THE BOX (2026-11-01, call_caption_ask.js argues it): while it is up `asking()` is true and the host
 //   hands its walk to `askVerb(v)` (next / prev / select / back) instead of its own; `onAsking(on)` says when the box comes
 //   and goes, so the host can put its own lit look away meanwhile and back after. The host's own walk is never changed.
+//
+// *** GROUP CALLS (row 2.144 step 4, 2026-11-01). *** A call with more than two people (call_group.js: the call that rang
+// this screen, plus one connection straight to each other person). Everything above happens PER PERSON:
+//   INCOMING made here    ONE RECOGNISER PER OTHER PERSON, each fed only that person's own sound and labelled with their
+//                         name. What the recogniser allows, checked (speech_engines.js `rankedRecognizer`): it takes any
+//                         number of remote streams, each its own "ear" with its own connection to the speech program, and
+//                         the speech program takes any number of connections (web/speech_service: one utterance at a time
+//                         per connection, decoded one after another). BUT one recogniser PAIRS utterances from different
+//                         ears that overlap or come within PAIR_MS (500 ms) of each other, as ONE utterance heard twice -
+//                         right for one voice on two microphones, wrong for two people talking at once, where it would
+//                         keep one person's words and drop the other's. So each person gets a recogniser of their own.
+//                         Nothing is ever mixed: in a mesh every person's sound arrives on its own connection, so the
+//                         "only the mixed sound, labelled as the call" case does not arise here (it would with a relay
+//                         that mixes, which is not built - call_relay.py). The cost: an audio context and a connection to
+//                         each engine per person, at most MESH_MAX_OTHERS of them [unmeasured on the bench Pi, like the
+//                         mesh cap itself]; the speech program decodes them in turn, so with several people talking the
+//                         words come later, never mixed up.
+//   INCOMING they sent    labelled by the connection they came on (the call that rang: `who()`; anybody else: the server's
+//                         name for them, call_group.js), never by anything inside the message. Mike's both-on rule is per
+//                         person too: Sam sending his own stops this screen's subtitles OF SAM, nobody else's.
+//   OUTGOING made here    one recogniser of this room, as before. Chosen ("Send subtitles of what is said here", or the
+//                         person's own "Send subtitles of what I say"): to EVERYBODY in the call. Started by a yes to a
+//                         request: to the people who got that yes, and nobody else.
+//   THE BOX               one subtitles.js box, lines labelled per speaker, at its own line limit (the screen's
+//                         "Subtitles: lines on screen", 1 to 6, default 3): no new number, and it cannot grow.
+//   ASKING / ASKED        each other person asked once, each answered on their own connection (call_caption_ask.js header
+//                         argues one box for everybody asking at once, `createAskDesk`).
 export function attachCallSubtitles({
   transport = null, host = null, plan = {}, row = {}, who = () => null, live = () => true,
   recognizer = undefined, flashLimit = undefined,
@@ -145,13 +172,19 @@ export function attachCallSubtitles({
   setTimer = undefined, clearTimer = undefined, askShowMs = CAPTION_ASK_SHOW_MS,
   onAsking = null,
 } = {}) {
+  // THE ENDS: the call that rang this screen ('call') and each other person in a group call (`peer:<id>`).
+  const CALL = 'call';
+  const keyOf = (peer) => `peer:${peer}`;
+  const peerOf = (key) => (typeof key === 'string' && key.startsWith('peer:') ? key.slice(5) : null);
   let subs = null;
-  let captions = null;           // incoming, made here
+  const incoming = new Map();    // end -> { caps, stream } : subtitles of that person, made here
+  const theirsCame = new Set();  // ends whose own subtitles arrived (Mike's both-on rule): ours of them stopped, not restarted
   let own = null;                // outgoing, made here
+  let ownBy = null;              // 'choice' (to everybody) | 'ask' (to those who said yes)
+  const yesTo = new Set();       // ends this end said yes to
   let micTrack = null;           // the microphone track the call was answered with (`answered`)
-  let asked = null;              // our asking: null (not asked) | 'sent' | the other end's answer
-  let prompt = null;             // their asking, while its box is up
-  let answeredWith = null;       // ...and what we said ('yes' | 'no' | 'cannot'), said again if they ask again this call
+  let askedAll = false;          // we asked (once per call)
+  const askedOf = new Map();     // end -> 'sent' | their answer
   let stopped = false;
   const offs = [];
   const ok = () => { if (stopped) return false; try { return live() !== false; } catch { return false; } };
@@ -159,7 +192,19 @@ export function attachCallSubtitles({
   const ableNow = () => { try { return able() !== false; } catch { return true; } };
   const timers = { ...(setTimer ? { setTimer } : {}), ...(clearTimer ? { clearTimer } : {}) };
   const rec = recognizer ? { recognizer } : {};
-  const tellAsking = (on) => { if (typeof onAsking === 'function') { try { onAsking(on); } catch (err) { console.error('call subtitles: asking', err); } } };
+  const group = (() => { try { return transport?.group?.() || null; } catch { return null; } })();
+  // The call that rang is still connected (false once its caller left and the group carried on). A transport that does
+  // not say is the two-person call, connected while it lasts.
+  const legOn = () => { try { return typeof transport?.legOn === 'function' ? !!transport.legOn() : true; } catch { return true; } };
+  const tiles = () => { try { return group?.tiles?.() || []; } catch { return []; } };
+  const nameOfEnd = (key, fallback = '') => {
+    if (key === CALL) return name();
+    const t = tiles().find((x) => keyOf(x.peer) === key);
+    return (t && t.name) || fallback || 'Someone on the call';
+  };
+  // A line's id, kept apart per person: two recognisers (and two people's pages) number their lines the same way.
+  // The call that rang keeps the ids it always had.
+  const lineId = (prefix, key, id) => (key === CALL ? `${prefix}-${id}` : `${prefix}-${id}@${peerOf(key)}`);
 
   function box() {
     if (subs || !host) return subs;
@@ -174,122 +219,186 @@ export function attachCallSubtitles({
     return subs;
   }
 
-  if (plan.captions && plan.captions !== 'off') {
-    try {
+  // ---- INCOMING, MADE HERE: one recogniser per other person (see the header) ----
+  const wantIncoming = !!plan.captions && plan.captions !== 'off';
+  function incomingFor(key, stream) {
+    if (!wantIncoming || theirsCame.has(key) || !ok()) return null;
+    let e = incoming.get(key);
+    if (!e) {
       box();
-      captions = makeCaptions({ row, mode: plan.captions, sink: subs, ...rec, who: name });
-      const now = transport?.remote?.();
-      if (now) captions.start(now);
-      offs.push(transport?.onRemote?.((s) => { if (ok() && s) captions?.start(s); }) || (() => {}));
+      const sink = key === CALL ? subs : { caption: (c) => {
+        if (!c || !subs) return;
+        try { subs.caption({ ...c, id: `${c.id}@${peerOf(key)}` }); } catch (err) { console.error('call subtitles: incoming', err); }
+      } };
+      e = { caps: makeCaptions({ row, mode: plan.captions, sink, ...rec, who: () => nameOfEnd(key) }), stream: null };
+      incoming.set(key, e);
+    }
+    if (stream && stream !== e.stream) { e.stream = stream; e.caps.start(stream); }
+    return e;
+  }
+  function stopIncoming(key) {
+    const e = incoming.get(key);
+    if (!e) return;
+    incoming.delete(key);
+    try { e.caps.stop(); } catch { /* gone */ }
+  }
+  const incomingRunning = (key) => {
+    const e = incoming.get(key);
+    if (!e) return false;
+    try { return !['no-recogniser', 'stopped'].includes(e.caps.status?.()?.state); } catch { return false; }
+  };
+  if (wantIncoming) {
+    try {
+      incomingFor(CALL, transport?.remote?.() || null);
+      offs.push(transport?.onRemote?.((s) => {
+        if (!ok()) return;
+        if (s) incomingFor(CALL, s);
+        else if (!legOn()) stopIncoming(CALL);       // the caller who rang left; the group carries on
+      }) || (() => {}));
     } catch (err) { console.error('call subtitles: incoming', err); }
   }
+  const hasAudio = (s) => { try { return (s?.getAudioTracks?.() || []).length > 0; } catch { return false; } };
+  // The group's people as they come and go: each one's own sound to their own recogniser; gone, theirs stops.
+  function followGroup() {
+    if (!group || !ok()) return;
+    const here = new Set();
+    for (const t of tiles()) {
+      const key = keyOf(t.peer);
+      here.add(key);
+      if (t.stream && hasAudio(t.stream)) incomingFor(key, t.stream);
+      else stopIncoming(key);       // their connection is lost (or not up yet): nothing to listen to
+    }
+    for (const key of [...incoming.keys()]) if (key !== CALL && !here.has(key)) stopIncoming(key);
+    for (const key of [...yesTo]) if (key !== CALL && !here.has(key)) yesTo.delete(key);
+    for (const key of [...askedOf.keys()]) if (key !== CALL && !here.has(key)) askedOf.delete(key);
+    for (const key of desk.waiting()) if (key !== CALL && !here.has(key)) desk.gone(key);
+  }
 
+  // ---- INCOMING, THEY SENT: per person, labelled by the connection it came on ----
+  function theirs(key, c, speakerName) {
+    if (!ok() || !c || !c.text) return;
+    if (plan.theirCaptions === 'ours' && incomingRunning(key)) return;
+    if (plan.theirCaptions === 'theirs' && incoming.has(key)) { stopIncoming(key); }
+    if (plan.theirCaptions === 'theirs') theirsCame.add(key);
+    try {
+      box()?.caption({ id: lineId('their', key, c.id), text: c.text, ear: 'call', source: 'call', others: [],
+        speaker: { name: speakerName || nameOfEnd(key), confidence: 1 } });
+    } catch (err) { console.error('call subtitles: theirs', err); }
+  }
   if (plan.theirCaptions && plan.theirCaptions !== 'none') {
     try {
-      offs.push(transport?.onCaptions?.((c) => {
-        if (!ok() || !c || !c.text) return;
-        const oursRunning = !!captions && !['no-recogniser', 'stopped'].includes(captions.status?.()?.state);
-        if (plan.theirCaptions === 'ours' && oursRunning) return;
-        if (captions && plan.theirCaptions === 'theirs') { try { captions.stop(); } catch { /* gone */ } captions = null; }
-        try {
-          box()?.caption({ id: `their-${c.id}`, text: c.text, ear: 'call', source: 'call', others: [],
-            speaker: { name: name(), confidence: 1 } });
-        } catch (err) { console.error('call subtitles: theirs', err); }
-      }) || (() => {}));
+      offs.push(transport?.onCaptions?.((c) => theirs(CALL, c, name())) || (() => {}));
+      if (group) offs.push(group.onCaptions?.((c) => { if (c && c.peer) theirs(keyOf(c.peer), c, c.name || null); }) || (() => {}));
     } catch (err) { console.error('call subtitles: theirs', err); }
   }
 
   /**
    * Outgoing: caption `track` (this end's plain microphone; absent, the call's own audio track as it is sent now) and
-   * send each line on the call's words channel. Not while a board word's clip plays into the call: that word went as
-   * text already. True when it started. NOT YET: a microphone changed mid-call is not followed.
+   * send each line on the call's words channels - to everybody when chosen, else to those who said yes. Not while a board
+   * word's clip plays into the call: that word went as text already. True when it started. NOT YET: a microphone changed
+   * mid-call is not followed.
    */
   function startOwn(track = null) {
     if (track) micTrack = track;
     if (!plan.ownCaptions || plan.ownCaptions === 'off') return false;
-    return startOwnAs(plan.ownCaptions, track);
+    return startOwnAs(plan.ownCaptions, track, 'choice');
   }
   const ownTrack = (track = null) => track || micTrack
     || (transport?.sending?.() || []).find((x) => x && x.kind === 'audio') || null;
-  function startOwnAs(mode, track = null) {
-    if (!ok() || own) return false;
+  const sendsTo = (key) => !!own && (ownBy === 'choice' || yesTo.has(key));
+  function sendOwn(c) {
+    if (!ok() || !c || !c.text) return;
+    if (transport?.clipPlaying?.()) return;
+    const msg = { id: c.id, text: c.text, final: !!c.final };
+    if (sendsTo(CALL)) { try { transport?.sendCaption?.(msg); } catch (err) { console.error('call subtitles: own', err); } }
+    if (group) {
+      const to = ownBy === 'choice' ? null : [...yesTo].map(peerOf).filter(Boolean);
+      if (to === null || to.length) { try { group.sendCaption?.(msg, to); } catch (err) { console.error('call subtitles: own (group)', err); } }
+    }
+  }
+  function startOwnAs(mode, track = null, by = 'choice') {
+    if (!ok()) return false;
+    if (own) { if (by === 'choice') ownBy = 'choice'; return false; }
     try {
       const t = ownTrack(track);
       if (!t || typeof MediaStream === 'undefined') return false;
-      own = makeCaptions({ row, mode, ...rec, sink: { caption: (c) => {
-        if (!ok() || !c || !c.text) return;
-        if (transport?.clipPlaying?.()) return;
-        try { transport?.sendCaption?.({ id: c.id, text: c.text, final: !!c.final }); } catch (err) { console.error('call subtitles: own', err); }
-      } } });
+      own = makeCaptions({ row, mode, ...rec, sink: { caption: sendOwn } });
+      ownBy = by;
       own.start(new MediaStream([t]));
       return true;
-    } catch (err) { console.error('call subtitles: own', err); own = null; return false; }
+    } catch (err) { console.error('call subtitles: own', err); own = null; ownBy = null; return false; }
   }
 
-  // ---- ASKING THE OTHER END, AND ANSWERING ITS ASKING (row 2.144 step 3; see the header) ----
+  // ---- ASKING EACH OTHER PERSON, AND ANSWERING EACH ONE'S ASKING (steps 3 and 4; see the headers) ----
   const ownWhere = plan.ownWhere === 'any' ? 'any' : 'here';
   function askOther() {
-    if (!ok() || asked !== null) return false;
+    if (!ok() || askedAll) return false;
     let oursCan = false;
-    try { oursCan = !!captions && ableNow() && captions.status?.()?.state !== 'no-recogniser'; } catch { oursCan = false; }
+    try {
+      oursCan = ableNow() && [...incoming.values()].some((e) => e.caps.status?.()?.state !== 'no-recogniser');
+    } catch { oursCan = false; }
     if (!screenShouldAsk(plan, oursCan)) return false;
     let sent = false;
-    try { sent = !!transport?.askCaptions?.(); } catch (err) { console.error('call subtitles: asking', err); }
-    if (sent) asked = 'sent';
-    return sent;
-  }
-  function reply(answer) {
-    let a = answer;
-    if (a === 'yes' && !own && !startOwnAs(ownWhere)) a = 'cannot';
-    answeredWith = a;
-    try { transport?.answerCaptions?.(a); } catch (err) { console.error('call subtitles: answering', err); }
-  }
-  function heardAsk() {
-    if (!ok() || prompt) return;
-    if (answeredWith) {               // asked again this call (a reconnect): the same answer, nothing new started
-      try { transport?.answerCaptions?.(answeredWith); } catch (err) { console.error('call subtitles: answering', err); }
-      return;
+    if (legOn()) {
+      try { sent = !!transport?.askCaptions?.(); } catch (err) { console.error('call subtitles: asking', err); }
+      if (sent) askedOf.set(CALL, 'sent');
     }
-    let canMake = false;
-    try { canMake = !!ownTrack() && ableNow() && callCaptionPlan(row, ownWhere).passes.length > 0; } catch { canMake = false; }
-    let remembered = null;
-    try { remembered = rememberedFor(answers?.get?.(), askKey); } catch { remembered = null; }
-    const d = answerFor({ running: !!own, able: canMake, remembered,
-      chosenOff: plan.decided?.out === 'person' && plan.ownCaptions === 'off' });
-    if (d !== 'ask') { reply(d); return; }
-    if (!host) return;          // nowhere to ask: no answer, nothing sent
-    prompt = showAskPrompt(host, {
-      words: askWords({ name: askName, at: 'screen', where: ownWhere }),
-      canRemember: !!(askKey && answers && typeof answers.set === 'function'),
-      showMs: askShowMs, ...timers,
-      // Over the top of the call's own box, clear of the subtitles at the bottom; the call goes on under it.
-      style: 'position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(92%,640px);box-sizing:border-box;'
-        + 'z-index:3;padding:12px 14px;border-radius:12px;background:var(--surface,#fff);color:var(--text,#111);'
-        + 'box-shadow:0 2px 12px rgba(0,0,0,.25);font-size:clamp(15px,1.6vw,20px);line-height:1.35',
-      onAnswer: (choice) => {
-        prompt = null;
-        tellAsking(false);               // the host's own walk is back, as it was
-        if (!ok()) return;
-        const { answer, remember } = choiceMeans(choice);
-        if (remember && answers && askKey) {
-          try { answers.set(withRemembered(answers.get?.(), askKey, remember, askName)); }
-          catch (err) { console.error('call subtitles: remembering an answer', err); }
-        }
-        if (answer) reply(answer);       // gone unanswered: nothing is sent, and nothing is said back
-      },
-    });
-    if (prompt?.el) tellAsking(true);
-    else prompt = null;
+    let sentGroup = false;
+    if (group) { try { sentGroup = !!group.askCaptions?.(); } catch (err) { console.error('call subtitles: asking (group)', err); } }
+    askedAll = sent || sentGroup;
+    return askedAll;
+  }
+  const answerOn = (key, a) => {
+    if (key === CALL) return !!transport?.answerCaptions?.(a);
+    return !!group?.answerCaptions?.(peerOf(key), a);
+  };
+  const desk = createAskDesk({
+    host, live: ok, showMs: askShowMs, ...timers, onAsking,
+    words: (names) => askWords({ names, at: 'screen', where: ownWhere }),
+    // Over the top of the call's own box, clear of the subtitles at the bottom; the call goes on under it.
+    style: 'position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(92%,640px);box-sizing:border-box;'
+      + 'z-index:3;padding:12px 14px;border-radius:12px;background:var(--surface,#fff);color:var(--text,#111);'
+      + 'box-shadow:0 2px 12px rgba(0,0,0,.25);font-size:clamp(15px,1.6vw,20px);line-height:1.35',
+    decide: ({ key, rememberKey }) => {
+      let canMake = false;
+      try { canMake = !!own || (!!ownTrack() && ableNow() && callCaptionPlan(row, ownWhere).passes.length > 0); } catch { canMake = false; }
+      let remembered = null;
+      try { remembered = rememberKey ? rememberedFor(answers?.get?.(), rememberKey) : null; } catch { remembered = null; }
+      return answerFor({ running: sendsTo(key), able: canMake, remembered,
+        chosenOff: plan.decided?.out === 'person' && plan.ownCaptions === 'off' });
+    },
+    reply: (key, answer, again) => {
+      let a = answer;
+      if (a === 'yes' && !again) {
+        if (!own && !startOwnAs(ownWhere, null, 'ask')) a = 'cannot';
+        else yesTo.add(key);
+      }
+      try { answerOn(key, a); } catch (err) { console.error('call subtitles: answering', err); }
+      return a;
+    },
+    remember: answers && typeof answers.set === 'function' ? (askers, r) => {
+      let m = answers.get?.();
+      for (const x of askers) m = withRemembered(m, x.rememberKey, r, x.name);
+      answers.set(m);
+    } : null,
+  });
+  function heardAsk(key, m, speakerName) {
+    if (!ok() || !m) return;
+    if (m.answer) { if (askedOf.has(key) || (key !== CALL && askedAll)) askedOf.set(key, m.answer); return; }
+    if (!m.ask) return;
+    const isCall = key === CALL;
+    desk.heard({ key, name: isCall ? (askName || '') : (speakerName || nameOfEnd(key)), rememberKey: isCall ? (askKey || '') : '' });
   }
   try {
-    offs.push(transport?.onCaptionAsks?.((m) => {
-      if (!ok() || !m) return;
-      if (m.answer) { if (asked !== null) asked = m.answer; return; }
-      if (m.ask) heardAsk();
-    }) || (() => {}));
+    offs.push(transport?.onCaptionAsks?.((m) => heardAsk(CALL, m, null)) || (() => {}));
+    if (group) offs.push(group.onCaptionAsks?.((m) => { if (m && m.peer) heardAsk(keyOf(m.peer), m, m.name || null); }) || (() => {}));
   } catch (err) { console.error('call subtitles: asks', err); }
+  if (group) {
+    try { offs.push(group.onChange?.(() => followGroup()) || (() => {})); followGroup(); }
+    catch (err) { console.error('call subtitles: the group', err); }
+  }
 
-  /** The call is answered: this end's own subtitles start (when chosen), and the other end is asked (when wanted). */
+  /** The call is answered: this end's own subtitles start (when chosen), and the other people are asked (when wanted). */
   function answered(track = null) {
     const started = startOwn(track);
     askOther();
@@ -300,22 +409,27 @@ export function attachCallSubtitles({
     if (stopped) return;
     stopped = true;
     offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
-    const wasAsking = !!prompt;
-    try { prompt?.close?.(); } catch { /* gone */ }
-    try { captions?.stop(); } catch { /* gone */ }
+    desk.close();
+    for (const key of [...incoming.keys()]) stopIncoming(key);
     try { own?.stop(); } catch { /* gone */ }
     try { subs?.destroy?.(); } catch { /* gone */ }
-    captions = null; own = null; subs = null; prompt = null; micTrack = null;
-    if (wasAsking) tellAsking(false);
+    own = null; ownBy = null; subs = null; micTrack = null;
+    yesTo.clear(); askedOf.clear(); theirsCame.clear();
   }
 
   return {
     answered, startOwn, askOther, stop, plan,
     // A switch's walk while a request is up (see the header): whether it is up, and one verb for it.
-    asking: () => !!prompt,
-    askVerb: (v) => { try { return !!prompt?.verb?.(v); } catch (err) { console.error('call subtitles: a switch on the request', err); return false; } },
-    // For the suites and the host: what is running now.
-    probe: () => ({ box: !!subs, incoming: !!captions, own: !!own, stopped, asked, answered: answeredWith, prompt: !!prompt,
-      askLit: prompt?.lit?.() || null }),
+    asking: () => desk.asking(),
+    askVerb: (v) => desk.verb(v),
+    // For the suites and the host: what is running now. `asked` / `answered`: the call that rang, as before; `askedBy` /
+    // `answeredBy` / `incomingFor` / `sendsTo`: per person (row 2.144 step 4).
+    probe: () => ({ box: !!subs, incoming: incoming.size > 0, own: !!own, stopped,
+      asked: askedOf.get(CALL) ?? null, answered: desk.answered(CALL),
+      prompt: desk.asking(), askLit: desk.lit(),
+      ownBy, incomingFor: [...incoming.keys()], askedBy: Object.fromEntries(askedOf),
+      answeredBy: Object.fromEntries([CALL, ...tiles().map((t) => keyOf(t.peer))].map((k) => [k, desk.answered(k)]).filter(([, v]) => v)),
+      sendsTo: [CALL, ...tiles().map((t) => keyOf(t.peer))].filter((k) => sendsTo(k)),
+      waiting: desk.waiting() }),
   };
 }

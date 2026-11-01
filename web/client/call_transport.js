@@ -287,7 +287,9 @@ export function parseCaption(data) {
 // Unlike a subtitle these DO wait for the channel to open: a request is about this whole call, and the first second of a
 // call (when it is sent) is exactly when the channel is still opening. They go with the call like a word does.
 export const CAPTION_ASK_TYPE = 'caption-ask';
-const CAPTION_ANSWER_WORDS = ['yes', 'no', 'cannot'];   // call_caption_ask.js CAPTION_ANSWERS (kept in step by its suite)
+// call_caption_ask.js CAPTION_ANSWERS (kept in step by its suite). Exported for call_group.js, whose connections carry the
+// same messages (row 2.144 step 4).
+export const CAPTION_ANSWER_WORDS = Object.freeze(['yes', 'no', 'cannot']);
 
 /** `{ ask: true }`, `{ answer }`, or null when the message is not one. Pure.
  *  Anything over 200 characters is refused unread: the longest real one is under 50, so the bound only stops a page
@@ -1138,8 +1140,10 @@ export function createCallTransport({
     onCaptions(cb) { if (typeof cb !== 'function') return () => {}; captionCbs.add(cb); return () => { captionCbs.delete(cb); }; },
     /**
      * ASK THE OTHER END for subtitles of its own voice (CAPTION_ASK_TYPE above), or ANSWER its asking ('yes' | 'no' |
-     * 'cannot'). Only in a live call; waits for the channel like a word, and goes with the call. Never to a group: the
-     * first connection only (row 2.144 step 4). True when it was sent or waits for the channel.
+     * 'cannot'). Only in a live call; waits for the channel like a word, and goes with the call. THIS connection only:
+     * in a group call each other person is asked and answered on their own connection (call_group.js `askCaptions` /
+     * `answerCaptions`, row 2.144 step 4), and `sendCaption` above likewise reaches only this one - who else gets a
+     * subtitle is the subtitles' own question (call_captions.js), not the transport's. True when sent or waiting.
      */
     askCaptions() {
       if (destroyed || !live) return false;

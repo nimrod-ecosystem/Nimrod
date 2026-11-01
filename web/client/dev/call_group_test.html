@@ -23,7 +23,10 @@
   its answers until its call is live; a talk-board word and a board clip reach every other person; a tile per person;
   leaving cleans up; the screen's call outlives the caller who rang while others stay; the caller page adds a screen,
   lets a knock in, carries on when the first screen leaves, and offers "Ask to join" after a busy; the screen's Call
-  panel draws a tile per person. The server's own rules are tested in web/server/test_call_groups.py.
+  panel draws a tile per person. Subtitles in a group call (row 2.144 step 4): a subtitle to everybody or only to those
+  who said yes, each person asked once and answered on their own connection, one recogniser per person on a screen,
+  one box naming everybody asking at once, one line per person on the call page. The server's own rules are tested in
+  web/server/test_call_groups.py.
 </div>
 <div id="page"></div>
 <div id="host"></div>
@@ -34,6 +37,11 @@
 import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT, MESH_RETRIES } from '../call_group.js';
 import { createCallTransport, WORDS_LABEL, CALL_PURPOSE, STALL_MS } from '../call_transport.js';
 import { mountCallPage, KNOCK_GIVE_UP_MS } from '../call_page.js';
+// row 2.144 step 4: subtitles in a group call.
+import { attachCallSubtitles } from '../call_captions.js';
+import { askWords, askNames, CAPTION_ASK_SHOW_MS, CAPTIONS_IN_DEVICE_KEY } from '../call_caption_ask.js';
+import { CAPTIONS_OUT_KEY } from '../call_outgoing_captions.js';
+import { SUBTITLES_DEFAULTS } from '../subtitles.js';
 import { SIGNAL_KINDS } from '../drive.js';
 import { mountModule } from '../module.js';
 import { createBus } from '../bus.js';
@@ -650,6 +658,359 @@ try {
     impl.__end('remote');
     check('the call ends: no tiles, no grid', !stage.querySelector('.call-tile') && !stage.classList.contains('call-grid'));
     inst.destroy();
+  }
+
+  // ===============================================================================================================
+  section('*** row 2.144 step 4: subtitles over the group\'s connections - to everybody or only some, asked once each ***');
+  const G = groupServer();
+  const lL = G.link('Lee'), lR = G.link('Robin'), lS9 = G.link('Sam');
+  const gL = createCallGroup(opts({ link: lL, getTracks: () => [track('audio')] }));
+  const gR = createCallGroup(opts({ link: lR, role: 'screen', getTracks: () => [track('audio')] }));
+  const gS = createCallGroup(opts({ link: lS9, getTracks: () => [track('audio')] }));
+  const leePeer = G.add(lL, { name: 'Lee' });
+  const robinPeer = G.add(lR, { name: 'Robin', role: 'screen', leg: leePeer, session: 'c9' });
+  const samPeer = G.add(lS9, { name: 'Sam' });
+  await settle(); meetAll(); await settle();
+  const atSam = [], asksAtSam = [], atLee = [], asksAtLee = [], atRobin = [], asksAtRobin = [];
+  gS.onCaptions((c) => atSam.push(c)); gS.onCaptionAsks((m) => asksAtSam.push(m));
+  gL.onCaptions((c) => atLee.push(c)); gL.onCaptionAsks((m) => asksAtLee.push(m));
+  gR.onCaptions((c) => atRobin.push(c)); gR.onCaptionAsks((m) => asksAtRobin.push(m));
+  check('(setup) Robin\'s screen reaches Sam through the group, and Lee through the call that rang', gR.tiles().map((t) => t.name).join() === 'Sam');
+  check('*** a subtitle to everybody in the group: one connection here (Sam; Lee is the call\'s) ***',
+    gR.sendCaption({ id: 'r1', text: 'hello all' }) === 1);
+  await settle();
+  check('*** ...labelled by the connection it came on, with the server\'s name ***', atSam.length === 1 && atSam[0].text === 'hello all'
+    && atSam[0].name === 'Robin' && atSam[0].peer === robinPeer && atLee.length === 0, JSON.stringify(atSam));
+  check('*** only the peers named: none -> nobody; a stranger -> nobody; Sam -> Sam ***',
+    gR.sendCaption({ id: 'r2', text: 'x' }, []) === 0 && gR.sendCaption({ id: 'r3', text: 'x' }, ['ffffffff']) === 0
+    && gR.sendCaption({ id: 'r4', text: 'only sam' }, [samPeer]) === 1);
+  await settle();
+  check('...a subtitle is never a board word', !atSam.some((c) => c.text === 'x'));
+  const lQ9 = G.link('Bo');
+  const gQ = createCallGroup(opts({ link: lQ9, getTracks: () => [track('audio')] }));
+  const asksAtBo = [];
+  gQ.onCaptionAsks((m) => asksAtBo.push(m));
+  check('*** asked: each other person once (Sam), never the one reached by the call that rang (Lee) ***', gR.askCaptions() === true);
+  await settle();
+  gR.askCaptions();
+  await settle();
+  check('...once, however often it is told', asksAtSam.filter((m) => m.ask).length === 1 && asksAtLee.length === 0, JSON.stringify(asksAtSam));
+  G.add(lQ9, { name: 'Bo' });
+  await settle(); meetAll(); await settle();
+  check('*** somebody joining later is asked too, once, when their connection opens ***', asksAtBo.filter((m) => m.ask && m.name === 'Robin').length === 1,
+    JSON.stringify(asksAtBo));
+  check('*** an answer goes to ONE person, on their connection only ***', gS.answerCaptions(robinPeer, 'no') === true);
+  await settle();
+  check('...and arrives labelled', asksAtRobin.some((m) => m.answer === 'no' && m.name === 'Sam' && m.peer === samPeer) && !asksAtBo.some((m) => m.answer));
+  check('not an answer, not a member, or the one reached by the call: refused', gS.answerCaptions(robinPeer, 'maybe') === false
+    && gS.answerCaptions('ffffffff', 'yes') === false && gR.answerCaptions(leePeer, 'yes') === false);
+  check('*** nothing outside a group ***', createCallGroup(opts({ link: G.link('x') })).sendCaption({ id: 'a', text: 'b' }) === 0
+    && createCallGroup(opts({ link: G.link('y') })).askCaptions() === false);
+
+  // ---------------------------------------------------------------------------------------------------------------
+  section('*** row 2.144 step 4: a screen in a group call - per person in, labelled; out to everybody or to whoever said yes ***');
+  {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    host.style.cssText = 'position:relative;width:640px;height:480px';
+    let realTrack = null;
+    try { const ac = new AudioContext(); realTrack = ac.createMediaStreamDestination().stream.getAudioTracks()[0]; } catch { realTrack = null; }
+    const clk = fakeClock();
+    // The call that rang Robin's screen (from Lee): a stand-in transport that hands over the real group.
+    const mkT = () => {
+      const t = { asks: 0, answers: [], askCbs: new Set(), capCbs: new Set(), remoteCbs: new Set(), sent: [], stream: new FakeStream([track('audio')]), leg: true,
+        group: () => gR, legOn: () => t.leg, remote: () => t.stream,
+        onRemote: (cb) => { t.remoteCbs.add(cb); return () => t.remoteCbs.delete(cb); },
+        onCaptions: (cb) => { t.capCbs.add(cb); return () => t.capCbs.delete(cb); },
+        sendCaption: (c) => { t.sent.push(c); return true; }, sending: () => [], clipPlaying: () => false,
+        askCaptions: () => { t.asks += 1; return true; }, answerCaptions: (a) => { t.answers.push(a); return true; },
+        onCaptionAsks: (cb) => { t.askCbs.add(cb); return () => t.askCbs.delete(cb); },
+        hear: (m) => { for (const f of [...t.askCbs]) f(m); }, theirs: (c) => { for (const f of [...t.capCbs]) f(c); } };
+      return t;
+    };
+    const made = [];
+    const makeCaptions = (o) => { const c = { o, starts: [], stopped: false, start(s) { c.starts.push(s); }, stop() { c.stopped = true; },
+      status: () => ({ state: 'listening' }) }; made.push(c); return c; };
+    const store = () => { const s = { m: {}, sets: [], get: () => s.m, set: (m) => { s.m = m; s.sets.push(m); } }; return s; };
+    const attach = (t, plan, extra = {}) => attachCallSubtitles({ transport: t, host, plan, makeCaptions, who: () => 'Lee', askName: 'Lee',
+      askKey: 'by:acct-lee', setTimer: clk.setTimer, clearTimer: clk.clearTimer, ...extra });
+    const subsText = () => host.querySelector('.subs')?.textContent || '';
+    const liveLines = () => [...host.querySelectorAll('.subs > .subs-line')].filter((l) => !l.classList.contains('subs-mark'));
+    const askBox = () => host.querySelector('[data-caption-ask]');
+    const ON = { captions: 'here', theirCaptions: 'theirs', ownCaptions: 'here', ownWhere: 'here', decided: { in: 'screen', out: 'screen' } };
+    const OFF = { captions: 'off', theirCaptions: 'theirs', ownCaptions: 'off', ownWhere: 'here', decided: { in: 'screen', out: 'screen' } };
+
+    let t = mkT();
+    let h = attach(t, ON);
+    const samStream = gR.tiles().find((x) => x.name === 'Sam')?.stream;
+    const boStream = gR.tiles().find((x) => x.name === 'Bo')?.stream;
+    const ofLee = made.find((c) => c.starts[0] === t.stream);
+    const ofSam = made.find((c) => c.starts[0] === samStream);
+    const ofBo = made.find((c) => c.starts[0] === boStream);
+    check('*** ONE RECOGNISER PER PERSON, each fed only that person\'s own sound: Lee (the call), Sam, Bo ***',
+      made.length === 3 && !!ofLee && !!ofSam && !!ofBo && new Set([ofLee, ofSam, ofBo]).size === 3
+      && ofSam.starts.length === 1 && ofSam.starts[0] !== t.stream, JSON.stringify(h.probe().incomingFor));
+    check('...each labelled with that person\'s name', ofLee.o.who() === 'Lee' && ofSam.o.who() === 'Sam' && ofBo.o.who() === 'Bo');
+    check('...and worked out where the plan says (this computer)', made.every((c) => c.o.mode === 'here'));
+    // Two recognisers number their lines the same way: two people, two lines - never one replacing the other.
+    ofLee.o.sink.caption({ id: 'call-g1', text: 'hello from lee', ear: 'call', source: 'call', others: [], speaker: { name: 'Lee', confidence: 1 } });
+    ofSam.o.sink.caption({ id: 'call-g1', text: 'hello from sam', ear: 'call', source: 'call', others: [], speaker: { name: 'Sam', confidence: 1 } });
+    await settle();
+    check('*** the same line id from two people: two lines, each with its own name ***', /hello from lee/.test(subsText()) && /hello from sam/.test(subsText())
+      && /Lee/.test(subsText()) && /Sam/.test(subsText()), subsText());
+    // Sam sends his own: Mike's both-on rule, per person.
+    gS.sendCaption({ id: 's1', text: 'sam made these himself' });
+    await settle();
+    check('*** Sam sends his own: ours OF SAM stop; ours of Lee and Bo keep going (the both-on rule is per person) ***',
+      ofSam.stopped && !ofLee.stopped && !ofBo.stopped && /sam made these himself/.test(subsText())
+      && h.probe().incomingFor.sort().join() === ['call', `peer:${gR.tiles().find((x) => x.name === 'Bo').peer}`].sort().join(), JSON.stringify(h.probe().incomingFor));
+    for (let i = 0; i < 6; i++) { gS.sendCaption({ id: `s${i + 2}`, text: `line ${i}` }); }
+    await settle(); await sleep(50);
+    check(`*** the box keeps to its own line limit (${SUBTITLES_DEFAULTS.lines}), however many people talk ***`,
+      liveLines().length > 0 && liveLines().length <= SUBTITLES_DEFAULTS.lines, String(liveLines().length));
+    if (realTrack) {
+      check('*** outgoing, chosen: started once from this room\'s microphone ***', h.answered(realTrack) === true && h.probe().ownBy === 'choice');
+      const own = made.at(-1);
+      atSam.length = 0;
+      own.o.sink.caption({ id: 'o1', text: 'said in this room', final: true });
+      await settle();
+      check('*** ...to EVERYBODY: Lee on the call that rang, Sam and Bo through the group, labelled as this screen ***',
+        t.sent.some((c) => c.text === 'said in this room') && atSam.some((c) => c.text === 'said in this room' && c.name === 'Robin'));
+      check('*** it asked each other person once: Lee on the call, the others through the group ***', t.asks === 1
+        && h.probe().askedBy.call === 'sent' && asksAtSam.filter((m) => m.ask).length >= 1);
+      gS.answerCaptions(robinPeer, 'no');
+      await settle();
+      check('...and their answers are kept per person', h.probe().askedBy[`peer:${samPeer}`] === 'no' && h.probe().askedBy.call === 'sent', JSON.stringify(h.probe().askedBy));
+    } else {
+      check('(skipped: no audio track in this browser) outgoing to everybody', true);
+    }
+    h.stop();
+    check('*** stop: every recogniser goes ***', made.every((c) => c.stopped) && !host.querySelector('.subs'));
+
+    // ---- being asked by more than one person ----
+    if (realTrack) {
+      made.length = 0; t = mkT();
+      let ans = store();
+      const says = [];
+      h = attach(t, OFF, { answers: ans, onAsking: (on) => says.push(on) });
+      h.answered(realTrack);
+      t.hear({ ask: true });
+      check('Lee asks: a box, four answers (Lee can be remembered: the call carries who placed it)', !!askBox() && /^Lee asks for subtitles/.test(askBox().textContent)
+        && [...askBox().querySelectorAll('[data-ask-answer]')].map((b) => b.dataset.askAnswer).join() === 'yes,always,no,never');
+      h.askVerb('next');
+      clk.advance(20000);
+      gQ.askCaptions();
+      await settle();
+      check('*** Bo asks while it is up: ONE box naming both, not a second box ***', host.querySelectorAll('[data-caption-ask]').length === 1
+        && /^Lee and Bo ask for subtitles/.test(askBox().textContent) && h.probe().waiting.length === 2, askBox()?.textContent);
+      check('*** ...only Yes and No now (Bo came through the group: nobody to remember him by, and "Always" must not remember half of them) ***',
+        [...askBox().querySelectorAll('[data-ask-answer]')].map((b) => b.dataset.askAnswer).join() === 'yes,no');
+      check('*** ...a switch keeps its place: "Yes, this call" is still lit ***', h.probe().askLit === 'yes' && says.join() === 'true');
+      clk.advance(CAPTION_ASK_SHOW_MS - 1);
+      check('*** the box\'s time started again for the person just named (still up 30 s after Bo asked) ***', !!askBox());
+      clk.advance(1);
+      check('*** NOBODY ANSWERS: it still goes by itself, and NOTHING is sent to either ***', !askBox() && t.answers.length === 0 && made.length === 0
+        && says.join() === 'true,false');
+      await settle();
+      check('...not even an answer to Bo', !asksAtBo.some((m) => m.answer));
+      h.stop();
+
+      made.length = 0; t = mkT(); ans = store();
+      atSam.length = 0; asksAtSam.length = 0; const atBo = []; gQ.onCaptions((c) => atBo.push(c));
+      h = attach(t, OFF, { answers: ans });
+      h.answered(realTrack);
+      t.hear({ ask: true });
+      askBox().querySelector('[data-ask-answer="no"]').click();
+      check('Lee asks; "No"', t.answers.join() === 'no' && made.length === 0);
+      gS.askCaptions();
+      await settle();
+      check('Sam asks after: his own box (Lee was answered already)', /^Sam asks/.test(askBox()?.textContent || ''));
+      askBox().querySelector('[data-ask-answer="yes"]').click();
+      await settle();
+      check('*** "Yes" to Sam: this room\'s subtitles start, and Sam hears yes on his own connection ***', made.length === 1 && h.probe().ownBy === 'ask'
+        && asksAtSam.some((m) => m.answer === 'yes' && m.name === 'Robin'));
+      made[0].o.sink.caption({ id: 'y1', text: 'for sam only', final: true });
+      await settle();
+      check('*** NOTHING IS SENT WITHOUT A YES, PER PERSON: Sam gets them; Lee (who said no) and Bo (who never asked) do not ***',
+        atSam.some((c) => c.text === 'for sam only') && !t.sent.some((c) => c.text === 'for sam only') && !atBo.some((c) => c.text === 'for sam only'),
+        JSON.stringify({ sent: t.sent, bo: atBo }));
+      check('...said in the probe', h.probe().sendsTo.join() === `peer:${samPeer}`, JSON.stringify(h.probe().sendsTo));
+      t.hear({ ask: true });
+      check('Lee asks again (a reconnect): the same no, no second box', !askBox() && t.answers.join() === 'no,no');
+      h.stop();
+
+      // A person named in the box leaves: they go from it; the box goes if they were the only one.
+      const lN = G.link('Nia');
+      const gN = createCallGroup(opts({ link: lN, getTracks: () => [track('audio')] }));
+      G.add(lN, { name: 'Nia' });
+      await settle(); meetAll(); await settle();
+      made.length = 0; t = mkT();
+      h = attach(t, OFF, { answers: store() });
+      h.answered(realTrack);
+      t.hear({ ask: true });
+      gN.askCaptions();
+      await settle();
+      check('(setup) Lee and Nia named', /^Lee and Nia ask/.test(askBox()?.textContent || ''), askBox()?.textContent);
+      gN.leave();
+      await settle();
+      check('*** Nia leaves the call: the box names Lee alone again, with all four answers back ***', /^Lee asks/.test(askBox()?.textContent || '')
+        && askBox().querySelectorAll('[data-ask-answer]').length === 4);
+      gN.destroy();
+      h.stop();
+      check('the call ends with a request up: it goes, nothing sent', !askBox() && t.answers.length === 0);
+    } else {
+      check('(skipped: no audio track in this browser) a screen asked by several people', true);
+    }
+    check('the words name everybody asking, grammatically, and nobody unnamed is left out',
+      askNames(['A', 'B', 'C']) === 'A, B and C' && askNames(['A']) === 'A' && askWords({ names: ['A', ''] }).text.startsWith('A and someone else on the call ask')
+      && askWords({ names: ['A', 'B'] }).always === 'Always for A and B');
+    check('site copy names nobody and never says "her screen"', !/her screen|Cici/i.test(JSON.stringify(askWords({ names: ['A', 'B'], at: 'page' }))));
+    host.innerHTML = ''; host.style.cssText = '';
+  }
+  for (const x of [gL, gR, gS, gQ]) x.destroy();
+
+  // ---------------------------------------------------------------------------------------------------------------
+  section('*** row 2.144 step 4: the call page in a group call - everybody\'s lines, asked once each, mine to whoever said yes ***');
+  {
+    const S10 = groupServer({ gid: 'unused', kind: 'audio' });
+    const links = [];
+    let gidSeen = null;
+    const connect = ({ personId, onState, onPresence } = {}) => {
+      const l = S10.link(`page:${personId}`);
+      const subs = new Set();
+      l.person = personId; l.signals = [];
+      l.sendSignal = (s) => {
+        l.signals.push(JSON.parse(JSON.stringify(s)));
+        if (s.kind === 'offer' && s.group && !gidSeen) { gidSeen = s.group; S10.setGid(s.group); S10.add(l, { name: 'Ann' }); }
+        return true;
+      };
+      l.onSignal = (cb) => { subs.add(cb); return () => subs.delete(cb); };
+      l.signal = (s) => { for (const f of [...subs]) f(s); };
+      l.close = () => { l.closed = true; l.st = 'offline'; };
+      queueMicrotask(() => { onState?.('connected'); onPresence?.({ screens: 1, drivers: 1 }); });
+      links.push(l);
+      return l;
+    };
+    const fetchImpl = async (url) => {
+      const ok = (b, st = 200) => ({ ok: st < 400, status: st, json: async () => b });
+      if (/\/api\/drive\/ticket\//.test(url)) return ok({ ticket: 'T' });
+      if (/\/api\/people$/.test(url)) return ok({ people: [{ id: 'p1', name: 'Alex' }] });
+      if (/\/api\/drive\/shared$/.test(url)) return ok({ people: [] });
+      if (/\/api\/me$/.test(url)) return ok({ display_name: 'Ann' });
+      return ok({}, 404);
+    };
+    const media = async (c) => new FakeStream([...(c.audio ? [track('audio')] : []), ...(c.video ? [track('video')] : [])]);
+    const outs = [];
+    const makeOutgoingCaptions = (o) => { const r = { o, started: false, stopped: false, start() { r.started = true; }, stop() { r.stopped = true; }, state: () => 'listening' }; outs.push(r); return r; };
+    const clk = fakeClock();
+    const store = { [CAPTIONS_IN_DEVICE_KEY]: 'on' };
+    const storage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
+    const root = document.getElementById('page');
+    root.innerHTML = '';
+    const q = (s) => root.querySelector(s);
+    const page = await mountCallPage(root, { fetchImpl, connect, getUserMedia: media, attach: () => {}, storage, search: '?person=p1', nav: {},
+      win: { addEventListener() {}, SpeechRecognition: function Rec() {} }, enumerateDevices: async () => [], speakWords: () => null,
+      setTimer: clk.setTimer, clearTimer: clk.clearTimer, makeOutgoingCaptions,
+      makeTransport: (x) => createCallTransport({ ...x, PeerConnection: PC, Stream: FakeStream }),
+      makeGroup: (x) => createCallGroup({ ...x, PeerConnection: PC, Stream: FakeStream }) });
+    const pcBefore = pcSeq;
+    const call = page.call('audio');
+    await until(() => links[0]?.signals.some((s) => s.kind === 'offer'));
+    await call;
+    const offer = links[0].signals.find((s) => s.kind === 'offer');
+    await settle();
+    const pc0 = [...allPcs.values()].find((p) => p.id > pcBefore && p.localDescription?.type === 'offer');
+    links[0].signal({ kind: 'answer', sdp: 'ANSWER-0', purpose: CALL_PURPOSE, session: offer.session });
+    await settle();
+    pc0.fire('connected');
+    const ch0 = pc0.channels.find((c) => c.label === WORDS_LABEL);
+    ch0.open();
+    await settle();
+    const lAlex = S10.link('screen-Alex');
+    createCallGroup(opts({ link: lAlex, role: 'screen' }));
+    S10.add(lAlex, { name: 'Alex', role: 'screen', leg: page.group().me(), session: offer.session });
+    await settle();
+    check('(setup) in an audio call with the first screen', page.state() === 'in-call');
+    check('*** the first screen is asked once, on its own call ***', ch0.sent.filter((d) => /caption-ask/.test(d) && !/answer/.test(d)).length === 1
+      && page.captionAsk().asked === 'sent');
+    // Three people knock and are let in.
+    const people = {};
+    for (const nm of ['Sam', 'Nia', 'Bo']) {
+      const l = S10.link(nm);
+      const g = createCallGroup(opts({ link: l, getTracks: () => [track('audio')] }));
+      const p = { g, caps: [], asks: [] };
+      g.onCaptions((c) => p.caps.push(c)); g.onCaptionAsks((m) => p.asks.push(m));
+      people[nm] = p;
+      g.knock();
+      await settle();
+      q('[data-knock-yes]')?.click();
+      await settle(); meetAll(); await settle();
+    }
+    check('(setup) Sam, Nia and Bo joined', page.tiles().map((x) => x.name).sort().join() === 'Bo,Nia,Sam', JSON.stringify(page.tiles()));
+    check('*** each of them is asked once, through the group ***', ['Sam', 'Nia', 'Bo'].every((n) => people[n].asks.filter((m) => m.ask && m.name === 'Ann').length === 1),
+      JSON.stringify(Object.fromEntries(Object.entries(people).map(([k, v]) => [k, v.asks]))));
+    // Lines from four people: the first screen on its call, three through the group.
+    ch0.onmessage?.({ data: JSON.stringify({ type: 'caption', id: 'a1', text: 'from the room' }) });
+    people.Sam.g.sendCaption({ id: 'x1', text: 'sam here' });
+    people.Nia.g.sendCaption({ id: 'x1', text: 'nia here' });
+    await settle();
+    const spans = () => [...root.querySelectorAll('[data-theirs] [data-theirs-line]')].map((s) => s.textContent);
+    check('*** one line per person, each with the name this page knows them by ***', spans().join('|') === 'Alex: from the room|Sam: sam here|Nia: nia here', spans().join('|'));
+    people.Sam.g.sendCaption({ id: 'x1', text: 'sam here, corrected' });
+    await settle();
+    check('...a person\'s line is corrected in place (still one line for Sam, now the newest)', spans().join('|') === 'Alex: from the room|Nia: nia here|Sam: sam here, corrected');
+    people.Bo.g.sendCaption({ id: 'x1', text: 'bo here' });
+    await settle();
+    check(`*** at most ${SUBTITLES_DEFAULTS.lines} people\'s lines (the subtitle box\'s own limit): the one heard longest ago goes ***`,
+      spans().length === SUBTITLES_DEFAULTS.lines && !spans().some((s) => s.startsWith('Alex')) && spans().at(-1) === 'Bo: bo here', spans().join('|'));
+    // Asked by two at once: one box naming both, only Yes and No (nobody to remember either by).
+    people.Sam.g.askCaptions(); people.Nia.g.askCaptions();
+    await settle();
+    const box = () => q('[data-caption-ask]');
+    check('*** Sam and Nia ask at once: ONE box naming both, Google said, Yes and No only ***', root.querySelectorAll('[data-caption-ask]').length === 1
+      && /^Sam and Nia ask for subtitles of what you say/.test(box()?.textContent || '') && /Google/.test(box().textContent)
+      && [...box().querySelectorAll('[data-ask-answer]')].map((b) => b.dataset.askAnswer).join() === 'yes,no', box()?.textContent);
+    check('*** nothing listens while it is asked ***', outs.length === 0);
+    box().querySelector('[data-ask-answer="yes"]').click();
+    await settle();
+    check('*** "Yes": each hears yes on their own connection; this browser starts listening ***', people.Sam.asks.some((m) => m.answer === 'yes')
+      && people.Nia.asks.some((m) => m.answer === 'yes') && !people.Bo.asks.some((m) => m.answer) && outs.length === 1 && outs[0].started
+      && page.captionAsk().grantedTo.sort().join() === [`peer:${page.group().state().members.find((m) => m.name === 'Sam').peer}`,
+        `peer:${page.group().state().members.find((m) => m.name === 'Nia').peer}`].sort().join(), JSON.stringify(page.captionAsk()));
+    const before = ch0.sent.length;
+    outs[0].o.send({ id: 'me1-0', text: 'hi you two', final: true });
+    await settle();
+    check('*** NOTHING IS SENT WITHOUT A YES, PER PERSON: Sam and Nia get what I say; Bo and the first screen do not ***',
+      people.Sam.caps.some((c) => c.text === 'hi you two' && c.name === 'Ann') && people.Nia.caps.some((c) => c.text === 'hi you two')
+      && !people.Bo.caps.some((c) => c.text === 'hi you two') && !ch0.sent.slice(before).some((d) => /hi you two/.test(d)));
+    // "Subtitles of me" on, as a choice: to everybody.
+    q('[data-captions-out-btn]').click();
+    check('the button with only yeses running takes them back', page.captionAsk().granted === false && outs[0].stopped);
+    q('[data-captions-out-btn]').click();
+    await settle();
+    check('...pressed again it is the choice itself', store[CAPTIONS_OUT_KEY] === 'on' && outs.at(-1).started);
+    outs.at(-1).o.send({ id: 'me2-0', text: 'hi everyone', final: true });
+    await settle();
+    check('*** chosen: what I say goes to EVERYBODY - the first screen on its call, and all three through the group ***',
+      ch0.sent.some((d) => /hi everyone/.test(d)) && ['Sam', 'Nia', 'Bo'].every((n) => people[n].caps.some((c) => c.text === 'hi everyone')));
+    // Answers to our asking, per person.
+    people.Bo.g.answerCaptions(page.group().me(), 'cannot');
+    ch0.onmessage?.({ data: JSON.stringify({ type: 'caption-ask', answer: 'no' }) });
+    await settle();
+    const bp = `peer:${page.group().state().members.find((m) => m.name === 'Bo').peer}`;
+    check('*** answers are kept per person ***', page.captionAsk().askedBy[bp] === 'cannot' && page.captionAsk().asked === 'no', JSON.stringify(page.captionAsk().askedBy));
+    check('...and a person whose line is already shown is not told about (Bo is shown; the first screen\'s line went, so its no is said by name)',
+      /Alex chose not to send/.test(q('[data-theirs-note]')?.textContent || '') && !/Bo cannot/.test(q('[data-theirs-note]').textContent), q('[data-theirs-note]')?.textContent);
+    // Nia leaves: her line goes.
+    people.Nia.g.leave();
+    await settle();
+    check('*** somebody leaves: their line goes ***', !spans().some((s) => s.startsWith('Nia')), spans().join('|'));
+    page.hangup();
+    await settle();
+    check('*** hang up: every line, every yes, every asking goes ***', spans().length === 0 && page.captionAsk().grantedTo.length === 0
+      && Object.keys(page.captionAsk().askedBy).length === 0 && page.theirLines().length === 0);
+    for (const p of Object.values(people)) p.g.destroy();
+    page.destroy();
   }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
