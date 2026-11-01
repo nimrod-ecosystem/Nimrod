@@ -57,22 +57,50 @@ function check(name, cond, detail = '') {
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 
-// Module files are named for their type -- with ONE exception, named here so it cannot spread quietly:
-// the panel editor's `options` lives in modules/edit_options.js (2026-10-02, edit_mode.js).
-const FILE_FOR_TYPE = Object.freeze({ options: 'edit_options' });
-const TYPE_FOR_FILE = Object.freeze(Object.fromEntries(Object.entries(FILE_FOR_TYPE).map(([t, f]) => [f, t])));
+// Module files are named for their type -- with these exceptions, named here so they cannot spread quietly. Each is
+// held to it below: importing the file must register every type listed for it.
+//   edit_options:  the panel editor's `options` (2026-10-02, edit_mode.js).
+//   page_parts:    the home page's five parts, each a module, registered from one file (3487b72b, row 2.102, 2026-10-17).
+//   lesson_player: the lesson-file player took the type `lessons`, and keeps `lesson_player` so a panel placed on its
+//                  first day does not break (4c6f03b9, 2026-10-17).
+const TYPES_IN_FILE = Object.freeze({
+  edit_options: ['options'],
+  page_parts: ['page_you', 'page_messages', 'page_recommended', 'page_people', 'page_connect'],
+  lesson_player: ['lessons', 'lesson_player'],
+});
+const FILE_FOR_TYPE = Object.freeze(Object.fromEntries(
+  Object.entries(TYPES_IN_FILE).flatMap(([f, ts]) => ts.map((t) => [t, f]))));
 
-// `import './modules/photos.js';` -> photos. Comments are stripped first so a commented-out
-// import does not count as a live one — which is exactly how this would rot back.
-async function importedModules(page) {
-  const res = await fetch(page, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`${page} -> ${res.status}`);
-  const src = (await res.text())
+async function source(url) {
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`${url} -> ${res.status}`);
+  // Comments are stripped first so a commented-out import does not count as a live one — which is exactly how this
+  // would rot back.
+  return (await res.text())
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
+}
+
+// The module files a page loads -> the types they register. `import './modules/photos.js';` -> photos, and so is
+// `import { X } from './modules/photos.js';` (a named import runs the file, registration and all: the kiosk takes
+// the director's live-name topic that way, e0de2209, 2026-10-14). And a module file that imports another module file
+// loads that one too: the Overlays module registers because modules/scene.js imports its rows (a9b04881, row 2.104,
+// 2026-10-18), and a composer page has it whether or not it names it. So the imports are followed through modules/,
+// and a file counts only if it registers something (a helper in modules/ is not a module).
+async function importedModules(page) {
+  const files = new Set();
+  const visit = async (file) => {
+    if (files.has(file)) return;
+    files.add(file);
+    const src = await source(`/modules/${file}.js`);
+    for (const m of src.matchAll(/^\s*import\s+(?:[^;'"]*?\s+from\s+)?['"]\.\/([A-Za-z0-9_-]+)\.js['"]/gm)) await visit(m[1]);
+  };
+  const src = await source(page);
+  for (const m of src.matchAll(/import\s+(?:[^;'"]*?\s+from\s+)?['"]\.\/modules\/([A-Za-z0-9_-]+)\.js['"]/g)) await visit(m[1]);
   const names = new Set();
-  for (const m of src.matchAll(/import\s+['"]\.\/modules\/([A-Za-z0-9_-]+)\.js['"]/g)) {
-    names.add(TYPE_FOR_FILE[m[1]] || m[1]);
+  for (const f of files) {
+    if (!/\bregisterModule\s*\(/.test(await source(`/modules/${f}.js`))) continue;
+    for (const t of TYPES_IN_FILE[f] || [f]) names.add(t);
   }
   return names;
 }
@@ -154,6 +182,11 @@ section('*** THE CATALOG\u2019S NAMES ARE THE MODULES\u2019 NAMES ***');
   check('...and loading them populated the registry (or nothing below means anything)',
     man.length >= CATALOG.length, `${man.length} registered vs ${CATALOG.length} described`);
   const byType = new Map(man.map((m) => [m.type, m.title]));
+  // The exceptions above, held to: every file that is not named for its type registers every type listed for it.
+  await Promise.all(Object.keys(TYPES_IN_FILE).map((f) => import(`../modules/${f}.js`).catch(() => null)));
+  const unreg = Object.entries(TYPES_IN_FILE).flatMap(([f, ts]) => ts.filter((t) => !listManifests().some((m) => m.type === t)).map((t) => `${f}: ${t}`));
+  check(`the files not named for their type (${Object.keys(TYPES_IN_FILE).join(', ')}) register every type listed for them`,
+    unreg.length === 0, unreg.join(', '));
   const named = CATALOG.filter((c) => c.title);
   check('some entries carry an explicit title (the landing page needs them)', named.length > 0,
     `${named.length} of ${CATALOG.length}`);
