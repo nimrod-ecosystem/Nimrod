@@ -53,6 +53,25 @@ all; an outside script that is blocked leaves its panel empty. The page says so,
     W.outside = { 'www.youtube.com': true };
     check('a known host says what stops working: "YouTube videos could not load here"', /^YouTube videos could not load here/.test(W.words()), W.words());
     check('its words name nobody (site copy)', !/her screen|cici/i.test(await (await fetch('../load_watch.js?x=' + Date.now())).text()));
+
+    // 2026-11-01 (row 2.148): a panel that found out another way (YouTube's frame never ready, its script hung) says so
+    // here; when it loads after all the line goes BY ITSELF; and a closed line is not reopened by the same trouble.
+    W.own = false;
+    for (const h of Object.keys(W.outside)) W.recovered(h);
+    check('the earlier troubles all recovered: the line has gone by itself', !bar() && W.words() === '', bar() && bar().textContent);
+    W.report('www.youtube-nocookie.com');
+    check('*** a panel can report a host that never failed as a script: the line says YouTube videos could not load ***',
+      !!bar() && /^YouTube videos could not load here/.test(bar().textContent), bar() && bar().textContent);
+    W.recovered('www.youtube-nocookie.com');
+    check('*** it loaded after all: the line goes by itself, no Close needed (nothing at a bedside has to press it) ***', !bar() && W.words() === '');
+    W.report('www.youtube.com');
+    bar().querySelector('[data-load-watch-close]').click();
+    W.report('www.youtube.com');
+    check('*** closed, it STAYS closed for the same trouble, though the panel keeps trying (every 30 s) ***', !bar());
+    W.report('sdk.scdn.co');
+    check('...but something new does bring it back', !!bar() && /Spotify/.test(bar().textContent), bar() && bar().textContent);
+    W.recovered('www.youtube.com'); W.recovered('sdk.scdn.co');
+    check('everything recovered: gone', !bar());
   } catch (err) {
     check('the suite ran to the end', false, String(err && err.stack || err));
   }

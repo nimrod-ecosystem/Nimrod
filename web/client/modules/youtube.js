@@ -37,6 +37,7 @@ import { flashLimit, failureBackoffMs } from '../flash_limit.js';
 import { createSearchKeyClient, keyInForceWords, keyAtLevelWords, KEY_LEVEL_WORDS } from '../search_key.js';
 import { PLAY_NOW_TOPIC } from '../play_sync.js';
 import { stallFields, stallSettings, pauseNoticeMs, createStallReporter } from '../playback_stall.js';
+import { cantReachWords } from '../outside_reach.js';
 import {
   autostartFields, shouldAutostart, panelAlone, createPlayReporter, ensureStartStyle, startOverlayHtml,
 } from '../game_start.js';
@@ -457,22 +458,76 @@ export async function searchVideos(query, { client = null, fetchFn = undefined, 
   try { return await c.searchYouTube(q); } catch { return { items: [], error: 'failed', message: '' }; }
 }
 
-function loadIframeApi() {
+// *** HOW LONG YOUTUBE'S PLAYER GETS TO LOAD BEFORE THE PANEL SAYS IT COULD NOT: 12 SECONDS (row 2.148). ***
+// Not a new number: it is the wait the IFrame API script already had here, now named and used for both halves of
+// "the player loaded" - the script, and then the player's own frame saying it is ready. The two are the same order
+// of work on the same network (a script, then a page of player code), so one wait covers both. A blocker refuses at
+// once, so this only decides how soon a HUNG load is called; shorter would call a slow facility connection blocked
+// (the line then takes itself back when the player does load, so the cost of that mistake is a line that comes and
+// goes), longer leaves an empty panel unexplained.
+export const YT_LOAD_MS = 12000;
+// *** AND HOW LONG BEFORE IT TRIES AGAIN, BY ITSELF: 30 SECONDS. *** The same figure music_spotify.js RETRY_MS gives
+// "a look that failed (offline, a busy minute)". Somebody who has just allowed the site in their blocker sees the
+// player within half a minute without touching the screen; a network that comes back is caught sooner still (the
+// browser's `online` event tries at once). One refused request every 30 s costs nothing. Nothing on the screen
+// waits for it: the panel's own buttons, next and the content director carry on as they did.
+export const YT_RETRY_MS = 30000;
+export const YT_API_SRC = 'https://www.youtube.com/iframe_api';
+
+// ONE hook on YouTube's global ready callback, installed once, rather than a new wrapper round the last one on every
+// try - with a try every 30 s for as long as a blocker is on, a chain of wrappers would only ever grow.
+let _apiResolve = null, _apiHooked = false;
+function hookApiReady() {
+  if (_apiHooked) return;
+  _apiHooked = true;
+  const prev = window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady = () => {
+    try { prev?.(); } catch (e) { console.error('youtube: an earlier ready callback', e); }
+    const r = _apiResolve; _apiResolve = null;
+    r?.(window.YT);
+  };
+}
+
+// `src`, `waitMs`: seams for the suites. A failure is an Error with `reach` set to what it looked like
+// (outside_reach.js): 'stopped' when the script was refused, 'slow' when it never came.
+function loadIframeApi({ src = YT_API_SRC, waitMs = YT_LOAD_MS } = {}) {
   if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
   if (_apiPromise) return _apiPromise;
+  // A try after one that hung: YouTube's script marks itself "loading" before it fetches the player code, and with
+  // that mark left over a fresh copy would wait for the stuck one for ever. (A `var` global: emptied, not deleted.)
+  try { if (window.YT && !window.YT.Player) window.YT = undefined; } catch { /* leave it */ }
+  hookApiReady();
   _apiPromise = new Promise((resolve, reject) => {
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => { prev?.(); resolve(window.YT); };
+    let settled = false, timer = null;
+    const fail = (message, reach) => {
+      if (settled) return;
+      settled = true; clearTimeout(timer);
+      _apiPromise = null; _apiResolve = null;
+      reject(Object.assign(new Error(message), { reach }));
+    };
+    _apiResolve = (YT) => { if (settled) return; settled = true; clearTimeout(timer); resolve(YT); };
     const s = document.createElement('script');
-    s.src = 'https://www.youtube.com/iframe_api';
+    s.src = src;
     s.async = true;
-    // A failure is forgotten (row 2.69, livecams), so the next player made asks again rather than failing for good.
-    s.onerror = () => { _apiPromise = null; s.remove(); reject(new Error('failed to load YouTube IFrame API')); };
+    // A failure is forgotten (row 2.69, livecams), so the next try asks again rather than failing for good.
+    s.onerror = () => { s.remove(); fail('failed to load YouTube IFrame API', 'stopped'); };
     document.head.append(s);
-    setTimeout(() => { if (!(window.YT && window.YT.Player)) { _apiPromise = null; reject(new Error('YouTube IFrame API timeout')); } }, 12000);
+    timer = setTimeout(() => {
+      if (window.YT && window.YT.Player) _apiResolve?.(window.YT);
+      else fail('YouTube IFrame API timeout', 'slow');
+    }, waitMs);
   });
   return _apiPromise;
 }
+
+/** For the suites: forget a loaded API, so the loader itself can be exercised again on the same page. */
+export function forgetIframeApiForTest() { _apiPromise = null; _apiResolve = null; }
+
+// Tell the page's one load line (load_watch.js) - when that file is on the page; quiet when it is not.
+function loadWatch(how, host) {
+  try { const w = typeof window !== 'undefined' ? window.__nimrodLoadWatch : null; w?.[how]?.(host); } catch { /* not load-bearing */ }
+}
+const hostOf = (url) => { try { return new URL(url, location.href).host; } catch { return ''; } };
 
 // The player reports FOUR things upward, and the last two are the ones that were missing.
 //
@@ -509,7 +564,9 @@ function loadIframeApi() {
 // reports nothing at all (LIST_POLL_MS x LIST_POLL_TRIES: about ten seconds).
 export const LIST_POLL_MS = 500;
 export const LIST_POLL_TRIES = 20;
-export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }, opts = {}) {
+// ROW 2.148: `onCantLoad(reach)` / `onLoaded()` - the player could not load (a blocker, the network) and then did; see
+// "WHEN THE PLAYER CANNOT LOAD" below. Optional, like the rest: a caller that leaves them out still gets the retries.
+export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist, onCantLoad, onLoaded }, opts = {}) {
   let player = null, ready = false, pending = null, pendingList = null, pendingCue = false, destroyed = false;
   let pendingStart = 0, curId = null, ytState = -1;   // watching along: where a queued load starts, what is loaded, its state
   const controlsWanted = () => {
@@ -558,47 +615,112 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
   const host = document.createElement('div');
   mountEl.append(host);
 
-  loadIframeApi().then((YT) => {
-    if (destroyed) return;
-    player = new YT.Player(host, {
-      host: 'https://www.youtube-nocookie.com',
-      width: '100%', height: '100%',
-      playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, ...(wantMuted ? { mute: 1 } : {}),
-        // Row 2.156: `opts.controls === false` (or a getter giving false) turns YouTube's own controls off; every other
-        // caller leaves it out and keeps them. Read here, when the API has loaded, so a panel's saved setting is in.
-        ...(controlsWanted() ? {} : { controls: 0 }) },
-      events: {
-        onReady: () => {
-          ready = true;
-          applyMute();   // livecams
-          if (pendingList) { cueListNow(pendingList); pendingList = null; }
-          else if (pending) { if (pendingCue) player.cueVideoById(pending); else loadNow(pending, pendingStart); pending = null; pendingCue = false; pendingStart = 0; }
-        },
-        onStateChange: (e) => {
-          ytState = e.data;                                            // watching along: `playing()` reads it
-          // (row 2.99) A cued list hands over its ids on whichever state first has them; a first video YouTube started
-          // by itself is stopped there, and is not reported as this module's video playing or stopping.
-          if (listWanted && takeList(e.data)) return;
-          if (listWanted && curId === null && (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING)) return;
+  // *** WHEN THE PLAYER CANNOT LOAD (row 2.148, Mike 2026-10-28: "ad blockers have broken Nimrod before"). ***
+  // Two ways it fails, and a page sees each differently: YouTube's script is refused or never comes (the API promise
+  // rejects), or the script is fine and the player's own frame (youtube-nocookie.com) is refused - which says nothing
+  // at all: the frame never reports ready. Both are given YT_LOAD_MS, said through `onCantLoad(reach)` (once per
+  // stretch; outside_reach.js's 'stopped' | 'slow') and to the page's load line, and tried again every YT_RETRY_MS
+  // until the player is ready, which is said through `onLoaded()`. A video asked for meanwhile is kept and plays then.
+  // NOT A GATE: nothing waits on this. Before it, a refused script was reported once through `onError` and the player
+  // was dead for the life of the panel; that one `onError` is still sent, so what a caller did with it is unchanged.
+  const T = typeof opts.setTimer === 'function' ? opts.setTimer : ((fn, ms) => setTimeout(fn, ms));
+  const C = typeof opts.clearTimer === 'function' ? opts.clearTimer : ((id) => clearTimeout(id));
+  const loadMs = Number(opts.loadMs) > 0 ? Number(opts.loadMs) : YT_LOAD_MS;
+  const retryMs = Number(opts.retryMs) > 0 ? Number(opts.retryMs) : YT_RETRY_MS;
+  const apiSrc = opts.apiSrc || YT_API_SRC;
+  const loadApi = typeof opts.loadApi === 'function' ? opts.loadApi : () => loadIframeApi({ src: apiSrc, waitMs: loadMs });
+  const FRAME_HOST = 'www.youtube-nocookie.com';
+  let readyTimer = null, retryTimer = null, cantSaid = false, errorSaid = false, gen = 0;
+  const watched = new Set();          // the hosts this player told the page's load line about
+  function cantLoad(reach, whereHost) {
+    if (destroyed || ready) return;
+    // Said on every failed try, not only the first: another panel taken away may have taken the page's line back, and
+    // this one is still failing. (A line somebody closed stays closed for the same host: load_watch.js.)
+    if (whereHost) { watched.add(whereHost); loadWatch('report', whereHost); }
+    if (!cantSaid) { cantSaid = true; try { onCantLoad?.(reach); } catch (e) { console.error('youtube: onCantLoad', e); } }
+    scheduleRetry();
+  }
+  function scheduleRetry() {
+    if (destroyed || ready || retryTimer != null) return;
+    retryTimer = T(() => { retryTimer = null; tryAgain(); }, retryMs);
+  }
+  function tryAgain() {
+    if (destroyed || ready) return;
+    if (retryTimer != null) { C(retryTimer); retryTimer = null; }
+    if (readyTimer != null) { C(readyTimer); readyTimer = null; }
+    // A player whose frame never said ready is thrown away and made fresh: its frame was refused or hung.
+    if (player) { try { player.destroy?.(); } catch { /* gone */ } player = null; }
+    host.replaceChildren();
+    start();
+  }
+  // Back on a network: try now rather than at the next 30 s.
+  const onOnline = () => { if (cantSaid && !ready) tryAgain(); };
+  try { window.addEventListener('online', onOnline); } catch { /* no window */ }
+  function loaded() {
+    if (readyTimer != null) { C(readyTimer); readyTimer = null; }
+    if (retryTimer != null) { C(retryTimer); retryTimer = null; }
+    for (const h of watched) loadWatch('recovered', h);
+    watched.clear();
+    errorSaid = false;
+    if (cantSaid) { cantSaid = false; try { onLoaded?.(); } catch (e) { console.error('youtube: onLoaded', e); } }
+  }
 
-          if (e.data === YT.PlayerState.ENDED) onEnded?.();
-          else if (e.data === YT.PlayerState.PLAYING) onPlaying?.();   // disarms the watchdog
-          // PAUSED / BUFFERING: stopped, and nothing in the product can press play. Hand it
-          // up so the module can re-arm the watchdog it disarmed when this started playing.
-          else if (e.data === YT.PlayerState.PAUSED) onIdle?.('paused');
-          else if (e.data === YT.PlayerState.BUFFERING) onIdle?.('buffering');
-          // CUED is how a cued PLAYLIST announces itself: getPlaylist() is empty until now.
-          // We only ever want the ids — the weighted picker chooses what actually plays, so
-          // the playlist is a SOURCE of videos, not the running order.
-          else if (e.data === YT.PlayerState.CUED) {
-            // A list cued again later (a daypart change) is handed over again; `takeList` above covers the first.
-            try { const l = player.getPlaylist?.(); if (l && l.length && curId === null) onPlaylist?.(l); } catch { /* not a list */ }
-          }
+  function start() {
+    const mine = ++gen;
+    const slot = document.createElement('div');
+    host.append(slot);
+    loadApi().then((YT) => {
+      if (destroyed || mine !== gen) return;
+      // The frame never saying ready looks the same refused or hung, so the reason is left open (null): both are named.
+      readyTimer = T(() => { readyTimer = null; if (mine === gen && !ready) cantLoad(null, FRAME_HOST); }, loadMs);
+      player = new YT.Player(slot, {
+        host: 'https://www.youtube-nocookie.com',
+        width: '100%', height: '100%',
+        playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, ...(wantMuted ? { mute: 1 } : {}),
+          // Row 2.156: `opts.controls === false` (or a getter giving false) turns YouTube's own controls off; every other
+          // caller leaves it out and keeps them. Read here, when the API has loaded, so a panel's saved setting is in.
+          ...(controlsWanted() ? {} : { controls: 0 }) },
+        events: {
+          onReady: () => {
+            if (destroyed || mine !== gen) return;   // a player given up on and replaced (row 2.148)
+            ready = true;
+            loaded();      // row 2.148: it loaded after all - the panel's and the page's line take themselves back
+            applyMute();   // livecams
+            if (pendingList) { cueListNow(pendingList); pendingList = null; }
+            else if (pending) { if (pendingCue) player.cueVideoById(pending); else loadNow(pending, pendingStart); pending = null; pendingCue = false; pendingStart = 0; }
+          },
+          onStateChange: (e) => {
+            ytState = e.data;                                            // watching along: `playing()` reads it
+            // (row 2.99) A cued list hands over its ids on whichever state first has them; a first video YouTube started
+            // by itself is stopped there, and is not reported as this module's video playing or stopping.
+            if (listWanted && takeList(e.data)) return;
+            if (listWanted && curId === null && (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING)) return;
+
+            if (e.data === YT.PlayerState.ENDED) onEnded?.();
+            else if (e.data === YT.PlayerState.PLAYING) onPlaying?.();   // disarms the watchdog
+            // PAUSED / BUFFERING: stopped, and nothing in the product can press play. Hand it
+            // up so the module can re-arm the watchdog it disarmed when this started playing.
+            else if (e.data === YT.PlayerState.PAUSED) onIdle?.('paused');
+            else if (e.data === YT.PlayerState.BUFFERING) onIdle?.('buffering');
+            // CUED is how a cued PLAYLIST announces itself: getPlaylist() is empty until now.
+            // We only ever want the ids — the weighted picker chooses what actually plays, so
+            // the playlist is a SOURCE of videos, not the running order.
+            else if (e.data === YT.PlayerState.CUED) {
+              // A list cued again later (a daypart change) is handed over again; `takeList` above covers the first.
+              try { const l = player.getPlaylist?.(); if (l && l.length && curId === null) onPlaylist?.(l); } catch { /* not a list */ }
+            }
+          },
+          onError: (e) => { if (mine === gen) onError?.(e?.data); },
         },
-        onError: (e) => onError?.(e?.data),
-      },
+      });
+    }).catch((err) => {
+      if (destroyed || mine !== gen) return;
+      // The script was refused or never came: said, and tried again. `onError` once per stretch, as it always was.
+      cantLoad(err && err.reach ? err.reach : null, hostOf(apiSrc));
+      if (!errorSaid) { errorSaid = true; onError?.(err); }
     });
-  }).catch((err) => onError?.(err));
+  }
+  start();
 
   return {
     // `start` (seconds, optional): where to begin - a follow page joining a video part-way through (row 2.79).
@@ -656,7 +778,18 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
     // livecams (row 2.69): sound off (true) or on (false); kept until the player is ready.
     setMuted(on) { if (destroyed) return; wantMuted = !!on; muteAsked = true; applyMute(); },
     stop() { pending = null; curId = null; try { player?.stopVideo?.(); } catch { /* not ready */ } },
-    destroy() { destroyed = true; pending = null; stopListPoll(); try { player?.destroy?.(); } catch { /* noop */ } host.remove(); },
+    destroy() {
+      destroyed = true; pending = null; stopListPoll();
+      if (readyTimer != null) { C(readyTimer); readyTimer = null; }
+      if (retryTimer != null) { C(retryTimer); retryTimer = null; }
+      try { window.removeEventListener('online', onOnline); } catch { /* no window */ }
+      // A panel taken away no longer needs YouTube: it does not leave the page's line saying so on its behalf.
+      for (const h of watched) loadWatch('recovered', h);
+      watched.clear();
+      try { player?.destroy?.(); } catch { /* noop */ } host.remove();
+    },
+    /** Row 2.148: true while the player has not loaded and has said it could not (for a panel or a suite). */
+    cantLoad: () => cantSaid && !ready,
   };
 }
 
@@ -1073,6 +1206,22 @@ registerModule(
       if (!s) return;
       s.hidden = !text;
       if (text) s.textContent = text;
+    }
+
+    // *** YOUTUBE'S PLAYER COULD NOT LOAD HERE (row 2.148, Mike 2026-10-28: "ad blockers have broken Nimrod before"). ***
+    // Before this the panel sat empty, or said "Still loading" for ever, with nothing to say why. Now it says, in a
+    // line of its own along the bottom of the panel (so the stall line above it still says what the watchdog is
+    // doing), that something on this device or network stopped YouTube's player, and what to try. A LINE, NOT A GATE:
+    // nothing on it is pressed, nothing waits on it, it covers no button, and it goes by itself the moment the player
+    // loads (the player tries again every YT_RETRY_MS on its own). `reach` is outside_reach.js's guess at why;
+    // false takes the line away.
+    function sayCantLoad(reach) {
+      const el = mount.querySelector('[data-yt-reach]');
+      if (!el) return;
+      if (reach === false) { el.hidden = true; el.textContent = ''; return; }
+      el.textContent = `${cantReachWords('YouTube’s player', { host: 'youtube.com and youtube-nocookie.com', trouble: reach || null })} `
+        + 'It keeps trying by itself.';
+      el.hidden = false;
     }
 
     // ---- presets: which playlist/schedule/shuffle is actually IN FORCE -----------------
@@ -1581,6 +1730,7 @@ registerModule(
             <div class="yt-start" data-start-host hidden></div>
             <div class="held" data-held hidden>Paused</div>
             <div class="status" data-status hidden></div>
+            <div class="yt-reach" data-yt-reach role="status" hidden></div>
             <div class="nav" data-nav hidden>
               <button class="ybtn" data-prev aria-label="previous video">‹</button>
               <span class="yt-label" data-label></span>
@@ -1777,6 +1927,9 @@ registerModule(
           },
           onPlaying,
           onIdle,
+          // Row 2.148: the player could not load - said on the panel, and taken back when it does (see `sayCantLoad`).
+          onCantLoad: (reach) => sayCantLoad(reach),
+          onLoaded: () => sayCantLoad(false),
         }, { controls: () => !!cfg.ytControls });   // row 2.156: YouTube's own controls, off unless asked for
 
         // Join the music group once the player exists to enact a level on. VIDEO PRIORITY, so

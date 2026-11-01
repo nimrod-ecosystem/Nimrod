@@ -263,6 +263,11 @@
 .youtube .stage iframe{width:100%;height:100%;border:0;display:block}
 .youtube .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
   color:var(--on-dark);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
+/* Row 2.148: "YouTube's player could not load here" - a line along the bottom of the panel, over the empty stage,
+   never in the way: nothing on it to press and clicks go through it. It goes by itself when the player loads. */
+.youtube .yt-reach{position:absolute;left:8px;right:8px;bottom:8px;z-index:2;padding:8px 12px;border-radius:8px;
+  color:var(--on-dark);background:rgba(10,51,35,.9);font-size:.95rem;line-height:1.35;text-align:center;pointer-events:none}
+.youtube .yt-reach[hidden]{display:none}
 /* *** YOUTUBE KEEPS ITS OWN CONTROLS. IT IS THE ONLY WAY TO CHOOSE A VIDEO. ***
  *
  * G13, Mike off the live site: *"YouTube's overlay covers everything on hover and there is no

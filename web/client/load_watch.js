@@ -39,10 +39,23 @@
       + ' may not play.' + ' If this browser or your network blocks ads, allowing ' + hosts.join(' and ') + ' may fix it.';
   }
 
+  // WHAT A CLOSE WAS FOR (2026-11-01). A panel that keeps trying by itself (YouTube's player, every 30 s) fails again
+  // the same way each time; a line somebody closed must not come back for the SAME trouble on every try. It comes back
+  // only for something new: another host, or this page's own files.
+  var closed = { own: false, outside: {} };
+  function anythingNew() {
+    if (state.own && !closed.own) return true;
+    for (var h in state.outside) if (state.outside.hasOwnProperty(h) && !closed.outside[h]) return true;
+    return false;
+  }
+
   var bar = null;
+  function hide() { if (bar && bar.parentNode) bar.parentNode.removeChild(bar); bar = null; }
   function show() {
     var text = words();
-    if (!text || !document.body) return;
+    if (!text) { hide(); return; }
+    if (!document.body) return;
+    if (!bar && !anythingNew()) return;
     if (!bar) {
       bar = document.createElement('div');
       bar.setAttribute('data-load-watch', '');
@@ -59,7 +72,11 @@
       close.textContent = 'Close';
       close.setAttribute('data-load-watch-close', '');
       close.style.cssText = 'min-height:40px;padding:4px 12px;border-radius:8px;font:inherit;cursor:pointer';
-      close.addEventListener('click', function () { if (bar && bar.parentNode) bar.parentNode.removeChild(bar); bar = null; });
+      close.addEventListener('click', function () {
+        closed.own = closed.own || state.own;
+        for (var h in state.outside) if (state.outside.hasOwnProperty(h)) closed.outside[h] = true;
+        hide();
+      });
       bar.appendChild(p);
       bar.appendChild(close);
       document.body.appendChild(bar);
@@ -84,7 +101,25 @@
     else document.addEventListener('DOMContentLoaded', show);
   }, true);
 
+  function later() { if (document.body) show(); else document.addEventListener('DOMContentLoaded', show); }
+
   // For a page or a suite: the words it would show now, and showing them.
   state.words = words;
   state.show = show;
+  // FOR A PANEL THAT FOUND OUT ANOTHER WAY (2026-11-01, row 2.148). Not every outside load is a <script> with an error
+  // event: YouTube's player is a frame that, blocked, simply never says it is ready, and its script can hang rather than
+  // fail. The panel that noticed says so here, so the page's one line covers it too.
+  state.report = function (host) {
+    if (!host) return;
+    state.outside[String(host)] = true;
+    later();
+  };
+  // ...and when it loads after all (the blocker allowed it, the network came back), the line takes it back by itself:
+  // nobody has to be there to press Close.
+  state.recovered = function (host) {
+    if (!host || !state.outside[String(host)]) return;
+    delete state.outside[String(host)];
+    delete closed.outside[String(host)];
+    if (bar) show();
+  };
 })();

@@ -48,7 +48,7 @@ import { createProfilesClient } from '../profile.js';
 import { mountModule, getManifest } from '../module.js';
 import { fieldsFor, displayValue } from '../settings_fields.js';
 import { pressControls, checkHiddenHides } from './press_controls.js';
-import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos, SETTINGS, createYtPlayer, LIST_POLL_MS } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
+import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos, SETTINGS, createYtPlayer, LIST_POLL_MS, YT_LOAD_MS, YT_RETRY_MS, forgetIframeApiForTest } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
 import { createPresetLibrary } from '../presets.js';
 import { PLAY_STATE_TOPIC } from '../game_start.js';
 
@@ -1212,6 +1212,115 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       check('*** a player that says nothing: the list is still handed over (a short poll) ***', got.lists.length === 2, JSON.stringify(got.lists.length));
       p.destroy(); hostY.remove();
       if (hadYT) window.YT = hadYT; else delete window.YT;
+    }
+
+    // ── ROW 2.148 (Mike, 2026-10-28: "ad blockers have broken Nimrod before"). YouTube's player could not load - its
+    // script refused (uBlock, AdGuard, Brave, Pi-hole), or its frame never ready - and the panel sat empty. Now: said,
+    // tried again by itself, and taken back when it loads. The REAL player wrapper, with the waits shortened.
+    {
+      check('the waits, argued in youtube.js: 12 s to load (the API script\'s own existing wait), 30 s between tries',
+        YT_LOAD_MS === 12000 && YT_RETRY_MS === 30000);
+      const hadYT = window.YT;
+      const hadLW = window.__nimrodLoadWatch;
+      const lw = { report: [], recovered: [] };
+      window.__nimrodLoadWatch = { report: (h) => lw.report.push(h), recovered: (h) => lw.recovered.push(h) };
+      const until = async (f, ms = 4000) => { const t0 = Date.now(); while (!f() && Date.now() - t0 < ms) await sleep(20); return f(); };
+      try {
+        // 1. The script refused: the real loader, pointed at an address that refuses at once.
+        // (Earlier checks on this page may have loaded the real API from YouTube; it is forgotten for this one.)
+        try { window.YT = undefined; } catch { /* fine */ }
+        forgetIframeApiForTest();
+        const g = { cant: [], loaded: 0, err: 0, calls: [] };
+        const hA = document.createElement('div'); document.body.append(hA);
+        const pA = createYtPlayer(hA, { onCantLoad: (r) => g.cant.push(r), onLoaded: () => { g.loaded += 1; }, onError: () => { g.err += 1; } },
+          { apiSrc: 'http://127.0.0.1:9/iframe_api', loadMs: 3000, retryMs: 150 });
+        pA.load('aaaaaaaaaaa');
+        await until(() => g.cant.length > 0);
+        check('*** a refused YouTube script is SAID (onCantLoad, "stopped": a blocker or the network), not a silent empty panel ***',
+          g.cant.length === 1 && g.cant[0] === 'stopped' && pA.cantLoad() === true, JSON.stringify(g));
+        check('...and the page’s load line hears which host (load_watch.js `report`)', lw.report.includes('127.0.0.1:9'), JSON.stringify(lw));
+        const before = document.querySelectorAll('script[src*="127.0.0.1:9"]').length;
+        await sleep(700);
+        check('*** it keeps trying by itself, and says so ONCE, with ONE onError (what callers already did with it) ***',
+          g.cant.length === 1 && g.err === 1 && lw.report.filter((h) => h === '127.0.0.1:9').length >= 3, JSON.stringify({ g, n: lw.report.length }));
+        check('a refused script is taken off the page each time (nothing piles up)', document.querySelectorAll('script[src*="127.0.0.1:9"]').length <= before + 1);
+        // The blocker is lifted: YouTube's API is there at the next try, and the video asked for meanwhile plays.
+        window.YT = { PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 },
+          Player: class { constructor(h, o) { this.o = o; setTimeout(() => o.events.onReady(), 0); }
+            loadVideoById(id) { g.calls.push(typeof id === 'string' ? id : id.videoId); } destroy() {} } };
+        await until(() => g.loaded > 0, 2000);
+        check('*** allowed again: it loads at the next try, with no press, says so (onLoaded), and the waiting video plays ***',
+          g.loaded === 1 && pA.cantLoad() === false && g.calls[0] === 'aaaaaaaaaaa', JSON.stringify(g));
+        check('...and the page’s line is taken back by itself (load_watch.js `recovered`)', lw.recovered.includes('127.0.0.1:9'), JSON.stringify(lw));
+        pA.destroy(); hA.remove();
+
+        // 2. The script is fine but the player's own frame never says ready (a blocked youtube-nocookie.com frame).
+        const made = [];
+        let readyNow = false;
+        window.YT = { PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 },
+          Player: class { constructor(h, o) { this.o = o; this.dead = false; made.push(this); if (readyNow) setTimeout(() => o.events.onReady(), 0); }
+            loadVideoById() {} destroy() { this.dead = true; } } };
+        const g2 = { cant: [], loaded: 0, err: 0 };
+        const hB = document.createElement('div'); document.body.append(hB);
+        const pB = createYtPlayer(hB, { onCantLoad: (r) => g2.cant.push(r), onLoaded: () => { g2.loaded += 1; }, onError: () => { g2.err += 1; } },
+          { loadMs: 100, retryMs: 100 });
+        await until(() => g2.cant.length > 0, 1000);
+        check('*** a player frame that never says ready, within the wait, is SAID (cause left open: both are named) ***',
+          g2.cant.length === 1 && g2.cant[0] === null && lw.report.includes('www.youtube-nocookie.com'), JSON.stringify({ g2, lw }));
+        await until(() => made.length >= 2, 1000);
+        check('...a stuck player is thrown away and made fresh at the next try', made.length >= 2 && made[0].dead === true);
+        check('no onError for a frame that never loaded: the stopped-video watchdog already covers it, as before', g2.err === 0);
+        readyNow = true;
+        await until(() => g2.loaded > 0, 1500);
+        check('*** ...and once it does load, the panel hears so and the page’s line is taken back ***',
+          g2.loaded === 1 && pB.cantLoad() === false && lw.recovered.includes('www.youtube-nocookie.com'), JSON.stringify({ g2, lw }));
+        pB.destroy(); hB.remove();
+
+        // 3. A script that never came is "slow" (the network, or a filter that drops), not a blocker.
+        const g3 = { cant: [] };
+        const hC = document.createElement('div'); document.body.append(hC);
+        const pC = createYtPlayer(hC, { onCantLoad: (r) => g3.cant.push(r) },
+          { loadApi: () => Promise.reject(Object.assign(new Error('YouTube IFrame API timeout'), { reach: 'slow' })), retryMs: 100000 });
+        await until(() => g3.cant.length > 0, 1000);
+        check('a script that never came is said as "slow"', g3.cant[0] === 'slow', JSON.stringify(g3));
+        pC.destroy(); hC.remove();
+      } finally {
+        if (hadYT) window.YT = hadYT; else { try { window.YT = undefined; } catch { /* fine */ } }
+        if (hadLW) window.__nimrodLoadWatch = hadLW; else delete window.__nimrodLoadWatch;
+      }
+
+      // 4. THE PANEL: the line, in plain words; not a gate; gone by itself.
+      const mem = (seed) => {
+        let d = { ...seed }; const subs = new Set();
+        return { load: async () => d, get: () => d, set: (p) => { d = { ...d, ...p }; subs.forEach((f) => f(d)); return Promise.resolve(); },
+          subscribe: (f) => { subs.add(f); f(d); return () => subs.delete(f); }, flush: () => Promise.resolve(), startPolling() {}, destroy() {} };
+      };
+      const evs = () => ({ load: async () => {}, get: () => ({ events: [], total: 0 }), append: async () => {}, subscribe: () => () => {}, startPolling() {}, destroy() {} });
+      let hh = {};
+      const asked = [];
+      const factory = (_m, h) => { hh = h || {}; return { load: (id) => asked.push(id), cue() {}, cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {} }; };
+      const hP = document.createElement('div'); document.getElementById('host').append(hP);
+      const b = createBus();
+      const inst = mountModule('youtube', { mount: hP, bus: b, state: mem({ playlist: PLAYLIST.slice(0, 3) }), events: evs(),
+        user: USER, instanceId: 'yt-reach', playerFactory: factory });
+      inst.init();
+      await sleep(30);
+      const line = () => hP.querySelector('[data-yt-reach]');
+      check('nothing is said while nothing has gone wrong', !!line() && line().hidden === true);
+      hh.onCantLoad?.('stopped');
+      const words = line().textContent;
+      check('*** the panel SAYS it: YouTube’s player, an ad or privacy blocker or the network, what to allow, and that it keeps trying ***',
+        line().hidden === false && /^YouTube’s player could not be reached/.test(words) && /ad or privacy blocker/.test(words)
+        && /internet may be down/.test(words) && /youtube\.com/.test(words) && /keeps trying by itself/.test(words), words);
+      check('its words name nobody', !/her screen|cici/i.test(words));
+      check('*** NOT A GATE: nothing on it to press, and the panel still answers (next asks for another video) ***',
+        !line().querySelector('button,a,input') && (b.publish('youtube/next'), asked.length >= 2), JSON.stringify(asked));
+      hh.onCantLoad?.('offline');
+      check('no network at all: said as that, with no blocker blamed', /not connected to the internet/.test(line().textContent) && !/blocker/.test(line().textContent),
+        line().textContent);
+      hh.onLoaded?.();
+      check('*** it loaded: the line goes by itself, nobody has to press anything ***', line().hidden === true && line().textContent === '');
+      inst.destroy(); hP.remove();
     }
 
   } catch (e) {
