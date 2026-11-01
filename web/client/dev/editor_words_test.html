@@ -319,6 +319,42 @@ try {
   check('*** closed: the window no longer takes presses on words ***', demoPresses === 1 && !document.documentElement.hasAttribute('data-se-words-shown'));
 
   // ============================================================================================
+  // ROW 2.145 STEP 5C: one of the site's owners saves this page's word changes as the site default (queued for Code).
+  section('*** step 5c: an owner saves the words as the site default; everybody else copies them ***');
+  {
+    const until = async (fn, ms = 4000) => { const end = Date.now() + ms; while (Date.now() < end) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(20); } return false; };
+    clean();
+    const sentWords = [];
+    let answer = { ok: true, status: 200, data: { ok: true }, why: '' };
+    const client = { saveWords: async (rows) => { sentWords.push(rows); return answer; }, save: async () => answer,
+      list: async () => answer, withdraw: async () => answer };
+    const eo = t.open({ words: true, owner: true, siteDefaults: { client } });
+    eo.choose(startId);
+    eo.useWords('Begin the game');
+    check('*** an owner: "Save as the site default (1)" where "Copy changes" was, and the help says it waits for the next update ***',
+      sec(eo, 'w')?.querySelector('[data-se-w="save"]')?.textContent === 'Save as the site default (1)' && !sec(eo, 'w').querySelector('[data-se-w="copy"]')
+      && (eo.el.querySelector('[data-se-help]')?.textContent || '') === EDITOR_WORDS.siteWordsHelpOwner);
+    answer = { ok: false, status: 400, data: { detail: 'Words are saved as plain text on one line.' }, why: 'Words are saved as plain text on one line.' };
+    sec(eo, 'w').querySelector('[data-se-w="save"]').click();
+    check('*** a refusal is said plainly, and the suggestion is KEPT ***', await until(() => (eo.el.querySelector('[data-se-status]')?.textContent || '') === 'Words are saved as plain text on one line.')
+      && readChanges().length === 1);
+    answer = { ok: true, status: 200, data: { ok: true }, why: '' };
+    sec(eo, 'w').querySelector('[data-se-w="save"]').click();
+    check('*** saved: this page’s changes were sent as rows of { page, old, new } ***', await until(() => sentWords.length === 2)
+      && J(sentWords[1]) === J([{ page: location.pathname, old: 'Start the game', new: 'Begin the game' }]), J(sentWords));
+    check('*** ...the suggestions here are done (out of the draft list), and it says it reaches the site with the next update ***',
+      await until(() => readChanges().length === 0) && (eo.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.wordsSaved);
+    eo.close();
+    // The words as they were on the page, for what follows (saved, the new words stay shown until the site has them).
+    t.w('[data-go]').textContent = 'Start the game';
+    t.w('[data-go]').removeAttribute('data-wording-changed');
+    const en = t.open({ words: true, siteDefaults: { client } });
+    en.choose(startId);
+    check('not an owner: "Copy changes" as before, no Save', !!sec(en, 'w')?.querySelector('[data-se-w="copy"]') && !sec(en, 'w').querySelector('[data-se-w="save"]'));
+    en.close();
+  }
+
+  // ============================================================================================
   section('the pure parts');
   check('shortWords cuts at 40 with …', shortWords('x'.repeat(50)).length === 40 && shortWords('x'.repeat(50)).endsWith('…') && shortWords(' a  b ') === 'a b');
   check('withoutWordingParam: taken out, the rest kept; nothing to take out, the same string',

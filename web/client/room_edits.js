@@ -203,11 +203,16 @@ export function addOptions() {
 // under the same keys"): `{ format: 'nimrod-defaults', version: 1, made, rooms: { <preset>: <recipe> } }`, merged into
 // nimrod_defaults.js. Its starting room's name when it has one; a room with no preset is offered as a new one, `myRoom`.
 const ID_RE = /^[A-Za-z_$][\w$]*$/;
+/** The room as one site default (row 2.145 step 5c: an owner's "Save as the site default", site_defaults.js):
+ *  `{ kind: 'rooms', path: [<preset>], body }`, every piece with its id. The same name rule as `presetText`. PURE. */
+export function presetEntry(recipe, { preset = '' } = {}) {
+  return { kind: 'rooms', path: [ID_RE.test(String(preset || '')) ? preset : 'myRoom'], body: withIds(recipe) };
+}
 /** The room as a nimrod_defaults entry (JSON text), saying in `made` when and from which dashboard. PURE. */
 export function presetText(recipe, { preset = '', from = '', date = '' } = {}) {
-  const name = ID_RE.test(String(preset || '')) ? preset : 'myRoom';
+  const { path, body } = presetEntry(recipe, { preset });
   const made = [date, from ? `rearranged on the dashboard "${String(from).replace(/[\r\n]+/g, ' ')}"` : ''].filter(Boolean).join(', ');
-  return defaultsEntry('rooms', [name], withIds(recipe), { made });
+  return defaultsEntry('rooms', path, body, { made });
 }
 
 /**

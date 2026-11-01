@@ -329,6 +329,9 @@ registerModule(
           { id: 'putBack', label: 'Put the scene back', note: 'as it comes, every change undone', run: () => { putBack(); } },
           { id: 'default', label: 'Copy as the default', note: 'this scene, ready to become a starting scene', run: () => { copyDefault(); } },
         ],
+        // (row 2.145 step 5c) This scene as a site default, for an owner's "Save as the site default" in the one editor:
+        // the same entry "Copy as the default" copies (nimrod_defaults.js `village`, [scene]).
+        siteDefault: () => (current ? { kind: 'village', path: [VILLAGE_SCENES[cfg.scene] ? cfg.scene : 'village'], body: ownRecipe(current) } : null),
       };
     }
     function arm() {

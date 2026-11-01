@@ -25,12 +25,67 @@
 // NEVER SHOWN AS CHANGED, never put back from here: a read-only row (it is changed somewhere else), and a SECRET (a key,
 // a pass phrase: its default is "none", so putting it back would delete somebody's key -- that has its own Remove).
 
+//
+// *** SAVING AS THE SITE DEFAULT (step 5c): ONLY THE SITE'S OWNERS, AND ONLY QUEUED. *** An owner (/api/me `site_owner`:
+// web/server/site_owner.py, NIMROD_SITE_OWNERS; a screen's key alone never is one) gets "Save as the site default" in the
+// editor. It does NOT change the site: the server checks the entry again and keeps it waiting (web/server/
+// site_defaults.py); "Copy the saved defaults" copies what is waiting as one text, and Code applies it
+// (web/tools/apply_site_defaults.py) and commits it. Visitors and every screen see nothing until that is deployed.
+// `createSiteDefaultsClient` below is the small fetch wrapper; every answer it gives is { ok, status, data, why }, `why`
+// being the server's own sentence when it refused (a 403 says plainly that only the site's owners can).
+// The kinds a thing saves as are nimrod_defaults.js's: a room (`rooms`, [preset]), a village scene (`village`, [scene]),
+// a Town place (`town`, [deck, place]) -- each module says its own (the edit-mode contract's `siteDefault()`) -- and the
+// site's words (`words`, rows of { page, old, new }).
+
 import { fieldValue } from './settings_fields.js';
+import { authHeaders } from './auth.js';
+
+export const SITE_DEFAULTS_API = '/api/site-defaults';
 
 export const SITE_DEFAULT_WORDS = Object.freeze({
   changed: 'Changed from the site default',
   putBack: 'Put back the site default',
+  save: 'Save as the site default',
+  saved: 'Saved. It reaches the site with the next update.',
+  saving: 'Saving…',
+  copyAll: 'Copy the saved defaults',
+  tidy: 'Take out the ones the site has now',
+  notSaved: 'It could not be saved just now. Nothing was changed.',
 });
+
+/** Whether /api/me's answer says this person is one of the site's owners. PURE. False on any doubt. */
+export const ownerFrom = (me) => !!me && typeof me === 'object' && me.site_owner === true;
+
+/**
+ * The outbox, over HTTP. `fetchImpl` and `headers` are seams (the suites hand in fakes; the default is the page's own
+ * fetch with the site's own auth headers). Never throws: every call resolves { ok, status, data, why }.
+ *   save({ kind, path, body })   one default (a room, a village scene, a Town place)
+ *   saveWords(rows)              the site's words: [{ page, old, new }]
+ *   list()                       what is waiting: { saves: [{ id, kind, path, at, in_site }], copy }
+ *   withdraw(id)                 take one out
+ */
+export function createSiteDefaultsClient({ fetchImpl = (...a) => globalThis.fetch(...a), headers = () => authHeaders() } = {}) {
+  async function call(method, url, body) {
+    try {
+      const h = { ...(safeHeaders(headers)), ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) };
+      const r = await fetchImpl(url, { method, headers: h, credentials: 'same-origin', ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+      let data = null;
+      try { data = await r.json(); } catch { data = null; }
+      if (r.ok) return { ok: true, status: r.status, data, why: '' };
+      const why = data && typeof data.detail === 'string' && data.detail ? data.detail : SITE_DEFAULT_WORDS.notSaved;
+      return { ok: false, status: r.status, data, why };
+    } catch {
+      return { ok: false, status: 0, data: null, why: SITE_DEFAULT_WORDS.notSaved };
+    }
+  }
+  return {
+    save: (entry) => call('POST', SITE_DEFAULTS_API, { kind: entry?.kind, path: entry?.path, body: entry?.body }),
+    saveWords: (rows) => call('POST', SITE_DEFAULTS_API, { kind: 'words', rows }),
+    list: () => call('GET', SITE_DEFAULTS_API),
+    withdraw: (id) => call('POST', `${SITE_DEFAULTS_API}/${encodeURIComponent(String(id))}/withdraw`, {}),
+  };
+}
+function safeHeaders(headers) { try { return (typeof headers === 'function' ? headers() : headers) || {}; } catch { return {}; } }
 
 const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
 const present = (values, key) => isObj(values) && Object.prototype.hasOwnProperty.call(values, key)

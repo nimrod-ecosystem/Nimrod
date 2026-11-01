@@ -92,7 +92,9 @@ async function whoami() {
       const u = j.user;
       try { localStorage.setItem(LAST_USER, u); } catch { /* private mode */ }
       // device key: `screen` = let in by this screen's own key, not a person's sign-in (`?pair=key`).
-      return { state: 'in', user: u, screen: j.screen === true };
+      // row 2.145 step 5c: `siteOwner` = one of the site's owners, signed in as a person (never a screen's key alone);
+      // only the one editor reads it, and the server asks again on every save.
+      return { state: 'in', user: u, screen: j.screen === true, siteOwner: j.site_owner === true };
     }
     return { state: 'error' };
   } catch {
@@ -295,7 +297,7 @@ function offerCat(kiosk) {
     const profiles = createProfilesClient({ user: who.user });
     const profileId = await ensureProfile(profiles, who.user, wantProfile);
     // reloadSwitch (row 2.89, screen_switch.js): a person changing dashboard gets the dashboards page's own load.
-    const kiosk = await mountKiosk(root, { user: who.user, profileId, profiles, reloadSwitch: true });
+    const kiosk = await mountKiosk(root, { user: who.user, profileId, profiles, reloadSwitch: true, siteOwner: who.siteOwner === true });
     boot.remove();
     offerTour(kiosk);
   } catch (e) {

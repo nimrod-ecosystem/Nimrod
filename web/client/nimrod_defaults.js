@@ -12,19 +12,35 @@
 // HOW AN ENTRY GETS HERE: "Copy as the default" on a dashboard's room (and the village and town builders' "Designer:
 // change the defaults") copies an entry in this exact shape (`defaultsEntry`); it is pasted to Code and merged in
 // here as a commit. The defaults are code, reviewed like code: the page never writes this file.
+// (row 2.145 step 5c, 2026-10-31) AND FROM THE ONE EDITOR: one of the site's owners presses "Save as the site default"
+// (the server keeps it waiting, web/server/site_defaults.py), then "Copy the saved defaults", and Code runs
+//   py -3.13 web/tools/apply_site_defaults.py <the copied text>
+// which merges every saved entry into the DATA block below and commits nothing itself: Code reads the change and commits.
 
 export const DEFAULTS_FORMAT = 'nimrod-defaults';
 export const DEFAULTS_VERSION = 1;
 export const DEFAULT_KINDS = Object.freeze(['rooms', 'town', 'village', 'backdrops']);
 
+// THE DATA, between the two marker lines, is PLAIN JSON and nothing else: web/tools/apply_site_defaults.py merges a saved
+// entry into it and writes it back (keys sorted, two spaces), and the server reads it to say which saved entries are in
+// the site now (web/server/site_defaults.py read_block). Edit it by hand only as JSON.
+const DATA = (
+// nimrod-defaults:begin
+{
+  "backdrops": {},
+  "made": "",
+  "rooms": {},
+  "town": {},
+  "village": {}
+}
+// nimrod-defaults:end
+);
+
 export const NIMROD_DEFAULTS = Object.freeze({
   format: DEFAULTS_FORMAT,
   version: DEFAULTS_VERSION,
-  made: '',
-  rooms: {},
-  town: {},
-  village: {},
-  backdrops: {},
+  made: String(DATA.made || ''),
+  ...Object.fromEntries(DEFAULT_KINDS.map((k) => [k, DATA[k] && typeof DATA[k] === 'object' && !Array.isArray(DATA[k]) ? DATA[k] : {}])),
 });
 
 const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);

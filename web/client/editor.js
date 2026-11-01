@@ -46,6 +46,13 @@
 //     is one step the toolbar's Undo takes back (the settings have no other history).
 //   * the site's words: a suggestion is "Changed from the site default"; its button is "Put back the site default".
 // Nothing here changes what anybody else sees: the site's defaults are the code.
+// *** STEP 5C: THE SITE'S OWNERS SAVE, AND IT IS ONLY QUEUED. *** For an owner (`owner`, /api/me `site_owner`; a screen's
+// key alone never is one), a room, a village scene or an open Town place has "Save as the site default" in its Site
+// default section (its module's `siteDefault()`, edit_mode.js contract) -- in place of "Copy as the default", which
+// everybody else keeps -- and the site's words have it in place of "Copy changes" (this page's changes, which then leave
+// the draft list). The dashboard's or page's own row has "Copy the saved defaults" (for Code) and "Take out the ones the
+// site has now". The server checks every save again and keeps it waiting; nothing reaches the site until Code commits it
+// (web/tools/apply_site_defaults.py) and it is deployed. Nothing is fetched when the editor opens; only an owner's press.
 //
 // *** HOW IT SITS ON WHAT IS THERE (nothing underneath it changes). ***
 //   * The selection IS edit mode's. A row chosen here is `arr.editPanel(id, true)` then `arr.editSelect(target)`; a
@@ -68,7 +75,8 @@ import { openDashboardEditor } from './dashboard_editor.js';
 import { renderOptions, ensureEditCss, targetsOf, targetAt, optionRows, EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC } from './edit_mode.js';
 import { displayValue } from './settings_fields.js';
 // (row 2.145 step 5) The site's default and a person's own: pure, no fetch.
-import { SITE_DEFAULT_WORDS, isChanged, changedFields, siteDefaultValue, putBackPatch, putBackAllPatch, undoPatchFor } from './site_defaults.js';
+import { SITE_DEFAULT_WORDS, isChanged, changedFields, siteDefaultValue, putBackPatch, putBackAllPatch, undoPatchFor,
+  createSiteDefaultsClient } from './site_defaults.js';
 import { buildTree, nodeForEditing, nodeIdFor, splitSelection, ROOT_ID } from './editor_targets.js';
 import { preset } from './layout.js';
 // (row 2.145 step 3) The words. wording_edit.js is imported for its shared pieces only (nothing starts on import).
@@ -112,7 +120,7 @@ export const EDITOR_WORDS = Object.freeze({
   wordsTransform: 'Words have no place of their own.',
   siteWordsTitle: 'Site words',
   siteWordsHelp: 'Words the site shows here. A change is a suggestion: it shows here at once, is kept in this browser, and is copied for the site\'s next update. Nothing is saved to the site.',
-  wordsKeys: 'One line, up to 300 letters. Enter keeps them; Escape puts the box back. A switch cannot type here (there is no on-screen keyboard for this yet); "Put back the site default" and "Copy changes" work with one.',
+  wordsKeys: 'One line, up to 300 letters. Enter keeps them; Escape puts the box back. A switch cannot type here (there is no on-screen keyboard for this yet); the buttons below the box work with one.',
   wordsEmpty: 'Type the new words first. To go back to the site’s words, press "Put back the site default".',
   wordsKept: 'Kept as a suggestion, and shown here. "Copy changes" copies it for the site\'s next update.',
   wordsKeptNotShown: 'Kept as a suggestion. These words are not on the screen now, so nothing here changed.',
@@ -141,7 +149,22 @@ export const EDITOR_WORDS = Object.freeze({
   putBackUndone: 'What was there before is back.',
   rootNotMade: 'Not made from a ready-made dashboard: each panel’s settings are compared with how its module comes.',
   wordsChanged: 'Changed from the site default.',
+  // (row 2.145 step 5c) The site's owners: "Save as the site default" (queued for Code; nobody sees it until the site has it).
+  siteDefaultWhole: 'Its site default is the one the site starts with.',
+  siteDefaultWholeOwner: 'Its site default is the one the site starts with. "Save as the site default" keeps this one for the site’s next update: Code puts it in, and nobody sees it until then.',
+  cannotSave: 'This one cannot be saved as the site default.',
+  savedTitle: 'Saved for the site',
+  savedHelp: 'What the site’s owners saved as site defaults waits here for Code to put into the site. Copy it to send to Code; once the site has it, take it out of the list.',
+  noneSaved: 'Nothing is waiting.',
+  tidyNone: 'None of them is in the site yet.',
+  siteWordsHelpOwner: 'Words the site shows here. A change shows here at once and is kept in this browser; "Save as the site default" sends this page’s changes to wait for the site’s next update.',
+  wordsSaved: 'Saved for the site: it reaches the site with the next update. The suggestions here are done.',
+  nothingToSave: 'There is no change kept for this page to save.',
 });
+/** "Copied 2 saved defaults. Send them to Code." (row 2.145 step 5c) */
+export const copiedSaved = (n) => `Copied ${n === 1 ? '1 saved default' : `${n} saved defaults`}. Send them to Code.`;
+/** "Took out 2 that the site has now." (row 2.145 step 5c) */
+export const tidied = (n) => `Took out ${n} that the site has now.`;
 /** "2 settings here are changed from the site default." (row 2.145 step 5) */
 export const changedCount = (n) => `${n === 1 ? '1 setting here is' : `${n} settings here are`} changed from the site default.`;
 /** The site default's source, for a panel on a dashboard made from a ready-made one (row 2.145 step 5). */
@@ -199,11 +222,15 @@ const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', dupl
  *   siteDefaults (step 5) where this dashboard's site defaults come from (injectable; the kiosk hands it in):
  *               startOf(panelId) -> dashboards.js prebuiltStartOf for this dashboard, or null; madeFrom() -> { key, label }
  *               of the ready-made dashboard it was made from, or null. Absent: every panel's module defaults.
+ *               (5c) client: the outbox (site_defaults.js createSiteDefaultsClient; a suite hands in a fake). Absent: the
+ *               real one, made the first time an owner presses something -- nothing is fetched by opening the editor.
+ *   owner       (5c) this person is one of the site's owners (/api/me `site_owner`): "Save as the site default" and
+ *               "Copy the saved defaults" are drawn. Default false. The server checks again on every save.
  */
 export function openSceneEditor(opts = {}) {
   const { arr = null, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null,
     words: wordsAtOpen = false, clipboard = globalThis.navigator?.clipboard, now = () => new Date(),
-    pageRoot = null, pageTargets = null, list: listAtOpen = true, siteDefaults = null } = opts;
+    pageRoot = null, pageTargets = null, list: listAtOpen = true, siteDefaults = null, owner = false } = opts;
   const pageScope = !arr && !!pageRoot && typeof pageTargets?.tree === 'function';
   if (!arr && !pageScope) throw new Error('openSceneEditor: an arrangement (or a page and its targets) is required');
   const doc = mountIn?.ownerDocument || pageRoot?.ownerDocument || (typeof document !== 'undefined' ? document : null);
@@ -397,6 +424,78 @@ export function openSceneEditor(opts = {}) {
   /** The rows of `sel` shown at the menu's level, as fields: what "N changed" counts and "Put back" puts back. */
   const shownFields = (sel) => safe(() => optionRows(sel, { level: levelNow() }).map((r) => r.field), []) || [];
 
+  // ---- (row 2.145 step 5c) THE SITE'S OWNERS: save as the site default, queued for Code (site_defaults.js) ----
+  let ownerNow = owner === true;
+  let outbox = null;
+  const client = () => outbox || (outbox = siteDefaults?.client || createSiteDefaultsClient());
+  let saveSaid = null;            // { nodeId, text }: the Site default section's own line for the last save
+  /** Save the chosen thing as a whole (a room, a village scene, a Town place) as the site default. */
+  async function saveSiteDefault(node = tree?.nodes.get(selectedId) || null) {
+    if (closed || !node) return false;
+    const defs = safe(() => node.defaults?.(), null);
+    const entry = ownerNow ? safe(() => defs?.saveAs?.(), null) : null;
+    if (!entry) { note(EDITOR_WORDS.cannotSave); return false; }
+    saveSaid = { nodeId: node.id, text: SITE_DEFAULT_WORDS.saving };
+    note(SITE_DEFAULT_WORDS.saving);
+    refreshSiteDefault();
+    const r = await client().save(entry);
+    if (closed) return r.ok;
+    saveSaid = { nodeId: node.id, text: r.ok ? SITE_DEFAULT_WORDS.saved : r.why };
+    note(saveSaid.text);
+    refreshSiteDefault();
+    return r.ok;
+  }
+  /** Save this page's word changes (the draft list's, for this page) as the site default; kept, they leave the list. */
+  async function saveWordsAsDefault() {
+    if (closed || !ownerNow) return false;
+    const rows = readChanges().filter((c) => c.page === page()).map((c) => ({ page: c.page, old: c.old, new: c.new }));
+    if (!rows.length) { note(EDITOR_WORDS.nothingToSave); return false; }
+    note(SITE_DEFAULT_WORDS.saving);
+    const r = await client().saveWords(rows);
+    if (closed) return r.ok;
+    if (!r.ok) { note(r.why); return false; }
+    // Saved for the site: the suggestions here are done (a change back to the original drops it, wording_edit.js).
+    for (const c of rows) recordChange({ page: c.page, old: c.old, now: c.old });
+    note(EDITOR_WORDS.wordsSaved);
+    render();
+    return true;
+  }
+  /** Copy what is waiting (the server's own copy text) for Code. */
+  async function copySaved() {
+    if (closed || !ownerNow) return null;
+    const r = await client().list();
+    if (closed) return null;
+    if (!r.ok) { note(r.why); return null; }
+    const saves = Array.isArray(r.data?.saves) ? r.data.saves : [];
+    if (!saves.length) { note(EDITOR_WORDS.noneSaved); return ''; }
+    const text = String(r.data?.copy || '');
+    try {
+      if (!clipboard?.writeText) throw new Error('no clipboard');
+      await clipboard.writeText(text);
+      note(copiedSaved(saves.length));
+    } catch { note(EDITOR_WORDS.noCopy); }
+    return text;
+  }
+  /** Take out of the waiting list the ones the site already has (the server marks them `in_site`). */
+  async function tidySaved() {
+    if (closed || !ownerNow) return 0;
+    const r = await client().list();
+    if (closed) return 0;
+    if (!r.ok) { note(r.why); return 0; }
+    const done = (Array.isArray(r.data?.saves) ? r.data.saves : []).filter((s) => s && s.in_site === true);
+    let n = 0;
+    for (const s of done) { const w = await client().withdraw(s.id); if (w.ok) n += 1; }
+    if (!closed) note(done.length ? tidied(n) : EDITOR_WORDS.tidyNone);
+    return n;
+  }
+  function setOwner(v) {
+    const want = v === true;
+    if (closed || want === ownerNow) return ownerNow;
+    ownerNow = want;
+    render();
+    return ownerNow;
+  }
+
   function addInto(panelId) {
     try { arr.editPanel(panelId, true); arr.editSelect(null); } catch (err) { console.error('editor: add', err); return; }
     const b = insEl.querySelector('[data-se-sec="s"] [data-em-focus="addPiece:1"]');
@@ -556,6 +655,8 @@ export function openSceneEditor(opts = {}) {
         }
       }
       head.innerHTML = `<strong class="em-title" data-se-title>${esc(node?.label || (pageScope ? 'This page' : 'This dashboard'))}</strong><p class="em-help" data-se-help>${esc(help)}</p>`;
+      // (5c) The site's owners: what is waiting for Code, on the dashboard's or the page's own row.
+      if (ownerNow && (!node || node.kind === 'dashboard' || node.kind === 'page')) drawSaved();
       return;
     }
     const sel = safe(() => arr.editSelection(), null);
@@ -570,7 +671,10 @@ export function openSceneEditor(opts = {}) {
     // ...then its own settings (and its buttons: Take it out, Copy as the default...).
     // (step 5) Compared with the site's default when they are the panel's own row (node.defaults(), site_defaults.js).
     const defs = safe(() => node.defaults?.(), null);
-    const settings = split.settings;
+    // (5c) For an owner, "Copy as the default" becomes the Site default section's "Save as the site default": the same
+    // entry, kept for Code by the server instead of copied by hand. Everybody else keeps the copy.
+    const settings = ownerNow && typeof defs?.saveAs === 'function' && split.settings
+      ? { ...split.settings, actions: (split.settings.actions || []).filter((a) => a.id !== 'default') } : split.settings;
     const cmp = defs && defs.stateRow && settings ? defs : null;
     const rowDefaults = cmp ? {
       words: SITE_DEFAULT_WORDS,
@@ -597,14 +701,32 @@ export function openSceneEditor(opts = {}) {
   function fillSiteDefault(wrap, node, settings, defs) {
     let text = EDITOR_WORDS.siteDefaultOwnValues;
     let n = 0;
+    // (5c) A thing that is saved as a whole (a room, a village scene, a Town place): its site default is the site's own.
+    const canSave = typeof defs.saveAs === 'function';
     if (defs.stateRow && settings) {
       n = changedFields(shownFields(settings), safe(() => settings.values(), {}) || {}, defs.start).length;
       text = `${defs.from?.label ? madeFromReady(defs.from.label) : EDITOR_WORDS.siteDefaultModule} ${n ? changedCount(n) : EDITOR_WORDS.siteDefaultSame}`;
-    }
+    } else if (canSave) text = ownerNow ? EDITOR_WORDS.siteDefaultWholeOwner : EDITOR_WORDS.siteDefaultWhole;
+    const save = ownerNow && canSave;
+    const said = save && saveSaid && saveSaid.nodeId === node.id ? saveSaid.text : '';
     wrap.innerHTML = `<div class="em-opts" role="group" aria-label="${esc(EDITOR_WORDS.siteDefaultTitle)}">
       <strong class="em-title">${esc(EDITOR_WORDS.siteDefaultTitle)}</strong>
       <p class="em-help" data-se-def-help>${esc(text)}</p>
-      ${n ? `<div class="em-act"><button type="button" class="em-btn" data-se-d="back" data-em-focus="dback">${esc(EDITOR_WORDS.putBackAll)}</button></div>` : ''}</div>`;
+      ${n || save ? `<div class="em-act">${n ? `<button type="button" class="em-btn" data-se-d="back" data-em-focus="dback">${esc(EDITOR_WORDS.putBackAll)}</button>` : ''}${save
+        ? `<button type="button" class="em-btn" data-se-d="save" data-em-focus="dsave">${esc(SITE_DEFAULT_WORDS.save)}</button>` : ''}</div>` : ''}
+      ${said ? `<p class="em-help" role="status" data-se-def-status>${esc(said)}</p>` : ''}</div>`;
+  }
+  /** (5c) The site's owners, on the dashboard's or the page's own row: what is waiting for Code, copied, and tidied. */
+  function drawSaved() {
+    const wrap = doc.createElement('section');
+    wrap.className = 'se-sec';
+    wrap.dataset.seSec = 'o';
+    wrap.innerHTML = `<div class="em-opts" role="group" aria-label="${esc(EDITOR_WORDS.savedTitle)}">
+      <strong class="em-title">${esc(EDITOR_WORDS.savedTitle)}</strong>
+      <p class="em-help">${esc(EDITOR_WORDS.savedHelp)}</p>
+      <div class="em-act"><button type="button" class="em-btn" data-se-d="copyall" data-em-focus="copyall">${esc(SITE_DEFAULT_WORDS.copyAll)}</button>
+        <button type="button" class="em-btn" data-se-d="tidy" data-em-focus="tidy">${esc(SITE_DEFAULT_WORDS.tidy)}</button></div></div>`;
+    insEl.append(wrap);
   }
   /** The "Site default" section drawn again in place (after a value changed in the rows above it). */
   function refreshSiteDefault() {
@@ -642,7 +764,9 @@ export function openSceneEditor(opts = {}) {
     const w = node.words || {};
     const draft = draftFor(w.original);
     const count = readChanges().length;
-    head.innerHTML = `<strong class="em-title" data-se-title>${esc(EDITOR_WORDS.siteWordsTitle)}</strong><p class="em-help" data-se-help>${esc(EDITOR_WORDS.siteWordsHelp)}</p>`;
+    // (5c) An owner saves this page's changes as the site default (queued for Code) where everybody else copies them.
+    const here = readChanges().filter((c) => c.page === page()).length;
+    head.innerHTML = `<strong class="em-title" data-se-title>${esc(EDITOR_WORDS.siteWordsTitle)}</strong><p class="em-help" data-se-help>${esc(ownerNow ? EDITOR_WORDS.siteWordsHelpOwner : EDITOR_WORDS.siteWordsHelp)}</p>`;
     plain('t', 'Transform', EDITOR_WORDS.wordsTransform);
     const wrap = doc.createElement('section');
     wrap.className = 'se-sec';
@@ -657,7 +781,8 @@ export function openSceneEditor(opts = {}) {
       <div class="em-act">
         <button type="button" class="em-btn" data-se-w="use" data-em-focus="use">Use these words</button>
         <button type="button" class="em-btn" data-se-w="back" data-em-focus="back">${esc(SITE_DEFAULT_WORDS.putBack)}</button>
-        <button type="button" class="em-btn" data-se-w="copy" data-em-focus="copy">Copy changes (${count})</button>
+        ${ownerNow ? `<button type="button" class="em-btn" data-se-w="save" data-em-focus="save">${esc(SITE_DEFAULT_WORDS.save)} (${here})</button>`
+          : `<button type="button" class="em-btn" data-se-w="copy" data-em-focus="copy">Copy changes (${count})</button>`}
       </div>
       <p class="em-help" data-se-words-help>${esc(EDITOR_WORDS.wordsKeys)}</p></div>`;
     insEl.append(wrap);
@@ -908,8 +1033,13 @@ export function openSceneEditor(opts = {}) {
   // (step 5) "Put back the site default" for everything changed on the chosen thing (the Site default section).
   insEl.addEventListener('click', (e) => {
     const b = e.target instanceof Element ? e.target.closest('[data-se-d]') : null;
-    if (!b || !insEl.contains(b) || b.dataset.seD !== 'back') return;
+    if (!b || !insEl.contains(b)) return;
     activity();
+    // (5c) The site's owners: save this thing as the site default; copy, or tidy, what is waiting for Code.
+    if (b.dataset.seD === 'save') { saveSiteDefault(); return; }
+    if (b.dataset.seD === 'copyall') { copySaved(); return; }
+    if (b.dataset.seD === 'tidy') { tidySaved(); return; }
+    if (b.dataset.seD !== 'back') return;
     const node = tree?.nodes.get(selectedId) || null;
     const defs = node ? safe(() => node.defaults?.(), null) : null;
     const settings = editingNow() ? splitSelection(safe(() => arr.editSelection(), null)).settings : null;
@@ -926,6 +1056,7 @@ export function openSceneEditor(opts = {}) {
     if (b.dataset.seW === 'use') useWords(node);
     else if (b.dataset.seW === 'back') putBackWords(node);
     else if (b.dataset.seW === 'copy') copyWords();
+    else if (b.dataset.seW === 'save') saveWordsAsDefault();
   });
   insEl.addEventListener('keydown', (e) => {
     const ta = e.target instanceof Element && e.target.matches('[data-se-words]') ? e.target : null;
@@ -1030,6 +1161,14 @@ export function openSceneEditor(opts = {}) {
     useWords: (text = null) => useWords(chosenWords(), text),
     putBackWords: () => putBackWords(chosenWords()),
     copyWords,
+    // (row 2.145 step 5c) The site's owners: whether this person is one (page_editor.js sets it once /api/me answers), and
+    // the saves (each resolves true when the server kept it -- queued for Code, never applied by the page).
+    owner: () => ownerNow,
+    setOwner,
+    saveSiteDefault: () => saveSiteDefault(),
+    saveWords: () => saveWordsAsDefault(),
+    copySaved,
+    tidySaved,
   };
 }
 

@@ -558,6 +558,9 @@ registerModule(
           { id: 'undo', label: 'Undo', run: () => { undoThing(); } },
           { id: 'reset', label: 'Put it back', note: `as the ${themeLabel()} town has it`, run: () => { putBack(); } },
         ] : [],
+        // (row 2.145 step 5c) The open place, as it is now, as a site default (nimrod_defaults.js `town`, [deck, place]),
+        // for an owner's "Save as the site default" in the one editor. Only while a place is open.
+        ...(open ? { siteDefault: () => { const r = recipeNow(); return r && place ? { kind: 'town', path: [deckNow(), place], body: r } : null; } } : {}),
       };
     }
     function editTargets() {

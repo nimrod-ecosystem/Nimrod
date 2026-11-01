@@ -2260,7 +2260,9 @@ export function createArrangement({
       values: () => ({ ...Object.fromEntries(rows().map((x) => [x.key, x.value])), ...(ed ? { addPiece: '' } : {}) }),
       ...(ed ? { actions: [{ id: 'undo', label: 'Undo', run: () => { undoRoom(); } },
         // Step 2 (room_edits.js presetText): the room as a starting room, copied, to go into the site's own rooms.
-        { id: 'default', label: 'Copy as the default', note: 'this room, ready to become a starting room', run: () => { copyRoomDefault(); } }] } : {}),
+        { id: 'default', label: 'Copy as the default', note: 'this room, ready to become a starting room', run: () => { copyRoomDefault(); } }],
+        // (row 2.145 step 5c) The room as a site default, for an owner's "Save as the site default" in the one editor.
+        siteDefault: () => { const scene = roomBase()?.scene || null; return scene && roomEditsLib ? roomEditsLib.presetEntry(sceneRecipe(scene), { preset: scene.preset || '' }) : null; } } : {}),
       set: (patch) => {
         if (!patch) return;
         if (ed && patch.addPiece) { addRoomPiece(patch.addPiece); return; }

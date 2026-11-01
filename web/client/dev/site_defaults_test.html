@@ -20,7 +20,9 @@ under). Pure: no server, no page drawn.</p>
 <div id="summary">running…</div>
 
 <script type="module">
-import { SITE_DEFAULT_WORDS, comparable, siteDefaultValue, isChanged, changedFields, putBackPatch, putBackAllPatch, undoPatchFor } from '../site_defaults.js';
+import { SITE_DEFAULT_WORDS, comparable, siteDefaultValue, isChanged, changedFields, putBackPatch, putBackAllPatch, undoPatchFor,
+  ownerFrom, createSiteDefaultsClient, SITE_DEFAULTS_API } from '../site_defaults.js';
+import { presetEntry } from '../room_edits.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { prebuiltStartOf, prebuiltMadeFrom, prebuiltRecord, PREBUILT_KEY, PREBUILT_REFS_KEY } from '../dashboards.js';
 
@@ -84,6 +86,38 @@ try {
   check('...a panel the maker did not make (added later): null', prebuiltStartOf(doc, 'm9') === null);
   st.state.startPage = 'changed';
   check('...a copy: changing it changes nothing shipped', prebuiltStartOf(doc, 'm2').state.startPage === 'sc-theme');
+
+  section('step 5c: the outbox over HTTP (a fake fetch), and who is an owner');
+  check('*** ownerFrom: only an explicit site_owner true ***', ownerFrom({ site_owner: true }) === true && ownerFrom({ site_owner: 'true' }) === false
+    && ownerFrom({}) === false && ownerFrom(null) === false);
+  const calls = [];
+  let reply = { status: 200, body: { ok: true, saved: 1 } };
+  const fakeFetch = async (url, init) => { calls.push({ url, ...init }); if (reply.throws) throw new Error('offline');
+    return { ok: reply.status < 300, status: reply.status, json: async () => reply.body }; };
+  const cl = createSiteDefaultsClient({ fetchImpl: fakeFetch, headers: () => ({ 'X-Dev-User': 'ownerone' }) });
+  let r = await cl.save({ kind: 'rooms', path: ['theRoom'], body: { items: [] }, extra: 'dropped' });
+  check('*** save: POST /api/site-defaults with { kind, path, body } only, JSON, with the site’s own auth headers ***',
+    r.ok && calls[0].url === SITE_DEFAULTS_API && calls[0].method === 'POST' && calls[0].headers['X-Dev-User'] === 'ownerone'
+    && calls[0].headers['Content-Type'] === 'application/json' && J(JSON.parse(calls[0].body)) === J({ kind: 'rooms', path: ['theRoom'], body: { items: [] } }), J(calls[0]));
+  await cl.saveWords([{ page: '/home', old: 'A', new: 'B' }]);
+  check('saveWords: { kind: words, rows }', J(JSON.parse(calls[1].body)) === J({ kind: 'words', rows: [{ page: '/home', old: 'A', new: 'B' }] }));
+  await cl.list();
+  await cl.withdraw('a b');
+  check('list is a GET; withdraw posts to its own address (the id encoded)', calls[2].method === 'GET' && !calls[2].body
+    && calls[3].url === `${SITE_DEFAULTS_API}/a%20b/withdraw` && calls[3].method === 'POST');
+  reply = { status: 403, body: { detail: 'Only the site’s owners can save the site’s defaults.' } };
+  r = await cl.save({ kind: 'rooms', path: ['x'], body: { a: 1 } });
+  check('*** a refusal: ok false, and `why` is the server’s own sentence ***', !r.ok && r.status === 403 && r.why.startsWith('Only the site’s owners'));
+  reply = { status: 500, body: null };
+  r = await cl.save({ kind: 'rooms', path: ['x'], body: { a: 1 } });
+  check('no sentence from the server: a plain one of its own', !r.ok && r.why === SITE_DEFAULT_WORDS.notSaved);
+  reply = { throws: true };
+  r = await cl.save({ kind: 'rooms', path: ['x'], body: { a: 1 } });
+  check('offline: never throws, says it could not be saved', !r.ok && r.status === 0 && r.why === SITE_DEFAULT_WORDS.notSaved);
+  const pe = presetEntry({ items: [{ kind: 'furniture', part: 'desk', x: 40, y: 80 }] }, { preset: 'theRoom' });
+  check('*** a room as a site default (room_edits.js presetEntry): rooms, [its preset], every piece with an id ***',
+    pe.kind === 'rooms' && J(pe.path) === J(['theRoom']) && pe.body.items.every((it) => typeof it.id === 'string' && it.id), J(pe));
+  check('...a room with no preset name is offered as a new one, myRoom (presetText’s own rule)', J(presetEntry({ items: [] }, { preset: '' }).path) === J(['myRoom']));
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

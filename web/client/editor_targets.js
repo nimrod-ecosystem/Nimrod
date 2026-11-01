@@ -278,6 +278,8 @@ export function splitSelection(sel) {
  *              thing that keeps its own values (a room piece's place, in the room's recipe)
  *   start      the ready-made start's settings for the panel ({} when it has none), or null: the module's own defaults
  *   from       { key, label } of that ready-made dashboard, or null
+ *   saveAs     (5c) () => { kind, path, body } | null when the thing as a whole can be saved as a site default (its
+ *              module's `siteDefault`, edit_mode.js contract), else null
  */
 export function buildTree(arr, { placedModel = null, words = null, startOf = null } = {}) {
   const nodes = new Map();
@@ -355,6 +357,8 @@ export function buildTree(arr, { placedModel = null, words = null, startOf = nul
       stateRow: sel.stateRow !== false,
       start: got && got.state && typeof got.state === 'object' ? got.state : null,
       from: got ? { key: got.key, label: got.label } : null,
+      // (5c) () => { kind, path, body } | null: this thing as a site default (a room, a village scene, a Town place).
+      saveAs: typeof sel.siteDefault === 'function' ? sel.siteDefault : null,
     };
   }
 

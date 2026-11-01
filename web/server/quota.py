@@ -106,6 +106,11 @@ NOT_COUNTED = {
     "pairings": "a code that lives for fifteen minutes while a folder is connected, belonging to no login until used",
     "screen_pairings": "a code that lives for ten minutes while a screen is set up, belonging to no login until used",
     "will": "legacy, unused",
+    # 2026-10-26 (chat's note CV): it was left out of both lists when it was added, and this file's own test said so.
+    "call_outcomes": "two numbers a day for the whole site, with no login on any row",
+    # Row 2.145 step 5c (2026-10-31): web/server/site_defaults.py.
+    "site_default_saves": "the site's own outbox, written only by its owners (NIMROD_SITE_OWNERS) and capped for the "
+                          "whole site (site_defaults.WAITING_MAX); not anybody's own settings",
 }
 
 # The words for each table when a person is told what uses their space (the same words as the "what we keep" list).

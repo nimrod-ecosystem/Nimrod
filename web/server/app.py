@@ -55,6 +55,7 @@ import recommend
 import storage_line  # storage line (row 2.58): what the state and event routes refuse to keep
 import quota  # how much one login may keep (Mike, 2026-10-14: "some limit to keep the site free")
 import site_owner  # the one editor, step 5 (row 2.145): who may save the site's own defaults (NIMROD_SITE_OWNERS)
+import site_defaults  # step 5c: the outbox an owner's "Save as the site default" queues into, for Code to commit
 from version import deploy_commit, safe_code_version
 
 log = logging.getLogger("nimrod")
@@ -436,6 +437,69 @@ def _site_owner_flag(request: Request, user: str) -> bool:
 @app.get("/api/whoami")
 def whoami(request: Request, user: str = Depends(current_user)):
     return {"user": user, "site_owner": _site_owner_flag(request, user)}
+
+
+# ----------------------------------------------------------- the site's defaults outbox (row 2.145 step 5c)
+# An owner's "Save as the site default" QUEUES a checked entry here; Code applies "Copy the saved defaults" with
+# web/tools/apply_site_defaults.py and commits it. Nothing here changes what anybody is shown: the defaults are the code.
+# EVERY ROUTE ASKS WHO IS ASKING AND CHECKS WHAT IT IS GIVEN, AGAIN (site_owner.py rule 4, site_defaults.py rule 2).
+def _site_owner_only(request: Request, user: str) -> None:
+    if not site_owner.is_site_owner(request, user):
+        raise HTTPException(status_code=403, detail=site_defaults.SAY_NOT_OWNER)
+
+
+def _shipped_defaults():
+    """The defaults this deploy ships (nimrod_defaults.js, between its markers), or {} when it cannot be read."""
+    try:
+        return site_defaults.read_block((CLIENT_DIR / "nimrod_defaults.js").read_text(encoding="utf-8")) or {}
+    except OSError:
+        return {}
+
+
+@app.post("/api/site-defaults")
+def save_site_default(request: Request, payload: dict = Body(...), user: str = Depends(current_user)):
+    """{kind, path, body} (a room, a village scene, a Town place) or {kind: 'words', rows: [{page, old, new}]}."""
+    _site_owner_only(request, user)
+    try:
+        if payload.get("kind") == site_defaults.WORDS:
+            entries = [(site_defaults.WORDS, [r["page"], r["old"]], r) for r in site_defaults.clean_words(payload.get("rows"))]
+        else:
+            e = site_defaults.clean_entry(payload.get("kind"), payload.get("path"), payload.get("body"))
+            entries = [(e["kind"], e["path"], e["body"])]
+    except site_defaults.Refused as e:
+        log.warning("site defaults: refused a save status=%s", e.status)
+        raise HTTPException(status_code=e.status, detail=e.detail)
+    # Rule 4: room for them all (a save of a thing already waiting replaces it, so it takes no more room).
+    have = {site_defaults.entry_key(s["kind"], s["path"]) for s in store.site_default_waiting()}
+    if len(have | {site_defaults.entry_key(k, p) for k, p, _ in entries}) > site_defaults.WAITING_MAX:
+        raise HTTPException(status_code=507, detail=site_defaults.SAY_FULL)
+    replaced = sum(1 for k, p, b in entries if store.site_default_put(k, p, b, user)["replaced"])
+    return {"ok": True, "saved": len(entries), "replaced": replaced, "waiting": store.site_default_count()}
+
+
+@app.get("/api/site-defaults")
+def list_site_defaults(request: Request, user: str = Depends(current_user)):
+    """What is waiting (each with `in_site`: the deploy already ships exactly it), and the text to copy for Code."""
+    _site_owner_only(request, user)
+    saves = store.site_default_waiting()
+    shipped = _shipped_defaults()
+    date = datetime.now(timezone.utc).date().isoformat()
+    return {
+        "saves": [{"id": s["id"], "kind": s["kind"], "path": s["path"], "at": s["at"], "by": s["by"],
+                   "in_site": (site_defaults.in_site(s["kind"], s["path"], s["body"], shipped)
+                               if s["kind"] != site_defaults.WORDS else None)} for s in saves],
+        "copy": site_defaults.copy_text(saves, date),
+    }
+
+
+@app.post("/api/site-defaults/{sid}/withdraw")
+def withdraw_site_default(sid: str, request: Request, user: str = Depends(current_user)):
+    """Take one waiting entry out (it is in the site now, or it was not wanted)."""
+    _site_owner_only(request, user)
+    _check(sid, ID_RE, "saved default id")
+    if not store.site_default_withdraw(sid):
+        raise HTTPException(status_code=404, detail="no such saved default")
+    return {"ok": True, "waiting": store.site_default_count()}
 
 
 # ---------------------------------------------------------------- profiles

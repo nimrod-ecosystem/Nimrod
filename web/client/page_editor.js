@@ -8,7 +8,8 @@
 //
 // What it does not do (said so this file is not read as more): nothing on a page is moved or taken out (the page is
 // written in the site's code; the tools say so), and nothing is saved to the site -- a change is a suggestion kept in this
-// browser and copied for the site's next update, as before. Not step 5.
+// browser and copied for the site's next update, as before. (Step 5c: one of the site's owners saves it instead, and it is
+// only QUEUED for Code -- still nothing on the page changes the site.)
 //
 // *** NEVER A GATE, NEVER A TRAP (CLAUDE.md). *** Off unless somebody types the address: importing this file draws nothing.
 // Done is its first button; Escape closes it (after leaving chosen words); `?wording=0` forgets it; and it closes itself
@@ -27,9 +28,23 @@
 //                        quarter of the page to press on. AGAINST: the list is one press away ("Show the list"), and a
 //                        switch user on a phone has one more stop to reach it. Wider than that, the list shows.
 //   IDLE_OFF_MS          reused (wording_edit.js), not a new number.
+//   (row 2.145 step 5c) WHO IS AN OWNER: asked of /api/me ONCE, WHEN THE EDITOR OPENS -- never at page load (a page that
+//                        is not being edited asks nothing new). Until it answers, and on any doubt (signed out, offline,
+//                        a screen's key), the editor is as for everybody: "Copy changes". An owner's answer turns on
+//                        "Save as the site default" (editor.js setOwner); the server asks again on every save.
 import { openSceneEditor } from './editor.js';
 import { pageSections, pageRest, buildPageTree } from './page_targets.js';
 import { ON_KEY, IDLE_OFF_MS, wordingParam, forgetWordingOn } from './wording_edit.js';
+import { ownerFrom } from './site_defaults.js';
+import { authHeaders } from './auth.js';
+
+/** /api/me's answer, or null on any doubt (the default `fetchMe`). */
+async function meFromServer() {
+  try {
+    const r = await globalThis.fetch('/api/me', { headers: authHeaders(), credentials: 'same-origin' });
+    return r && r.ok ? await r.json() : null;
+  } catch { return null; }
+}
 
 export const PAGE_EDITOR_Z = 2147483000;
 export const NARROW_PX = 700;
@@ -49,9 +64,11 @@ const store = {
  *   words        open with the words shown (default true: the address asked to change words)
  *   list         show the list (default: not under NARROW_PX)
  *   setTimer / clearTimer   for the idle close (the suite runs it by hand); clipboard, now: the editor's
+ *   fetchMe      (row 2.145 step 5c) () => /api/me's answer or null: asked once, when it opens (default: the server)
+ *   siteDefaults (5c) passed to the editor (a suite's fake outbox: `{ client }`)
  */
 export function openPageEditor({ win = globalThis.window, words = true, list = null, setTimer = null, clearTimer = null,
-  clipboard = undefined, now = undefined } = {}) {
+  clipboard = undefined, now = undefined, fetchMe = meFromServer, siteDefaults = undefined } = {}) {
   const doc = win?.document;
   if (!doc?.body) return null;
   const open = win.__nimrodPageEditor;
@@ -75,6 +92,7 @@ export function openPageEditor({ win = globalThis.window, words = true, list = n
       pageRoot: doc.body, pageTargets: { sections: pageSections, rest: pageRest, tree: buildPageTree },
       mountIn: host, words: !!words, list: list === null ? !narrow : !!list, level: 'advanced',
       ...(clipboard !== undefined ? { clipboard } : {}), ...(now !== undefined ? { now } : {}),
+      ...(siteDefaults !== undefined ? { siteDefaults } : {}),
       onActivity: arm,
       onClose: () => {
         disarm();
@@ -94,6 +112,11 @@ export function openPageEditor({ win = globalThis.window, words = true, list = n
   arm();
   const api = { ...ed, host };
   win.__nimrodPageEditor = api;
+  // (5c) Now that it is open, and only now: is this person one of the site's owners? (`ready` resolves once answered.)
+  api.ready = Promise.resolve().then(() => fetchMe?.()).then((me) => {
+    if (ownerFrom(me) && ed.isOpen()) ed.setOwner(true);
+    return ed.owner();
+  }).catch(() => false);
   return api;
 }
 

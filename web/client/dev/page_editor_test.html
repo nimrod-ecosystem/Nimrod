@@ -275,6 +275,45 @@ try {
     f1.remove();
     clean();
   }
+
+  // ============================================================================================
+  // ROW 2.145 STEP 5C: is this person one of the site's owners? Asked of /api/me ONCE, when the editor opens -- never at load.
+  section('*** step 5c: /api/me is asked only when the page editor opens; an owner gets "Save as the site default" ***');
+  {
+    clean();
+    // The button as the page has it (an earlier section left its words changed in place, as closing the editor does).
+    document.getElementById('btn').textContent = 'Press me';
+    document.getElementById('btn').removeAttribute('data-wording-changed');
+    let asked = 0;
+    const meOwner = async () => { asked += 1; return { user: 'ownerone', site_owner: true }; };
+    const pageSrc = await (await fetch('../page_editor.js')).text();
+    check('*** nothing asks /api/me at import: only inside openPageEditor, after it opened ***',
+      asked === 0 && /api\/me/.test(pageSrc) && !/^\s*(await\s+)?(meFromServer|fetch)\(/m.test(pageSrc));
+    const sent = [];
+    const client = { saveWords: async (rows) => { sent.push(rows); return { ok: true, status: 200, data: {}, why: '' }; },
+      save: async () => ({ ok: true }), list: async () => ({ ok: true, data: { saves: [], copy: '' } }), withdraw: async () => ({ ok: true }) };
+    const ed = openPageEditor({ win: window, fetchMe: meOwner, siteDefaults: { client }, setTimer: () => 0, clearTimer: () => {} });
+    check('*** opened: /api/me asked once ***', await until(() => asked === 1) && (await ed.ready) === true && asked === 1, String(asked));
+    const pressId = leafOf(ed.tree(), 'Press me')?.id;
+    ed.choose(pressId);
+    ed.useWords('Push me');
+    check('*** an owner: "Save as the site default (1)" in place of "Copy changes" ***',
+      ed.el.querySelector('[data-se-w="save"]')?.textContent === 'Save as the site default (1)' && !ed.el.querySelector('[data-se-w="copy"]'),
+      `${pressId} ${ed.selected()} ${document.getElementById('btn').textContent} ${J([...ed.el.querySelectorAll('[data-se-w]')].map((b) => b.textContent))}`);
+    ed.el.querySelector('[data-se-w="save"]')?.click();
+    check('...saved: this page’s change sent, and out of the draft list', await until(() => sent.length === 1 && readChanges().length === 0)
+      && J(sent[0]) === J([{ page: location.pathname, old: 'Press me', new: 'Push me' }]), J(sent));
+    ed.close();
+    document.getElementById('btn').textContent = 'Press me';
+    document.getElementById('btn').removeAttribute('data-wording-changed');
+    const notOwner = openPageEditor({ win: window, fetchMe: async () => ({ user: 'someone', site_owner: false }), setTimer: () => 0, clearTimer: () => {} });
+    check('*** not an owner (or no answer): the editor as for everybody ***', (await notOwner.ready) === false && notOwner.owner() === false);
+    notOwner.close();
+    const offline = openPageEditor({ win: window, fetchMe: async () => { throw new Error('offline'); }, setTimer: () => 0, clearTimer: () => {} });
+    check('...a failed /api/me is not an owner', (await offline.ready) === false);
+    offline.close();
+    clean();
+  }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 } finally {

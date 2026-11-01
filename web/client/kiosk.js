@@ -393,6 +393,10 @@ export async function mountKiosk(root, {
   // Back, Home, the crumbs) is the same LOAD the dashboards page does, except while a call, the intercom or a check-in
   // is live. kiosk.html turns it on; off here so a host page (a suite, a preview) is never navigated away by a switch.
   reloadSwitch = false,
+  // ROW 2.145 STEP 5C (2026-10-31): this person is one of the site's owners (/api/me `site_owner`, which kiosk.html already
+  // reads -- no request of its own). Only the one editor reads it, to draw "Save as the site default"; the server asks
+  // again on every save. A screen's own key is never an owner (web/server/site_owner.py), so a bedside screen has it false.
+  siteOwner = false,
   // RECOVERY SEAMS. All three exist so the test can walk the whole ladder without anything
   // actually happening - a suite that reloads the page cannot report its own results, and
   // one that reboots a machine is not a suite anybody will run twice.
@@ -3491,6 +3495,8 @@ export async function mountKiosk(root, {
           arr, bus, mountIn: kioskEl, dashOpts,
           words: !!words,
           // (row 2.145 step 5) The site default of each panel: how the ready-made dashboard this one was made from starts it.
+          // (5c) And whether this person may save one as the site's (only queued for Code; the server asks again).
+          owner: siteOwner === true,
           siteDefaults: {
             startOf: (id) => prebuiltStartOf(dashOpts.settingsNow(), id),
             madeFrom: () => prebuiltMadeFrom(dashOpts.settingsNow()),

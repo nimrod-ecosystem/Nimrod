@@ -1400,6 +1400,12 @@ class _Store:
                             "a day for the whole site. No names, no logins, no addresses, nothing about who "
                             "called whom. It shows whether calls that cannot connect are rare or common.", False,
                             "when a call connects or cannot connect"),
+        # Row 2.145 step 5c (2026-10-31): site_defaults.py. Written only by the site's owners (NIMROD_SITE_OWNERS).
+        "site_default_saves": ("Only for the people who run this site: a change one of them saved as the site's own "
+                            "default (a starting room, a village scene, a place in Town, or the words on a page), which "
+                            "of them saved it and when, waiting to be put into the site's code. Nobody else can save "
+                            "one, and nothing in it is shown to anybody until it is in the site's code.", False,
+                            "when one of the site's owners saves something as the site's default"),
         "history_totals":  ("Counts of a person's older history entries, made once they pass the limit in the "
                             "line above. For each song, video, game topic or AAC board word: how many times, how "
                             "many right, and the first and last time. Only for history you chose to keep with us. "
@@ -2352,6 +2358,46 @@ class _Store:
                 days.setdefault(day, {"day": day, "direct": 0, "failed": 0})[outcome] = int(n)
         return list(days.values())
 
+    # ---- the site's defaults outbox (row 2.145 step 5c, site_defaults.py): saved by an owner, waiting for Code ----
+    # One waiting row per thing (`kind` + `path`): saving it again replaces it. `state` is 'waiting' (the seam for a later
+    # 'in a pull request', B2); a withdrawn entry is removed, since nothing but the outbox ever reads it.
+    def site_default_put(self, kind: str, path: list, body: dict, by: str) -> dict:
+        """Keep one entry, replacing the waiting one for the same thing. -> {"id", "replaced"}."""
+        pid = json.dumps(list(path), ensure_ascii=False, separators=(",", ":"))
+        with self._tx() as cur:
+            cur.execute(self._q("DELETE FROM site_default_saves WHERE kind=? AND path=? AND state='waiting'"), (kind, pid))
+            replaced = (cur.rowcount or 0) > 0
+            sid = _new_id()
+            cur.execute(self._q("INSERT INTO site_default_saves(id, kind, path, body, saved_by, at, state) "
+                                "VALUES(?,?,?,?,?,?,'waiting')"),
+                        (sid, kind, pid, json.dumps(body, ensure_ascii=False), by, _now()))
+        return {"id": sid, "replaced": replaced}
+
+    def site_default_waiting(self) -> list[dict]:
+        """Every waiting entry, oldest first."""
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT id, kind, path, body, saved_by, at FROM site_default_saves WHERE state='waiting' "
+                                "ORDER BY at, id"))
+            rows = cur.fetchall()
+        return [{"id": r[0], "kind": r[1], "path": json.loads(r[2]), "body": json.loads(r[3]), "by": r[4], "at": r[5]} for r in rows]
+
+    def site_default_count(self, kind: str | None = None, path: list | None = None) -> int:
+        """How many are waiting (not counting the one for `kind` + `path`, which a save would replace)."""
+        with self._tx() as cur:
+            if kind is None:
+                cur.execute(self._q("SELECT COUNT(*) FROM site_default_saves WHERE state='waiting'"))
+            else:
+                pid = json.dumps(list(path or []), ensure_ascii=False, separators=(",", ":"))
+                cur.execute(self._q("SELECT COUNT(*) FROM site_default_saves WHERE state='waiting' AND NOT (kind=? AND path=?)"),
+                            (kind, pid))
+            return int(cur.fetchone()[0])
+
+    def site_default_withdraw(self, sid: str) -> bool:
+        """Take one waiting entry out of the outbox. False when there is none by that id."""
+        with self._tx() as cur:
+            cur.execute(self._q("DELETE FROM site_default_saves WHERE id=? AND state='waiting'"), (sid,))
+            return (cur.rowcount or 0) > 0
+
     def history_counts(self, user_id: str, person_id: str) -> dict:
         """Per stream: how many rows are kept, and how many older ones are counted in totals."""
         out: dict[str, dict] = {}
@@ -2597,6 +2643,12 @@ class SQLiteStore(_Store):
                 CREATE TABLE IF NOT EXISTS call_outcomes (
                     day TEXT NOT NULL, outcome TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, outcome)
                 );
+                -- the site's defaults outbox (row 2.145 step 5c, site_defaults.py): saved by an owner, waiting for Code.
+                CREATE TABLE IF NOT EXISTS site_default_saves (
+                    id TEXT PRIMARY KEY, kind TEXT NOT NULL, path TEXT NOT NULL, body TEXT NOT NULL,
+                    saved_by TEXT NOT NULL, at TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'waiting'
+                );
+                CREATE INDEX IF NOT EXISTS ix_site_default_saves ON site_default_saves(state, kind, path);
 
                 -- PROVENANCE COLUMNS (for_code.md 9f). Nullable, populated null, NEVER
                 -- mutated after write. They exist BEFORE the first real trial because an
@@ -2961,6 +3013,10 @@ class PostgresStore(_Store):
             # calls that connected directly, and that could not, per day (2026-10-26): counts only.
             "CREATE TABLE IF NOT EXISTS call_outcomes (day TEXT NOT NULL, outcome TEXT NOT NULL, "
             "n INTEGER NOT NULL, PRIMARY KEY (day, outcome))",
+            # the site's defaults outbox (row 2.145 step 5c, site_defaults.py) - see the SQLite block.
+            "CREATE TABLE IF NOT EXISTS site_default_saves (id TEXT PRIMARY KEY, kind TEXT NOT NULL, path TEXT NOT NULL, "
+            "body TEXT NOT NULL, saved_by TEXT NOT NULL, at TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'waiting')",
+            "CREATE INDEX IF NOT EXISTS ix_site_default_saves ON site_default_saves(state, kind, path)",
 
             "CREATE TABLE IF NOT EXISTS events (id BIGSERIAL PRIMARY KEY, user_id TEXT NOT NULL, "
             "profile_id TEXT NOT NULL, stream TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, "

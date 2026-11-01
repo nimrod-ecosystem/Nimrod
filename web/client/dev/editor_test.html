@@ -30,7 +30,8 @@ import { mergeLayoutSave } from '../doc_merge.js';
 import { targetsOf, parseTyped, typedRange } from '../edit_mode.js';
 import { normalizeField, displayValue } from '../settings_fields.js';
 import { sceneRecipe } from '../room_doors.js';
-import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS, transformWhy, changedCount, madeFromReady, rootMadeFrom } from '../editor.js';
+import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS, transformWhy, changedCount, madeFromReady, rootMadeFrom, copiedSaved, tidied } from '../editor.js';
+import { SITE_DEFAULT_WORDS } from '../site_defaults.js';
 import { buildTree, nodeIdFor, ROOT_ID, splitSelection, PLACED_TRANSFORM_FIELDS, TRANSFORM_ORDER, presentField, presentFields } from '../editor_targets.js';
 import '../modules/button.js';
 import '../modules/clock.js';
@@ -761,6 +762,79 @@ try {
     check('*** putting back to a ready-made start writes the start’s own value ("Bea"), not null ***', b1.state.get().label === 'Bea', J(b1.state.get()));
     e.close();
     sd.arr.destroy();
+  }
+
+  // ============================================================================================
+  section('*** step 5c: the site’s owners -- "Save as the site default", queued for Code ***');
+  {
+    const so = await make();
+    await so.roomReady();
+    // A fake outbox: what was sent, and what it answers.
+    const sent = [];
+    let answer = { ok: true, status: 200, data: { ok: true, saved: 1, replaced: 0, waiting: 1 }, why: '' };
+    let waiting = [{ id: 'a1', kind: 'rooms', path: ['theRoom'], in_site: false }, { id: 'a2', kind: 'village', path: ['village'], in_site: true }];
+    const withdrawn = [];
+    const client = {
+      save: async (entry) => { sent.push(entry); return answer; },
+      saveWords: async (rows) => { sent.push({ words: rows }); return answer; },
+      list: async () => ({ ok: true, status: 200, data: { saves: waiting, copy: '# nimrod site defaults\n{"rooms":{}}\n' }, why: '' }),
+      withdraw: async (id) => { withdrawn.push(id); return { ok: true, status: 200, data: {}, why: '' }; },
+    };
+    const clip = { text: null, writeText: async (x) => { clip.text = x; } };
+    const roomId = nodeIdFor(ROOM_PANEL_ID);
+    // Not an owner: the room keeps "Copy as the default", and there is no Save anywhere.
+    let e = so.open({ siteDefaults: { client } });
+    row(e, roomId).click();
+    check('*** not an owner: no "Save as the site default", and the room keeps "Copy as the default" ***',
+      !e.el.querySelector('[data-se-d="save"]') && !!sec(e, 's')?.querySelector('[data-em-run="default"]')
+      && (sec(e, 'd')?.querySelector('[data-se-def-help]')?.textContent || '') === EDITOR_WORDS.siteDefaultWhole, sec(e, 'd')?.textContent);
+    row(e, ROOT_ID).click();
+    check('...and no "Saved for the site" on the dashboard’s row', !sec(e, 'o') && e.owner() === false);
+    e.close();
+    // An owner.
+    e = so.open({ owner: true, siteDefaults: { client }, clipboard: clip });
+    row(e, roomId).click();
+    check('*** an owner: the room’s Site default section has "Save as the site default", and its "Copy as the default" is gone (the save stands in for it) ***',
+      !!sec(e, 'd')?.querySelector('[data-se-d="save"]') && !sec(e, 's')?.querySelector('[data-em-run="default"]')
+      && (sec(e, 'd').querySelector('[data-se-def-help]')?.textContent || '') === EDITOR_WORDS.siteDefaultWholeOwner);
+    check('...a switch stop', e.scan.stops().some((b) => b.dataset.seD === 'save'));
+    const layoutBefore = J(so.doc.kiosk.layout);
+    sec(e, 'd').querySelector('[data-se-d="save"]').click();
+    check('*** Save sends the room as ONE site default: rooms, its preset, every piece with its id ***',
+      await until(() => sent.length === 1) && sent[0].kind === 'rooms' && J(sent[0].path) === J(['theRoom'])
+      && Array.isArray(sent[0].body?.items) && sent[0].body.items.length > 0 && sent[0].body.items.every((it) => typeof it.id === 'string'), J(sent[0])?.slice(0, 200));
+    check('*** ...and says it is saved for the site’s next update, in the section and the status line ***',
+      await until(() => (sec(e, 'd')?.querySelector('[data-se-def-status]')?.textContent || '') === SITE_DEFAULT_WORDS.saved)
+      && (e.el.querySelector('[data-se-status]')?.textContent || '') === SITE_DEFAULT_WORDS.saved);
+    check('...nothing on the dashboard changed by it (its saved layout and room are as they were)', J(so.doc.kiosk.layout) === layoutBefore);
+    answer = { ok: false, status: 403, data: { detail: 'Only the site’s owners can save the site’s defaults.' }, why: 'Only the site’s owners can save the site’s defaults.' };
+    sec(e, 'd').querySelector('[data-se-d="save"]').click();
+    check('*** a refusal (403) is said plainly ***', await until(() => (sec(e, 'd')?.querySelector('[data-se-def-status]')?.textContent || '').startsWith('Only the site’s owners')));
+    answer = { ok: true, status: 200, data: {}, why: '' };
+    // The village's scene is a site default of its own kind.
+    row(e, 'panel:v1').click();
+    sec(e, 'd')?.querySelector('[data-se-d="save"]')?.click();
+    check('*** the village’s scene saves as `village` [its scene] ***', await until(() => sent.length === 3) && sent[2].kind === 'village'
+      && sent[2].path.length === 1 && Array.isArray(sent[2].body?.pieces), J(sent[2])?.slice(0, 160));
+    // A panel's settings are not a thing saved whole.
+    row(e, 'panel:b1').click();
+    check('a sign (settings, not a whole thing) has no Save', !sec(e, 'd')?.querySelector('[data-se-d="save"]'));
+    // The dashboard's own row: what is waiting.
+    row(e, ROOT_ID).click();
+    check('*** the dashboard’s row: "Saved for the site", with Copy and Take out ***', !!sec(e, 'o')?.querySelector('[data-se-d="copyall"]')
+      && !!sec(e, 'o').querySelector('[data-se-d="tidy"]'));
+    sec(e, 'o').querySelector('[data-se-d="copyall"]').click();
+    check('*** "Copy the saved defaults" copies the server’s own text and says how many ***',
+      await until(() => clip.text === '# nimrod site defaults\n{"rooms":{}}\n') && await until(() => (e.el.querySelector('[data-se-status]')?.textContent || '') === copiedSaved(2)));
+    sec(e, 'o').querySelector('[data-se-d="tidy"]').click();
+    check('*** "Take out the ones the site has now": only those the server marks in the site ***',
+      await until(() => J(withdrawn) === J(['a2'])) && await until(() => (e.el.querySelector('[data-se-status]')?.textContent || '') === tidied(1)));
+    waiting = [];
+    sec(e, 'o').querySelector('[data-se-d="copyall"]').click();
+    check('...nothing waiting: says so, copies nothing', await until(() => (e.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.noneSaved));
+    check('setOwner(false): the owner’s rows go', e.setOwner(false) === false && !sec(e, 'o'));
+    e.close();
+    so.arr.destroy();
   }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

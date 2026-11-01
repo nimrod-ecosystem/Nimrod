@@ -39,6 +39,10 @@
 //             its turn (['x', 'y', 'size', 'rotate'] for a room or village piece). The one editor (editor.js) shows
 //             those first, under "Transform", and the rest under its settings. Absent: it has no transform of its own.
 //             Carried onto the selection as `transformKeys` ([] when absent); nothing else reads it.
+//     siteDefault (row 2.145 step 5c, 2026-10-31) () => { kind, path, body } | null: this thing, as it is now, as an entry
+//             for the site's own defaults (nimrod_defaults.js: a room's `rooms` [preset], a village's `village` [scene],
+//             a Town place's `town` [deck, place]). Only the one editor reads it, for an owner's "Save as the site default"
+//             (site_defaults.js: queued for Code, never applied by the page). Carried onto the selection; absent: null.
 //             (step 2, 2026-10-31: a room piece also names 'facing' and 'wall', a village piece 'facing', a Town piece
 //             ['x', 'y', 'size', 'facing'] -- where it stands, its size, its turn and which way it faces.)
 // A record may also say `passThrough` (a CSS selector): a press inside a matching element nested in the
@@ -202,6 +206,8 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
     // (step 5) Whether these settings are the panel's own row (its state), not a thing's own `values` (a room piece's
     // place, kept in the room's recipe): only the panel's row is compared with the site's default settings.
     stateRow: typeof target?.values !== 'function',
+    // (step 5c) The thing as a whole as a site default, when its module offers one (the contract's `siteDefault`).
+    siteDefault: typeof target?.siteDefault === 'function' ? target.siteDefault : null,
   };
 }
 
