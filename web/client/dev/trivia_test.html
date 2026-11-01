@@ -64,6 +64,7 @@ import { createAudioBus } from '../audio_bus.js';
 import { createOutputBus } from '../output.js';
 import { createSpeechChannel } from '../output_channels.js';
 import { fieldItems, normalizeField } from '../settings_fields.js';
+import { ASKED_KEY, ASKED_CAP_DEFAULT, askedHash, askedList, askedAdd, askedMerge } from '../asked_memory.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -1707,9 +1708,12 @@ Shared Q | Shared A` });
       const screenB = liveRow();
       const b = rig({ saved: { bank: BANK3 }, personId: 'pat', ladderRow: screenB, makePersonState: people.make, hostId: 'host2' });
       await sleep(30);
-      check('*** the same person on ANOTHER screen starts where they left off (level 2), not over ***',
-        b.probe().level === 2 && b.inst.impl.__ladder().playerRow('person:pat', 'trivia').n === 10,
+      // (Their floor, not the question's level: the ten they answered on screen A are remembered too (row 2.173), so on a
+      // twelve-question bank the first one here is one of the two they have not met, which are hard.)
+      check('*** the same person on ANOTHER screen starts where they left off (floor 2), not over ***',
+        b.inst.impl.__ladder().playerRow('person:pat', 'trivia').floor === 2 && b.inst.impl.__ladder().playerRow('person:pat', 'trivia').n === 10,
         JSON.stringify([b.probe().level, b.inst.impl.__ladder().playerRow('person:pat', 'trivia')]));
+      check('...and is not asked one of the ten they answered there (row 2.173)', b.probe().level === 4, String(b.probe().level));
       b.inst.destroy();
     }
     {
@@ -1864,6 +1868,94 @@ Shared Q | Shared A` });
       check('*** two Trivia panels on one row: both players\' progress is there (3 answers each) ***',
         pl['name:ann']?.games?.trivia?.n === 3 && pl['name:bob']?.games?.trivia?.n === 3, JSON.stringify(pl));
       a.inst.destroy(); b.inst.destroy();
+    }
+  }
+
+  // =====================================================================================
+  section('*** no question again until the pool is used up (row 2.173: "the same old question like 4 times in a row") ***');
+  {
+    let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const answerRight = (r) => r.host.querySelector(`[data-opt="${r.probe().question.correctIndex}"]`).click();
+    const answerWrong = (r) => r.host.querySelector(`[data-opt="${r.probe().question.correctIndex === 0 ? 1 : 0}"]`).click();
+    const next = (r) => r.host.querySelector('[data-next]')?.click();
+    const asked = (r, k, how) => { const out = []; for (let i = 0; i < k; i++) {
+      out.push(r.probe().question?.question); how(r, i); next(r); } return out; };
+    const dupes = (qs) => qs.filter((q, i) => qs.indexOf(q) !== i);
+    const liveRow = (init = {}) => { let d = JSON.parse(JSON.stringify(init)); const subs = new Set();
+      return { get: () => d, set: (p) => { d = { ...d, ...p }; for (const f of [...subs]) f(d); },
+        load: async () => d, flush: async () => {}, startPolling() {}, destroy() {},
+        subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); } }; };
+    const peopleRows = () => { const rows = {}; return { make: (pid, key) => (rows[`${pid}:${key}`] ||= liveRow()) }; };
+    const skip = (r) => r.bus.publish('trivia/skip', {});
+    for (const [name, how] of [['right', (r) => answerRight(r)], ['wrong then right', (r) => { answerWrong(r); answerRight(r); }],
+      ['mixed', (r, i) => (i % 2 ? answerRight(r) : (answerWrong(r), answerRight(r)))],
+      ['skipped from the transport bar', (r) => { skip(r); r.__skipped = true; }],
+      ['transport bar next/select', (r) => { r.bus.publish('trivia/select', {}); answerRight(r); r.bus.publish('trivia/next', {}); }]]) {
+      for (const person of [false, true]) {
+        const r = rig({ bankText: null, saved: { contentSource: 'all' }, personId: 'pat', rand: rnd,
+          ...(person ? { ladderRow: liveRow(), makePersonState: peopleRows().make } : {}) });
+        await sleep(250);
+        const qs = asked(r, 60, how);
+        check(`*** all packs, ${name}${person ? ', the level kept with the person' : ''}: sixty questions, none asked twice ***`,
+          dupes(qs).length === 0 && qs.every(Boolean), JSON.stringify(dupes(qs).slice(0, 5)));
+        r.inst.destroy();
+      }
+    }
+
+    // *** THE PANEL RESTARTING (a dashboard switch, a reload, a deploy) DOES NOT FORGET (../asked_memory.js) ***
+    {
+      const people = peopleRows();
+      const all = [];
+      for (let sitting = 0; sitting < 4; sitting++) {
+        const r = rig({ bankText: null, saved: { contentSource: 'all' }, personId: 'pat', rand: rnd,
+          ladderRow: liveRow(), makePersonState: people.make });
+        await sleep(250);
+        all.push(...asked(r, 15, (x) => answerRight(x)));
+        r.inst.destroy();
+      }
+      check('*** four sittings of fifteen, the panel restarted between each: none of the sixty asked twice ***',
+        dupes(all).length === 0 && all.length === 60, JSON.stringify(dupes(all).slice(0, 5)));
+      const row = people.make('pat', ASKED_KEY).get();
+      check('...kept on the person\'s own row, eight characters a question',
+        askedList(row.players?.['person:pat']?.trivia).length === 60, JSON.stringify(row).slice(0, 200));
+    }
+    // *** THE POOL USED UP: THE OLDEST COME ROUND FIRST, never the one just answered ***
+    {
+      const LV = (d, n) => ({ question: `${d} used ${n}?`, answer: `${d} A${n}`, wrong: [`${d} x${n}`, `${d} y${n}`, `${d} z${n}`], difficulty: d });
+      const SMALL = [1, 2, 3, 4].map((n) => LV('easy', n));
+      const people = peopleRows();
+      const all = [];
+      for (let sitting = 0; sitting < 3; sitting++) {
+        const r = rig({ saved: { bank: SMALL, roundLength: 5 }, personId: 'kim', rand: rnd, ladderRow: liveRow(), makePersonState: people.make });
+        await sleep(60);
+        all.push(...asked(r, 2, (x) => answerRight(x)));
+        r.inst.destroy();
+      }
+      check('*** four questions, three sittings of two: the first four all different, then the oldest ones again ***',
+        new Set(all.slice(0, 4)).size === 4 && all.slice(4).every((q) => all.slice(0, 2).includes(q)), JSON.stringify(all));
+    }
+    // *** "Questions remembered: None" keeps only this sitting, as before ***
+    {
+      const people = peopleRows();
+      const r = rig({ bankText: null, saved: { contentSource: 'all', askedCap: 0 }, personId: 'pat', rand: rnd,
+        ladderRow: liveRow(), makePersonState: people.make });
+      await sleep(250);
+      asked(r, 5, (x) => answerRight(x));
+      r.inst.destroy();
+      check('"None (only this sitting)": nothing kept on the row', askedList(people.make('pat', ASKED_KEY).get().players?.['person:pat']?.trivia).length === 0);
+      const row = (getManifest('trivia').settings || []).find((f) => f.key === 'askedCap');
+      check('the setting is offered, advanced, default 1,000', row?.level === 'advanced' && row.default === 1000 && row.default === ASKED_CAP_DEFAULT);
+    }
+    // ---- the memory itself, pure ----
+    {
+      check('a question is eight hex characters, the same every time', /^[0-9a-f]{8}$/.test(askedHash('trivia:x')) && askedHash('a') === askedHash('a') && askedHash('a') !== askedHash('b'));
+      check('kept newest last, the oldest dropped past the cap; one asked again moves to the newest end',
+        JSON.stringify(askedAdd(['a', 'b', 'c'], ['d'], 3)) === '["b","c","d"]' && JSON.stringify(askedAdd(['a', 'b', 'c'], ['a'], 5)) === '["b","c","a"]');
+      check('a malformed stored string drops what does not read', askedList('0000000aZZZZZZZZ0000000b').join(',') === '0000000a,0000000b');
+      const m = askedMerge({}, { players: { 'person:a': { trivia: '0000000a0000000c' } } }, { players: { 'person:a': { trivia: '0000000a0000000b' }, 'name:z': { trivia: '0000000d' } } }).data;
+      check('*** two screens of one person both answering: a refused save keeps both sets ***',
+        m.players['person:a'].trivia === '0000000a0000000b0000000c' && m.players['name:z'].trivia === '0000000d', JSON.stringify(m));
     }
   }
 

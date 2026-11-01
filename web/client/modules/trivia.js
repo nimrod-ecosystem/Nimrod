@@ -91,11 +91,13 @@ import { createPackReviews, isReviewPackId, playableBank, REVIEW_STATUS, REVIEW_
 import { linksOpenHere } from '../page_links.js';
 import { spellPaceField, spellPace, spellsAloud, spellAloud, spelledOptions, SPELL_PACE_DEFAULT } from '../spell_aloud.js';
 import { createPlayWatch } from '../game_start.js';
+import { createAskedMemory, ASKED_CAP_DEFAULT } from '../asked_memory.js';
 
 export const GAME = 'trivia';
 
 export const DEFAULTS = {
   roundLength: 10,
+  askedCap: ASKED_CAP_DEFAULT,   // questions each player's memory keeps (the setting, below)
   // *** A SCORE ON SCREEN, ON BY DEFAULT. *** Reversed 2026-09-22 -- Mike: "Why should a screen
   // someone can't walk away from not show a score? Games have scores. That's pretty standard."
   // The earlier off-by-default was itself already a correction of a misquote (see the SETTINGS
@@ -604,6 +606,16 @@ const SETTINGS = [
     level: 'standard',
     options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
               { value: 15, label: '15' }, { value: 20, label: '20' }] },
+  // *** NO QUESTION AGAIN UNTIL THE POOL IS USED UP (row 2.173, ../asked_memory.js). *** How many each player's memory
+  // keeps. Default 1,000, argued: FOR more (every question, ever): no repeat even after the new packs (about 2,000
+  // questions) are all asked. AGAINST, and it decides it: the row is rewritten after every answer (8 bytes a question),
+  // and somebody who has answered a thousand questions has played for many hours, so meeting one from the start again
+  // is no longer "the same question". Past the cap, or once every question has been asked, the oldest come round first.
+  { key: 'askedCap', label: 'Questions remembered, so they are not asked again', kind: 'choice', default: ASKED_CAP_DEFAULT,
+    level: 'advanced',
+    options: [{ value: 0, label: 'None (only this sitting)' }, { value: 200, label: '200' }, { value: 500, label: '500' },
+              { value: 1000, label: '1,000' }, { value: 2000, label: '2,000' }, { value: 5000, label: '5,000' }],
+    note: 'Kept with the person, so a question they answered on one screen is not asked again on another.' },
   { key: 'choices', label: 'Answers to choose from', kind: 'choice', default: 4,
     level: 'standard',
     // FEWER IS EASIER, AND IT IS THE FIRST THING TO REACH FOR. With one switch and a scan,
@@ -809,6 +821,7 @@ registerModule(
     let ladderBank = [];
     let idOf = new Map();
     const seenBy = {};
+    let asked = null;            // what each player was asked in earlier sittings (../asked_memory.js), made in init()
     // THE LEVEL FOLLOWS THE PERSON (above). `splitStore`: the screen's row plus the person's own, as one row to
     // the ladder (null on a host with no per-person rows). `personHandles`: the person's own row, one per person
     // id this panel has met. `rawPersonStart`: the panel's copy of "Start trivia at", as saved (undefined: never).
@@ -1255,12 +1268,20 @@ registerModule(
         return { id, item: b, level: Math.min(levelOf(r, TRIVIA_RATING), maxLevel) };
       });
     }
+    // "Seen": answered or skipped this sitting, or in the player's memory from earlier ones (../asked_memory.js, row
+    // 2.173). When every question is seen, the older half of the memory is forgotten, so those come round first.
     function pickNext() {
       const p = ladder.currentPlayer();
       const win = ladder.windowFor(p.id, GAME);
       const never = new Set(deck.filter(Boolean).map((b) => idOf.get(b)));
-      const pick = pickNear(candidates(roundPool, win.maxLevel), { lo: win.lo, hi: win.hi,
-        playerRating: ladder.playerRow(p.id, GAME).rating, avoid: seenBy[p.id] || new Set(), never, rand,
+      const cands = candidates(roundPool, win.maxLevel);
+      const sitting = seenBy[p.id] || new Set();
+      const avoid = { has: (id) => sitting.has(id) || !!asked?.has(p.id, id) };
+      for (let i = 0; i < 12 && asked && asked.size(p.id) && cands.every((c) => avoid.has(c.id) || never.has(c.id)); i++) {
+        asked.forgetOldest(p.id);
+      }
+      const pick = pickNear(cands, { lo: win.lo, hi: win.hi,
+        playerRating: ladder.playerRow(p.id, GAME).rating, avoid, never, rand,
         rating: TRIVIA_RATING, poolOf: (c) => c.item?.pool || '' });
       return pick ? pick.item : null;
     }
@@ -1279,6 +1300,7 @@ registerModule(
       const pid = ladder.dealt()?.player?.id;
       if (!id || ladder.dealt()?.id !== id) return;
       if (pid) (seenBy[pid] ||= new Set()).add(id);
+      if (pid) { try { asked?.add(pid, id); } catch (err) { console.error('trivia: asked', err); } }
       try { ladder.record({ ...result, item: { id } }); } catch (err) { console.error('trivia: ladder', err); }
     }
 
@@ -1691,6 +1713,10 @@ registerModule(
             onChange: () => firstAgain(),
           });
         } catch (err) { ladder = null; console.error('trivia: no ladder', err); }
+        // NO QUESTION AGAIN UNTIL THE POOL IS USED UP (row 2.173): their memory loads in the background; if it lands
+        // before anybody touched the first question, that question is picked again from it, as when the ladder lands.
+        asked = createAskedMemory(ctx, { game: GAME, cap: () => cfg.askedCap ?? DEFAULTS.askedCap });
+        asked.ready(ctx.personId ? `person:${ctx.personId}` : 'player').then(() => { if (!dead) firstAgain(); });
         // players: somebody picked (here, or on the screen's Players tab) has their own row read in when they join.
         firstAgainNow = firstAgain;
         triviaPlayersMoved();
@@ -1881,6 +1907,7 @@ registerModule(
         if (lessonQ) { lessonQ.destroy?.(); lessonQ = null; }
         // The ladder's row is opened here too (init), so it goes the same way. Saved on every answer already.
         if (ladder) { ladder.destroy(); ladder = null; }
+        if (asked) { asked.destroy(); asked = null; }
         if (offScreenPlayers) { try { offScreenPlayers(); } catch { /* gone */ } offScreenPlayers = null; }   // players
         if (splitStore) { splitStore.destroy(); splitStore = null; }
         if (ladderStore) { ladderStore.flush?.(); ladderStore.destroy?.(); ladderStore = null; }
