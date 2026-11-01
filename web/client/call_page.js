@@ -620,7 +620,7 @@ export async function mountCallPage(root, {
     // asking for ours, or their answer to ours. A person met through the group carries no card this page knows, so
     // nothing can be remembered for them (only Yes and No).
     offs.push(group.onCaptions?.((c) => { if (my === run && c?.peer) heardCaption(c, `peer:${c.peer}`, c.name); }) || (() => {}));
-    offs.push(group.onCaptionAsks?.((m) => { if (my === run && m?.peer) heardAskFrom(`peer:${m.peer}`, m.name || '', '', m); }) || (() => {}));
+    offs.push(group.onCaptionAsks?.((m) => { if (my === run && m?.peer) heardAskFrom(`peer:${m.peer}`, m.name || '', typeof m.key === 'string' ? m.key : '', m); }) || (() => {}));
     offs.push(group.onJoined(() => {
       if (my !== run) return;
       if (phase === 'knocking') { connected = true; answered = true; setPhase('in-call'); }
@@ -703,7 +703,7 @@ export async function mountCallPage(root, {
     // row 2.144 step 4: that screen's subtitles of what is said there, its asking for ours, its answer to ours - each
     // labelled and answered as that person, on that call.
     leg.offs.push(t.onCaptions?.((c) => { if (my === run) heardCaption(c, `leg:${session}`, person.name); }) || (() => {}));
-    leg.offs.push(t.onCaptionAsks?.((m) => { if (my === run) heardAskFrom(`leg:${session}`, person.name, `person:${person.id}`, m); }) || (() => {}));
+    leg.offs.push(t.onCaptionAsks?.((m) => { if (my === run) heardAskFrom(`leg:${session}`, person.name, keyOfScreen(t, person.id), m); }) || (() => {}));
     paintGroup();
     let sent = false;
     try {
@@ -1019,7 +1019,14 @@ export async function mountCallPage(root, {
   // for that person, kept on this device) starts it, and sends them to that person. Already sending to them -> yes; no
   // recogniser here -> cannot; the person chose "off", or "Never" for them -> no, without asking. The box goes by itself
   // (CAPTION_ASK_SHOW_MS): no answer. Several asking at once: one box naming them all (call_caption_ask.js argues it).
-  const askedKey = () => (target?.id ? `person:${target.id}` : '');
+  // Who is asking, to keep an "Always" / "Never" by: the server's key for the screen that answered (its person's - the
+  // same that screen carries in a group call, row 2.144), else that person's card here (an older server).
+  const keyOfScreen = (t, personId) => {
+    let k = null;
+    try { k = t?.answeredKey?.() || null; } catch { k = null; }
+    return k || (personId ? `person:${personId}` : '');
+  };
+  const askedKey = () => keyOfScreen(transport, target?.id);
   function askedAnswers() { return rememberedAnswers(get(CAPTIONS_ASKED_DEVICE_KEY, '')); }
   askDesk = createAskDesk({
     host: () => q('[data-caption-ask-box]'), live: () => phase !== 'idle', setTimer, clearTimer, showMs: CAPTION_ASK_SHOW_MS,

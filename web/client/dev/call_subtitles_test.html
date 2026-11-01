@@ -509,6 +509,10 @@ try {
     check('*** who asked: the account the server stamped first (a page cannot forge it), else their card ***',
       askKeyOf({ by: 'u1', personId: 'p1', name: 'x' }) === 'by:u1' && askKeyOf({ personId: 'p1' }) === 'person:p1' && askKeyOf({ name: 'Ann' }) === ''
       && askKeyOf(null) === '' && askKeyOf({ personId: 'a b<' }) === '');
+    const K = `k:${'0f'.repeat(12)}`;
+    check('*** the server\'s key (`byKey`, the same in a group call) comes first; a malformed one is passed over ***',
+      askKeyOf({ byKey: K, by: 'u1', personId: 'p1' }) === K && askKeyOf({ byKey: 'k:short', by: 'u1' }) === 'by:u1'
+      && askKeyOf({ byKey: `${K}x`, personId: 'p1' }) === 'person:p1');
     let m = withRemembered({}, 'by:u1', 'yes', 'Ann');
     m = withRemembered(m, 'by:u2', 'no', 'Bo');
     check('remembered answers: kept per asker, read back, forgotten one at a time, junk dropped',

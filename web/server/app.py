@@ -30,7 +30,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
 from db import SOURCE_ON_REMOVE  # remove this picture (2026-10-10): a source's 'keep' / 'remove'
-from drive import ROLES, Answerers, CallGroups, Rooms, ScreenTargets, Tickets, parse_message, stamp_signal
+from drive import ROLES, Answerers, CallGroups, Rooms, ScreenTargets, Tickets, ask_key, parse_message, stamp_signal
 from play_relay import PlayRelay  # watching along (row 2.79): a screen's `play` to its following drivers, kept nowhere
 # who may see a screen, ask first, a temporary permission on a call (Mike, 2026-10-12): rules pure in screen_access.py
 from screen_access import SeeAccess, ask_seconds, lend_minutes, name_for, see_decision
@@ -1527,7 +1527,25 @@ def _may_bring(user: str, room) -> bool:
         return False
 
 
-_groups = CallGroups(name_of=_group_name, may_bring=_may_bring)
+def _ask_key_of(user: str, call_as: str = "", screen_person: str = "") -> str:
+    """WHO THIS END IS, to remember an "Always" / "Never" by (row 2.144, drive.py `ask_key`): a screen by its person, a
+    caller by the person it calls as (a screen's Call panel), else by its login. Keyed with SESSION_SECRET, so a page can
+    neither read a login out of it nor make one up."""
+    secret = os.environ.get("SESSION_SECRET", "dev-only-insecure-change-me")
+    if screen_person:
+        return ask_key(f"person:{screen_person}", secret)
+    if call_as:
+        return ask_key(f"person:{call_as}", secret)
+    return ask_key(user, secret)
+
+
+def _group_key(user: str, role: str, room) -> str:
+    # A screen is its person; a caller is its login (a caller met at the door, by a knock). A caller that placed the
+    # call is keyed by what it calls as instead, given by the drive socket (`driver_offer(..., key=)`).
+    return _ask_key_of(user, screen_person=room[1] if role == "screen" and room else "")
+
+
+_groups = CallGroups(name_of=_group_name, may_bring=_may_bring, key_of=_group_key)
 
 
 async def _send_out(out) -> None:
@@ -2270,7 +2288,11 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                         await _tell([c for c in room.screens if c is not ws],
                                     {"type": "answerer", "purpose": sig.get("purpose"), "session": sig.get("session"), "you": False})
                     if relay:
-                        await _tell(room.drivers, stamp_signal(msg, user))
+                        out_msg = stamp_signal(msg, user)
+                        # row 2.144 (2026-11-01): which screen's person answered, for the caller page to remember an
+                        # answer by - the same key that person's screen carries in a group call.
+                        out_msg["signal"]["byKey"] = _ask_key_of(user, screen_person=person_id)
+                        await _tell(room.drivers, out_msg)
                         # group calls: an older page answering without a claim is picked by its answer.
                         if newly and sig.get("kind") == "answer" and sig.get("purpose") == "call":
                             await _send_out(_groups.screen_won(ws, user, arb_key, sig.get("session")))
@@ -2303,7 +2325,7 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                             continue
                     # group calls: an offer tagged with a group makes it or rings another screen into it - and is
                     # NOT relayed when the tag is not this login's to use, or the group is full (nothing rings).
-                    relay, gout = _groups.driver_offer(ws, user, arb_key, sig)
+                    relay, gout = _groups.driver_offer(ws, user, arb_key, sig, key=_ask_key_of(user, call_as))
                     await _send_out(gout)
                     if not relay:
                         continue
@@ -2324,6 +2346,9 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                     # intercom, with no picture. One lookup now; _seer_name is still its fallback when there is no card.
                     if sig.get("kind") == "offer" and sig.get("purpose") in (None, "call", "intercom", "checkin"):
                         stamped["signal"].update(_caller_on_screen(room_key, person_id, user, call_as or None))
+                    # row 2.144 (2026-11-01): who is calling, to remember a screen's "Always" / "Never" by - the same
+                    # key this caller carries in a group call (drive.py ask_key: not the login, which it hides).
+                    stamped["signal"]["byKey"] = _ask_key_of(user, call_as)
                     # 2026-10-25: an offer naming one screen (`toScreen`) rings that screen alone, and the rest of its
                     # call follows it there (drive.py ScreenTargets). Not online: nothing rings, and the caller is told.
                     targets, targeted = _screen_targets.route(arb_key, sig, room.screens)

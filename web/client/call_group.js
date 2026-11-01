@@ -38,7 +38,7 @@
 //     connection it came on, never by anything inside the message, so nobody can put somebody else's name on their words.
 
 import { iceServers, gatheringDone, WORDS_LABEL, WORDS_QUEUE_MAX, parseWords, cleanWords, STALL_MS,
-  CAPTION_TYPE, CAPTION_ASK_TYPE, CAPTION_ANSWER_WORDS, parseCaption, parseCaptionAsk } from './call_transport.js';
+  CAPTION_TYPE, CAPTION_ASK_TYPE, CAPTION_ANSWER_WORDS, parseCaption, parseCaptionAsk, ASK_KEY_RE } from './call_transport.js';
 
 // HOW MANY OTHER PEOPLE ONE DEVICE IS IN A MESH CALL WITH. A default, argued in drive.py MESH_MAX_OTHERS:
 //   video 3 others (4 people) - a Raspberry Pi 400 drawing the screen can decode two or three small videos
@@ -132,7 +132,7 @@ export function createCallGroup({
   function view() {
     return {
       group: gid, me, kind, max, leg: myLeg, knocking, ready: isReady,
-      members: [...members.values()].map((m) => ({ peer: m.peer, name: m.name, role: m.role, leg: m.leg,
+      members: [...members.values()].map((m) => ({ peer: m.peer, name: m.name, role: m.role, leg: m.leg, key: m.key,
         session: m.session || null, viaCall: viaCall(m), state: m.state })),
       knocks: [...knocks.values()].map((k) => ({ ...k })),
     };
@@ -163,7 +163,7 @@ export function createCallGroup({
       const c = parseCaption(e?.data);
       if (c) { emit(captionCbs, { ...c, peer: m.peer, name: m.name }); return; }
       const a = parseCaptionAsk(e?.data);
-      if (a) emit(askCbs, { ...a, peer: m.peer, name: m.name });
+      if (a) emit(askCbs, { ...a, peer: m.peer, name: m.name, key: m.key });
     };
     ch.onclose = () => { if (m.words === ch) m.words = null; };
     if (ch.readyState === 'open') flush(m);
@@ -270,6 +270,8 @@ export function createCallGroup({
     if (old) closePeer(old);
     const m = { peer: v.peer, name: typeof v.name === 'string' ? v.name : 'Someone', role: v.role === 'screen' ? 'screen' : 'driver',
       leg: typeof v.leg === 'string' ? v.leg : null, session: typeof v.session === 'string' ? v.session : null,
+      // who they are, to remember an answer by (row 2.144): the server's key, never a login; '' from an older server
+      key: typeof v.key === 'string' && ASK_KEY_RE.test(v.key) ? v.key : '',
       pc: null, words: null, queue: [], stream: null, state: 'new', offerer: false, tries: 0, stall: null, asked: false };
     members.set(m.peer, m);
     return m;
@@ -409,9 +411,9 @@ export function createCallGroup({
     /** Room for one more, by the cap. */
     hasRoom: () => !!gid && members.size + 1 < max,
     state: () => view(),
-    /** The mesh members' tiles: `{ peer, name, role, stream, video, state }` (not those reached by a call that rang). */
+    /** The mesh members' tiles: `{ peer, name, role, key, stream, video, state }` (not those reached by a call that rang). */
     tiles: () => [...members.values()].filter((m) => !viaCall(m)).map((m) => ({
-      peer: m.peer, name: m.name, role: m.role, stream: m.stream, video: hasVideo(m.stream), state: m.state })),
+      peer: m.peer, name: m.name, role: m.role, key: m.key, stream: m.stream, video: hasVideo(m.stream), state: m.state })),
     /** The member a call that rang reached (`session` = that call's id), for naming a tile drawn from that call. */
     memberBySession: (session) => { for (const m of members.values()) if (m.session && m.session === session) return { peer: m.peer, name: m.name }; return null; },
 

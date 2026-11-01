@@ -37,6 +37,8 @@ the fix then is Redis pub/sub between instances, not a bigger dict.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import secrets
 import time
@@ -283,7 +285,24 @@ def stamp_signal(msg: dict, user: str) -> dict:
     return {"type": "signal", "signal": sig}
 
 
-SERVER_STAMPS = ("byOwner", "byName", "byPerson")
+SERVER_STAMPS = ("byOwner", "byName", "byPerson", "byKey")
+
+
+# WHO A CALLER IS, TO REMEMBER AN ANSWER BY (row 2.144, 2026-11-01). A screen asked for subtitles of its person's voice
+# may answer "Always" or "Never", kept for that asker. In a two-person call the screen could key it on `by`, the login;
+# in a GROUP every member is shown every other member, and a login id is not something a stranger brought into the
+# call should be handed. So the key is the login run through a keyed hash: stable across calls and screens, the same
+# in a two-person call (`byKey`) and a group, unforgeable by a page (the server writes it and strips any a page sends),
+# and not reversible to the login. Changing the secret only forgets the remembered answers; the asking still works.
+ASK_KEY_HEX = 24          # 96 bits: no two people collide in practice, and the key stays short on a person's row
+
+
+def ask_key(user: str, secret: str) -> str:
+    """'k:' and ASK_KEY_HEX hex characters for a login, or '' for none. PURE."""
+    if not user or not isinstance(user, str) or not secret:
+        return ""
+    mac = hmac.new(str(secret).encode(), b"call-ask:" + user.encode(), hashlib.sha256)
+    return "k:" + mac.hexdigest()[:ASK_KEY_HEX]
 
 
 # ---------------------------------------------------------------------------------------
@@ -682,11 +701,14 @@ class _Member:
     name: str
     leg: str | None = None          # the member whose call brought this screen in (they are already connected)
     session: str | None = None      # ...and that call's id
+    key: str = ""                   # who they are, to remember an answer by (`key_of`, below); "" = nobody to remember
 
     def view(self) -> dict:
         v = {"peer": self.peer, "name": self.name, "role": self.role, "leg": self.leg}
         if self.session:
             v["session"] = self.session
+        if self.key:
+            v["key"] = self.key
         return v
 
 
@@ -722,13 +744,17 @@ class CallGroups:
 
     `room` is app.py's (owner, person_id) for the socket; `conn` is any object (only its identity is used);
     `name_of(user, role, room)` is what the group calls a member - the server's own names, never the page's.
+    `key_of(user, role, room)` is a stable key for a member that a page cannot forge (row 2.144: an "Always" or "Never"
+    to their asking for subtitles is remembered by it). It must not be a login id: every member sees every other's.
+    None: no key, and the pages offer only Yes and No, as before.
     """
 
-    def __init__(self, now=time.monotonic, name_of=None, max_groups: int = MAX_GROUPS, may_bring=None):
+    def __init__(self, now=time.monotonic, name_of=None, max_groups: int = MAX_GROUPS, may_bring=None, key_of=None):
         self._groups: dict[str, _Group] = {}
         self._pending: dict[tuple, list] = {}     # (room, session) -> [gid, inviter peer, touched]
         self._now = now
         self._name = name_of or (lambda user, role, room: user)
+        self._key_of = key_of
         self._max = max_groups
         # BRINGING OTHERS INTO A CALL IS A PERMISSION (Mike, 2026-10-13: "This sounds like something that should be a
         # permission."). `may_bring(user, room)`: may this login bring somebody new in front of that room's person? app.py
@@ -772,6 +798,15 @@ class CallGroups:
         return len(self._pending)
 
     # ---- helpers -------------------------------------------------------------------------------
+    def _key(self, user: str, role: str, room) -> str:
+        if self._key_of is None:
+            return ""
+        try:
+            k = self._key_of(user, role, room)
+        except Exception:
+            return ""                        # a lookup that breaks costs the remembering, never the call
+        return k if isinstance(k, str) and 0 < len(k) <= 80 else ""
+
     def _new_id(self, taken) -> str:
         while True:
             pid = secrets.token_hex(PEER_ID_LEN // 2)
@@ -838,8 +873,9 @@ class CallGroups:
         return out
 
     # ---- the call's own signals (app.py calls these from the existing signal path) -------------
-    def driver_offer(self, conn, user: str, room, sig: dict) -> tuple[bool, list]:
-        """A caller's offer on its way to a person's screens. Returns (relay, out).
+    def driver_offer(self, conn, user: str, room, sig: dict, key: str | None = None) -> tuple[bool, list]:
+        """A caller's offer on its way to a person's screens. Returns (relay, out). `key`: who the caller is, to
+        remember an answer by (app.py knows what it calls as); None: `key_of`'s, from the login.
 
         No `group` on it: (True, []) - exactly as before. Tagged: makes the group (its first offer) or
         rings another screen into it (a caller already in it); a tag on an offer from a login that is not
@@ -864,7 +900,8 @@ class CallGroups:
             g = _Group(gid=gid, kind=kind, created=self._now())
             self._groups[gid] = g
             m = _Member(peer=self._new_id(()), conn=conn, user=user, room=room, role="driver",
-                        name=self._name(user, "driver", room))
+                        name=self._name(user, "driver", room),
+                        key=key if isinstance(key, str) and 0 < len(key) <= 80 else self._key(user, "driver", room))
             out += self._add(g, m)
             inviter = m
         else:
@@ -907,7 +944,8 @@ class CallGroups:
         if len(g.members) >= g.max:
             return out + [(conn, _g("refused", group=g.gid, reason="full"))]
         m = _Member(peer=self._new_id(g.members), conn=conn, user=user, room=room, role="screen",
-                    name=self._name(user, "screen", room), leg=p[1], session=session)
+                    name=self._name(user, "screen", room), leg=p[1], session=session,
+                    key=self._key(user, "screen", room))
         p[2] = self._now()
         return out + self._add(g, m)
 
@@ -985,7 +1023,8 @@ class CallGroups:
         old, om = self.group_of(k.conn)
         if old is not None:
             out += self._remove(old, om)
-        nm = _Member(peer=self._new_id(g.members), conn=k.conn, user=k.user, room=k.room, role="driver", name=k.name)
+        nm = _Member(peer=self._new_id(g.members), conn=k.conn, user=k.user, room=k.room, role="driver", name=k.name,
+                     key=self._key(k.user, "driver", k.room))
         return out + self._add(g, nm)
 
     def cancel(self, conn) -> list:

@@ -492,5 +492,33 @@ check("*** an API secret sent to this route is NOT kept (no field for it) ***",
       and "s3cr3t" not in json.dumps(appmod.store.get_state("mike", appmod.ACCOUNT_SCOPE, "call-relay")), r.text)
 check("it is one account's: another login reads its own (off)", c.get("/api/me/call-relay", headers=H_("sam")).json()["enabled"] is False)
 
+# row 2.144 (2026-11-01): each member carries a key a page cannot forge, so an "Always" / "Never" to their asking for
+# subtitles can be remembered; it is never the login (every member sees every other's view).
+section("*** a member's key: given by the server, never a login ***")
+keys = {("mike", "driver"): "k:mike", ("pat", "screen"): "k:robin", ("sam", "driver"): "k:sam"}
+K = CallGroups(now=Clock(), name_of=lambda u, r, room: names.get((u, r), "Someone"), key_of=lambda u, r, room: keys.get((u, r), ""))
+KA, KP, KS = Conn("KA"), Conn("KP"), Conn("KS")
+_, out = K.driver_offer(KA, "mike", ROOM_P, offer("call-key", "call-key"), key="k:as-robin")
+check("*** a caller's key handed in by the socket (what it calls as) wins over the login's ***",
+      K.get("call-key").members[to(out, KA, "joined")[0]["you"]].key == "k:as-robin")
+out = K.screen_won(KP, "pat", ROOM_P, "call-key")
+seen = to(out, KP, "joined")[0]["members"]
+check("*** the screen that joins sees the caller's key, and nothing that is a login ***",
+      [m.get("key") for m in seen] == ["k:as-robin"] and "mike" not in json.dumps(seen), json.dumps(seen))
+check("...and the caller hears the screen joined, with the screen's key",
+      to(out, KA, "peer-joined")[0]["peer"].get("key") == "k:robin", str(out))
+out = K.knock(KS, "sam", ROOM_P, "driver")
+out = K.answer_knock(KA, "call-key", to(out, KA, "knock")[0]["knock"], True)
+check("a caller let in by a knock: keyed by its login, through key_of",
+      to(out, KA, "peer-joined")[0]["peer"].get("key") == "k:sam", str(out))
+_, out = CallGroups(now=Clock()).driver_offer(Conn("n"), "mike", ROOM_P, offer("call-nokey", "call-nokey"))
+check("no key_of (an older caller of this class): no key in any view, as before",
+      '"key":' not in json.dumps([m for _, m in out]), str(out))
+bad = CallGroups(now=Clock(), key_of=lambda u, r, room: 1 / 0)
+_, out = bad.driver_offer(Conn("b"), "mike", ROOM_P, offer("call-bad", "call-bad"))
+check("*** a key lookup that breaks costs the key, never the call ***",
+      to(out, out[0][0], "joined") and '"key":' not in json.dumps([m for _, m in out]), str(out))
+check("a key that is too long is not used", CallGroups(now=Clock(), key_of=lambda u, r, room: "k" * 81)._key("m", "driver", ROOM_P) == "")
+
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

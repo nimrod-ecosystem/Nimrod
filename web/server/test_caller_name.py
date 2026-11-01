@@ -10,10 +10,12 @@ ever taken from the page. The rule is claims.caller_card (pure); the stamp is ap
 """
 import json
 import os
+import re
 import sys
 import tempfile
 
 from claims import caller_card
+from drive import ask_key
 
 passed = failed = 0
 
@@ -62,6 +64,8 @@ tmp = tempfile.mkdtemp(prefix="nimrod_callername_")
 os.environ["NIMROD_DB"] = os.path.join(tmp, "callername_test.db")
 os.environ.pop("DATABASE_URL", None)
 os.environ.pop("NIMROD_ENV", None)
+SECRET = "test-caller-name-secret"
+os.environ["SESSION_SECRET"] = SECRET
 from fastapi.testclient import TestClient  # noqa: E402
 import app as appmod  # noqa: E402
 
@@ -182,6 +186,18 @@ with ws_for(OWN, "screen") as S:
     g = ring(S, CALLONLY, {"byName": "Pat"}, purpose=None)
     check("a purpose-less offer (an older caller page) is a call, and stamped the same way", g.get("byName") == "Nurse Casey", J(g))
 
+    # row 2.144 (2026-11-01): who is calling, to remember a screen's "Always" / "Never" by (drive.py ask_key).
+    section("*** byKey: the same caller, the same key - and never their login ***")
+    k_own, k_own2, k_friend = ring(S, OWN).get("byKey"), ring(S, OWN).get("byKey"), ring(S, FRIEND).get("byKey")
+    check("*** a key on every call offer, of the server's shape ***",
+          all(isinstance(k, str) and re.fullmatch(r"k:[0-9a-f]{24}", k) for k in (k_own, k_own2, k_friend)), J([k_own, k_friend]))
+    check("*** the same caller twice: the same key (an answer is remembered across calls) ***", k_own == k_own2)
+    check("two callers: two keys", k_own != k_friend)
+    check("*** the login is not in it, and it is not the login hashed plainly ***",
+          OWN not in k_own and k_own == ask_key(OWN, SECRET) and k_own != ask_key(OWN, "another secret"))
+    g = ring(S, CALLONLY, {"byKey": k_own})
+    check("*** a forged byKey is replaced by the server's ***", g.get("byKey") == ask_key(CALLONLY, SECRET), J(g))
+
     # 2026-11-01: the intercom and the silent check-in named the caller the older way (the owner's list name, else the
     # display name) and carried no card, so one person read "Dad" on a call and "Pat" on the intercom, with no picture.
     section("*** the intercom and the silent check-in name the caller exactly as a call does ***")
@@ -241,6 +257,34 @@ g = ring_kim(OWN, sam)
 check("*** `as` another login's person: ignored ***", g.get("byPerson") == pat, J(g))
 g = ring_kim(OWN, "bad id!")
 check("...a malformed one: ignored, and the call still rings", g.get("byPerson") == pat, J(g))
+check("*** byKey: a screen calling as Robin is keyed as Robin, not as the login that owns it ***",
+      ring_kim(OWN, robin).get("byKey") == ask_key(f"person:{robin}", SECRET)
+      and ring_kim(OWN).get("byKey") == ask_key(OWN, SECRET))
+
+section("*** the screen's answer tells the caller page who answered: the screen's person, by the same kind of key ***")
+n[0] += 1
+session = f"cl-{n[0]:016d}"
+tk = c.post(f"/api/drive/ticket/{kim}", headers=H(OWN)).json()["ticket"]
+with c.websocket_connect(f"/api/drive/{kim}?t={tk}&role=screen") as K:
+    drain(K)
+    td = c.post(f"/api/drive/ticket/{kim}", headers=H(OWN)).json()["ticket"]
+    with c.websocket_connect(f"/api/drive/{kim}?t={td}&role=driver&idle=1&as={robin}") as D:
+        drain(D)
+        D.send_text(J({"type": "signal", "signal": {"kind": "offer", "sdp": SDP, "purpose": "call", "session": session}}))
+        drain(D)
+        drain(K)
+        K.send_text(J({"type": "signal", "signal": {"kind": "answer", "sdp": SDP, "purpose": "call", "session": session,
+                                                    "byKey": "k:000000000000000000000000"}}))
+        drain(K)
+        ans = [m["signal"] for m in drain(D) if m.get("type") == "signal" and m["signal"].get("kind") == "answer"]
+        a = ans[-1] if ans else {}
+        check("*** the answer carries Kim's key (the person whose screen it is), and a page's own is replaced ***",
+              a.get("byKey") == ask_key(f"person:{kim}", SECRET), J(a))
+        check("...which is what Kim's screen would carry as a member of a group call (app.py _group_key)",
+              appmod._group_key(OWN, "screen", (OWN, kim)) == a.get("byKey"))
+        check("...and a caller met by a knock is keyed by its login", appmod._group_key(FRIEND, "driver", (OWN, kim)) == ask_key(FRIEND, SECRET))
+        D.send_text(J({"type": "signal", "signal": {"kind": "bye", "purpose": "call", "session": session}}))
+        drain(D)
 
 section("a fresh login whose first person is still the default 'Me': not a name")
 fresh_robin = c.post("/api/people", json={"name": "Robin"}, headers=H(FRESH)).json()["id"]

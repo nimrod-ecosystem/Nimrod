@@ -387,7 +387,10 @@ export function attachCallSubtitles({
     if (m.answer) { if (askedOf.has(key) || (key !== CALL && askedAll)) askedOf.set(key, m.answer); return; }
     if (!m.ask) return;
     const isCall = key === CALL;
-    desk.heard({ key, name: isCall ? (askName || '') : (speakerName || nameOfEnd(key)), rememberKey: isCall ? (askKey || '') : '' });
+    // Who to remember an "Always" / "Never" by: the call that rang, by who placed it; a member of the group, by the key
+    // the server gave them (call_caption_ask.js header). '' (an older server): Yes and No only.
+    desk.heard({ key, name: isCall ? (askName || '') : (speakerName || nameOfEnd(key)),
+      rememberKey: isCall ? (askKey || '') : (typeof m.key === 'string' ? m.key : '') });
   }
   try {
     offs.push(transport?.onCaptionAsks?.((m) => heardAsk(CALL, m, null)) || (() => {}));

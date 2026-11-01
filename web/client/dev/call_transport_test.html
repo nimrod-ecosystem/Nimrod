@@ -1111,7 +1111,31 @@ try {
       byPerson: 'bad id!', from: { name: 'Sam' } });
     const b = rings[2] || {};
     check('a blank name or a malformed card from the server changes nothing', b.name === 'Sam' && b.personId === null, JSON.stringify(b));
+    // row 2.144 (2026-11-01): who is calling, to remember a screen's "Always" / "Never" by (drive.py ask_key).
+    const K = `k:${'c3'.repeat(12)}`;
+    t.hangup('declined');
+    link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: newCallSession(), by: 'acct-mike', byKey: K, from: { name: 'Mike' } });
+    check('*** the server\'s key for the caller is on the card ***', (rings[3] || {}).byKey === K, JSON.stringify(rings[3]));
+    t.hangup('declined');
+    link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: newCallSession(), by: 'acct-mike', byKey: 'acct-mike', from: { name: 'Mike', byKey: K } });
+    check('*** a key not of the server\'s shape is dropped, and the page\'s own `from` cannot supply one ***',
+      !('byKey' in (rings[4] || { byKey: 1 })), JSON.stringify(rings[4]));
     t.destroy();
+    {
+      const dp = fakePeer(); const dl = fakeLink();
+      const d = createCallTransport({ link: dl, role: 'driver', PeerConnection: dp.PC, Stream: FakeStream });
+      await d.call({ tracks: [{ kind: 'audio' }], from: { name: 'Ann' } });
+      check('before an answer: no key for the screen', d.answeredKey() === null);
+      const heard = []; d.onAnswered((e) => heard.push(e));
+      dl.deliver({ kind: 'answer', sdp: 'A', purpose: CALL_PURPOSE, session: d.__probe().session, byKey: K });
+      await sleep(5);
+      check('*** answered: the caller page knows whose screen answered, by the server\'s key ***', d.answeredKey() === K && heard[0]?.byKey === K,
+        JSON.stringify(heard));
+      d.hangup();
+      await d.call({ tracks: [{ kind: 'audio' }], from: { name: 'Ann' } });
+      check('...and a new call starts with none (it is that call\'s)', d.answeredKey() === null);
+      d.destroy();
+    }
   }
 
   // =====================================================================================

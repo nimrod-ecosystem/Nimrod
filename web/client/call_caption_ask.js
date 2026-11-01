@@ -70,10 +70,14 @@
 // just named gets the same CAPTION_ASK_SHOW_MS to be read as the first. STILL NEVER A GATE: each other person asks at most
 // once per call, so the box can be held up at most once per other person (a group's cap, MESH_MAX_OTHERS), and it still
 // goes by itself; a switch keeps its place in it (the lit choice stays lit while the words change).
-// REMEMBERED ANSWERS NEED SOMEBODY TO REMEMBER: the call that rang carries who placed it (`askKeyOf`); a person met through
-// the group is named by the server but carries no account a page can see, so for them only Yes and No are offered, and a
-// box naming any such person offers only Yes and No (an "Always" that silently remembered half the people named would be
-// a button that lies). NOT YET: the server stamping an account on group members (drive.py; not this change).
+// REMEMBERED ANSWERS NEED SOMEBODY TO REMEMBER: the server keys every other end (`byKey`, drive.py ask_key, 2026-11-01): a
+// caller by the person they call as, else their login; a screen by its person. The same key on a two-person call's offer,
+// on a screen's answer and on each member of a group call, so an "Always" said in one holds in the other. It is a keyed
+// hash, not the login, because every member of a group sees every other's. A person with no key (an older server) gets
+// only Yes and No, and so does a box naming any such person (an "Always" that silently remembered half the people named
+// would be a button that lies).
+
+import { ASK_KEY_RE } from './call_transport.js';
 
 // How long a request stays on the answering screen or page before it goes away by itself. 30 s, argued: the first seconds
 // of a call are greetings and settling the phone, so a box that left after 10 would often be gone before anybody looked at
@@ -95,10 +99,12 @@ export const ASK_CHOICES = Object.freeze(['yes', 'always', 'no', 'never']);
 export const CALL_SUBS_ASKED_KEY = 'callSubtitlesAsked';
 export const CAPTIONS_ASKED_DEVICE_KEY = 'nimrod:call:captions-asked';
 
-/** Who is asking, as a stable key: the account the server stamped on the call (`by`, which a page cannot forge), else the
- *  person card the call is with. '' when neither is known (then nothing can be remembered for them). Pure. */
+/** Who is asking, as a stable key: the server's key for them (`byKey`, the same in a group call), else the account the
+ *  server stamped on the call (`by`; an older server), else the person card the call is with. '' when none is known (then
+ *  nothing can be remembered for them). A page cannot forge `byKey` or `by`: the server writes both. Pure. */
 export function askKeyOf(who) {
   if (!who || typeof who !== 'object') return '';
+  if (typeof who.byKey === 'string' && ASK_KEY_RE.test(who.byKey)) return who.byKey;
   if (typeof who.by === 'string' && who.by) return `by:${who.by.slice(0, 80)}`;
   const pid = who.personId || who.id;
   if (typeof pid === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(pid)) return `person:${pid}`;

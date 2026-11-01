@@ -287,6 +287,10 @@ export function parseCaption(data) {
 // Unlike a subtitle these DO wait for the channel to open: a request is about this whole call, and the first second of a
 // call (when it is sent) is exactly when the channel is still opening. They go with the call like a word does.
 export const CAPTION_ASK_TYPE = 'caption-ask';
+// WHO THE OTHER END IS, AS THE SERVER KEYS THEM (row 2.144, 2026-11-01; drive.py ask_key): 'k:' and 24 hex, written by the
+// server on a call's offer and a screen's answer (and any a page sends is removed there). Anything else is no key. PURE.
+export const ASK_KEY_RE = /^k:[0-9a-f]{24}$/;
+export const askKeyFrom = (sig) => (sig && typeof sig.byKey === 'string' && ASK_KEY_RE.test(sig.byKey) ? sig.byKey : null);
 // call_caption_ask.js CAPTION_ANSWERS (kept in step by its suite). Exported for call_group.js, whose connections carry the
 // same messages (row 2.144 step 4).
 export const CAPTION_ANSWER_WORDS = Object.freeze(['yes', 'no', 'cannot']);
@@ -458,6 +462,7 @@ export function createCallTransport({
   // and its connection changing. Sets, like `liveCbs`: the page and a test may both listen.
   let placed = null;                  // { tracks, from } of the call this driver placed
   let answeredOnce = false;           // this driver's call has been answered at least once
+  let answerKey = null;               // { session, key }: whose screen answered it (row 2.144, `askKeyFrom`)
   const answeredCbs = new Set();
   const connCbs = new Set();
   const emit = (set, ...a) => { for (const cb of [...set]) { try { cb(...a); } catch (e) { log('listener threw', e); } } };
@@ -875,11 +880,18 @@ export function createCallTransport({
       // only stands when the server had none (an older server), and its own `personId` never does.
       const byName = typeof sig.byName === 'string' ? sig.byName.trim().slice(0, 60) : '';
       const byPerson = typeof sig.byPerson === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(sig.byPerson) ? sig.byPerson : null;
-      const known = { ...(byName ? { name: byName } : {}), personId: byPerson };
+      // `byKey` (row 2.144, 2026-11-01): who is calling, to remember an "Always" / "Never" by - the server's, the same
+      // key this caller carries in a group call (drive.py ask_key), and not their login.
+      const byKey = askKeyFrom(sig);
+      const known = { ...(byName ? { name: byName } : {}), personId: byPerson, ...(byKey ? { byKey } : {}) };
       const who = from && typeof from === 'object'
         ? { ...from, ...known, by: typeof sig.by === 'string' ? sig.by : null, byOwner, ...(session ? { session } : {}) }
         : (typeof sig.by === 'string' ? { ...known, by: sig.by, byOwner, ...(session ? { session } : {}) } : from);
-      if (who && typeof who === 'object') delete who.person_id;
+      if (who && typeof who === 'object') {
+        delete who.person_id;
+        // The key is only ever the server's: one the caller's page put in its own `from` is dropped.
+        if (byKey) who.byKey = byKey; else delete who.byKey;
+      }
       try { incomingCb?.(who); } catch (e) { log('onIncoming threw', e); }
       emit(ringCbs, { type: 'ring', from: who, session, panel });
       return;
@@ -898,7 +910,9 @@ export function createCallTransport({
           // THE CALLER'S CONNECT CLOCK (2026-10-04): answered, and now it has to connect. If the screen's
           // socket died and its own bye never comes, this is what ends the call (ANSWER_CONNECT_MS).
           if (mine.connectionState !== 'connected') armConnect();
-          emit(answeredCbs, { session: currentSession, by: typeof sig.by === 'string' ? sig.by : null });
+          // Whose screen answered, to remember an answer by (row 2.144; the server's `byKey`, its person's).
+          answerKey = { session: currentSession, key: askKeyFrom(sig) };
+          emit(answeredCbs, { session: currentSession, by: typeof sig.by === 'string' ? sig.by : null, byKey: answerKey.key });
         })
         .catch((e) => log('setRemoteDescription(answer) failed', e));
     }
@@ -1071,6 +1085,9 @@ export function createCallTransport({
     // ---- the caller's half (2026-10-02; `call_page.js`) ------------------------------------------------
     /** `cb({ session, by })` when THIS driver's call is answered (the answer applied). Returns an unsubscribe. */
     onAnswered(cb) { if (typeof cb !== 'function') return () => {}; answeredCbs.add(cb); return () => { answeredCbs.delete(cb); }; },
+    /** Whose screen answered THIS call, as the server keys them (row 2.144: an "Always" / "Never" is kept by it); null
+     *  before an answer, for another call, or from an older server. */
+    answeredKey: () => (answerKey && answerKey.session === currentSession ? answerKey.key : null),
     /** `cb(state)` on the peer connection's own state: 'connecting' | 'connected' | 'disconnected' | 'failed'... */
     onConnection(cb) { if (typeof cb !== 'function') return () => {}; connCbs.add(cb); return () => { connCbs.delete(cb); }; },
     /** A caller offers its call again (same session); also done by itself once per dropped connection. */

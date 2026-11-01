@@ -39,7 +39,7 @@ import { createCallTransport, WORDS_LABEL, CALL_PURPOSE, STALL_MS } from '../cal
 import { mountCallPage, KNOCK_GIVE_UP_MS } from '../call_page.js';
 // row 2.144 step 4: subtitles in a group call.
 import { attachCallSubtitles } from '../call_captions.js';
-import { askWords, askNames, CAPTION_ASK_SHOW_MS, CAPTIONS_IN_DEVICE_KEY } from '../call_caption_ask.js';
+import { askWords, askNames, CAPTION_ASK_SHOW_MS, CAPTIONS_IN_DEVICE_KEY, CAPTIONS_ASKED_DEVICE_KEY } from '../call_caption_ask.js';
 import { CAPTIONS_OUT_KEY } from '../call_outgoing_captions.js';
 import { SUBTITLES_DEFAULTS } from '../subtitles.js';
 import { SIGNAL_KINDS } from '../drive.js';
@@ -163,9 +163,9 @@ function groupServer({ gid: gid0 = 'call-g1', kind = 'video' } = {}) {
     };
     return l;
   }
-  function add(l, { name, role = 'driver', leg = null, session = null }) {
+  function add(l, { name, role = 'driver', leg = null, session = null, key = '' }) {
     const peer = hex8();
-    const view = { peer, name, role, leg, ...(session ? { session } : {}) };
+    const view = { peer, name, role, leg, ...(session ? { session } : {}), ...(key ? { key } : {}) };
     const others = [...members.values()];
     members.set(peer, { link: l, view });
     l.deliver(g('joined', { group: gid, you: peer, kind, max, leg, members: others.map((o) => o.view) }));
@@ -858,6 +858,48 @@ try {
       gN.destroy();
       h.stop();
       check('the call ends with a request up: it goes, nothing sent', !askBox() && t.answers.length === 0);
+
+      // row 2.144 (2026-11-01): a member the server keyed (drive.py ask_key) can be remembered like the call that rang.
+      const KAI_KEY = `k:${'a1'.repeat(12)}`;
+      const joinKai = async (label, key) => {
+        const l = G.link(label);
+        const gK = createCallGroup(opts({ link: l, getTracks: () => [track('audio')] }));
+        const asks = []; gK.onCaptionAsks((m) => asks.push(m));
+        G.add(l, { name: 'Kai', key });
+        await settle(); meetAll(); await settle();
+        return { gK, asks };
+      };
+      let kai = await joinKai('Kai', KAI_KEY);
+      check('*** the key the server gave a member is on their tile ***', gR.tiles().find((x) => x.name === 'Kai')?.key === KAI_KEY,
+        JSON.stringify(gR.tiles().map((x) => [x.name, x.key])));
+      made.length = 0; t = mkT(); ans = store();
+      h = attach(t, OFF, { answers: ans });
+      h.answered(realTrack);
+      kai.gK.askCaptions();
+      await settle();
+      check('*** Kai, met through the group but keyed by the server: all four answers ***', /^Kai asks/.test(askBox()?.textContent || '')
+        && [...askBox().querySelectorAll('[data-ask-answer]')].map((b) => b.dataset.askAnswer).join() === 'yes,always,no,never', askBox()?.textContent);
+      askBox().querySelector('[data-ask-answer="always"]').click();
+      await settle();
+      check('*** "Always for Kai": kept under the server\'s key, and Kai hears yes ***', ans.m[KAI_KEY]?.answer === 'yes'
+        && kai.asks.some((m) => m.answer === 'yes'), JSON.stringify(ans.m));
+      h.stop(); kai.gK.leave(); kai.gK.destroy();
+      await settle();
+      kai = await joinKai('Kai again', KAI_KEY);
+      made.length = 0; t = mkT();
+      h = attach(t, OFF, { answers: ans });
+      h.answered(realTrack);
+      kai.gK.askCaptions();
+      await settle();
+      check('*** the next call, a new connection, the same Kai: answered yes by itself, no box ***', !askBox() && kai.asks.some((m) => m.answer === 'yes')
+        && made.length === 1, JSON.stringify(kai.asks));
+      h.stop(); kai.gK.leave(); kai.gK.destroy();
+      await settle();
+      kai = await joinKai('Kai, older server', `KAI-${'a1'.repeat(12)}`);
+      check('a key that is not the server\'s shape is not kept (an older server, or a page\'s word): nobody to remember',
+        gR.tiles().find((x) => x.name === 'Kai')?.key === '');
+      kai.gK.leave(); kai.gK.destroy();
+      await settle();
     } else {
       check('(skipped: no audio track in this browser) a screen asked by several people', true);
     }
@@ -983,6 +1025,24 @@ try {
     check('*** NOTHING IS SENT WITHOUT A YES, PER PERSON: Sam and Nia get what I say; Bo and the first screen do not ***',
       people.Sam.caps.some((c) => c.text === 'hi you two' && c.name === 'Ann') && people.Nia.caps.some((c) => c.text === 'hi you two')
       && !people.Bo.caps.some((c) => c.text === 'hi you two') && !ch0.sent.slice(before).some((d) => /hi you two/.test(d)));
+    // row 2.144 (2026-11-01): somebody the server keyed (drive.py ask_key) can be remembered on this device too.
+    const OLA_KEY = `k:${'b2'.repeat(12)}`;
+    const lO = S10.link('Ola');
+    const gO = createCallGroup(opts({ link: lO, getTracks: () => [track('audio')] }));
+    const asksAtOla = []; gO.onCaptionAsks((m) => asksAtOla.push(m));
+    S10.add(lO, { name: 'Ola', key: OLA_KEY });
+    await settle(); meetAll(); await settle();
+    gO.askCaptions();
+    await settle();
+    check('*** Ola, keyed by the server, asks: all four answers on the page ***', /^Ola asks/.test(box()?.textContent || '')
+      && [...box().querySelectorAll('[data-ask-answer]')].map((b) => b.dataset.askAnswer).join() === 'yes,always,no,never', box()?.textContent);
+    box().querySelector('[data-ask-answer="always"]').click();
+    await settle();
+    check('*** "Always for Ola": kept on this device under the server\'s key, and Ola hears yes ***',
+      JSON.parse(store[CAPTIONS_ASKED_DEVICE_KEY] || '{}')[OLA_KEY]?.answer === 'yes' && asksAtOla.some((m) => m.answer === 'yes'),
+      String(store[CAPTIONS_ASKED_DEVICE_KEY]));
+    gO.leave(); gO.destroy();
+    await settle();
     // "Subtitles of me" on, as a choice: to everybody.
     q('[data-captions-out-btn]').click();
     check('the button with only yeses running takes them back', page.captionAsk().granted === false && outs[0].stopped);
