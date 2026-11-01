@@ -26,7 +26,14 @@
 //
 // PURE except `fetchItem` (one fetch, injectable) and the page-memory cache.
 
+import { reachTrouble, cantReachWords } from './outside_reach.js';
+
 export const ARCHIVE_ORIGIN = 'https://archive.org';
+
+// Row 2.148: a read that got no usable answer, as `{ ok: false, reason: 'archive-unreachable', words }` - the reason
+// every caller already branches on, unchanged, and the sentence narrowed to what the failure looked like.
+const unreachable = (trouble) => ({ ok: false, reason: 'archive-unreachable',
+  words: cantReachWords('The Internet Archive', { host: 'archive.org', trouble }) });
 
 // An item identifier as the Archive allows them: letters, digits, dot, dash, underscore; at most 100 characters.
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
@@ -265,8 +272,9 @@ export const ARCHIVE_MESSAGES = Object.freeze({
   'archive-bad-id': 'That is not an Internet Archive address. Paste an address like archive.org/details/… or type the item’s name.',
   'archive-not-found': 'The Internet Archive has no public item at that address.',
   // Row 2.148 (2026-10-28): the browser asks archive.org itself, so a blocker on this browser or network can stop it too.
-  'archive-unreachable': 'The Internet Archive could not be reached. Check the internet connection. An ad blocker on '
-    + 'this browser or network can also stop it.',
+  // The words every panel that asks an outside service shares (outside_reach.js). A failed read also carries `words`,
+  // the same sentence narrowed to what the failure looked like (no network at all, too slow, or an error answer).
+  'archive-unreachable': cantReachWords('The Internet Archive', { host: 'archive.org' }),
   'archive-no-audio': 'That Internet Archive item has no sound files this screen can play.',
   'archive-nothing': 'Nothing in this item can be played here.',
   'archive-collection': 'That address is a collection of many items. Add one item from it instead.',
@@ -341,7 +349,8 @@ export async function fetchItem(id, { fetchImpl = (typeof fetch === 'function' ?
       fetchImpl(metadataUrl(id), { credentials: 'omit', referrerPolicy: 'no-referrer', ...(ctl ? { signal: ctl.signal } : {}) }),
       wait,
     ]);
-    if (!res || !res.ok) return { ok: false, reason: res && res.status === 404 ? 'archive-not-found' : 'archive-unreachable' };
+    if (res && res.status === 404) return { ok: false, reason: 'archive-not-found' };
+    if (!res || !res.ok) return unreachable(reachTrouble(res));
     const raw = await Promise.race([res.json(), wait]);
     // A missing, dark or private item answers `{}` (measured), or `is_dark`.
     if (!raw || typeof raw !== 'object' || !raw.metadata || raw.is_dark) return { ok: false, reason: 'archive-not-found' };
@@ -350,8 +359,8 @@ export async function fetchItem(id, { fetchImpl = (typeof fetch === 'function' ?
     cache.set(id, { at: now(), item });
     while (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value);
     return { ok: true, item };
-  } catch {
-    return { ok: false, reason: 'archive-unreachable' };
+  } catch (err) {
+    return unreachable(reachTrouble(err));
   } finally {
     if (timer != null) clearTimeout(timer);
   }
@@ -395,7 +404,7 @@ export async function searchArchive(q, { fetchImpl = (typeof fetch === 'function
       fetchImpl(searchUrl(q, { rows }), { credentials: 'omit', referrerPolicy: 'no-referrer', ...(ctl ? { signal: ctl.signal } : {}) }),
       wait,
     ]);
-    if (!res || !res.ok) return { ok: false, reason: 'archive-unreachable' };
+    if (!res || !res.ok) return unreachable(reachTrouble(res));
     const raw = await Promise.race([res.json(), wait]);
     const docs = Array.isArray(raw?.response?.docs) ? raw.response.docs : [];
     const text = (v) => (Array.isArray(v) ? v.join(', ') : String(v == null ? '' : v)).replace(/\s+/g, ' ').trim();
@@ -406,8 +415,8 @@ export async function searchArchive(q, { fetchImpl = (typeof fetch === 'function
       items.push({ id, title: text(d.title).slice(0, 200) || id, kind: String(d.mediatype || ''), creator: text(d.creator).slice(0, 120) });
     }
     return { ok: true, items };
-  } catch {
-    return { ok: false, reason: 'archive-unreachable' };
+  } catch (err) {
+    return unreachable(reachTrouble(err));
   } finally {
     if (timer != null) clearTimeout(timer);
   }

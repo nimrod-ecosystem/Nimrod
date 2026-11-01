@@ -23,6 +23,7 @@
 // read from explore.org's own pages and checked against YouTube's oEmbed on 2026-10-10.
 
 import { parseVideoId } from './modules/youtube.js';
+import { cantReachWords } from './outside_reach.js';
 
 export const CAMS_MAX = 30;
 export const LOOKUP_TIMEOUT_MS = 8000;
@@ -180,7 +181,8 @@ export const CAM_MESSAGES = Object.freeze({
   // gone (measured 2026-10-10 with an id that does not exist), so the sentence says both.
   'cam-no-embed': '{name} can’t be shown here. YouTube may not allow it on other sites, or the video may be gone.',
   'cam-wont-play': '{name} would not play here.',
-  'cam-unreachable': 'YouTube could not be reached. It is tried again in a minute.',
+  // Row 2.148: the browser asks YouTube itself, so a blocker can stop it; the shared words (outside_reach.js).
+  'cam-unreachable': `${cantReachWords('YouTube', { host: 'youtube.com' })} It is tried again in a minute.`,
   'cam-bad-address': 'That is not a YouTube address. Paste the address of the cam’s video on YouTube.',
   'cam-explore-page': 'explore.org’s own pages can’t be read from here. Choose the cam from the list below, or open it on '
     + 'explore.org, press the YouTube logo on the video, and paste that address.',

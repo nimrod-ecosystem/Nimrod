@@ -237,8 +237,10 @@ registerModule(
     const maxFiles = () => num(cfg.maxFiles, FILES_MAX_DEFAULT, 50, 2000);
     const frameFor = () => (FRAME_FOR.includes(cfg.frameFor) ? cfg.frameFor : 'books');
     const currentId = () => ids[at] || null;
+    // Row 2.148: the last "could not be reached", narrowed to what it looked like (archive_org.js `words`).
+    let reachWords = '';
     const words = (key) => (key === 'blocked' ? 'The browser is waiting for a press before it will play sound. Press Play.'
-      : ARCHIVE_MESSAGES[key] || '');
+      : (key === 'archive-unreachable' && reachWords) || ARCHIVE_MESSAGES[key] || '');
 
     // ---- the speaker --------------------------------------------------------------------------------------------
     function ensureBus() {
@@ -502,6 +504,7 @@ registerModule(
       loading = false;
       if (!r.ok) {
         reason = r.reason;
+        reachWords = r.words || '';
         render();
         // Not reachable: asked again after SOURCE_RECHECK_MS (a screen that came up before the network did). Not found:
         // the address is wrong, and asking again changes nothing.
@@ -789,7 +792,7 @@ registerModule(
           if (mine !== searchSeq || dead) return;
           found = r && r.ok
             ? { q, items: r.items, words: r.items.length ? '' : 'Nothing found.' }
-            : { q, items: [], words: ARCHIVE_MESSAGES[r?.reason] || ARCHIVE_MESSAGES['archive-unreachable'] };
+            : { q, items: [], words: r?.words || ARCHIVE_MESSAGES[r?.reason] || ARCHIVE_MESSAGES['archive-unreachable'] };
           menuChanged();
         });
         return true;

@@ -50,10 +50,13 @@
 
 import { registerModule } from '../module.js';
 import { iconSvg } from '../weather_icons.js';
+import { reachTrouble, cantReachWords, cantReachWhy } from '../outside_reach.js';
 
 export const OPEN_METEO_FORECAST = 'https://api.open-meteo.com/v1/forecast';
 export const OPEN_METEO_GEOCODE = 'https://geocoding-api.open-meteo.com/v1/search';
 export const CREDIT = 'Weather data by Open-Meteo.com (CC BY 4.0)';
+// The address to allow in a blocker: both hosts above are under it.
+const OPEN_METEO_HOST = 'open-meteo.com';
 
 export const REFRESH_OPTIONS = Object.freeze([15, 30, 60, 120, 180]);   // minutes
 export const MAX_REFRESH_MIN = Math.max(...REFRESH_OPTIONS);
@@ -321,6 +324,7 @@ registerModule(
     let searchedQuery = null;
     let activeKey = null;         // the place key the current fetch loop is for
     let lastFailed = false;       // the most recent forecast request failed
+    let trouble = null;           // why the last request failed, as far as a page can tell (outside_reach.js)
     let seq = 0;                  // bumps on every request, so a late answer for an old place is dropped
     let tickTimer = null;
     let inflight = null;          // the AbortController of the request in flight
@@ -363,6 +367,7 @@ registerModule(
         if (lit >= 0) lit = 0;
       } catch (e) {
         if (dead || my !== seq) return;
+        trouble = reachTrouble(e);
         status = 'searchfailed';
         searchedQuery = null;          // try the name again at the next tick
       }
@@ -380,6 +385,7 @@ registerModule(
         try { state?.set?.({ lastGood }); } catch { /* memory only */ }
       } catch (e) {
         if (dead || my !== seq) return;
+        trouble = reachTrouble(e);
         lastFailed = true;
         status = shown() ? 'ok' : 'failed';
       }
@@ -476,14 +482,15 @@ registerModule(
         case 'short': return messageHtml('Type a little more of the place’s name.', 'At least 2 letters, in the Place setting of this panel.');
         case 'searching': return messageHtml(`Looking up “${q}”…`, '');
         case 'notfound': return messageHtml(`No place called “${q}” was found.`, 'Check the spelling in this panel’s Place setting. Or type a latitude and longitude instead, like 40.7, -74.0.');
-        case 'searchfailed': return messageHtml(`Could not look up “${q}” just now.`, `The weather service did not answer. It will try again in ${mins} minutes.`,
+        // Row 2.148: why, in the words every panel that asks an outside service uses (outside_reach.js) - an ad or
+        // privacy blocker named beside the network only when the failure looks like one.
+        case 'searchfailed': return messageHtml(`Could not look up “${q}” just now.`, `${esc(cantReachWords('The weather service', { host: OPEN_METEO_HOST, trouble }))} It will try again in ${mins} minutes.`,
           '<button type="button" class="wx-btn" data-walk data-act="retry">Try again now</button>');
         case 'pick': return `<div class="wx-msg" data-weather-msg="pick"><p class="wx-msg-title">Which “${q}”?</p>
           <div class="wx-picks">${matches.map((m, i) => `<button type="button" class="wx-btn" data-walk data-act="pick" data-i="${i}">${esc(m.name)}</button>`).join('')}</div></div>`;
         case 'loading': return messageHtml(`Getting the weather for ${esc(place().name || q)}…`, '');
         // Row 2.148 (2026-10-28): the browser asks Open-Meteo itself, so a blocker on this browser or network can stop it.
-        case 'failed': return messageHtml('Could not reach the weather service.', `It will try again in ${mins} minutes. `
-          + 'An ad blocker on this browser or network can also stop it.',
+        case 'failed': return messageHtml('Could not reach the weather service.', `${esc(cantReachWhy({ host: OPEN_METEO_HOST, trouble }))} It will try again in ${mins} minutes.`,
           '<button type="button" class="wx-btn" data-walk data-act="retry">Try again now</button>');
         default: return messageHtml('No place set for the weather yet.',
           'Open this panel’s settings. In Place, type a town, or a latitude and longitude (the two numbers that mark a spot on a map). '

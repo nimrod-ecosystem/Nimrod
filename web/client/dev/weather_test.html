@@ -388,6 +388,10 @@ try {
     check('*** says it could not reach the service and when it will try again ***', /Could not reach the weather service/.test(t.text('[data-weather-msg]'))
       && /30 minutes/.test(t.text('[data-weather-msg]')));
     check('with a button to try again now', !!t.q('[data-act="retry"]'));
+    // Row 2.148: no answer at all is what a blocker looks like to a page, so it is named beside the network.
+    check('*** row 2.148: no answer at all names an ad or privacy blocker beside the network, and the address to allow ***',
+      /internet may be down/.test(t.text('[data-weather-msg]')) && /ad or privacy blocker/.test(t.text('[data-weather-msg]'))
+      && /open-meteo\.com/.test(t.text('[data-weather-msg]')), t.text('[data-weather-msg]'));
     t.inst.destroy();
 
     const slow = fakeNet();
@@ -398,6 +402,8 @@ try {
     check('while it waits: "Getting the weather…", not blank', /Getting the weather/.test(s.text('[data-weather-msg]')));
     await s.timers.fire((x) => x.ms === FETCH_TIMEOUT_MS);
     check('*** ...and when the timeout passes it counts as failed ***', /Could not reach/.test(s.text('[data-weather-msg]')));
+    check('row 2.148: a wait that ran out is said as slow, not blamed on a blocker (they refuse at once)',
+      /did not answer in time/.test(s.text('[data-weather-msg]')) && !/ad or privacy/.test(s.text('[data-weather-msg]')), s.text('[data-weather-msg]'));
     s.inst.destroy();
   }
 

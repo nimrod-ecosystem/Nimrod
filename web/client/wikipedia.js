@@ -43,6 +43,8 @@
 // Licence: Wikipedia's text is CC BY-SA. What is kept from it is one quoted sentence per question,
 // shown with the article's title and a link to it, which is the attribution the licence asks for.
 
+import { reachTrouble, cantReachWhy, REACH } from './outside_reach.js';
+
 export const WIKI_API = 'https://en.wikipedia.org/w/api.php';
 export const DEFAULT_TIMEOUT_MS = 15 * 1000;     // per request; Wikipedia answers in ~0.5-1 s here
 export const MAX_ARTICLES = 3;
@@ -158,9 +160,12 @@ export function pickEvidence(articles, terms, { budget = EVIDENCE_CHARS } = {}) 
 // the client
 // ---------------------------------------------------------------------------------------------
 
+// Row 2.148 (2026-10-28): the browser asks Wikipedia itself, so a blocker on this browser or network can stop it too.
+// The words are the ones every panel that asks an outside service shares (outside_reach.js).
+const notReached = (trouble) => `Could not reach Wikipedia, so this was not checked. ${cantReachWhy({ host: 'wikipedia.org', trouble })}`;
 export const REASONS = Object.freeze({
-  // Row 2.148 (2026-10-28): the browser asks Wikipedia itself, so a blocker on this browser or network can stop it too.
-  offline: 'Could not reach Wikipedia, so this was not checked. The connection may be down, or an ad blocker may be stopping it.',
+  // No answer at all, cause unknown: the internet, or a blocker. (A device with no network at all is said as that.)
+  offline: notReached(null),
   timeout: 'Wikipedia took too long to answer, so this was not checked.',
   cancelled: 'Stopped before it was checked.',
   unreadable: 'Wikipedia answered, but the answer could not be read, so this was not checked.',
@@ -188,7 +193,7 @@ export function createWikipedia({ fetchImpl = (...a) => fetch(...a), timeoutMs =
     } catch (err) {
       if (timedOut) return { ok: false, timedOut: true, reason: REASONS.timeout };
       if (signal?.aborted || err?.name === 'AbortError') return { ok: false, cancelled: true, reason: REASONS.cancelled };
-      return { ok: false, offline: true, reason: REASONS.offline };
+      return { ok: false, offline: true, reason: reachTrouble(err) === REACH.OFFLINE ? notReached(REACH.OFFLINE) : REASONS.offline };
     } finally {
       clearTimeout(timer);
       signal?.removeEventListener?.('abort', onCancel);

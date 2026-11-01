@@ -64,6 +64,7 @@
 import { parseSpotifyUri } from './music_favourites.js';
 import { screenLockedHere } from './screen_lock.js';
 import { thumbOk } from './recommend.js';
+import { cantReachWords } from './outside_reach.js';
 
 export const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
 export const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
@@ -139,7 +140,8 @@ export const SPOTIFY_MESSAGES = Object.freeze({
   'no-device': 'No Spotify speaker, phone or computer is switched on. Open Spotify on one of them first.',
   'device-not-found': 'That Spotify speaker is not switched on, or is called something else.',
   busy: 'Spotify asked this screen to slow down. Try again in a minute.',
-  failed: 'Could not reach Spotify.',
+  // Row 2.148: the browser asks Spotify itself, so a blocker can stop it; the shared words (outside_reach.js).
+  failed: cantReachWords('Spotify', { host: 'spotify.com' }),
   'bad-uri': 'That is not a Spotify link.',
   'not-secure': 'Connecting Spotify needs a secure address. Open this site at an address that starts with https, or as http://127.0.0.1 on this computer.',
   'state-mismatch': 'That Spotify sign-in did not match one started here. Try Connect Spotify again.',

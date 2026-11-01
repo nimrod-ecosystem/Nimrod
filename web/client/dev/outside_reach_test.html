@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>outside_reach - when an outside service could not be reached, say what may have stopped it (row 2.148)</title>
+<style>body{font:14px system-ui;margin:16px}.pass{color:#060}.fail{color:#b00;font-weight:600}</style>
+</head>
+<body>
+<h1>outside_reach <span id="summary">running…</span></h1>
+<p>Row 2.148: a panel that asks an outside service from the browser (weather, Wikipedia, the Internet Archive, YouTube,
+Spotify) says the same plain sentence when it cannot reach it, naming an ad or privacy blocker as one possible cause
+beside the network, and not naming it when the failure says otherwise.</p>
+<div id="out"></div>
+<script type="module">
+import { REACH, reachTrouble, cantReachWords, cantReachWhy } from '../outside_reach.js';
+import { REASONS, createWikipedia } from '../wikipedia.js';
+import { ARCHIVE_MESSAGES, fetchItem, searchArchive, forgetItemsForTest } from '../archive_org.js';
+import { CAM_MESSAGES } from '../explore_cams.js';
+import { SPOTIFY_MESSAGES } from '../music_spotify.js';
+
+const out = document.getElementById('out');
+let passed = 0, failed = 0;
+function check(name, ok, detail) {
+  const p = document.createElement('div');
+  p.className = ok ? 'pass' : 'fail';
+  p.textContent = (ok ? 'PASS  ' : 'FAIL  ') + name + (!ok && detail ? '   ' + detail : '');
+  out.append(p);
+  if (ok) passed += 1; else failed += 1;
+}
+const on = { online: () => true };
+const off = { online: () => false };
+const abort = () => { const e = new Error('The operation was aborted.'); e.name = 'AbortError'; return e; };
+try {
+  // What a page can tell (outside_reach.js's header).
+  check('*** no answer at all (the TypeError every browser gives a blocked request): "stopped" ***',
+    reachTrouble(new TypeError('Failed to fetch'), on) === REACH.STOPPED
+    && reachTrouble(new TypeError('NetworkError when attempting to fetch resource.'), on) === REACH.STOPPED
+    && reachTrouble(new TypeError('Load failed'), on) === REACH.STOPPED);
+  check('*** no network at all: "offline", whatever was thrown ***', reachTrouble(new TypeError('Failed to fetch'), off) === REACH.OFFLINE
+    && reachTrouble(null, off) === REACH.OFFLINE);
+  check('a wait that ran out: "slow" (AbortError, TimeoutError, a caller\'s own "timed out" / "timeout")',
+    reachTrouble(abort(), on) === REACH.SLOW && reachTrouble(new Error('timed out'), on) === REACH.SLOW
+    && reachTrouble(new Error('timeout'), on) === REACH.SLOW && reachTrouble(Object.assign(new Error('x'), { name: 'TimeoutError' }), on) === REACH.SLOW);
+  check('*** the host ANSWERED (any status, a thrown "HTTP 500", an unreadable body): "answered", not a blocker ***',
+    reachTrouble({ ok: false, status: 503 }, on) === REACH.ANSWERED && reachTrouble(new Error('HTTP 500'), on) === REACH.ANSWERED
+    && reachTrouble(new SyntaxError('Unexpected token <'), on) === REACH.ANSWERED);
+  check('nothing to go on: null (the sentence then names both causes)', reachTrouble(new Error('down'), on) === null && reachTrouble(null, on) === null);
+
+  const stopped = cantReachWords('The weather service', { host: 'open-meteo.com', trouble: REACH.STOPPED });
+  check('*** "stopped": the network AND a blocker, as possibilities, and what to allow ***',
+    /^The weather service could not be reached from here\./.test(stopped) && /internet may be down/.test(stopped)
+    && /ad or privacy blocker/.test(stopped) && /may be stopping it/.test(stopped) && /Allowing open-meteo\.com in the blocker may fix it\./.test(stopped), stopped);
+  check('cause unknown reads the same as "stopped"', cantReachWords('X', { host: 'x.org' }) === cantReachWords('X', { host: 'x.org', trouble: REACH.STOPPED }));
+  const offline = cantReachWords('The weather service', { host: 'open-meteo.com', trouble: REACH.OFFLINE });
+  check('*** "offline": says so, and does NOT blame a blocker ***', /not connected to the internet, so the weather service could not be reached/.test(offline)
+    && !/blocker/.test(offline), offline);
+  const slow = cantReachWords('Wikipedia', { trouble: REACH.SLOW });
+  check('"slow": the network, or a filter on it (blockers refuse at once, so not named as one)', /did not answer in time/.test(slow) && /filter on this network/.test(slow) && !/ad or privacy/.test(slow), slow);
+  const answered = cantReachWords('Wikipedia', { trouble: REACH.ANSWERED });
+  check('"answered": not a blocker, not the connection', /answered with an error/.test(answered) && !/blocker|internet/.test(answered), answered);
+  check('the why on its own, for a panel whose title already said what', !/could not be reached/.test(cantReachWhy({ host: 'a.org' }))
+    && /Allowing a\.org/.test(cantReachWhy({ host: 'a.org' })) && cantReachWhy({ trouble: REACH.OFFLINE }) === 'This device is not connected to the internet.');
+
+  // The panels that ask an outside service use it.
+  check('*** Wikipedia: its "could not reach" names the blocker and wikipedia.org ***', /^Could not reach Wikipedia, so this was not checked\./.test(REASONS.offline) && /ad or privacy blocker/.test(REASONS.offline)
+    && /wikipedia\.org in the blocker/.test(REASONS.offline), REASONS.offline);
+  const w = createWikipedia({ fetchImpl: () => Promise.reject(new TypeError('Failed to fetch')), timeoutMs: 1000 });
+  const wr = await w.lookup('What is the capital of Australia?', 'Canberra');
+  check('...and a lookup that gets no answer says it (still offline: true, never a throw)', !wr.ok && wr.offline && wr.reason === REASONS.offline, JSON.stringify(wr));
+  check('*** the Internet Archive: the shared words, archive.org to allow ***', /^The Internet Archive could not be reached from here\./.test(ARCHIVE_MESSAGES['archive-unreachable'])
+    && /archive\.org in the blocker/.test(ARCHIVE_MESSAGES['archive-unreachable']));
+  forgetItemsForTest();
+  const a1 = await fetchItem('someitem', { fetchImpl: () => Promise.reject(new TypeError('Failed to fetch')) });
+  const a2 = await fetchItem('someitem2', { fetchImpl: async () => ({ ok: false, status: 503, json: async () => ({}) }) });
+  const a3 = await searchArchive('jazz', { fetchImpl: () => new Promise(() => {}), timeoutMs: 30 });
+  check('*** an Archive read keeps its reason and carries the narrowed sentence ***', a1.reason === 'archive-unreachable' && /blocker/.test(a1.words)
+    && a2.reason === 'archive-unreachable' && /answered with an error/.test(a2.words) && !/blocker/.test(a2.words)
+    && a3.reason === 'archive-unreachable' && /did not answer in time/.test(a3.words), JSON.stringify([a1, a2, a3]));
+  check('the live cams: "YouTube could not be reached", the blocker named, still tried again in a minute',
+    /^YouTube could not be reached/.test(CAM_MESSAGES['cam-unreachable']) && /youtube\.com in the blocker/.test(CAM_MESSAGES['cam-unreachable'])
+    && /tried again in a minute/.test(CAM_MESSAGES['cam-unreachable']), CAM_MESSAGES['cam-unreachable']);
+  check('Spotify: the shared words, spotify.com to allow', /^Spotify could not be reached/.test(SPOTIFY_MESSAGES.failed) && /spotify\.com/.test(SPOTIFY_MESSAGES.failed));
+
+  const src = await (await fetch('../outside_reach.js?x=' + Date.now())).text();
+  check('its words name nobody (site copy)', !/her screen|cici/i.test(src));
+  check('it never asks for a bait address to find a blocker (no fetch, no network at all)', !/\bfetch\([^)]|XMLHttpRequest|new Image/.test(src));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed ? failed + ' FAILED / ' + passed + ' passed' : 'ALL PASS - ' + passed + ' checks';
+</script>
+</body>
+</html>
