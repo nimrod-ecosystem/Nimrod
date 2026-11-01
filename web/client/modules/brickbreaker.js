@@ -98,6 +98,7 @@ import { ensureBrickFaceStyle, cellsAlong } from '../brick_face.js';
 import {
   FIELD_W, FIELD_H, BALL_R, PADDLE_H, PADDLE_Y, BALL_SPEEDS, PADDLE_WIDTHS, SWEEP_SPEEDS, STEP_SIZES,
   CONTROLS, newGame, launch, step, setPaddleX, nudgePaddle, landingX, togglePause, setPaused, nextWall, aliveCount,
+  WALL_SHAPES, WALL_SHAPE_NAMES, HARDER_TOPS, harderSpeed,
 } from '../breakout.js';
 
 export const GAME = 'brickbreaker';
@@ -153,6 +154,13 @@ export const DEFAULTS = Object.freeze({
   lives: 0,               // 0 = off
   rows: 4,
   cols: 8,
+  // Row 2.178 (Mike, 2026-11-01: "yes to different levels and increasing difficulty options"). A new shape each wall:
+  // ON by default, argued: it changes what the wall looks like and how many bricks it has, never how hard a brick is to
+  // reach (breakout.js WALL_SHAPES), and the first wall is still the full one. Faster with each wall: OFF by default,
+  // Comet's call (row 2.165): a game that speeds up under somebody who responds slowly is a setback nobody asked for.
+  levels: 'shapes',
+  harder: false,
+  harderTop: 2,
   // brick games (2026-10-09). 'nimrod': each brick drawn as a Nimrod brick, one keyed socket per 40 mm cell, a theme
   // colour a row. 'plain': the flat bricks it had before. FOR nimrod by default: Mike asked for it ("made of Nimrod
   // bricks"), and on this site the bricks ARE the product. AGAINST: busier bricks, a little harder to read as
@@ -213,6 +221,15 @@ const SETTINGS = [
     options: [2, 3, 4, 5, 6].map((v) => ({ value: v, label: String(v) })), note: 'Starts with the next wall.' },
   { key: 'cols', label: 'Bricks across', kind: 'choice', default: 8, level: 'advanced',
     options: [5, 6, 8, 10].map((v) => ({ value: v, label: String(v) })), note: 'Starts with the next wall.' },
+  { key: 'levels', label: 'Each new wall', kind: 'choice', default: 'shapes', level: 'standard',
+    options: [{ value: 'shapes', label: 'A new shape: stripes, a pyramid, a doorway and more' }, { value: 'same', label: 'The same whole wall' }],
+    note: 'The first wall of a game is always the whole wall. A shape never makes a brick harder to reach.' },
+  { key: 'harder', label: 'The ball gets faster with each wall knocked down', default: false, level: 'standard',
+    onLabel: 'Yes', offLabel: 'No, one speed',
+    note: 'Only as walls come down, so it never speeds up for somebody who is not knocking them down. A new game starts at the ball speed above. Not while the screen asks for less motion.' },
+  { key: 'harderTop', label: 'Fastest the ball gets', kind: 'choice', default: 2, level: 'advanced',
+    options: HARDER_TOPS.map((v) => ({ value: v, label: v === 1.5 ? 'One and a half times the ball speed' : (v === 2 ? 'Twice the ball speed' : 'Three times the ball speed') })),
+    appliesWhen: (v) => !!v && v.harder === true },
   { key: 'look', label: 'The bricks', kind: 'choice', default: 'nimrod', level: 'standard',
     options: [{ value: 'nimrod', label: 'Nimrod bricks, in the theme\'s colors' }, { value: 'plain', label: 'Plain bricks' }] },
   { key: 'sounds', label: 'Bounce sounds', default: true, level: 'standard', onLabel: 'On', offLabel: 'Off' },
@@ -236,7 +253,8 @@ const pick = (v, table, dflt) => (Object.prototype.hasOwnProperty.call(table, v)
 export function statusFor(g, { control = 'sweep', idle = false, autoLaunch = 3 } = {}) {
   switch (g.phase) {
     case 'paused': return 'Paused. Press to go on.';
-    case 'cleared': return 'Wall down! A new wall is going up.';
+    case 'cleared': return g.shapes ? `Wall down! Next: ${WALL_SHAPE_NAMES[WALL_SHAPES[g.walls % WALL_SHAPES.length]]}.`
+      : 'Wall down! A new wall is going up.';
     case 'again': return 'Again! A new game is starting.';
     case 'ready':
       if (idle) return 'Press to play.';
@@ -305,8 +323,11 @@ registerModule(
     const setT = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
     const clearT = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (h) => clearTimeout(h);
 
+    // Row 2.178: faster with each wall, only with the setting on, a real game (not the demo) and the screen not asking
+    // for less motion (Comet's rule: less motion asked for wins over the panel's row).
+    const harder = () => (cfg.harder === true && started && !reducedMotion() && g ? harderSpeed(g.walls, cfg.harderTop) : 1);
     const opts = () => ({
-      speed: pick(cfg.ballSpeed, BALL_SPEEDS, 'slow'),
+      speed: pick(cfg.ballSpeed, BALL_SPEEDS, 'slow') * harder(),
       sweep: pick(cfg.sweepSpeed, SWEEP_SPEEDS, 'slow'),
       control: CONTROLS.includes(cfg.control) ? cfg.control : 'sweep',
       autoLaunchMs: Math.max(0, Number(cfg.autoLaunch) || 0) * 1000,
@@ -452,7 +473,7 @@ registerModule(
       clearRest();
       stopLoop();
       started = false;
-      g = newGame({ rows: cfg.rows, cols: cfg.cols, paddle: cfg.paddleWidth, lives: 0 });
+      g = newGame({ rows: cfg.rows, cols: cfg.cols, paddle: cfg.paddleWidth, lives: 0, shapes: cfg.levels !== 'same' });
       idle = true; missesSinceInput = 0;
       demo = demoWanted();
       demoMs = 0; demoRested = false; demoMemory = {}; readyMs = 0;
@@ -708,7 +729,7 @@ registerModule(
     }
 
     function fresh() {
-      g = newGame({ rows: cfg.rows, cols: cfg.cols, paddle: cfg.paddleWidth, lives: cfg.lives });
+      g = newGame({ rows: cfg.rows, cols: cfg.cols, paddle: cfg.paddleWidth, lives: cfg.lives, shapes: cfg.levels !== 'same' });
       idle = true; missesSinceInput = 0;
     }
 
@@ -758,7 +779,7 @@ registerModule(
           cfg = next;
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
           if (g && next.paddleWidth !== was.paddleWidth) { g.paddle.w = pick(next.paddleWidth, PADDLE_WIDTHS, 'wide'); setPaddleX(g, g.paddle.x); }
-          if (g) { g.rows = next.rows; g.cols = next.cols; }
+          if (g) { g.rows = next.rows; g.cols = next.cols; g.shapes = next.levels !== 'same'; }   // (row 2.178: from the next wall)
           if (g && next.lives !== was.lives) {
             const n = Number(next.lives) > 0 ? Math.round(Number(next.lives)) : null;
             g.startLives = n; g.livesLeft = n;

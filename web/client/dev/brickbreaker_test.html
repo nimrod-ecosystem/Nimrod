@@ -39,6 +39,7 @@ import { expectFor, HEALTH_EXPECT } from '../health.js';
 import {
   FIELD_W, FIELD_H, BALL_R, PADDLE_Y, BALL_SPEEDS, PADDLE_WIDTHS, MIN_VX_FRAC, MIN_VY_FRAC,
   makeWall, newGame, launch, step, setPaddleX, landingX, togglePause, aliveCount,
+  nextWall, WALL_SHAPES, harderSpeed,
 } from '../breakout.js';
 import { GAME, DEFAULTS, REST_MS, IDLE_BALLS, AIM, statusFor } from '../modules/brickbreaker.js';
 import { SYSTEM_TOPICS } from '../actions.js';
@@ -142,6 +143,42 @@ try {
     check('no two bricks overlap', !overlap);
     check('rows and columns are clamped to something playable', makeWall({ rows: 99, cols: 1 }).length > 0
       && Math.max(...makeWall({ rows: 99, cols: 1 }).map((b) => b.row)) === 7);
+  }
+
+  // =====================================================================
+  section('*** levels (row 2.178): a new shape each wall, and faster with each wall when asked ***');
+  {
+    const full = makeWall({ rows: 4, cols: 8 });
+    const ids = new Set(full.map((b) => b.id));
+    for (const s of WALL_SHAPES.filter((x) => x !== 'full')) {
+      const w = makeWall({ rows: 4, cols: 8, shape: s });
+      check(`"${s}": some of the whole wall's bricks, in their places, never a new one (${w.length} of ${full.length})`,
+        w.length >= 4 && w.length < full.length && w.every((b) => ids.has(b.id)
+          && full.find((f) => f.id === b.id).x === b.x), String(w.length));
+    }
+    check('a shape that would leave almost nothing on a small wall is dealt whole',
+      WALL_SHAPES.every((s) => makeWall({ rows: 2, cols: 5, shape: s }).length >= 4));
+    const g = newGame({ shapes: true });
+    check('the first wall of a game is the whole wall', g.shape === 'full' && g.bricks.length === full.length);
+    const seen = [];
+    for (let i = 0; i < WALL_SHAPES.length + 1; i++) { g.phase = 'cleared'; g.walls += 1; nextWall(g); seen.push(g.shape); }
+    check('*** then each wall the next shape in the list, round again ***',
+      JSON.stringify(seen) === JSON.stringify([...WALL_SHAPES.slice(1), WALL_SHAPES[0], WALL_SHAPES[1]]), JSON.stringify(seen));
+    g.phase = 'again'; nextWall(g);
+    check('a game starting again starts at the whole wall', g.shape === 'full' && g.walls === 0);
+    const same = newGame({ shapes: false });
+    same.phase = 'cleared'; same.walls = 3; nextWall(same);
+    check('"The same whole wall": always the whole wall', same.shape === 'full' && same.bricks.length === full.length);
+    check('the status line names the next shape', /Next: stripes/.test(statusFor({ ...newGame({ shapes: true }), phase: 'cleared', walls: 1 })));
+    check('*** faster by walls cleared: their speed at first, a fifth more a wall, capped (twice by default) ***',
+      harderSpeed(0) === 1 && Math.abs(harderSpeed(1) - 1.2) < 1e-9 && harderSpeed(5) === 2 && harderSpeed(50) === 2
+      && harderSpeed(50, 1.5) === 1.5 && harderSpeed(50, 3) === 3 && harderSpeed(50, 'junk') === 2);
+    check('defaults: shapes on, faster off (Comet\'s call), up to twice', DEFAULTS.levels === 'shapes' && DEFAULTS.harder === false && DEFAULTS.harderTop === 2);
+    const rows = getManifest(GAME).settings;
+    check('the rows are offered; "Fastest the ball gets" only with faster on',
+      !!rows.find((f) => f.key === 'levels') && !!rows.find((f) => f.key === 'harder')
+      && rows.find((f) => f.key === 'harderTop').appliesWhen({ harder: false }) === false
+      && rows.find((f) => f.key === 'harderTop').appliesWhen({ harder: true }) === true);
   }
 
   section('a new game is at rest');

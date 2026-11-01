@@ -50,8 +50,57 @@ const WALL_TOP = 6, WALL_SIDE = 3, BRICK_GAP = 0.8, BRICK_H = 3.4;
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-/** Bricks for one wall. `rows` of `cols` whole bricks; odd rows are shifted half a brick. */
-export function makeWall({ rows = 4, cols = 8 } = {}) {
+// *** A NEW SHAPE EACH WALL (row 2.178, Mike 2026-11-01: "yes to different levels"). *** Each shape keeps some of the
+// full wall's bricks, so a shape is never harder to reach than the full wall is - it only looks different, and has fewer
+// bricks. The first wall of a game is always the full one (what everybody already knows); then the list, in order, round
+// again. A shape that would leave fewer than MIN_SHAPE_BRICKS on a small wall (2 rows of 5) is dealt as the full wall.
+export const WALL_SHAPES = Object.freeze(['full', 'stripes', 'pyramid', 'doorway', 'checker', 'diamond', 'frame']);
+export const WALL_SHAPE_NAMES = Object.freeze({ full: 'the whole wall', stripes: 'stripes', pyramid: 'a pyramid',
+  doorway: 'a doorway', checker: 'a checkerboard', diamond: 'a diamond', frame: 'a frame' });
+const MIN_SHAPE_BRICKS = 4;
+
+// *** FASTER WITH EACH WALL (row 2.178: "increasing difficulty options"), Comet's challenge (row 2.165) in this game's
+// terms. *** Off by default (the module's setting). BY WALLS CLEARED, not by the clock: a player who is not keeping up
+// clears no walls, so it never gets faster under them. HARDER_STEP a fifth of their chosen speed per wall: a wall takes a
+// minute or more at the slow speed, so twice the speed is about five walls in, ten minutes or so - and the step is small
+// enough not to notice as a jump. [A fixed number: on Mike's list, Rule 1.] The CAP is the setting (HARDER_TOPS, as
+// Comet's), because how fast is too fast is what differs between players. A new game starts at their chosen speed.
+export const HARDER_STEP = 0.2;
+export const HARDER_TOPS = Object.freeze([1.5, 2, 3]);
+/** How much faster than chosen the ball goes after `walls` cleared this game, up to `top`. PURE. */
+export function harderSpeed(walls, top = 2) {
+  const cap = HARDER_TOPS.includes(Number(top)) ? Number(top) : 2;
+  const n = Math.max(0, Math.floor(Number(walls) || 0));
+  return Math.min(cap, 1 + HARDER_STEP * n);
+}
+/** Whether brick `col` of `n` in row `row` of `rows` stays in `shape`. PURE. */
+export function keepsBrick(shape, row, col, n, rows) {
+  const mid = (n - 1) / 2;
+  const across = n > 1 ? Math.abs(col - mid) / mid : 0;          // 0 in the middle, 1 at either end
+  const down = rows > 1 ? row / (rows - 1) : 1;                  // 0 at the top row, 1 at the bottom
+  switch (shape) {
+    case 'stripes': return row % 2 === 0;
+    case 'pyramid': return across <= 0.25 + 0.75 * down;          // narrow at the top, the whole width at the bottom
+    case 'doorway': return !(across < 0.3 && down > 0.4);         // a way through the middle of the lower rows
+    case 'checker': return (row + col) % 2 === 0;
+    case 'diamond': return across + Math.abs(down - 0.5) * 2 * 0.6 <= 0.85;
+    case 'frame': return row === 0 || row === rows - 1 || col === 0 || col === n - 1;
+    default: return true;
+  }
+}
+
+/** Bricks for one wall. `rows` of `cols` whole bricks; odd rows are shifted half a brick. `shape`: WALL_SHAPES. */
+export function makeWall({ rows = 4, cols = 8, shape = 'full' } = {}) {
+  const all = makeFullWall({ rows, cols });
+  if (!WALL_SHAPES.includes(shape) || shape === 'full') return all;
+  const nRows = Math.max(...all.map((b) => b.row)) + 1;
+  const perRow = new Map();
+  for (const b of all) perRow.set(b.row, (perRow.get(b.row) || 0) + 1);
+  const kept = all.filter((b) => keepsBrick(shape, b.row, b.col, perRow.get(b.row), nRows));
+  return kept.length >= MIN_SHAPE_BRICKS ? kept : all;
+}
+
+function makeFullWall({ rows = 4, cols = 8 } = {}) {
   const r = clamp(Math.round(Number(rows) || 4), 1, 8);
   const c = clamp(Math.round(Number(cols) || 8), 2, 12);
   const bw = (FIELD_W - 2 * WALL_SIDE - (c - 1) * BRICK_GAP) / c;
@@ -77,11 +126,13 @@ export function makeWall({ rows = 4, cols = 8 } = {}) {
 export const aliveCount = (g) => g.bricks.reduce((n, b) => n + (b.alive ? 1 : 0), 0);
 
 /** A new game: a full wall, the ball resting on a still paddle, nothing moving until somebody presses. */
-export function newGame({ rows = 4, cols = 8, paddle = 'wide', lives = 0 } = {}) {
+export function newGame({ rows = 4, cols = 8, paddle = 'wide', lives = 0, shapes = false } = {}) {
   const w = PADDLE_WIDTHS[paddle] || PADDLE_WIDTHS.wide;
   const g = {
     bricks: makeWall({ rows, cols }),
     rows, cols,
+    shapes: !!shapes,        // a new shape each wall (WALL_SHAPES); the first is always the full wall
+    shape: 'full',
     paddle: { x: FIELD_W / 2, w, dir: 1, moving: false },
     ball: { x: FIELD_W / 2, y: PADDLE_Y - BALL_R, vx: 0, vy: 0, r: BALL_R },
     phase: 'ready',          // ready | play | cleared | again | paused
@@ -306,11 +357,13 @@ export function step(g, dt, opts = {}) {
 /** After "wall down" or "again": the next wall goes up and the ball rests on the paddle. */
 export function nextWall(g) {
   const again = g.phase === 'again';
-  g.bricks = makeWall({ rows: g.rows, cols: g.cols });
   if (again) {
     g.broken = 0; g.walls = 0; g.misses = 0; g.catches = 0;
     g.livesLeft = g.startLives != null ? g.startLives : g.livesLeft;
   }
+  // The next shape in the list by walls cleared this game (a game starting again starts at the full wall).
+  g.shape = g.shapes ? WALL_SHAPES[g.walls % WALL_SHAPES.length] : 'full';
+  g.bricks = makeWall({ rows: g.rows, cols: g.cols, shape: g.shape });
   g.phase = 'ready'; g.wait = 0;
   restOnPaddle(g);
   return [again ? 'restart' : 'wall'];
