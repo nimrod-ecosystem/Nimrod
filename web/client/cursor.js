@@ -66,6 +66,14 @@ export const CURSOR_DEFAULTS = {
   // one and being wrong half the time.
   //
   //   'tracking'  draw it only when something other than a mouse is aiming   (default)
+  //               A FINGER COUNTS, BUT ONLY WHILE IT IS ON THE GLASS (row 2.170, 2026-10-31). Both sides, as
+  //               Mike asks (porting Rule 2): FOR leaving a finger out entirely: on a phone the finger already
+  //               marks the spot, and a ring under it is redundant. AGAINST, and it decides it: on a big touch
+  //               screen somebody across the room sees where a tap landed, and a dwell by finger needs its
+  //               progress ring (talk.js argues both). What was wrong was never the ring under the finger; it
+  //               was the ring STAYING after the finger left, parked on whatever game was under the last tap.
+  //               aim.js `release` ends a lifted finger's aim, so the ring goes with the finger. 'never' is
+  //               still one setting away for anybody who wants no ring at all.
   //   'always'    draw it whatever is aiming — for somebody who wants a big pointer with a
   //               mouse too, which is a real want and the reason this is not a boolean
   //   'never'     off
@@ -110,7 +118,7 @@ export const SYSTEM_DRAWN = ['pointer:mouse'];
 export const SETTINGS = [
   { key: 'show', label: 'Show a big cursor', kind: 'choice', default: 'tracking', level: 'standard',
     options: [
-      { value: 'tracking', label: 'when a hand or a marker moves it, not a mouse' },
+      { value: 'tracking', label: 'when a hand, a marker or a finger on the screen moves it, not a mouse' },
       { value: 'always', label: 'always, including with a mouse' },
       { value: 'never', label: 'never' },
     ] },
@@ -246,6 +254,9 @@ export function mountCursor(root, {
     const c = cfg();
     const want = wanted(a, c);
     syncSystem(!!c.hideSystem && want);
+    // No aim (a finger lifted: aim.js `release`) forgets the last one too, so `refresh()` on a settings change
+    // cannot bring the ring back where nobody is pointing any more.
+    if (!a) at = null;
     if (!want || !a) { hide(); return null; }
     const w = Number(view?.innerWidth) || 0;
     const h = Number(view?.innerHeight) || 0;

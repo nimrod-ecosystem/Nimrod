@@ -47,7 +47,7 @@ registry's sake: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port
 import { createBus } from '../bus.js';
 import { createAim, viewportAim, aimIn, AIM_TOPIC } from '../aim.js';
 import { mountCursor, CURSOR_DEFAULTS } from '../cursor.js';
-import { attachPointer, POINTER_DEVICE } from '../input_pointer.js';
+import { attachPointer, POINTER_DEVICE, TOUCH_DEVICE } from '../input_pointer.js';
 import { mountModule } from '../module.js';
 import '../modules/comet.js';
 
@@ -286,6 +286,64 @@ try {
     const cur = mountCursor(root, { bus, aim, settings: () => ({ show: 'always' }) });
     check('*** it starts where she was already pointing, not blank ***', cur.isVisible()
       && Math.abs(cur.at().x - 0.6) < 1e-9, JSON.stringify(cur.at()));
+    cur.destroy();
+  }
+
+  // =====================================================================================
+  // ROW 2.170 (Mike, 2026-10-31): "Some (maybe all) of the games have cursors that show up on them. Saw it in
+  // solitaire and brick breaker." The ring a finger left behind: a touch is drawn under 'tracking' (a finger is not
+  // the mouse), and nothing ever ended a finger's aim, so the ring stayed where the last tap was, on the game.
+  section('*** a finger lifted takes its ring with it (row 2.170) ***');
+  {
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const aim = createAim({ bus });
+    const root = document.getElementById('curhost');
+    const cur = mountCursor(root, { bus, aim, settings: () => ({ show: 'tracking' }) });
+    const target = document.createElement('div');
+    const input = { isCapturing: () => false, hasBinding: () => false, down() {}, up() {}, heldControls: () => [] };
+    const off = attachPointer(input, { target, aim });
+    const touch = (type, x = 40, y = 40) => target.dispatchEvent(Object.assign(new Event(type), { clientX: x, clientY: y, pointerType: 'touch' }));
+    const mouse = (type, x = 40, y = 40) => target.dispatchEvent(Object.assign(new Event(type), { clientX: x, clientY: y, pointerType: 'mouse' }));
+
+    touch('pointermove');
+    check('CONTROL: a finger moving reports an aim as the touch device', seen.at(-1)?.device === TOUCH_DEVICE, JSON.stringify(seen.at(-1)));
+    check('CONTROL: ...and on the default the ring shows while the finger is on the glass', cur.isVisible());
+    touch('pointerup');
+    check('*** the finger lifting ends its aim: the bus hears null ***', seen.at(-1) === null, JSON.stringify(seen.at(-1)));
+    check('*** ...and the ring is gone, not parked on whatever game was under the tap ***', !cur.isVisible());
+    check('...and latest() forgets it, so the next mount does not draw it again', aim.latest() === null, JSON.stringify(aim.latest()));
+    cur.refresh();
+    check('...and a settings change cannot bring it back where nobody is pointing', !cur.isVisible());
+
+    touch('pointermove'); touch('pointercancel');
+    check('a touch the browser cancels (a scroll took it) ends the aim too', aim.latest() === null && !cur.isVisible());
+
+    // A module that stops its own pointerup from bubbling must not keep the ring alive.
+    const inner = document.createElement('div');
+    target.append(inner);
+    inner.addEventListener('pointerup', (e) => e.stopPropagation());
+    touch('pointermove');
+    inner.dispatchEvent(Object.assign(new Event('pointerup', { bubbles: true }), { clientX: 40, clientY: 40, pointerType: 'touch' }));
+    check('*** ...even when a game stops the pointerup from bubbling ***', aim.latest() === null && !cur.isVisible(),
+      JSON.stringify(aim.latest()));
+
+    // Only a finger's own aim. A tracker that took over since must not be blanked by a finger lifting.
+    touch('pointermove');
+    aim.report('tracker:hand', 0.5, 0.5);
+    touch('pointerup');
+    check('*** a finger lifting does not blank a tracker that has the aim now ***',
+      aim.latest()?.device === 'tracker:hand' && cur.isVisible(), JSON.stringify(aim.latest()));
+    // And a mouse button coming up is not a mouse leaving: the mouse is still somewhere.
+    mouse('pointermove');
+    const n = seen.length;
+    mouse('pointerup');
+    check('a mouse button coming up does not end the mouse aim', seen.length === n && aim.latest()?.device === POINTER_DEVICE,
+      JSON.stringify(aim.latest()));
+    check('release() of a device that does not own the aim does nothing', aim.release(TOUCH_DEVICE) === false && aim.latest() !== null);
+
+    off();
     cur.destroy();
   }
 

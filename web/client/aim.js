@@ -146,6 +146,21 @@ export function createAim({
     // instead of waiting for the next movement — which for somebody whose movement is slow
     // and effortful is the difference between a working screen and a blank one.
     latest: () => (last ? { ...last } : null),
+    // *** A FINGER LEAVING THE GLASS ENDS ITS AIM (row 2.170, 2026-10-31). *** Mike: "Some (maybe all) of the
+    // games have cursors that show up on them. Saw it in solitaire and brick breaker." A mouse and a hand tracker
+    // are always SOMEWHERE, so their last aim is still true after they stop moving. A finger is not: once it is
+    // lifted it points at nothing, and an aim that outlives it is a lie. The kiosk never said so, so the big cursor
+    // (cursor.js, which draws a finger under its default) stayed parked wherever the last touch was, for good, and
+    // came back on the next mount from `latest()`. It showed most over games because games are what people tap and
+    // drag. talk.js already ended a touch this way on its own page (publishing null); this is the shared version.
+    // Publishes null (every aim subscriber already treats null as "pointing at nothing") and clears `latest()`,
+    // but ONLY if `device` still owns the aim: a finger lifting must not blank a tracker that took over since.
+    release(device) {
+      if (destroyed || !last || (device && last.device !== device)) return false;
+      last = null;
+      bus.publish(AIM_TOPIC, null);
+      return true;
+    },
     setEnabled(device, on) { if (on) off.delete(device); else off.add(device); return !off.has(device); },
     enabled: (device) => !off.has(device),
     destroy() { destroyed = true; last = null; off.clear(); },

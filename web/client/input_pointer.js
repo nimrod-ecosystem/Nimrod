@@ -79,6 +79,12 @@ export function attachPointer(input, { target = window, device = null, aim = nul
   // superset that also fires for touch and pen, WITH `pointerType` on every event — which is
   // the one thing a plain `mousedown` can never tell you, touch-synthesized or not.
   const onMove = aim ? (e) => { aim.reportEvent(device || deviceFor(e.pointerType), e); } : null;
+  // A FINGER LIFTED POINTS AT NOTHING (row 2.170; aim.js `release`). Without this the last touch stayed the aim for
+  // good, and the big cursor sat on whatever game was under it. Only a touch: a mouse that stops is still somewhere.
+  // Listened for whatever is bound, since it is about where, not about a button.
+  const onLift = aim && typeof aim.release === 'function'
+    ? (e) => { if ((device || deviceFor(e.pointerType)) === TOUCH_DEVICE) aim.release(TOUCH_DEVICE); }
+    : null;
 
   // `ignore(e)` — OPT-IN, absent everywhere except the binder page (`inputs.js`). Found
   // 2026-09-20: a switch that presents as a mouse click (this file's own header — "a $30
@@ -139,6 +145,11 @@ export function attachPointer(input, { target = window, device = null, aim = nul
   target.addEventListener('pointerleave', onLeave);
   target.addEventListener('blur', onLeave);
   if (onMove) target.addEventListener('pointermove', onMove, { passive: true });
+  if (onLift) {
+    // Capture phase: a module that stops a pointerup from bubbling (its own business) must not keep a ring alive.
+    target.addEventListener('pointerup', onLift, { passive: true, capture: true });
+    target.addEventListener('pointercancel', onLift, { passive: true, capture: true });
+  }
 
   return () => {
     target.removeEventListener('pointerdown', onDown);
@@ -147,5 +158,9 @@ export function attachPointer(input, { target = window, device = null, aim = nul
     target.removeEventListener('pointerleave', onLeave);
     target.removeEventListener('blur', onLeave);
     if (onMove) target.removeEventListener('pointermove', onMove);
+    if (onLift) {
+      target.removeEventListener('pointerup', onLift, { capture: true });
+      target.removeEventListener('pointercancel', onLift, { capture: true });
+    }
   };
 }
