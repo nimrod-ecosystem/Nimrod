@@ -108,7 +108,9 @@ try {
     const darkMax = Math.max(...ids.filter((id) => THEMES[id].dark).map(themeLightness));
     const lightMin = Math.min(...ids.filter((id) => !THEMES[id].dark).map(themeLightness));
     check('...with room either side of the line (every dark page under .05, every light one over .6)', darkMax < 0.05 && lightMin > 0.6, `${darkMax} ${lightMin}`);
-    check('moving = it has a scene (the five plain ones are still)', ids.filter((id) => !isMovingTheme(id)).join() === 'default,dusk,contrast,warm,forge',
+    // Medieval (0f18a49, 2026-10-26) came as a site theme with no moving scene yet (Design has been asked for every
+    // theme's backdrop), so it is still too. It moves the day its scene lands, and this fails until it is taken off.
+    check('moving = it has a scene (the five plain ones are still, and Medieval until its scene comes)', ids.filter((id) => !isMovingTheme(id)).join() === 'default,dusk,contrast,warm,forge,medieval',
       ids.filter((id) => !isMovingTheme(id)).join());
     const easy = ids.filter((id) => isEasyToRead(id));
     check(`*** "Easy to read" is ${THEME_GALLERY_DEFAULTS.easyAt}:1 words on every surface, both visions: High contrast is one ***`,

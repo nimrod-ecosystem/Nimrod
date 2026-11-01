@@ -77,6 +77,10 @@ export const siteThemes = {
   spring: 'spring', summer: 'summer', newYear: 'newYear', lunarNewYear: 'lunarNewYear', valentines: 'valentines',
   stPatricks: 'stPatricks', easter: 'easter', july4: 'july4', halloween: 'halloween', diwali: 'diwali',
   harvest: 'harvest', hanukkah: 'hanukkah', christmas: 'christmas',
+  // (2026-10-31) Medieval became a site theme on 2026-10-26 (commit 0f18a49) without being written in here. Its id is
+  // Design's: the medieval deck, town and outfits all key off it. The lines it does not answer yet are named, one by
+  // one, in dev/theme_surfaces_test.html ADDED_SINCE.
+  medieval: 'medieval',
 };
 
 /* ---- Added by Code, 2026-10-12, from Design's characters handoff (Nimrod Design System16, handoff/characters). ----
