@@ -34,8 +34,11 @@
 // `createSiteDefaultsClient` below is the small fetch wrapper; every answer it gives is { ok, status, data, why }, `why`
 // being the server's own sentence when it refused (a 403 says plainly that only the site's owners can).
 // The kinds a thing saves as are nimrod_defaults.js's: a room (`rooms`, [preset]), a village scene (`village`, [scene]),
-// a Town place (`town`, [deck, place]) -- each module says its own (the edit-mode contract's `siteDefault()`) -- and the
+// a Town place (`town`, [deck, place]) -- each module says its own (the edit-mode contract's `siteDefault()`) -- a whole
+// dashboard made from a ready-made one (`dashboards`, [its key]; step 5d, dashboards.js prebuiltDefaultEntry) and the
 // site's words (`words`, rows of { page, old, new }).
+// (step 5d) Where a thing IS is compared too: a placed panel's and a part of a page's Transform, against where the
+// ready-made dashboard puts it (dashboards.js prebuiltLayoutOf, editor_targets.js transformDefaults).
 
 import { fieldValue } from './settings_fields.js';
 import { authHeaders } from './auth.js';

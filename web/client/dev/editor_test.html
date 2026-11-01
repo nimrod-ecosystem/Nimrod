@@ -30,7 +30,8 @@ import { mergeLayoutSave } from '../doc_merge.js';
 import { targetsOf, parseTyped, typedRange } from '../edit_mode.js';
 import { normalizeField, displayValue } from '../settings_fields.js';
 import { sceneRecipe } from '../room_doors.js';
-import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS, transformWhy, changedCount, madeFromReady, rootMadeFrom, copiedSaved, tidied } from '../editor.js';
+import { openSceneEditor, SCENE_EDITOR_KIND, EDITOR_WORDS, transformWhy, changedCount, madeFromReady, rootMadeFrom, copiedSaved, tidied, dashboardSaveHelp } from '../editor.js';
+import { PREBUILT_KEY, PREBUILT_REFS_KEY, prebuiltStartOf, prebuiltMadeFrom, prebuiltLayoutOf, prebuiltDefaultEntry, PREBUILT_DEFAULT_WORDS } from '../dashboards.js';
 import { SITE_DEFAULT_WORDS } from '../site_defaults.js';
 import { buildTree, nodeIdFor, ROOT_ID, splitSelection, PLACED_TRANSFORM_FIELDS, TRANSFORM_ORDER, presentField, presentFields } from '../editor_targets.js';
 import '../modules/button.js';
@@ -835,6 +836,169 @@ try {
     check('setOwner(false): the owner’s rows go', e.setOwner(false) === false && !sec(e, 'o'));
     e.close();
     so.arr.destroy();
+  }
+
+  // ============================================================================================
+  // ROW 2.145 STEP 5D (2026-11-01): where things are -- a placed panel's and a part of a page's Transform against where the
+  // ready-made dashboard puts it -- and an owner's save of a whole dashboard as its ready-made one's default.
+  section('*** step 5d: a placed panel’s Transform against the ready-made dashboard’s layout ***');
+  {
+    const pp = await make();
+    // Made from "Your people": its people panel is the sign (b1), its Nimrod at the bottom is the clock placed over it (k2).
+    // The ready-made one puts Nimrod at HELPER_SPOT (80, 83); here it is at (30, 30).
+    const doc = { [PREBUILT_KEY]: 'people', [PREBUILT_REFS_KEY]: { people: 'b1', helper: 'k2' } };
+    const site = { startOf: (id) => prebuiltStartOf(doc, id), madeFrom: () => prebuiltMadeFrom(doc), layoutOf: () => prebuiltLayoutOf(doc) };
+    const tChanged = (e, k) => sec(e, 't')?.querySelector(`[data-em-changed="${k}"]`) || null;
+    const defHelp = (e) => sec(e, 'd')?.querySelector('[data-em-help], [data-se-def-help]')?.textContent || '';
+    const item = (e) => e.placedModel().item('k2');
+    let e = pp.open({ siteDefaults: site });
+    row(e, 'panel:k2').click();
+    check('*** left-right and up-down say "Changed from the site default", with where the ready-made one puts it; size, turn, layer and where it sits do not ***',
+      /Changed from the site default: 80 %/.test(tChanged(e, 'x')?.textContent || '') && /83 %/.test(tChanged(e, 'y')?.textContent || '')
+        && !tChanged(e, 'scale') && !tChanged(e, 'rot') && !tChanged(e, 'layer') && !tChanged(e, 'place'), sec(e, 't')?.textContent.slice(0, 400));
+    check('...the Site default section says its Transform is changed, with its Put back', defHelp(e).includes(EDITOR_WORDS.transformChanged)
+      && !!sec(e, 'd')?.querySelector('[data-se-d="back"]'), defHelp(e));
+    check('...each row’s Put back is a switch stop', e.scan.stops().some((b) => b.dataset.emDefault === 'x'));
+    const saves0 = pp.saves.length;
+    sec(e, 't').querySelector('[data-em-default="x"]').click();
+    check('*** one row put back: x is 80 again, y left alone, saved where the edit windows save ***',
+      item(e).x === 80 && item(e).y === 30 && pp.saves.length > saves0 && savedPlaced(pp, 'k2')?.x === 80, J({ it: item(e), saved: savedPlaced(pp, 'k2') }));
+    check('...Undo is the edit model’s, as for any move of it, and takes it back', await until(() => !bar(e, 'undo').disabled));
+    bar(e, 'undo').click();
+    check('*** Undo: x is 30 again ***', await until(() => item(e).x === 30 && savedPlaced(pp, 'k2')?.x === 30), J(item(e)));
+    await until(() => !!sec(e, 'd')?.querySelector('[data-se-d="back"]'));
+    sec(e, 'd').querySelector('[data-se-d="back"]').click();
+    check('*** the section’s "Put back the site default": x AND y back, in ONE step of the model ***',
+      await until(() => item(e).x === 80 && item(e).y === 83) && savedPlaced(pp, 'k2')?.y === 83, J(item(e)));
+    check('...the section says its Transform is the site default now, with no button', await until(() => defHelp(e).includes(EDITOR_WORDS.transformSame)
+      && !sec(e, 'd').querySelector('[data-se-d="back"]') && !tChanged(e, 'x')), defHelp(e));
+    bar(e, 'undo').click();
+    check('*** ONE Undo brings both back ***', await until(() => item(e).x === 30 && item(e).y === 30), J(item(e)));
+    // A move afterwards: Undo is the model's again (the put back is not the newest thing done).
+    sec(e, 'd').querySelector('[data-se-d="back"]')?.click();
+    await until(() => item(e).x === 80);
+    sec(e, 't').querySelector('[data-em-step="1"][data-em-key="layer"]').click();
+    const layerNow = item(e).layer;
+    bar(e, 'undo').click();
+    check('*** after a move of its own, Undo takes back that move, not the put back ***', await until(() => item(e).layer !== layerNow) && item(e).x === 80, J(item(e)));
+    e.close();
+    // Not made from a ready-made one: a placed panel has no site default place.
+    e = pp.open();
+    row(e, 'panel:k2').click();
+    check('*** a dashboard not made from a ready-made one: a placed panel’s rows are never marked ***', !sec(e, 't')?.querySelector('[data-em-changed]')
+      && !(defHelp(e).includes(EDITOR_WORDS.transformChanged)), defHelp(e));
+    e.close();
+    check('*** the in-panel card draws no site default line for it either ***', (() => { pp.arr.editPanel('k2', true); return true; })()
+      && await until(() => !!pp.card()) && !pp.card().querySelector('[data-em-changed], [data-em-default]'));
+    pp.arr.editPanel('k2', false);
+    pp.arr.destroy();
+  }
+
+  section('*** step 5d: a part of a page’s place and height against the ready-made dashboard ***');
+  {
+    const pg = await make({ layout: PAGE_LAYOUT, modules: PAGE_MODULES });
+    // Made from "Start here", whose saved default (made up here) lays it out as a page and starts its settings panel (k2)
+    // three quarters high.
+    const D = { dashboards: { start: { layout: { preset: 'page', slots: ['profile', 'settings', 'nimrod', 'devices'] },
+      modules: { settings: { startPage: 'sc-theme', pageHeight: 75 } } } } };
+    const doc = { [PREBUILT_KEY]: 'start', [PREBUILT_REFS_KEY]: { profile: 'b1', settings: 'k2', nimrod: 'b3', devices: 'dv' } };
+    const site = { startOf: (id) => prebuiltStartOf(doc, id, { defaults: D }), madeFrom: () => prebuiltMadeFrom(doc),
+      layoutOf: () => prebuiltLayoutOf(doc, { defaults: D }) };
+    const tChanged = (e, k) => sec(e, 't')?.querySelector(`[data-em-changed="${k}"]`) || null;
+    const filled = () => (pg.arr.layout().slots || []).filter(Boolean);
+    let e = pg.open({ siteDefaults: site });
+    row(e, 'panel:k2').click();
+    check('*** its place (2) is the ready-made one’s; its height (half) is not: three quarters is how the ready-made one starts it ***',
+      !tChanged(e, 'order') && /Changed from the site default: Three quarters/.test(tChanged(e, 'pageHeight')?.textContent || ''), sec(e, 't')?.textContent.slice(0, 300));
+    sec(e, 't').querySelector('[data-em-step="1"][data-em-key="order"]').click();
+    check('*** moved down: its place says it is changed, and where the site default has it (2) ***',
+      J(filled()) === J(['b1', 'b3', 'k2']) && await until(() => /Changed from the site default: 2/.test(tChanged(e, 'order')?.textContent || '')), sec(e, 't')?.textContent.slice(0, 300));
+    sec(e, 't').querySelector('[data-em-default="order"]').click();
+    check('*** its place put back: second again, saved ***', await until(() => J(filled()) === J(['b1', 'k2', 'b3']))
+      && J((pg.doc.kiosk.layout.slots || []).filter(Boolean)) === J(['b1', 'k2', 'b3']), J(filled()));
+    check('...the toolbar’s Undo takes that back (a part has no other history)', await until(() => !bar(e, 'undo').disabled));
+    bar(e, 'undo').click();
+    check('*** Undo: third again ***', await until(() => J(filled()) === J(['b1', 'b3', 'k2'])), J(filled()));
+    await until(() => !!sec(e, 'd')?.querySelector('[data-se-d="back"]'));
+    sec(e, 'd').querySelector('[data-se-d="back"]').click();
+    const k2 = pg.arr.recFor('k2');
+    check('*** the section’s Put back: its place AND its height, the height written as the ready-made one starts it (75) ***',
+      await until(() => J(filled()) === J(['b1', 'k2', 'b3'])) && k2.state.get().pageHeight === 75, `${J(filled())} ${J(k2.state.get())}`);
+    e.close();
+    // b1: the profile, no start of its own: its height's site default is the height's own (half).
+    e = pg.open({ siteDefaults: site });
+    row(e, 'panel:b1').click();
+    sec(e, 't').querySelector('[data-em-step="1"][data-em-key="pageHeight"]').click();
+    const b1 = pg.arr.recFor('b1');
+    check('*** a part with no start of its own: a height stepped away from half says so ***', b1.state.get().pageHeight === 75
+      && await until(() => /Changed from the site default: Half/.test(tChanged(e, 'pageHeight')?.textContent || '')));
+    sec(e, 't').querySelector('[data-em-default="pageHeight"]').click();
+    check('*** ...and put back it is written null (not chosen): it follows the default height from then on ***',
+      b1.state.get().pageHeight === null && await until(() => !tChanged(e, 'pageHeight')), J(b1.state.get()));
+    e.close();
+    // Not made from a ready-made one: the height still has its own default (as a module setting's site default is its
+    // module's), the place has none.
+    e = pg.open();
+    row(e, 'panel:k2').click();
+    sec(e, 't').querySelector('[data-em-step="1"][data-em-key="order"]').click();
+    check('*** a dashboard not made from a ready-made one: a part’s place is never marked; its height is against the height’s own default ***',
+      !tChanged(e, 'order') && /Changed from the site default: Half/.test(tChanged(e, 'pageHeight')?.textContent || ''), sec(e, 't')?.textContent.slice(0, 300));
+    e.close();
+    // An owner saving this page as the ready-made one's default: a part's height changed from its site default is in it
+    // (it is kept on the panel's own row, not a setting its module declares).
+    const asked = [];
+    e = pg.open({ owner: true, siteDefaults: { ...site, client: { save: async () => ({ ok: true }) },
+      entryFor: (changed) => { asked.push(changed); return { entry: null, why: 'checked' }; } } });
+    row(e, 'panel:b3').click();
+    sec(e, 't').querySelector('[data-em-step="1"][data-em-key="pageHeight"]').click();
+    row(e, ROOT_ID).click();
+    sec(e, 'r')?.querySelector('[data-se-d="savedash"]')?.click();
+    check('*** an owner’s save of the page carries a part’s changed height with its panel’s start ***',
+      await until(() => asked.length === 1) && asked[0].b3?.pageHeight === 75 && !('pageHeight' in (asked[0].b1 || {})), J(asked));
+    e.close();
+    pg.arr.destroy();
+  }
+
+  section('*** step 5d: an owner saves a whole dashboard as its ready-made one’s site default ***');
+  {
+    const ow = await make();
+    const doc = { [PREBUILT_KEY]: 'people', [PREBUILT_REFS_KEY]: { people: 'b1', helper: 'k2' } };
+    const sent = [];
+    const client = { save: async (entry) => { sent.push(entry); return { ok: true, status: 200, data: {}, why: '' }; },
+      saveWords: async () => ({ ok: true }), list: async () => ({ ok: true, data: { saves: [], copy: '' } }), withdraw: async () => ({ ok: true }) };
+    const asked = [];
+    let made = () => prebuiltMadeFrom(doc);
+    const site = { client, startOf: (id) => prebuiltStartOf(doc, id), madeFrom: () => made(), layoutOf: () => prebuiltLayoutOf(doc),
+      entryFor: (changed) => { asked.push(changed); return prebuiltDefaultEntry(doc, ow.arr.layout(), changed, { defaults: {} }); } };
+    let e = ow.open({ siteDefaults: site });
+    check('*** not an owner: no Save on the dashboard’s row ***', !sec(e, 'r') && !e.el.querySelector('[data-se-d="savedash"]'));
+    e.close();
+    e = ow.open({ owner: true, siteDefaults: site });
+    check('*** an owner, a dashboard made from a ready-made one: its row has "Save as the site default", saying what it keeps and what not ***',
+      !!sec(e, 'r')?.querySelector('[data-se-d="savedash"]') && (sec(e, 'r').querySelector('[data-se-def-help]')?.textContent || '') === dashboardSaveHelp('Your people'),
+      sec(e, 'r')?.textContent);
+    check('...a switch stop', e.scan.stops().some((b) => b.dataset.seD === 'savedash'));
+    const before = J(ow.doc);
+    sec(e, 'r').querySelector('[data-se-d="savedash"]').click();
+    check('*** Save sends ONE `dashboards` entry [people]: its layout by ref (Nimrod where it is here), the people panel’s changed settings ***',
+      await until(() => sent.length === 1) && sent[0].kind === 'dashboards' && J(sent[0].path) === J(['people'])
+        && sent[0].body.layout?.placed?.[0]?.ref === 'helper' && sent[0].body.layout.placed[0].x === 30 && !('id' in sent[0].body.layout.placed[0])
+        && sent[0].body.modules?.people?.label === 'Ada' && sent[0].body.modules.people.style === 'plate', J(sent[0])?.slice(0, 400));
+    check('...the changed settings were worked out by the editor (only the ready-made one’s panels, only what differs)',
+      J(Object.keys(asked[0] || {})) === J(['b1']) && asked[0].b1.label === 'Ada', J(asked));
+    check('*** ...said saved for the next update; nothing on the dashboard changed ***',
+      await until(() => (sec(e, 'r')?.querySelector('[data-se-def-status]')?.textContent || '') === SITE_DEFAULT_WORDS.saved) && J(ow.doc) === before);
+    // Nothing to save: said, nothing sent.
+    site.entryFor = () => ({ entry: null, why: PREBUILT_DEFAULT_WORDS.same });
+    sec(e, 'r').querySelector('[data-se-d="savedash"]').click();
+    check('*** nothing to save: it says so, and sends nothing ***', await until(() => (sec(e, 'r')?.querySelector('[data-se-def-status]')?.textContent || '') === PREBUILT_DEFAULT_WORDS.same)
+      && sent.length === 1);
+    e.close();
+    made = () => null;
+    e = ow.open({ owner: true, siteDefaults: site });
+    check('*** an owner on a dashboard NOT made from a ready-made one: no such Save ***', !sec(e, 'r') && !!sec(e, 'o'));
+    e.close();
+    ow.arr.destroy();
   }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));

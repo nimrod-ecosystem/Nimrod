@@ -440,6 +440,22 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
       if (!it || it.locked || it.fixed || !SURFACES.includes(surface) || it.surface === surface) return false;
       return commit(patch(id, { surface }), [id]);
     },
+    /** (row 2.145 step 5d, the one editor's "Put back the site default") Several of x, y, scale, rot, layer, place and
+     *  surface at once, each checked as `set` (typed), `setPlace` and `setSurface` check it, in ONE undoable step. A
+     *  value it would not take is left out; nothing it would change: false, and nothing is committed. */
+    setMany(p, { id = sel } = {}) {
+      const it = get(id);
+      if (!it || it.locked || it.fixed || !p || typeof p !== 'object') return false;
+      const next = {};
+      for (const k of TRANSFORM_KEYS) {
+        if (!(k in p)) continue;
+        const v = clampValue(k, resolveValue(k, { value: p[k], via: 'type', snap: snapState, config: cfg }), cfg);
+        if (v !== null && v !== it[k]) next[k] = v;
+      }
+      if (PLACES.includes(p.place) && p.place !== it.place) next.place = p.place;
+      if (SURFACES.includes(p.surface) && p.surface !== it.surface) next.surface = p.surface;
+      return Object.keys(next).length ? commit(patch(id, next), [id]) : false;
+    },
 
     // ---- layers ---------------------------------------------------------------------
     // (Row 2.38: over the LAYERED things only; a `fixed` room object is never a neighbour.)

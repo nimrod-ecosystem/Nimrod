@@ -88,8 +88,22 @@ def refused(t):
 
 bad = {"format": "nimrod-defaults", "version": 1, "made": "", "backdrops": {"steampunk": {"a": 1}}}
 check("*** an unknown kind (or one nothing reads, backdrops) is refused and NOTHING is written ***", refused(json.dumps(bad)))
-bad = {"format": "nimrod-defaults", "version": 1, "rooms": {"theRoom": ROOM}, "dashboards": {"x": {}}}
+bad = {"format": "nimrod-defaults", "version": 1, "rooms": {"theRoom": ROOM}, "screens": {"x": {"a": 1}}}
 check("...even beside a good one", refused(json.dumps(bad)))
+# (step 5d) A ready-made dashboard: the `dashboards` kind, [its key], shaped as dashboards.js reads it.
+DASH = {"layout": {"preset": "full", "slots": ["people"], "placed": [{"ref": "helper", "place": "overlay", "x": 70, "y": 80}]},
+        "settings": {"panelSurface": "solid"}}
+got = tool.apply(rules.copy_text([{"kind": "dashboards", "path": ["people"], "body": DASH}], "2026-11-01"), js)
+data = rules.read_block(js.read_text(encoding="utf-8"))
+check("*** 5d: a ready-made dashboard is merged under `dashboards` [its key], the others kept ***",
+      got["said"] == [("dashboards", ["people"], "new")] and data["dashboards"]["people"] == DASH and data["rooms"]["theRoom"] == ROOM2, str(got["said"]))
+DASH2 = {"modules": {"people": {"show": "big"}}}
+got = tool.apply(rules.copy_text([{"kind": "dashboards", "path": ["people"], "body": DASH2}], "2026-11-01"), js)
+check("...saved again, it REPLACES the one there as a whole (what the owner saved last is the default, not a mix of the two)",
+      got["said"] == [("dashboards", ["people"], "replaced")] and rules.read_block(js.read_text(encoding="utf-8"))["dashboards"]["people"] == DASH2)
+check("*** a ready-made dashboard not shaped as one (a part it does not have, a slot by instance id) is refused, nothing written ***",
+      refused(json.dumps({"format": "nimrod-defaults", "version": 1, "dashboards": {"people": {"kiosk": {"clock": 1}}}}))
+      and refused(json.dumps({"format": "nimrod-defaults", "version": 1, "dashboards": {"people": {"layout": {"preset": "full", "slots": ["m 1"]}}}})))
 check("a path that is not an id is refused", refused(json.dumps({"format": "nimrod-defaults", "version": 1, "rooms": {"the room!": ROOM}})))
 check("a town place one level short is refused", refused(json.dumps({"format": "nimrod-defaults", "version": 1, "town": {"nimrod": ROOM}})))
 check("a picture inside it is refused (storage_line's content rules)",
@@ -99,7 +113,7 @@ check("not JSON: refused", refused("# nimrod site defaults\n{not json"))
 e2, w2 = tool.split_copy(rules.copy_text([saves[3]], "2026-10-31"))
 check("words only: no defaults part, the words kept", e2 is None and "Begin here" in w2)
 p = tmp / "saved.txt"
-p.write_text(json.dumps({"format": "nimrod-defaults", "version": 1, "dashboards": {"x": {}}}), encoding="utf-8")
+p.write_text(json.dumps({"format": "nimrod-defaults", "version": 1, "screens": {"x": {"a": 1}}}), encoding="utf-8")
 check("the command: a refusal exits 2", tool.main([str(p), "--defaults", str(js)]) == 2)
 check("*** the real nimrod_defaults.js was never written ***", REAL.read_bytes() == real_before)
 

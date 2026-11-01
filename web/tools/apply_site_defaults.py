@@ -7,9 +7,11 @@ defaults", and hands Code the text. This puts it in:
 
     py -3.13 web/tools/apply_site_defaults.py saved.txt [--dry-run] [--no-words] [--defaults PATH]
 
-  * THE DEFAULTS (the JSON entry under "# nimrod site defaults"): each room, village scene and Town place is merged into
-    the data block of web/client/nimrod_defaults.js (between its marker lines: plain JSON), replacing the one there for
-    the same thing. Anything that is not one of those kinds, or not shaped like one, is REFUSED and nothing is written -
+  * THE DEFAULTS (the JSON entry under "# nimrod site defaults"): each room, village scene, Town place and (step 5d)
+    ready-made dashboard is merged into the data block of web/client/nimrod_defaults.js (between its marker lines: plain
+    JSON), replacing the one there for the same thing. (A ready-made dashboard's entry is replaced WHOLE: it is the
+    dashboard as the owner saved it, never a mix of two saves. dashboards_test checks every one the site ships against
+    dashboards.js recordProblems, so one that would not make a sound dashboard fails a suite, not a screen.) Anything that is not one of those kinds, or not shaped like one, is REFUSED and nothing is written -
     the same checks the server made (site_defaults.clean_entry), made again, since the text passed through a clipboard.
   * THE WORDS (the lines under "# nimrod wording changes"): written beside the input as <name>.words.tsv and handed to
     web/tools/export_site_text.py --apply-page-edits, which finds each line in the code by its words and refuses what

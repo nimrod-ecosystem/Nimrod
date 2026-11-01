@@ -149,6 +149,12 @@ check("...in the copy text as wording_edit.js's own lines", rules.WORDS_HEAD in 
 village = c.post("/api/site-defaults", json={"kind": "village", "path": ["village"], "body": {"pieces": []}}, headers=OWN)
 town = c.post("/api/site-defaults", json={"kind": "town", "path": ["nimrod", "kingHall"], "body": {"items": []}}, headers=OWN)
 check("a village scene and a Town place are kinds it keeps", village.status_code == 200 and town.status_code == 200, village.text + town.text)
+# (step 5d) A ready-made dashboard, as dashboards.js reads it: its layout by ref, its panels' starts, its look.
+DASH = {"layout": {"preset": "full", "slots": ["people"], "placed": [{"ref": "helper", "place": "overlay", "x": 70, "y": 80, "w": 36, "h": 11}]},
+        "modules": {"people": {"show": "big"}}, "settings": {"panelSurface": "solid"}}
+dash = c.post("/api/site-defaults", json={"kind": "dashboards", "path": ["people"], "body": DASH}, headers=OWN)
+check("*** 5d: a ready-made dashboard is a kind it keeps (`dashboards` [its key]) ***", dash.status_code == 200, dash.text)
+check("...in the copy text under `dashboards`", '"dashboards"' in c.get("/api/site-defaults", headers=OWN).json()["copy"])
 
 
 def refused_save(payload, status=400):
@@ -157,8 +163,16 @@ def refused_save(payload, status=400):
 
 
 section("*** 5c: each refusal ***")
-check("a kind nothing reads (backdrops) or not built yet (dashboards): refused",
-      refused_save({"kind": "backdrops", "path": ["x"], "body": ROOM}) and refused_save({"kind": "dashboards", "path": ["x"], "body": ROOM}))
+check("a kind nothing reads (backdrops), or one made up: refused",
+      refused_save({"kind": "backdrops", "path": ["x"], "body": ROOM}) and refused_save({"kind": "screens", "path": ["x"], "body": ROOM}))
+check("*** 5d: a ready-made dashboard not shaped as one is refused, in its own words ***",
+      refused_save({"kind": "dashboards", "path": ["people"], "body": ROOM})
+      and c.post("/api/site-defaults", json={"kind": "dashboards", "path": ["people"], "body": ROOM}, headers=OWN).json().get("detail") == rules.SAY_DASHBOARD)
+check("...a slot that is not a ref, a placed panel by instance id, a panel's start that is not an object, a look that is not plain values: each refused",
+      refused_save({"kind": "dashboards", "path": ["people"], "body": {"layout": {"preset": "full", "slots": ["no way!"]}}})
+      and refused_save({"kind": "dashboards", "path": ["people"], "body": {"layout": {"preset": "full", "slots": [], "placed": [{"id": "m-1", "ref": "helper"}]}}})
+      and refused_save({"kind": "dashboards", "path": ["people"], "body": {"modules": {"people": "big"}}})
+      and refused_save({"kind": "dashboards", "path": ["people"], "body": {"settings": {"theme": {"a": 1}}}}))
 check("a path that is not an id, or too short or long for its kind: refused",
       refused_save({"kind": "rooms", "path": ["the room!"], "body": ROOM}) and refused_save({"kind": "town", "path": ["nimrod"], "body": ROOM})
       and refused_save({"kind": "rooms", "path": ["a", "b"], "body": ROOM}) and refused_save({"kind": "rooms", "path": "theRoom", "body": ROOM}))

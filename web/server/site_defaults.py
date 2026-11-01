@@ -11,12 +11,17 @@ Visitors and every screen see nothing until that commit is deployed. (A server t
 THE RULES:
   1. ONLY AN OWNER (site_owner.py), checked in EVERY route that reads or writes here - never the page's word for it.
   2. NOTHING IS TRUSTED FROM THE PAGE. Every entry is checked here again, whatever the editor already checked:
-       kinds     rooms [preset], village [scene], town [deck, place] - the kinds nimrod_defaults.js has and something
-                 reads (DEFAULT_KINDS there; `backdrops` is read by nothing yet, and a dashboard's own default is a
-                 later step, so both are refused rather than kept for nothing)
+       kinds     rooms [preset], village [scene], town [deck, place], dashboards [ready-made key] (step 5d) - the
+                 kinds nimrod_defaults.js has and something reads (DEFAULT_KINDS there; `backdrops` is read by nothing
+                 yet, so it is refused rather than kept for nothing)
        a path    exactly as deep as its kind, each part an id (letters, digits, - and _, as every id on this site)
        a body    an object, no deeper than DEPTH_MAX, no bigger than ENTRY_MAX_BYTES, and storage_line.py's content
                  rules (no picture, sound or video inside it)
+       a ready-  (`dashboards`, step 5d) shaped as dashboards.js reads it: only `layout`, `modules` and `settings`;
+       made one  a layout's slots refs or null and its placed panels each with a ref; modules keyed by ref, each an
+                 object; settings plain values. Whether the refs are the ready-made one's own is the client's check
+                 (dashboards.js recordProblems, before the save and again when a dashboard is made from it): the
+                 server does not know the ready-made dashboards, which are code.
        words     a page (a path on this site) and the words on it and the new words: plain text, one line, at most
                  LINE_MAX letters; never < > ` ${ a control character or a data: address (they are going into code)
   3. ONE WAITING ENTRY PER THING. Saving the same room (or the same words on the same page) again replaces what was
@@ -28,7 +33,9 @@ THE NUMBERS (Rule 1, 2026-09-11):
       about 1 KB; 40 things with every field set is about 5 KB"); a village holds up to PIECES_MAX (120) pieces, about
       15-20 KB written out. 64 KiB is four times the town's own backstop and clears the fullest village. AGAINST: the
       state rows' own cap (storage_line.STATE_MAX_BYTES, 2 MiB) would also do, and is one number fewer - but this text
-      becomes a line of the site's code, which nobody should be asked to review at two megabytes.
+      becomes a line of the site's code, which nobody should be asked to review at two megabytes. (Step 5d: a ready-made
+      dashboard's entry is its layout and a few panels' starting settings, a few KB; one holding a village panel's own
+      scene is the village's size again, still under it.)
   DEPTH_MAX 12  A room recipe nests about five deep (the room, its items, an item, its look, a colour). Twelve is over
       twice that; deeper is not a recipe.
   WAITING_MAX 200  FOR: by rule 3 each thing has at most one entry, and the site has about forty defaults today (five
@@ -45,7 +52,8 @@ import re
 
 import storage_line
 
-KINDS = {"rooms": 1, "village": 1, "town": 2}      # kind -> how many parts its path has (nimrod_defaults.js)
+KINDS = {"rooms": 1, "village": 1, "town": 2, "dashboards": 1}   # kind -> how many parts its path has (nimrod_defaults.js)
+DASHBOARD_PARTS = ("layout", "modules", "settings")                # dashboards.js prebuiltRecord reads these
 WORDS = "words"
 ENTRY_MAX_BYTES = 64 * 1024
 DEPTH_MAX = 12
@@ -61,7 +69,10 @@ _PAGE_RE = re.compile(r"^/[A-Za-z0-9._~/-]{0,200}$")
 _REFUSED_IN_WORDS = re.compile(r"[<>`\x00-\x1f\x7f  ]|\$\{|data:", re.I)
 
 SAY_NOT_OWNER = "Only the site's owners can save the site's defaults. Your own changes are kept as yours."
-SAY_KIND = "That is not a kind of site default that can be saved (rooms, village scenes and Town's places can)."
+SAY_KIND = ("That is not a kind of site default that can be saved (rooms, village scenes, Town's places and ready-made "
+            "dashboards can).")
+SAY_DASHBOARD = ("A ready-made dashboard's default is its layout, its panels' starting settings and its look, each "
+                 "named by the ready-made one's own names for its panels.")
 SAY_PATH = "That is not a place for a site default."
 SAY_BODY = "A site default has to be the thing's settings, as an object."
 SAY_DEEP = f"That is nested more than {DEPTH_MAX} deep, which no site default is."
@@ -109,7 +120,41 @@ def clean_entry(kind, path, body) -> dict:
         storage_line.check_content(body)
     except storage_line.Refused as e:
         raise Refused(e.status, e.detail)
+    if kind == "dashboards" and not _dashboard_shaped(body):
+        raise Refused(400, SAY_DASHBOARD)
     return {"kind": kind, "path": list(path), "body": json.loads(json.dumps(body))}
+
+
+def _is_ref(v) -> bool:
+    return isinstance(v, str) and bool(_PART_RE.fullmatch(v))
+
+
+def _dashboard_shaped(body: dict) -> bool:
+    """A `dashboards` body as dashboards.js reads it (rule 2, step 5d): only its three parts, each the right shape."""
+    if any(k not in DASHBOARD_PARTS for k in body):
+        return False
+    lay = body.get("layout")
+    if lay is not None:
+        if not isinstance(lay, dict) or not isinstance(lay.get("preset"), str) or not _PART_RE.fullmatch(lay["preset"]):
+            return False
+        slots = lay.get("slots", [])
+        if not isinstance(slots, list) or not all(s is None or _is_ref(s) for s in slots):
+            return False
+        placed = lay.get("placed", [])
+        if not isinstance(placed, list) or not all(isinstance(p, dict) and _is_ref(p.get("ref")) and "id" not in p
+                                                   for p in placed):
+            return False
+        if "scene" in lay and not isinstance(lay["scene"], dict):
+            return False
+    mods = body.get("modules")
+    if mods is not None and (not isinstance(mods, dict) or not all(_is_ref(r) and isinstance(s, dict) for r, s in mods.items())):
+        return False
+    sets = body.get("settings")
+    if sets is not None and (not isinstance(sets, dict)
+                             or not all(isinstance(k, str) and (v is None or isinstance(v, (str, int, float, bool)))
+                                        for k, v in sets.items())):
+        return False
+    return True
 
 
 def _one_line(s) -> str | None:
@@ -150,7 +195,7 @@ def entry_key(kind: str, path: list) -> str:
 # merges into it deterministically and this server can say which waiting entries are already in the site.
 MARK_BEGIN = "// nimrod-defaults:begin"
 MARK_END = "// nimrod-defaults:end"
-DATA_KINDS = ("rooms", "town", "village", "backdrops")     # nimrod_defaults.js DEFAULT_KINDS
+DATA_KINDS = ("rooms", "town", "village", "backdrops", "dashboards")     # nimrod_defaults.js DEFAULT_KINDS
 _BLOCK_RE = re.compile(re.escape(MARK_BEGIN) + r"[^\n]*\n(.*?)\n[ \t]*" + re.escape(MARK_END), re.S)
 
 

@@ -100,6 +100,7 @@ import {
   DASHBOARD_BARE_FIELD, DASHBOARD_BARE_KEY, bareNamesOn,
   dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, dashboardsSignature, LOCKED_KEY,
   prebuiltStartOf, prebuiltMadeFrom,   // row 2.145 step 5: the site default of a panel on a dashboard made from a ready-made one
+  prebuiltLayoutOf, prebuiltDefaultEntry,   // (5d) where it puts its panels; an owner's save of the whole dashboard
 } from './dashboards.js';
 import { createDashboardPicker } from './dashboard_picker.js';
 // Row 2.38: dashboards inside dashboards -- the live limit, the tray's wait, the trail and its breadcrumb.
@@ -3509,6 +3510,10 @@ export async function mountKiosk(root, {
           siteDefaults: {
             startOf: (id) => prebuiltStartOf(dashOpts.settingsNow(), id),
             madeFrom: () => prebuiltMadeFrom(dashOpts.settingsNow()),
+            // (5d) Where it puts its panels (a placed panel's and a page part's site default), and an owner's save of the
+            // whole dashboard as its ready-made one's default. Both read what is already here: no request.
+            layoutOf: () => prebuiltLayoutOf(dashOpts.settingsNow()),
+            entryFor: (changed) => prebuiltDefaultEntry(dashOpts.settingsNow(), arr.layout(), changed),
           },
           level: () => complexity(),
           notify: (text) => { try { output?.notify?.(text, { source: 'shell' }); } catch { /* the line still says it */ } },

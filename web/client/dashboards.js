@@ -30,7 +30,10 @@
 // page closed half-way leaves a stamped, unfinished dashboard that the next pick FINISHES rather than
 // making a second one; and a screen somebody happened to NAME "My room" has no stamp and is never adopted.
 
-import { normalizeLayout } from './layout.js';
+import { normalizeLayout, PLACED_DEFAULTS } from './layout.js';
+// (row 2.145 step 5d) The site's saved default of a ready-made dashboard (`dashboards`). Already loaded with this file:
+// room_presets.js, imported below, imports it -- so no page fetches one more file for it.
+import { NIMROD_DEFAULTS, defaultFor } from './nimrod_defaults.js';
 import { THEMES, DEFAULT_THEME, DEVICE_THEME, resolveThemeId } from './theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET as ROOM_DEFAULT_PRESET } from './room_presets.js';
 // The 3D room's presets (data only; its renderer is loaded by the arrangement when a dashboard has one).
@@ -415,12 +418,55 @@ export function exampleCards(order = EXAMPLE_ORDER) {
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
+const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+/** JSON with every object's keys in order: two layouts or two settings rows compared by what they hold, not by the
+ *  order their keys were written in (a placed panel's entry gains keys in the order it was edited). PURE. */
+const stable = (v) => JSON.stringify(v, (k, x) => (isObj(x) ? Object.fromEntries(Object.keys(x).sort().map((y) => [y, x[y]])) : x));
+
+// =====================================================================================================
+// *** THE SITE'S OWN DEFAULT OF A READY-MADE DASHBOARD (row 2.145 step 5d, 2026-11-01). *** Mike's go keeps the site's
+// defaults in the repo (row 2.145, DN 1): one of the site's owners, on a dashboard made from a ready-made one, presses
+// "Save as the site default" in the editor; Code puts it into nimrod_defaults.js (`dashboards`, [key]) and commits it.
+// From that deploy on, a ready-made dashboard is made from the record HERE with that saved default laid over it:
+//   layout     the whole layout, by REF, as the record writes it (where every panel is: its cell, a placed panel's place
+//              and size, a page's order) -- in place of the record's
+//   modules    { <ref>: its starting settings } -- in place of that module's `state`. NOT for a module the profile game
+//              starts (`start`: the picture and the name sign): their start is made for each person (their name on the
+//              sign), and one person's saved start would put that name on everybody's.
+//   settings   the record's OWN look keys (`settings`: the theme, the panel backgrounds), each in place of the record's;
+//              any other key is not the record's and is left out
+// A part the saved default does not have keeps the record's, so a later change to the record in the code still reaches
+// what the owner did not change. *** AND IT IS CHECKED: *** the record with the default laid over it must pass
+// `recordProblems`, or the record in the code is used as it is (said once in the console) -- a saved default that
+// would make a dashboard missing one of its panels never reaches anybody. (dashboards_test checks every one the site
+// ships too, so it fails a suite before it could.)
+// A DASHBOARD SOMEBODY ALREADY MADE IS A COPY: nothing here changes it. Its editor's "Put back the site default" (a
+// panel's settings, a placed panel's Transform, a part of a page's place and height) reads the default from here, so
+// putting back brings the saved default to an existing dashboard, one thing at a time, by a person's press.
+// =====================================================================================================
+let warnedDefault = false;
+/** `base` (a record) with the saved default `over` laid over it (above), or `base` itself when `over` is not one or the
+ *  result would not be a sound record. PURE (a console line once). */
+export function withSiteDefault(base, over) {
+  if (!isObj(base) || !isObj(over)) return base;
+  const rec = withSiteDefaultRaw(base, over);
+  const problems = recordProblems(rec);
+  if (problems.length) {
+    if (!warnedDefault) { warnedDefault = true; console.warn(`dashboards: the saved site default of "${base.key}" is not used (${problems.join('; ')})`); }
+    return base;
+  }
+  return rec;
+}
+
 /** One ready-made dashboard as a concrete record (a deep copy, so nothing edits the table): the picture
- *  and the sign get the profile game's starting settings, the sign with `personName` on it. */
-export function prebuiltRecord(key, { personName = '' } = {}) {
+ *  and the sign get the profile game's starting settings, the sign with `personName` on it.
+ *  (row 2.145 step 5d) With the site's saved default for it laid over it (`withSiteDefault`, nimrod_defaults.js
+ *  `dashboards`); `defaults: null` is the record exactly as the code writes it. */
+export function prebuiltRecord(key, { personName = '', defaults = NIMROD_DEFAULTS } = {}) {
   const base = PREBUILT_DASHBOARDS[key];
   if (!base) return null;
-  const rec = clone(base);
+  const over = defaults ? defaultFor('dashboards', [key], defaults) : null;
+  const rec = clone(over ? withSiteDefault(base, over) : base);
   const setup = profileSetup(personName);
   for (const m of rec.modules) {
     if (m.start === 'picture') m.state = { ...setup.picture };
@@ -449,14 +495,115 @@ export function prebuiltMadeFrom(doc) {
  * A picture's or sign's start (`start`) is the profile game's, read with NO person's name: the words a sign was made with
  * for one person are that person's own, so they show as changed from the site's, which is true.
  */
-export function prebuiltStartOf(doc, instanceId) {
+export function prebuiltStartOf(doc, instanceId, { defaults = NIMROD_DEFAULTS } = {}) {
   const made = prebuiltMadeFrom(doc);
   if (!made || !instanceId) return null;
   const refs = doc[PREBUILT_REFS_KEY] && typeof doc[PREBUILT_REFS_KEY] === 'object' ? doc[PREBUILT_REFS_KEY] : {};
   const ref = Object.keys(refs).find((r) => refs[r] === instanceId);
   if (!ref) return null;
-  const m = (prebuiltRecord(made.key)?.modules || []).find((x) => x.ref === ref);
+  const m = (prebuiltRecord(made.key, { defaults })?.modules || []).find((x) => x.ref === ref);
   return m ? { ...made, ref, state: m.state && typeof m.state === 'object' ? clone(m.state) : {} } : null;
+}
+
+/**
+ * (row 2.145 step 5d) WHERE THE READY-MADE DASHBOARD PUTS ITS PANELS, for a dashboard made from it: the record's layout
+ * (with the site's saved default, `withSiteDefault`) in THIS dashboard's instance ids (its `prebuiltRefs`), normalised
+ * as every saved layout is. The site default of a placed panel's Transform and of a part of a page's place (the one
+ * editor, editor_targets.js). -> { key, label, layout }, or null for a dashboard not made from a ready-made one. PURE.
+ */
+export function prebuiltLayoutOf(doc, { defaults = NIMROD_DEFAULTS } = {}) {
+  const made = prebuiltMadeFrom(doc);
+  if (!made) return null;
+  const refs = isObj(doc[PREBUILT_REFS_KEY]) ? doc[PREBUILT_REFS_KEY] : {};
+  const rec = prebuiltRecord(made.key, { defaults });
+  return rec ? { ...made, layout: layoutFor(rec, refs) } : null;
+}
+
+/** A layout in instance ids as the record would write it, BY REF (`refOf`: id -> ref): only the ready-made one's own
+ *  panels (one added since is no part of it), a placed panel's link to another dashboard left out (`opens`: an id on
+ *  this account), and a room's own furniture left out (`recipe`: the room's default is its own kind, `rooms`). PURE. */
+export function layoutByRef(layout, refOf) {
+  if (!isObj(layout)) return null;
+  const map = refOf instanceof Map ? refOf : new Map(Object.entries(refOf || {}));
+  const L = normalizeLayout(layout, [...map.keys()]);
+  const out = { preset: L.preset, slots: L.slots.map((id) => (id ? map.get(id) : null)) };
+  if (Array.isArray(L.placed)) {
+    out.placed = L.placed.map(({ id, opens: _o, ...e }) => ({ ref: map.get(id), ...e })); // eslint-disable-line no-unused-vars
+  }
+  if (L.scene) {
+    const { recipe: _r, ...scene } = L.scene;  // eslint-disable-line no-unused-vars
+    out.scene = scene;
+  }
+  return out;
+}
+/** A layout by ref as compared (`stable`), with a placed panel's unwritten numbers filled (layout.js PLACED_DEFAULTS):
+ *  a panel moved and moved back reads as never moved, though its entry now writes its scale and turn out. PURE. */
+const layoutSig = (L) => stable(L && { ...L, placed: (L.placed || []).map((e) => ({ ...PLACED_DEFAULTS, ...e })) });
+
+/** Words for why a dashboard cannot be saved as its ready-made one's default (row 2.145 step 5d). */
+export const PREBUILT_DEFAULT_WORDS = Object.freeze({
+  notMade: 'This dashboard was not made from a ready-made one, so it has no ready-made default to save.',
+  same: 'This dashboard is the site default already: there is nothing to save.',
+  unsound: 'This cannot be the ready-made dashboard’s default as it is',
+});
+
+/**
+ * (row 2.145 step 5d) "SAVE AS THE SITE DEFAULT" FOR A WHOLE DASHBOARD MADE FROM A READY-MADE ONE: its entry for
+ * nimrod_defaults.js (`dashboards`, [key]), as the server keeps it waiting for Code. PURE.
+ *   doc       the dashboard's settings doc (its stamp, `prebuiltRefs`, its look)
+ *   layout    the dashboard's layout as it is now (instance ids)
+ *   changed   { <instanceId>: { <key>: value } } its panels' settings that differ from the site default (the one editor
+ *             works them out, site_defaults.js: only settings a module declares, never a secret)
+ * -> { entry: { kind, path, body } | null, why }. THE ENTRY IS THE DASHBOARD AS IT IS, against the record IN THE CODE
+ * (no saved default): only the parts that differ from it are written, and since a save replaces the whole entry, a part
+ * the owner put back to the code's is dropped from the default too (everything back to the code's, with a saved default in
+ * the site: the entry is the code's layout, so the save takes the default back to the code's). Each module's start is the site default as it is
+ * now with this dashboard's changes on it; one whose start comes out as the code's is left out. Checked with
+ * `recordProblems` (the same check `withSiteDefault` makes when a dashboard is made from it): `why` says what is wrong.
+ */
+export function prebuiltDefaultEntry(doc, layout, changed = {}, { defaults = NIMROD_DEFAULTS } = {}) {
+  const made = prebuiltMadeFrom(doc);
+  if (!made) return { entry: null, why: PREBUILT_DEFAULT_WORDS.notMade };
+  const base = PREBUILT_DASHBOARDS[made.key];
+  const refs = isObj(doc[PREBUILT_REFS_KEY]) ? doc[PREBUILT_REFS_KEY] : {};
+  const refOf = new Map(Object.entries(refs).filter(([, id]) => typeof id === 'string' && id).map(([r, id]) => [id, r]));
+  const now = prebuiltRecord(made.key, { defaults }) || base;
+  const body = {};
+  const lay = layoutByRef(layout, refOf);
+  if (lay && layoutSig(lay) !== layoutSig(layoutByRef(layoutFor(base, refs), refOf))) body.layout = lay;
+  const modules = {};
+  for (const m of base.modules) {
+    if (m.start) continue;
+    const id = refs[m.ref];
+    const start = (now.modules.find((x) => x.ref === m.ref) || {}).state || {};
+    const st = { ...clone(start), ...(id && isObj(changed?.[id]) ? clone(changed[id]) : {}) };
+    if (stable(st) !== stable(m.state || {})) modules[m.ref] = st;
+  }
+  if (Object.keys(modules).length) body.modules = modules;
+  const settings = {};
+  for (const k of Object.keys(base.settings || {})) {
+    if (doc[k] !== undefined && doc[k] !== null && stable(doc[k]) !== stable(base.settings[k])) settings[k] = clone(doc[k]);
+  }
+  if (Object.keys(settings).length) body.settings = settings;
+  if (!Object.keys(body).length) {
+    // The record exactly as the code writes it. With no saved default that is nothing to save; with one, it is a save
+    // that takes the saved one back to the code's -- written as the layout (an entry is never empty), which IS the code's.
+    if (!(defaults && defaultFor('dashboards', [made.key], defaults)) || !lay) return { entry: null, why: PREBUILT_DEFAULT_WORDS.same };
+    body.layout = lay;
+  }
+  const problems = recordProblems(withSiteDefaultRaw(base, body));
+  if (problems.length) return { entry: null, why: `${PREBUILT_DEFAULT_WORDS.unsound}: ${problems.join('; ')}.` };
+  return { entry: { kind: 'dashboards', path: [made.key], body }, why: '' };
+}
+/** `withSiteDefault` without its fallback: the record as the saved default would make it, sound or not (for the check). */
+function withSiteDefaultRaw(base, over) {
+  const rec = clone(base);
+  if (isObj(over.layout)) rec.layout = clone(over.layout);
+  if (isObj(over.modules)) for (const m of rec.modules || []) if (!m.start && isObj(over.modules[m.ref])) m.state = clone(over.modules[m.ref]);
+  if (isObj(over.settings) && isObj(rec.settings)) {
+    for (const k of Object.keys(rec.settings)) if (Object.prototype.hasOwnProperty.call(over.settings, k)) rec.settings[k] = over.settings[k];
+  }
+  return rec;
 }
 
 /** The record's layout with module REFS turned into instance ids (`refs`: ref -> id), normalised the way

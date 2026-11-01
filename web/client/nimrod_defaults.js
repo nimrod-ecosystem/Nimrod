@@ -9,6 +9,11 @@
 //   town        { <deck>: { <placeId>: <room recipe> } }      over town.js's places (town_edits.js recipeFor)
 //   village     { <scene>: <village recipe> }                over village_kit.js's starting scenes (modules/village.js)
 //   backdrops   { <theme>: <backdrop recipe> }                once the themes' backdrops are pieces (item 42.2; nothing reads it yet)
+//   dashboards  { <key>: { layout?, modules?, settings? } }    over dashboards.js PREBUILT_DASHBOARDS (prebuiltRecord), row
+//               2.145 step 5d: a ready-made dashboard as an owner saved it -- `layout` by REF (as the record writes it),
+//               `modules` { <ref>: its starting settings }, `settings` the record's own keys (its look). Only what differs
+//               from the record in the code is kept; a missing part keeps the code's. A dashboard somebody already made is a
+//               copy and does not change; its "Put back the site default" brings this to it.
 // HOW AN ENTRY GETS HERE: "Copy as the default" on a dashboard's room (and the village and town builders' "Designer:
 // change the defaults") copies an entry in this exact shape (`defaultsEntry`); it is pasted to Code and merged in
 // here as a commit. The defaults are code, reviewed like code: the page never writes this file.
@@ -19,7 +24,7 @@
 
 export const DEFAULTS_FORMAT = 'nimrod-defaults';
 export const DEFAULTS_VERSION = 1;
-export const DEFAULT_KINDS = Object.freeze(['rooms', 'town', 'village', 'backdrops']);
+export const DEFAULT_KINDS = Object.freeze(['rooms', 'town', 'village', 'backdrops', 'dashboards']);
 
 // THE DATA, between the two marker lines, is PLAIN JSON and nothing else: web/tools/apply_site_defaults.py merges a saved
 // entry into it and writes it back (keys sorted, two spaces), and the server reads it to say which saved entries are in
@@ -28,6 +33,7 @@ const DATA = (
 // nimrod-defaults:begin
 {
   "backdrops": {},
+  "dashboards": {},
   "made": "",
   "rooms": {},
   "town": {},

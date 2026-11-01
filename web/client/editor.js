@@ -53,6 +53,15 @@
 // the draft list). The dashboard's or page's own row has "Copy the saved defaults" (for Code) and "Take out the ones the
 // site has now". The server checks every save again and keeps it waiting; nothing reaches the site until Code commits it
 // (web/tools/apply_site_defaults.py) and it is deployed. Nothing is fetched when the editor opens; only an owner's press.
+// *** STEP 5D: WHERE THINGS ARE, AND A WHOLE READY-MADE DASHBOARD. *** On a dashboard made from a ready-made one, a placed
+// panel's Transform (where it is, its size, turn, layer, where it sits) and a part of a page's (its place, its height)
+// are compared with where the ready-made one puts it (`siteDefaults.layoutOf`, dashboards.js prebuiltLayoutOf; a part's
+// height with its module's own default on any dashboard): a changed row says so, with its own "Put back the site
+// default", and the Site default section's button puts back the settings AND the Transform, one Undo for both. An owner
+// has "Save as the site default" on the dashboard's own row: the whole dashboard as its ready-made one's default
+// (nimrod_defaults.js `dashboards`, made by the host: `siteDefaults.entryFor`, dashboards.js prebuiltDefaultEntry). A
+// dashboard made from it after the next deploy starts from it; one already made is a copy, and changes only when somebody
+// puts a thing back.
 //
 // *** HOW IT SITS ON WHAT IS THERE (nothing underneath it changes). ***
 //   * The selection IS edit mode's. A row chosen here is `arr.editPanel(id, true)` then `arr.editSelect(target)`; a
@@ -73,12 +82,12 @@
 
 import { openDashboardEditor } from './dashboard_editor.js';
 import { renderOptions, ensureEditCss, targetsOf, targetAt, optionRows, EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC } from './edit_mode.js';
-import { displayValue } from './settings_fields.js';
+import { displayValue, fieldValue } from './settings_fields.js';
 // (row 2.145 step 5) The site's default and a person's own: pure, no fetch.
 import { SITE_DEFAULT_WORDS, isChanged, changedFields, siteDefaultValue, putBackPatch, putBackAllPatch, undoPatchFor,
   createSiteDefaultsClient } from './site_defaults.js';
-import { buildTree, nodeForEditing, nodeIdFor, splitSelection, ROOT_ID } from './editor_targets.js';
-import { preset } from './layout.js';
+import { buildTree, nodeForEditing, nodeIdFor, splitSelection, sameTransformValue, ROOT_ID } from './editor_targets.js';
+import { preset, PAGE_HEIGHT_KEY } from './layout.js';
 // (row 2.145 step 3) The words. wording_edit.js is imported for its shared pieces only (nothing starts on import).
 // FOR importing it here, at load: one draft list and one rule, not a copy. AGAINST: the kiosk now fetches that small file
 // on every load (it is pure functions, and since step 4 it draws nothing at all: the editor is the one way in).
@@ -160,7 +169,14 @@ export const EDITOR_WORDS = Object.freeze({
   siteWordsHelpOwner: 'Words the site shows here. A change shows here at once and is kept in this browser; "Save as the site default" sends this page’s changes to wait for the site’s next update.',
   wordsSaved: 'Saved for the site: it reaches the site with the next update. The suggestions here are done.',
   nothingToSave: 'There is no change kept for this page to save.',
+  // (row 2.145 step 5d) A placed panel's and a part of a page's Transform, and a whole dashboard.
+  transformSame: 'Its Transform is the site default.',
+  transformChanged: 'Its Transform is changed from the site default: each changed row says so above.',
+  putBackRefused: 'It was not put back: it is locked, or it cannot be moved from here.',
+  putBackPart: 'Its settings are back to the site default. Its Transform was not put back: it is locked, or it cannot be moved from here.',
 });
+/** (row 2.145 step 5d) What an owner's "Save as the site default" on a whole dashboard keeps, and what it does not. */
+export const dashboardSaveHelp = (label) => `“Save as the site default” keeps this dashboard as the way the ready-made “${label}” starts: where its panels are, their settings and its look. It waits for the site’s next update; Code puts it in, and nobody sees it until then. Panels added here are not part of it, and nor is anything made for each person (a name sign’s words). Dashboards already made from it stay as they are; their “Put back the site default” brings it to them.`;
 /** "Copied 2 saved defaults. Send them to Code." (row 2.145 step 5c) */
 export const copiedSaved = (n) => `Copied ${n === 1 ? '1 saved default' : `${n} saved defaults`}. Send them to Code.`;
 /** "Took out 2 that the site has now." (row 2.145 step 5c) */
@@ -224,6 +240,9 @@ const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', dupl
  *               of the ready-made dashboard it was made from, or null. Absent: every panel's module defaults.
  *               (5c) client: the outbox (site_defaults.js createSiteDefaultsClient; a suite hands in a fake). Absent: the
  *               real one, made the first time an owner presses something -- nothing is fetched by opening the editor.
+ *               (5d) layoutOf() -> dashboards.js prebuiltLayoutOf for this dashboard ({ key, label, layout } | null): the
+ *               site default of a placed panel's and a part of a page's Transform. entryFor(changed) -> dashboards.js
+ *               prebuiltDefaultEntry ({ entry, why }): an owner's save of the whole dashboard. Absent: neither offered.
  *   owner       (5c) this person is one of the site's owners (/api/me `site_owner`): "Save as the site default" and
  *               "Copy the saved defaults" are drawn. Default false. The server checks again on every save.
  */
@@ -273,7 +292,9 @@ export function openSceneEditor(opts = {}) {
   const model = () => placed?.model || null;
   // The toolbar follows the model AT ONCE (Undo lights the moment there is something to undo), not after the screen has
   // been moved (the host's onChange comes after its apply, a moment later): a quick second press must find it lit.
-  try { offs.push(placed?.model?.subscribe?.((evt) => { if (evt && evt.type === 'items' && box && !closed) { drawBar(tree?.nodes.get(selectedId) || null, editingNow()); paint(); } })); }
+  // (row 2.145 step 5d) A change to the placed panels that is not a put back of ours is the newest thing done: the
+  // toolbar's Undo is the model's again, not the last "Put back the site default".
+  try { offs.push(placed?.model?.subscribe?.((evt) => { if (evt && evt.type === 'items' && !puttingBack) putBackUndo = null; if (evt && evt.type === 'items' && box && !closed) { drawBar(tree?.nodes.get(selectedId) || null, editingNow()); paint(); } })); }
   catch (err) { console.error('editor: following the placed model', err); }
 
   // ---- the box ----
@@ -351,15 +372,17 @@ export function openSceneEditor(opts = {}) {
     const t = {};
     // Undo / Redo: the placed panels' history (also from the dashboard's own row: a panel taken out is undone there),
     // else the chosen thing's own Undo (a room's, a village's), else nothing to step back through.
-    if (placedPanel || (group && m)) {
+    // (step 5) A "Put back the site default" just made on this thing comes FIRST: Undo takes it back (its settings have
+    // no other history). (5d: before the placed panels' history too -- it is the newest thing done, and its Transform
+    // part is a step of that history, which it takes back with the rest. A move of any placed panel afterwards forgets it.)
+    if (!group && putBackUndo && putBackUndo.nodeId === node.id) {
+      t.undo = on(() => undoPutBack());
+      t.redo = off(EDITOR_WORDS.noRedo);
+    } else if (placedPanel || (group && m)) {
       t.undo = m.canUndo() ? on(() => m.undo()) : off(EDITOR_WORDS.nothingToUndo);
       t.redo = m.canRedo() ? on(() => m.redo()) : off(EDITOR_WORDS.nothingToRedo);
     } else if (group) {
       t.undo = off(EDITOR_WORDS.chooseFirst); t.redo = off(EDITOR_WORDS.chooseFirst);
-    } else if (putBackUndo && putBackUndo.nodeId === node.id) {
-      // (step 5) A "Put back the site default" just made on this thing: Undo takes it back (its settings have no other history).
-      t.undo = on(() => undoPutBack());
-      t.redo = off(EDITOR_WORDS.noRedo);
     } else {
       // (step 4) A part of a page: its own Undo if its module has one (a room's), else what moving it back is.
       t.undo = act('undo') ? on(() => act('undo').run()) : off(node.pagePart && !node.targetId ? EDITOR_WORDS.pageUndo : EDITOR_WORDS.noHistory);
@@ -416,9 +439,76 @@ export function openSceneEditor(opts = {}) {
   function undoPutBack() {
     const u = putBackUndo;
     putBackUndo = null;
-    const sel = u ? safe(() => tree?.nodes.get(u.nodeId)?.fields(), null) : null;
-    if (!sel?.patch?.(u.patch)) return false;
+    if (!u) return false;
+    const node = tree?.nodes.get(u.nodeId) || null;
+    let ok = false;
+    // (step 5d) A placed panel's Transform was put back through the edit model: its own Undo takes that step back.
+    if (u.modelStep) ok = writing(() => model()?.undo?.() === true) || ok;
+    if (u.tpatch) { const tf = safe(() => node?.transform?.(), null); ok = (!!tf && writing(() => tf.patch(u.tpatch) === true)) || ok; }
+    if (u.patch) { const sel = safe(() => node?.fields?.(), null); ok = !!sel?.patch?.(u.patch) || ok; }
+    if (!ok) return false;
     note(EDITOR_WORDS.putBackUndone);
+    return true;
+  }
+
+  // ---- (row 2.145 step 5d) A PLACED PANEL'S AND A PART OF A PAGE'S TRANSFORM, against the site default ----
+  // `tdefs` is the node's transformDefaults() (editor_targets.js): { values, write, from }. A row is changed when it HAS a
+  // site default and its value differs from it (numbers to a tenth). Putting back writes through the Transform's own
+  // `patch`: the edit model's ONE step for a placed panel (so its Undo is the model's, as for every move of it), the
+  // part's place and height for a part of a page (remembered here for the toolbar's Undo, which a part has no other of).
+  let puttingBack = false;          // a write of our own is under way: the placed model's event is not somebody's move
+  function writing(fn) { puttingBack = true; try { return safe(fn, false); } finally { puttingBack = false; } }
+  const hasKey = (o, k) => !!o && Object.prototype.hasOwnProperty.call(o, k);
+  const tfRowChanged = (tdefs, key, vals) => hasKey(tdefs?.values, key) && !sameTransformValue(vals?.[key], tdefs.values[key]);
+  const tfChangedKeys = (tf, tdefs) => { const vals = safe(() => tf.values(), {}) || {}; return Object.keys(tdefs?.values || {}).filter((k) => tfRowChanged(tdefs, k, vals)); };
+  /** What putting back `keys` (all of them: null) of a Transform writes, and what was there. */
+  function transformPatch(tf, tdefs, keys = null) {
+    const vals = safe(() => tf.values(), {}) || {};
+    const patch = {};
+    const before = {};
+    for (const k of (keys || Object.keys(tdefs.values)).filter((x) => tfRowChanged(tdefs, x, vals))) {
+      patch[k] = hasKey(tdefs.write, k) ? tdefs.write[k] : tdefs.values[k];
+      before[k] = vals[k];
+    }
+    return { patch, before };
+  }
+  /** A Transform's rows `keys` put back to the site default (one row's own button). */
+  function putBackTransform(node, tf, tdefs, keys) {
+    if (closed || !node || !tf || typeof tf.patch !== 'function' || !tdefs) return false;
+    const { patch, before } = transformPatch(tf, tdefs, keys);
+    if (!Object.keys(patch).length) { note(EDITOR_WORDS.putBackNothing); return false; }
+    if (!writing(() => tf.patch(patch) === true)) { note(EDITOR_WORDS.putBackRefused); laterRender(); return false; }
+    putBackUndo = tf.type === 'placed' ? null : { nodeId: node.id, tpatch: before };
+    note(EDITOR_WORDS.putBackDone);
+    laterRender();
+    return true;
+  }
+  /** The Site default section's "Put back the site default": everything changed on the chosen thing -- its settings (as
+   *  5b) and its Transform (5d) -- one press, and one Undo. */
+  function putBackAll(node) {
+    if (closed || !node) return false;
+    const defs = safe(() => node.defaults?.(), null);
+    const settings = editingNow() ? splitSelection(safe(() => arr.editSelection(), null)).settings : null;
+    let sPatch = {};
+    let sBefore = null;
+    if (defs?.stateRow && settings && typeof settings.patch === 'function') {
+      const vals = safe(() => settings.values(), {}) || {};
+      sPatch = putBackAllPatch(shownFields(settings), vals, defs.start);
+      sBefore = undoPatchFor(sPatch, vals);
+    }
+    const tdefs = safe(() => node.transformDefaults?.(), null);
+    const tf = tdefs ? safe(() => node.transform?.(), null) : null;
+    const t = tf && typeof tf.patch === 'function' ? transformPatch(tf, tdefs) : { patch: {}, before: {} };
+    const hasS = Object.keys(sPatch).length > 0;
+    const hasT = Object.keys(t.patch).length > 0;
+    if (!hasS && !hasT) { note(EDITOR_WORDS.putBackNothing); return false; }
+    const tOk = hasT ? writing(() => tf.patch(t.patch) === true) : false;
+    const sOk = hasS ? settings.patch(sPatch) === true : false;
+    if (!tOk && !sOk) { note(EDITOR_WORDS.putBackRefused); laterRender(); return false; }
+    putBackUndo = { nodeId: node.id, patch: sOk ? sBefore : null,
+      tpatch: tOk && tf.type !== 'placed' ? t.before : null, modelStep: tOk && tf.type === 'placed' };
+    note(hasT && !tOk ? EDITOR_WORDS.putBackPart : EDITOR_WORDS.putBackDone);
+    laterRender();
     return true;
   }
   /** The rows of `sel` shown at the menu's level, as fields: what "N changed" counts and "Put back" puts back. */
@@ -487,6 +577,53 @@ export function openSceneEditor(opts = {}) {
     for (const s of done) { const w = await client().withdraw(s.id); if (w.ok) n += 1; }
     if (!closed) note(done.length ? tidied(n) : EDITOR_WORDS.tidyNone);
     return n;
+  }
+  /** (step 5d) Each panel's settings that differ from the site default, by its id: { <id>: { <key>: value in force } }.
+   *  Only panels made with a ready-made start (`defaults().start`), only settings their module declares and that can be
+   *  compared (site_defaults.js: never a secret, never a read-only row), EVERY one of them -- not only the menu's level: a
+   *  save is the dashboard as it is. */
+  function changedStates() {
+    const out = {};
+    for (const n of tree?.list || []) {
+      if (n.kind !== 'panel' || n.targetId || !n.panelId) continue;
+      const defs = safe(() => n.defaults?.(), null);
+      if (!defs?.stateRow || !defs.start) continue;
+      const sel = safe(() => n.fields(), null);
+      if (!sel) continue;
+      const vals = safe(() => sel.values(), {}) || {};
+      const ch = Object.fromEntries(changedFields(sel.fields || [], vals, defs.start).map((f) => [f.key, fieldValue(f, vals)]));
+      // A part of a page's height is kept on the panel's own row too (not a setting its module declares): when it is
+      // changed from the site default, it is part of the panel's start as well, so the page saved is the page as it is.
+      if (n.pagePart) {
+        const tdefs = safe(() => n.transformDefaults?.(), null);
+        const tf = tdefs ? safe(() => n.transform?.(), null) : null;
+        if (tf && tfChangedKeys(tf, tdefs).includes(PAGE_HEIGHT_KEY)) ch[PAGE_HEIGHT_KEY] = safe(() => tf.values()[PAGE_HEIGHT_KEY], null);
+      }
+      if (Object.keys(ch).length) out[n.panelId] = ch;
+    }
+    return out;
+  }
+  /** (step 5d) An owner, on the dashboard's own row: this dashboard as its ready-made one's site default (`dashboards`,
+   *  [its key]), queued for Code like every other save. The entry is the host's to make (`siteDefaults.entryFor`,
+   *  dashboards.js prebuiltDefaultEntry): it knows the dashboard's stamp and its look. */
+  async function saveDashboardDefault() {
+    if (closed || !ownerNow || typeof siteDefaults?.entryFor !== 'function') return false;
+    const got = safe(() => siteDefaults.entryFor(changedStates()), null);
+    if (!got?.entry) {
+      saveSaid = { nodeId: ROOT_ID, text: got?.why || EDITOR_WORDS.cannotSave };
+      note(saveSaid.text);
+      fillDashboardDefault();
+      return false;
+    }
+    saveSaid = { nodeId: ROOT_ID, text: SITE_DEFAULT_WORDS.saving };
+    note(SITE_DEFAULT_WORDS.saving);
+    fillDashboardDefault();
+    const r = await client().save(got.entry);
+    if (closed) return r.ok;
+    saveSaid = { nodeId: ROOT_ID, text: r.ok ? SITE_DEFAULT_WORDS.saved : r.why };
+    note(saveSaid.text);
+    fillDashboardDefault();
+    return r.ok;
   }
   function setOwner(v) {
     const want = v === true;
@@ -558,7 +695,9 @@ export function openSceneEditor(opts = {}) {
       scanner, page: page(), drafts: readChanges(), clicked,
     }) : null;
     const startOf = typeof siteDefaults?.startOf === 'function' ? (id) => siteDefaults.startOf(id) : null;
-    return safe(() => buildTree(arr, { placedModel: model(), words, startOf }), null);
+    // (step 5d) Where the ready-made dashboard puts its panels: a placed panel's and a part of a page's site default.
+    const siteLayout = typeof siteDefaults?.layoutOf === 'function' ? () => siteDefaults.layoutOf() : null;
+    return safe(() => buildTree(arr, { placedModel: model(), words, startOf, siteLayout }), null);
   }
   /** Keep a built tree, and which row each listed element is (a press on words in the view finds its row by it). */
   function keepTree(next) {
@@ -655,6 +794,8 @@ export function openSceneEditor(opts = {}) {
         }
       }
       head.innerHTML = `<strong class="em-title" data-se-title>${esc(node?.label || (pageScope ? 'This page' : 'This dashboard'))}</strong><p class="em-help" data-se-help>${esc(help)}</p>`;
+      // (5d) An owner, a dashboard made from a ready-made one: save it whole as that one's site default.
+      if (ownerNow && !pageScope && (!node || node.kind === 'dashboard')) drawDashboardDefault();
       // (5c) The site's owners: what is waiting for Code, on the dashboard's or the page's own row.
       if (ownerNow && (!node || node.kind === 'dashboard' || node.kind === 'page')) drawSaved();
       return;
@@ -666,7 +807,16 @@ export function openSceneEditor(opts = {}) {
     // presented one way (editor_targets.js presentTransform), and its numbers take typing (step 2).
     // (step 4) ...or a part of a page's: its place on the page and its height (editor_targets.js pagePartTransformSel).
     const tf = (node.place || node.pagePart) && !node.targetId ? safe(() => node.transform(), null) : split.transform;
-    if (tf) section('t', tf, { typed: true });
+    // (step 5d) A placed panel's or a part of a page's Transform rows are compared with the site default too (where the
+    // ready-made dashboard puts it, editor_targets.js transformDefaults), each changed row with its own Put back.
+    const tdefs = tf && (node.place || node.pagePart) && !node.targetId ? safe(() => node.transformDefaults?.(), null) : null;
+    const tfDefaults = tdefs ? {
+      words: SITE_DEFAULT_WORDS,
+      changed: (f, vals) => tfRowChanged(tdefs, f.key, vals),
+      siteShown: (f) => displayValue(f, tdefs.values[f.key]),
+      putBack: (f) => { putBackTransform(node, tf, tdefs, [f.key]); },
+    } : null;
+    if (tf) section('t', tf, { typed: true, defaults: tfDefaults });
     else plain('t', 'Transform', transformWhy(node, sel, { hasLayout: !!safe(() => arr.layout(), null) }));
     // ...then its own settings (and its buttons: Take it out, Copy as the default...).
     // (step 5) Compared with the site's default when they are the panel's own row (node.defaults(), site_defaults.js).
@@ -686,7 +836,7 @@ export function openSceneEditor(opts = {}) {
     // (step 3) A panel's own words: the same rows (its Words row is above), and what they are, in words.
     if (node.kind === WORDS_KINDS.own) plain('w', 'Words', EDITOR_WORDS.ownWords);
     // (step 5) The site default, for this thing as a whole.
-    if (defs) drawSiteDefault(node, settings, defs);
+    if (defs || tdefs) drawSiteDefault(node, settings, defs);
   }
   /** (row 2.145 step 5) The "Site default" section: where the site default comes from, how many rows are changed from it,
    *  and "Put back the site default" for all of them at once. A thing that keeps its own values (a room piece) says
@@ -699,21 +849,46 @@ export function openSceneEditor(opts = {}) {
     fillSiteDefault(wrap, node, settings, defs);
   }
   function fillSiteDefault(wrap, node, settings, defs) {
-    let text = EDITOR_WORDS.siteDefaultOwnValues;
+    let text = defs ? EDITOR_WORDS.siteDefaultOwnValues : '';
     let n = 0;
     // (5c) A thing that is saved as a whole (a room, a village scene, a Town place): its site default is the site's own.
-    const canSave = typeof defs.saveAs === 'function';
-    if (defs.stateRow && settings) {
+    const canSave = typeof defs?.saveAs === 'function';
+    if (defs?.stateRow && settings) {
       n = changedFields(shownFields(settings), safe(() => settings.values(), {}) || {}, defs.start).length;
       text = `${defs.from?.label ? madeFromReady(defs.from.label) : EDITOR_WORDS.siteDefaultModule} ${n ? changedCount(n) : EDITOR_WORDS.siteDefaultSame}`;
     } else if (canSave) text = ownerNow ? EDITOR_WORDS.siteDefaultWholeOwner : EDITOR_WORDS.siteDefaultWhole;
+    // (step 5d) Its Transform (a placed panel, a part of a page): the same or changed, put back with the rest.
+    const tdefs = safe(() => node.transformDefaults?.(), null);
+    const tf = tdefs ? safe(() => node.transform?.(), null) : null;
+    const tn = tf ? tfChangedKeys(tf, tdefs).length : 0;
+    if (tf) text = `${text} ${tn ? EDITOR_WORDS.transformChanged : EDITOR_WORDS.transformSame}`.trim();
     const save = ownerNow && canSave;
     const said = save && saveSaid && saveSaid.nodeId === node.id ? saveSaid.text : '';
     wrap.innerHTML = `<div class="em-opts" role="group" aria-label="${esc(EDITOR_WORDS.siteDefaultTitle)}">
       <strong class="em-title">${esc(EDITOR_WORDS.siteDefaultTitle)}</strong>
       <p class="em-help" data-se-def-help>${esc(text)}</p>
-      ${n || save ? `<div class="em-act">${n ? `<button type="button" class="em-btn" data-se-d="back" data-em-focus="dback">${esc(EDITOR_WORDS.putBackAll)}</button>` : ''}${save
+      ${n || tn || save ? `<div class="em-act">${n || tn ? `<button type="button" class="em-btn" data-se-d="back" data-em-focus="dback">${esc(EDITOR_WORDS.putBackAll)}</button>` : ''}${save
         ? `<button type="button" class="em-btn" data-se-d="save" data-em-focus="dsave">${esc(SITE_DEFAULT_WORDS.save)}</button>` : ''}</div>` : ''}
+      ${said ? `<p class="em-help" role="status" data-se-def-status>${esc(said)}</p>` : ''}</div>`;
+  }
+  /** (5d) An owner, on the dashboard's own row, when it was made from a ready-made one (and the host can make its
+   *  entry): "Save as the site default" for the whole dashboard, and what became of the last press. */
+  function drawDashboardDefault() {
+    const made = safe(() => siteDefaults?.madeFrom?.(), null);
+    if (!made?.label || typeof siteDefaults?.entryFor !== 'function') return;
+    const wrap = doc.createElement('section');
+    wrap.className = 'se-sec';
+    wrap.dataset.seSec = 'r';
+    insEl.append(wrap);
+    fillDashboardDefault(wrap, made);
+  }
+  function fillDashboardDefault(wrap = insEl.querySelector('[data-se-sec="r"]'), made = safe(() => siteDefaults?.madeFrom?.(), null)) {
+    if (!wrap || !made?.label) return;
+    const said = saveSaid && saveSaid.nodeId === ROOT_ID ? saveSaid.text : '';
+    wrap.innerHTML = `<div class="em-opts" role="group" aria-label="${esc(EDITOR_WORDS.siteDefaultTitle)}">
+      <strong class="em-title">${esc(EDITOR_WORDS.siteDefaultTitle)}</strong>
+      <p class="em-help" data-se-def-help>${esc(dashboardSaveHelp(made.label))}</p>
+      <div class="em-act"><button type="button" class="em-btn" data-se-d="savedash" data-em-focus="savedash">${esc(SITE_DEFAULT_WORDS.save)}</button></div>
       ${said ? `<p class="em-help" role="status" data-se-def-status>${esc(said)}</p>` : ''}</div>`;
   }
   /** (5c) The site's owners, on the dashboard's or the page's own row: what is waiting for Code, copied, and tidied. */
@@ -734,7 +909,7 @@ export function openSceneEditor(opts = {}) {
     const node = tree?.nodes.get(selectedId);
     if (!wrap || !node) return;
     const defs = safe(() => node.defaults?.(), null);
-    if (!defs) return;
+    if (!defs && !safe(() => node.transformDefaults?.(), null)) return;
     const sel = editingNow() ? safe(() => arr.editSelection(), null) : null;
     fillSiteDefault(wrap, node, splitSelection(sel).settings, defs);
   }
@@ -1039,11 +1214,11 @@ export function openSceneEditor(opts = {}) {
     if (b.dataset.seD === 'save') { saveSiteDefault(); return; }
     if (b.dataset.seD === 'copyall') { copySaved(); return; }
     if (b.dataset.seD === 'tidy') { tidySaved(); return; }
+    // (5d) The whole dashboard, as its ready-made one's default (the dashboard's own row, an owner).
+    if (b.dataset.seD === 'savedash') { saveDashboardDefault(); return; }
     if (b.dataset.seD !== 'back') return;
     const node = tree?.nodes.get(selectedId) || null;
-    const defs = node ? safe(() => node.defaults?.(), null) : null;
-    const settings = editingNow() ? splitSelection(safe(() => arr.editSelection(), null)).settings : null;
-    if (defs?.stateRow && settings) putBack(node, settings, shownFields(settings), defs.start);
+    if (node) putBackAll(node);
   });
   // (step 3) The Words section's buttons, and its box: Enter keeps the words; Escape with typing in it puts the box back
   // and is used up here (the editor's own Escape below ignores a key already used).

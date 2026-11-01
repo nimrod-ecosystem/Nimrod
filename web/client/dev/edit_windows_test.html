@@ -167,6 +167,22 @@ section('place and surface');
 }
 
 // =====================================================================
+section('row 2.145 step 5d: setMany -- several values in ONE undoable step (the one editor’s "Put back the site default")');
+{
+  const m = fresh();
+  const was = m.item('pic');
+  check('*** x, y, a place and a wall at once: one step, each checked as its own setter checks it (x past its limit is clamped) ***',
+    m.setMany({ x: 999, y: 40, place: 'scene', surface: 'left', nonsense: 5 }, { id: 'pic' }) === true
+      && m.item('pic').x === EDIT_DEFAULTS.limits.x[1] && m.item('pic').y === 40 && m.item('pic').place === 'scene' && m.item('pic').surface === 'left'
+      && !('nonsense' in m.item('pic')));
+  m.undo();
+  check('*** ONE Undo puts all of it back ***', JSON.stringify(m.item('pic')) === JSON.stringify(was));
+  check('nothing it would change: false, nothing committed (the Redo just made is still there)', m.setMany({ x: was.x, place: 'roof' }, { id: 'pic' }) === false && m.canRedo());
+  m.toggleLocked('pic');
+  check('a locked thing is not changed', m.setMany({ x: 10 }, { id: 'pic' }) === false && m.item('pic').x === was.x);
+}
+
+// =====================================================================
 section('layers: order, reorder, hide, lock');
 {
   const m = fresh();

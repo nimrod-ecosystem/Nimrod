@@ -45,7 +45,9 @@ import {
   PREBUILT_KEY, PREBUILT_DONE_KEY, PREBUILT_REFS_KEY, DASHBOARD_OFFERS_KEY, LOCKED_KEY, EXAMPLE_ORDER,
   inKindOrder, EDIT_PANEL_KEY, recordSettings, remapSettingsIds,
   bareNamesOn, DASHBOARD_BARE_KEY, DASHBOARD_BARE_FIELD,
+  withSiteDefault, prebuiltLayoutOf, prebuiltStartOf, layoutByRef, prebuiltDefaultEntry, PREBUILT_DEFAULT_WORDS, HELPER_SPOT,
 } from '../dashboards.js';
+import { NIMROD_DEFAULTS } from '../nimrod_defaults.js';
 import { EDIT_PANEL_KEY as EDIT_MODE_PANEL_KEY } from '../edit_mode.js';
 // The builder's panels (registered by modules/view.js wherever a dashboard can mount; imported here too).
 import '../modules/button.js';
@@ -195,6 +197,82 @@ function backend(user) {
       const lay = layoutFor(room, { picture: 'P1', sign: 'S1' });
       check('layoutFor turns refs into ids and keeps the scene and both placed modules',
         lay.scene?.kind === 'room' && J(lay.placed.map((p) => p.id)) === J(['P1', 'S1']) && lay.placed[0].surface === 'back', J(lay));
+    }
+
+    // =================================================================================================
+    section('1b. *** row 2.145 step 5d: the site’s saved default of a ready-made dashboard (nimrod_defaults.js `dashboards`) ***');
+    {
+      const known = new Set(listManifests().map((m) => m.type));
+      const shipped = NIMROD_DEFAULTS.dashboards || {};
+      check('*** every saved default the site ships is a ready-made dashboard’s, and USED (it makes a sound record) ***',
+        Object.keys(shipped).every((k) => PREBUILT_DASHBOARDS[k] && withSiteDefault(PREBUILT_DASHBOARDS[k], shipped[k]) !== PREBUILT_DASHBOARDS[k]
+          && recordProblems(prebuiltRecord(k, { personName: 'Ada' }), { knownTypes: known }).length === 0), J(Object.keys(shipped)));
+      // A made-up saved default for Your people: Nimrod moved, the panels solid, a key the record does not have.
+      const moved = { ref: 'helper', place: 'overlay', x: 20, y: 20, w: 36, h: 11, scan: false };
+      const D = { dashboards: { people: { layout: { preset: 'full', slots: ['people'], placed: [moved] },
+        settings: { panelSurface: 'solid', other: 'x' } } } };
+      const rec = prebuiltRecord('people', { defaults: D });
+      check('*** laid over the record: its layout as saved, its own look keys only (a key it does not have is left out) ***',
+        rec.layout.placed[0].x === 20 && rec.settings.panelSurface === 'solid' && !('other' in rec.settings) && rec.settings.theme === PREBUILT_DASHBOARDS.people.settings.theme,
+        J(rec));
+      check('...`defaults: null` is the record as the code writes it, and the table itself is untouched',
+        prebuiltRecord('people', { defaults: null }).layout.placed[0].x === HELPER_SPOT.x && PREBUILT_DASHBOARDS.people.layout.placed[0].x === HELPER_SPOT.x
+          && PREBUILT_DASHBOARDS.people.settings.panelSurface === 'clear');
+      const S = { dashboards: { start: { modules: { settings: { startPage: 'sc-sound' }, nobody: { a: 1 } } } } };
+      check('*** a module’s start as saved (a ref the record does not have is ignored) ***',
+        prebuiltRecord('start', { defaults: S }).modules.find((m) => m.ref === 'settings').state.startPage === 'sc-sound'
+          && !prebuiltRecord('start', { defaults: S }).modules.some((m) => m.ref === 'nobody'));
+      const R = { dashboards: { room: { modules: { sign: { label: 'Somebody' } } } } };
+      check('*** a module the profile game starts for each person (the name sign) keeps its own start, whatever is saved ***',
+        prebuiltRecord('room', { personName: 'Ada', defaults: R }).modules.find((m) => m.ref === 'sign').state.label === 'Ada');
+      const U = { dashboards: { tutorial: { layout: { preset: 'quad', slots: ['profile', 'devices', 'nimrod', null] } } } };
+      check('*** a saved default that would not make a sound record (the locked settings panel left off) is NOT used: the code’s record stands ***',
+        J(prebuiltRecord('tutorial', { defaults: U })) === J(prebuiltRecord('tutorial', { defaults: null })));
+      // Where it puts its panels, in a made dashboard's ids.
+      const doc = { [PREBUILT_KEY]: 'people', [PREBUILT_REFS_KEY]: { people: 'P', helper: 'H' } };
+      const site = prebuiltLayoutOf(doc, { defaults: D });
+      check('*** prebuiltLayoutOf: the ready-made layout (with its saved default) in this dashboard’s ids ***',
+        site.key === 'people' && J(site.layout.slots) === J(['P']) && site.layout.placed[0].id === 'H' && site.layout.placed[0].x === 20, J(site));
+      check('...nothing for a dashboard not made from a ready-made one', prebuiltLayoutOf({}) === null && prebuiltLayoutOf({ [PREBUILT_KEY]: 'nope' }) === null);
+      check('prebuiltStartOf reads the saved default too',
+        prebuiltStartOf({ [PREBUILT_KEY]: 'start', [PREBUILT_REFS_KEY]: { settings: 'S1' } }, 'S1', { defaults: S })?.state?.startPage === 'sc-sound');
+      // A layout by ref: only the ready-made one's panels, no link to another dashboard, no room furniture.
+      const byRef = layoutByRef({ preset: 'full', slots: ['P'], scene: { kind: 'room', preset: 'theRoom', recipe: { items: [] } },
+        placed: [{ id: 'H', place: 'overlay', x: 5, y: 6, opens: 'dash-9' }, { id: 'ADDED', place: 'screen', x: 1, y: 1 }] }, { P: 'people', H: 'helper' });
+      check('*** layoutByRef: refs for ids, a panel added since left out, no `opens`, no room recipe ***',
+        J(byRef.slots) === J(['people']) && byRef.placed.length === 1 && byRef.placed[0].ref === 'helper' && !('id' in byRef.placed[0])
+          && !('opens' in byRef.placed[0]) && byRef.scene.preset === 'theRoom' && !('recipe' in byRef.scene), J(byRef));
+      // An owner's save of a whole dashboard.
+      const base = layoutFor(PREBUILT_DASHBOARDS.people, { people: 'P', helper: 'H' });
+      const docP = { ...doc, theme: PREBUILT_DASHBOARDS.people.settings.theme, panelSurface: 'clear' };
+      check('*** not made from a ready-made one: nothing to save, said ***', prebuiltDefaultEntry({}, base).entry === null
+        && prebuiltDefaultEntry({}, base).why === PREBUILT_DEFAULT_WORDS.notMade);
+      check('*** exactly the code’s record: nothing to save, said ***', prebuiltDefaultEntry(docP, base, {}, { defaults: {} }).why === PREBUILT_DEFAULT_WORDS.same);
+      const touched = { ...base, placed: base.placed.map((e) => ({ ...e, scale: 100, rot: 0, layer: 0 })) };
+      check('...a panel moved and moved back (its entry now writes scale, turn and layer out) is still the code’s',
+        prebuiltDefaultEntry(docP, touched, {}, { defaults: {} }).why === PREBUILT_DEFAULT_WORDS.same);
+      const movedNow = { ...base, placed: [{ ...base.placed[0], x: 20, y: 20, opens: 'dash-1' }] };
+      const got = prebuiltDefaultEntry({ ...docP, panelSurface: 'solid' }, movedNow, { P: { show: 'big' } }, { defaults: {} });
+      check('*** moved, a setting changed, the look changed: ONE `dashboards` entry [people], by ref, only what differs ***',
+        got.entry?.kind === 'dashboards' && J(got.entry.path) === J(['people']) && got.entry.body.layout.placed[0].ref === 'helper'
+          && got.entry.body.layout.placed[0].x === 20 && !('opens' in got.entry.body.layout.placed[0]) && !('id' in got.entry.body.layout.placed[0])
+          && got.entry.body.modules?.people?.show === 'big' && !('helper' in (got.entry.body.modules || {}))
+          && J(got.entry.body.settings) === J({ panelSurface: 'solid' }), J(got));
+      const back = prebuiltLayoutOf(doc, { defaults: { dashboards: { people: got.entry.body } } });
+      check('...and that entry, laid over the record, makes the moved layout back in a made dashboard’s ids (the round trip)',
+        back.layout.placed[0].id === 'H' && back.layout.placed[0].x === 20 && back.layout.placed[0].y === 20 && back.layout.placed[0].scan === false
+          && J(back.layout.slots) === J(['P']), J(back));
+      check('*** the code’s record again, with a saved default in the site: a save that takes it back to the code’s (never an empty entry) ***',
+        (() => { const g = prebuiltDefaultEntry(docP, base, {}, { defaults: D }); return J(g.entry?.body) === J({ layout: layoutByRef(base, { P: 'people', H: 'helper' }) }); })());
+      const docT = { [PREBUILT_KEY]: 'tutorial', [PREBUILT_REFS_KEY]: { profile: 'A', devices: 'B', nimrod: 'C', settings: 'D' } };
+      const noSettings = { preset: 'quad', slots: ['A', 'B', 'C', null] };
+      const bad = prebuiltDefaultEntry(docT, noSettings, {}, { defaults: {} });
+      check('*** one that would not make a sound record is refused, and says what is wrong ***',
+        bad.entry === null && bad.why.startsWith(PREBUILT_DEFAULT_WORDS.unsound) && /settings/.test(bad.why), bad.why);
+      const docR = { [PREBUILT_KEY]: 'room', [PREBUILT_REFS_KEY]: { picture: 'PI', sign: 'SI' } };
+      const rl = layoutFor(PREBUILT_DASHBOARDS.room, { picture: 'PI', sign: 'SI' });
+      check('*** a name sign’s words (made for each person) are never in the entry ***',
+        !('modules' in (prebuiltDefaultEntry({ ...docR, panelSurface: 'solid' }, rl, { SI: { label: 'Ada' } }, { defaults: {} }).entry?.body || {})));
     }
 
     // =================================================================================================

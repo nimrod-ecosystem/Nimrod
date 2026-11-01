@@ -54,10 +54,15 @@
 // Its Transform is where it is on the page: "Place on the page" (1 to the number of parts; ‹ up, › down, typed in the box
 // like any number) and "Height on the page" (layout.js PAGE_HEIGHT_FIELD, the same row the menu has). `pagePartTransformSel`.
 // The words and the parts of every OTHER page of the site are page_targets.js's (the editor opened over a page).
+//
+// *** WHERE A THING IS, AGAINST THE SITE DEFAULT (row 2.145 step 5d, 2026-11-01). *** A placed panel's Transform and a part
+// of a page's have a site default too: where the ready-made dashboard this one was made from puts it (`siteLayout`,
+// dashboards.js prebuiltLayoutOf). `node.transformDefaults()` says it, row by row, and each Transform selection has a
+// `patch` that writes several rows as one step (a placed panel's through edit_model.js setMany, so its Undo is the model's).
 import { targetsOf, selectionFor } from './edit_mode.js';
 import { normalizeField } from './settings_fields.js';
-import { preset, isPagePreset, PAGE_HEIGHT_FIELD, PAGE_HEIGHT_KEY, pageHeightOf } from './layout.js';
-import { PLACES, SURFACES, PLACE_LABELS, SURFACE_LABELS, EDIT_DEFAULTS as MODEL_DEFAULTS } from './edit_model.js';
+import { preset, isPagePreset, PAGE_HEIGHT_FIELD, PAGE_HEIGHT_KEY, PAGE_HEIGHTS, pageHeightOf, placedGeometry } from './layout.js';
+import { PLACES, SURFACES, PLACE_LABELS, SURFACE_LABELS, EDIT_DEFAULTS as MODEL_DEFAULTS, normalizeItem } from './edit_model.js';
 import { getManifest } from './module.js';
 import { ROOM_PANEL_ID } from './arrangement.js';
 import { WORDS_GROUP_ID } from './editor_words.js';
@@ -120,7 +125,28 @@ export function placedTransformSel(model, id, { title = '' } = {}) {
         return model.set(key, value, { id, via: 'type' });
       } catch (err) { console.error('editor: transform', err); return false; }
     },
+    // (row 2.145 step 5d) Several rows in ONE undoable step ("Put back the site default": edit_model.js setMany).
+    patch: (p) => { try { return typeof model.setMany === 'function' && model.setMany(p, { id }) === true; } catch (err) { console.error('editor: transform', err); return false; } },
   };
+}
+
+/** (row 2.145 step 5d) A placed entry of a layout as the Transform's rows read it (the edit model's own normalising,
+ *  edit_model.js normalizeItem over layout.js placedGeometry -- exactly what `placedTransformSel` shows for it). PURE. */
+export function placedSiteValues(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  const g = placedGeometry(entry);
+  const it = normalizeItem({ id: entry.id, x: g.x, y: g.y, scale: g.scale, rot: g.rot, layer: g.layer, place: entry.place, surface: g.surface });
+  const out = { x: it.x, y: it.y, scale: it.scale, rot: it.rot, layer: it.layer, place: it.place };
+  // Which wall matters only in the scene: elsewhere it is not a row, and is not compared or put back.
+  if (it.place === 'scene') out.surface = it.surface;
+  return out;
+}
+/** Whether a Transform row's value is its site default's. PURE. Numbers within 0.05 of each other are the same: every
+ *  owner keeps them to a tenth (edit_model.js round1), so 0.05 is half the smallest step a value can really differ by --
+ *  a float's last digit never reads as "changed", and a tenth always does. */
+export function sameTransformValue(a, b) {
+  if (typeof a === 'number' || typeof b === 'number') return Number.isFinite(Number(a)) && Math.abs(Number(a) - Number(b)) < 0.05;
+  return (a ?? null) === (b ?? null);
 }
 
 // =====================================================================================================
@@ -170,6 +196,24 @@ export function pagePartTransformSel(arr, id, { title = '' } = {}) {
           return true;
         }
         return false;
+      } catch (err) { console.error('editor: a part of the page', err); return false; }
+    },
+    // (row 2.145 step 5d) "Put back the site default": its place (moved as ‹ › move it) and its height AS GIVEN -- null is
+    // "not chosen", so the part follows the default height from then on, as a module setting put back does.
+    patch: (p) => {
+      try {
+        let ok = true;
+        if (p && Object.prototype.hasOwnProperty.call(p, PAGE_ORDER_KEY)) {
+          const at = pageParts(safe(() => arr.layout(), null))?.indexOf(id) ?? -1;
+          if (at + 1 !== Number(p[PAGE_ORDER_KEY])) ok = typeof arr.movePagePart === 'function' && arr.movePagePart(id, Number(p[PAGE_ORDER_KEY]) - 1) !== false;
+        }
+        if (p && Object.prototype.hasOwnProperty.call(p, PAGE_HEIGHT_KEY)) {
+          const rec = recNow();
+          if (!rec?.state?.set) return false;
+          const h = p[PAGE_HEIGHT_KEY];
+          rec.state.set({ [PAGE_HEIGHT_KEY]: h === null || h === undefined ? null : pageHeightOf(h) });
+        }
+        return ok;
       } catch (err) { console.error('editor: a part of the page', err); return false; }
     },
   };
@@ -280,8 +324,18 @@ export function splitSelection(sel) {
  *   from       { key, label } of that ready-made dashboard, or null
  *   saveAs     (5c) () => { kind, path, body } | null when the thing as a whole can be saved as a site default (its
  *              module's `siteDefault`, edit_mode.js contract), else null
+ * (step 5d) siteLayout () => { key, label, layout } | null: where the ready-made dashboard this one was made from puts its
+ *              panels, in this dashboard's ids (dashboards.js prebuiltLayoutOf); absent: no ready-made layout.
+ * (5d) transformDefaults() -> { values, write, from } for a placed panel or a part of a page, else null:
+ *   values     its Transform rows' site default, by key -- only the rows that HAVE one: a placed panel's x, y, size, turn,
+ *              layer, where it sits (and which wall, in the scene), when the ready-made layout places it too; a part of a
+ *              page's place, when the ready-made layout is a page with it on, and its height always (the ready-made
+ *              start's, else the height's own default, as a module setting's site default is its module's own)
+ *   write      what "Put back the site default" writes for a key, where that is not the value itself (a height that is
+ *              the default's own is written null: not chosen, so it follows the default from then on)
+ *   from       { key, label } of the ready-made dashboard, or null
  */
-export function buildTree(arr, { placedModel = null, words = null, startOf = null } = {}) {
+export function buildTree(arr, { placedModel = null, words = null, startOf = null, siteLayout = null } = {}) {
   const nodes = new Map();
   const list = [];
   const kids = new Map();
@@ -296,6 +350,7 @@ export function buildTree(arr, { placedModel = null, words = null, startOf = nul
       fields: () => fieldsOf(node),
       set: (key, value) => { const s = fieldsOf(node); return s ? s.set(key, value) : false; },
       defaults: () => defaultsOf(node),
+      transformDefaults: () => transformDefaultsOf(node),
     };
     if (nodes.has(node.id)) return nodes.get(node.id);    // one record in two places: listed once, first place wins
     nodes.set(node.id, node);
@@ -360,6 +415,30 @@ export function buildTree(arr, { placedModel = null, words = null, startOf = nul
       // (5c) () => { kind, path, body } | null: this thing as a site default (a room, a village scene, a Town place).
       saveAs: typeof sel.siteDefault === 'function' ? sel.siteDefault : null,
     };
+  }
+  /** (step 5d) The site default of a placed panel's or a part of a page's Transform (see above), or null. */
+  function transformDefaultsOf(node) {
+    if (!node.panelId || node.targetId || !recById.has(node.panelId) || !(node.place || node.pagePart)) return null;
+    const site = typeof siteLayout === 'function' ? safe(() => siteLayout(), null) : null;
+    const from = site && site.key ? { key: site.key, label: site.label } : null;
+    if (node.place) {
+      // Only where the ready-made layout places it too: one it puts in a cell has no free place to put back to.
+      const e = (Array.isArray(site?.layout?.placed) ? site.layout.placed : []).find((x) => x && x.id === node.panelId);
+      const values = e ? placedSiteValues(e) : null;
+      return values ? { values, write: {}, from } : null;
+    }
+    const values = {};
+    const write = {};
+    const there = pageParts(site?.layout || null);
+    const now = pageParts(safe(() => arr.layout(), null)) || [];
+    // Its place: only when the ready-made layout is a page with it on, at a place this page has.
+    if (there && there.includes(node.panelId) && there.indexOf(node.panelId) < now.length) values[PAGE_ORDER_KEY] = there.indexOf(node.panelId) + 1;
+    const got = typeof startOf === 'function' ? safe(() => startOf(node.panelId), null) : null;
+    const h = got?.state?.[PAGE_HEIGHT_KEY];
+    const started = PAGE_HEIGHTS.includes(Number(h));
+    values[PAGE_HEIGHT_KEY] = pageHeightOf(h);
+    write[PAGE_HEIGHT_KEY] = started ? Number(h) : null;
+    return { values, write, from: got ? { key: got.key, label: got.label } : from };
   }
 
   const profile = safe(() => arr.profile(), null);
