@@ -850,7 +850,7 @@ const toTab = (m, id) => {
       // (2026-10-07, DELIBERATELY changed: Mike, "The default should be transparent background on panels." A screen
       // that never picked is now clear; a saved choice stays as saved.)
       check('and it is CLEAR by default (Mike, 2026-10-07) — only a screen that never picked',
-        kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint === 'Fully clear'
+        kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint === 'Fully clear · nobody has chosen, so the usual'
           && ds().panelSurface === 'clear',
         JSON.stringify({ hint: kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint, ds: ds().panelSurface }));
       check('the panel-backgrounds row is a stop on the one-button walk', walkTo('set:panelSurface'));
@@ -859,9 +859,13 @@ const toTab = (m, id) => {
         kiosk.menu.select();
         surfaceLap.push([kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint, ds().panelSurface]);
       }
+      // (row 2.169) The row says where its value is from, after the value: chosen here, it is this screen's.
       check('it cycles through all three, wraps home, and each step reaches the document',
-        JSON.stringify(surfaceLap) === JSON.stringify([['Solid', 'solid'], ['See-through', 'veil'], ['Fully clear', 'clear']]),
+        JSON.stringify(surfaceLap.map(([h, d]) => [String(h).split(' · ')[0], d]))
+          === JSON.stringify([['Solid', 'solid'], ['See-through', 'veil'], ['Fully clear', 'clear']]),
         JSON.stringify(surfaceLap));
+      check('*** and says where it is from: "chosen for this screen" once chosen here (row 2.169) ***',
+        surfaceLap.every(([h]) => / · chosen for this screen$/.test(String(h))), JSON.stringify(surfaceLap));
     }
     await press('Escape');
 

@@ -2448,6 +2448,24 @@ export async function mountKiosk(root, {
     }
     return PANEL_SURFACES.includes(s && s.panelSurface) ? s.panelSurface : PANEL_SURFACE_DEFAULT;
   }
+  // *** WHERE THE BACKGROUNDS COME FROM (row 2.169, 2026-11-01). *** Mike: on the Pi every module was solid, on the
+  // desktop see-through, the same dashboard on both. The Pi's browser had no setting of its own (looked, read-only), so
+  // the solid came from a level kept on the server -- the screen, or the person it is for -- which nothing on screen
+  // named. The menu's row now says which level its value is from, so the next time is one look, not an investigation.
+  const SURFACE_FROM = Object.freeze({ dashboard: 'chosen on this dashboard', screen: 'chosen for this screen',
+    device: 'chosen on this device', person: 'chosen for the person this screen is for' });
+  // After the value on the row ("Solid · chosen for this screen"): settings_fields.js `status`.
+  function panelSurfaceFrom() {
+    const L = levelLayers();
+    for (const lv of ['dashboard', 'screen', 'device', 'person']) {
+      if (PANEL_SURFACES.includes(L[lv] && L[lv].panelSurface)) return lv;
+    }
+    return null;
+  }
+  function panelSurfaceNote() {
+    const lv = panelSurfaceFrom();
+    return lv ? SURFACE_FROM[lv] : 'nobody has chosen, so the usual';
+  }
   function applyPanelSurface(s) {
     const v = shownPanelSurface(s);
     kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : PANEL_SURFACE_DEFAULT;
@@ -4498,6 +4516,8 @@ export async function mountKiosk(root, {
     // legibility escape hatch. (2026-10-07: the default is `clear`, PANEL_SURFACE_DEFAULT, argued there.)
     { key: 'panelSurface', label: 'Panel backgrounds', kind: 'choice', level: 'standard',
       default: PANEL_SURFACE_DEFAULT,
+      // Where the value is from (row 2.169, panelSurfaceNote).
+      status: (() => { try { return panelSurfaceNote(); } catch { return undefined; } })(),
       options: [
         { value: 'solid', label: 'Solid' },
         { value: 'veil', label: 'See-through' },
