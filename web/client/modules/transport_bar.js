@@ -42,7 +42,7 @@
 import { registerModule } from '../module.js';
 import {
   barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
-  sitOutWakePress, paintSave, paintSwap,
+  sitOutWakePress, paintSave, paintSwap, paintMirror,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME,
@@ -121,6 +121,8 @@ registerModule(
     let playPause = (() => { try { return ctx.shell?.playPause?.() || null; } catch { return null; } })();
     // (row 2.190) the picked panel's pages, or null (the shell's getter at mount, then SHELL_STATE `pages`).
     let pages = (() => { try { return ctx.shell?.pages?.() || null; } catch { return null; } })();
+    // (row 2.191) whether this dashboard has a camera for Mirror (the shell's getter, then SHELL_STATE `mirror`).
+    let mirrorS = (() => { try { return ctx.shell?.mirror?.() || null; } catch { return null; } })();
     // Bigger / Smaller (2026-10-02 evening): the same, for the selected panel's corner press.
     let bigger = (() => { try { return ctx.shell?.bigger?.() || null; } catch { return null; } })();
     // Save and ⇄ Swap (row 2.109): the same.
@@ -323,6 +325,8 @@ registerModule(
       paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
       paintSave(shell?.querySelector('[data-act="save"]'), saveS || {});
       paintSwap(shell?.querySelector('[data-act="swap"]'), swapS || {});
+      // With no word from the shell (a preview, a host with no shell) Mirror stays as it was drawn.
+      if (mirrorS) paintMirror(shell?.querySelector('[data-act="mirror"]'), mirrorS);
       const sv = shell?.querySelector('[data-act="save"]');
       if (sv) {
         let hostSaves = false;
@@ -401,7 +405,9 @@ registerModule(
           if ('save' in s) saveS = s.save || null;
           if ('swap' in s) swapS = s.swap || null;
           if ('pages' in s) pages = s.pages || null;
-          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s || 'pages' in s) draw();
+          if ('mirror' in s) mirrorS = s.mirror || null;
+          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s
+            || 'pages' in s || 'mirror' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
           // bar toggle: the key put the bar away (tucked, whether or not in full screen) or brought it back.
           if (BAR_KEY_HIDDEN in s) {

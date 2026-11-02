@@ -46,6 +46,7 @@ import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID,
   PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
+  paintMirror,
   paintSave as paintSaveBtn, paintSwap as paintSwapBtn,
   sitOutWakePress,
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
@@ -3257,11 +3258,18 @@ export async function mountKiosk(root, {
   // MIRROR MODE (C): make the camera fill the whole screen (the mirror element
   // expands over the stage; press again to return). The camera stream stays mounted.
   let mirrorFull = false;
+  /** What the bars' Mirror says (row 2.191): whether there is a camera to show, and whether it is showing. */
+  function mirrorState() {
+    let cam = null;
+    try { cam = arr.cameraRec(); } catch { cam = null; }
+    return { can: !!cam, on: !!cam && mirrorFull };
+  }
   function toggleMirrorFull() {
     if (!arr.cameraRec()) return;
     mirrorFull = !mirrorFull;
     kioskEl.classList.toggle('mirror-full', mirrorFull);
     try { arr.cameraRec().instance.onResize?.(); } catch { /* noop */ }
+    try { syncPlayPause(); } catch { /* not drawn yet */ }
   }
   function toggleFs() {
     if (!document.fullscreenElement) root.requestFullscreen?.().catch(() => {});
@@ -5721,6 +5729,10 @@ export async function mountKiosk(root, {
     let pg = null;
     try { pg = pagesState(); paintPages(pg); } catch { pg = null; /* not drawn yet */ }
     if (useDashboard) { try { bus.publish(SHELL_STATE, { pages: pg }); } catch { /* not load-bearing */ } }
+    // (row 2.191) Mirror: dimmed on a dashboard with no camera panel, where it used to look live and do nothing.
+    let mi = null;
+    try { mi = mirrorState(); paintMirror(controlsEl.querySelector('[data-act="mirror"]'), mi); } catch { mi = null; /* not drawn yet */ }
+    if (useDashboard && mi) { try { bus.publish(SHELL_STATE, { mirror: mi }); } catch { /* not load-bearing */ } }
     // Bigger / Smaller follows the same selection (2026-10-02 evening; transport_bar.js paintBigger).
     let b = null;
     try {
@@ -6602,6 +6614,13 @@ export async function mountKiosk(root, {
           try { menu.close(); } catch { /* already closed */ }
           bus.publish('shell/edit-panel', { id: ROOM_PANEL_ID, on: true, from: 'menu' });
         } }] : []),
+      // MIRROR, IN THE MENU (row 2.191, 2026-11-02): the bar's Mirror, here too, so the bar can lose it without the screen
+      // losing it (the transport bar proposal's step 5.2). Only while this dashboard has a camera: with none it can do
+      // nothing, and a row that does nothing is D16's dead button again. The menu closes first: it would cover the camera.
+      ...(mirrorState().can ? [{ kind: 'item', id: 'mirror', ...MENU_TAB.screen(0),
+        label: mirrorState().on ? 'Back from the camera, full screen' : 'Mirror: the camera, full screen',
+        hint: 'the bar’s Mirror and the C key do the same',
+        run: () => { try { menu.close(); } catch { /* already closed */ } toggleMirrorFull(); } }] : []),
       { kind: 'heading', id: 'switch-hold-head', label: 'Switches', ...MENU_TAB.devices(1) },
       { kind: 'heading', id: 'bar-key-head', label: 'The bar', ...MENU_TAB.devices(2) },   // bar toggle
       { kind: 'heading', id: 'speakers-head', label: 'Speakers', ...MENU_TAB.devices(4) },   // play on (row 2.68)
@@ -9176,6 +9195,7 @@ export async function mountKiosk(root, {
           // 2026-10-02: what the placed bar's Pause / Play and a live call's controls show at mount.
           playPause: () => playPauseState(), callControls: () => callState,
           pages: () => pagesState(),   // row 2.190: Previous page / Next page at mount (then SHELL_STATE `pages`)
+    mirror: () => mirrorState(), // row 2.191: Mirror dimmed with no camera, at mount (then SHELL_STATE `mirror`)
           bigger: () => biggerState(),
           // row 2.109: what its Save and ⇄ Swap show at mount (then SHELL_STATE `save` / `swap`).
           save: () => saveState(), swap: () => swapState(),

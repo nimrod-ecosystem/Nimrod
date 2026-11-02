@@ -544,8 +544,11 @@ const toTab = (m, id) => {
       // (row 2.144 step 2, 2026-10-31, DELIBERATELY: "Send subtitles of what is said here" beside them. 57.)
       // (row 2.144, 2026-10-31, DELIBERATELY: the person's own "Send subtitles of what I say on calls" and "Make subtitles
       // of the other person on calls", on the Subtitles heading - one choice per person, every screen of theirs. 59.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 59) ***',
-        lapStops.length === 15 && oldStops.length === 59 && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
+      // (row 2.191, 2026-11-02, DELIBERATELY: "Mirror: the camera, full screen" on This screen while the dashboard has a
+      // camera, so the bar can lose Mirror without the screen losing it. This dashboard has one. 60.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 60) ***',
+        lapStops.length === 15 && oldStops.length === 60 && oldStops.some((i) => i.id === 'mirror') /* Mirror */
+        && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
         && oldStops.some((i) => i.id === 'set:callTheirCaptions') /* subtitles a caller sends */
         && oldStops.some((i) => i.id === 'set:callOwnCaptions') /* subtitles of what is said here */
         && oldStops.some((i) => i.id === 'set:callSubtitlesOut') && oldStops.some((i) => i.id === 'set:callSubtitlesIn') /* the person's own */

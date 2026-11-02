@@ -138,6 +138,18 @@ export function paintSmaller(btn, s = {}) {
   btn.title = on ? 'make it smaller, one step at a time' : 'nothing is bigger now';
 }
 
+// *** MIRROR, DIMMED WITH NO CAMERA (row 2.191, 2026-11-02). *** Mirror shows the camera full screen; on a dashboard
+// with no camera panel it used to look live and do nothing (kiosk.js `toggleMirrorFull` returned quietly), which is
+// D16's "a button that does nothing" exactly. The shell says whether there is a camera (`mirror: { can, on }`).
+export function paintMirror(btn, s = {}) {
+  if (!btn) return;
+  const can = !!(s && s.can);
+  btn.disabled = !can;
+  btn.setAttribute('aria-pressed', can && s.on ? 'true' : 'false');
+  btn.title = can ? (s.on ? 'back from the camera, full screen (C)' : 'the camera, full screen (C)')
+    : 'there is no camera on this dashboard';
+}
+
 // ---------------------------------------------------------------------------------------------------
 // *** SAVE AND ⇄ SWAP, ON BOTH BARS (row 2.109). *** The shell's state says what they can do (kiosk.js `saveState`,
 // `swapState`): Save is dimmed until a panel was switched since the dashboard was saved, and then reads "Save •";

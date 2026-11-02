@@ -136,6 +136,19 @@ function unreachableChips() {
     check('pressing the last button puts that module on the stage',
       kiosk.primaryType() === 'board', `primary=${kiosk.primaryType()}`);
 
+    // Row 2.191 (2026-11-02): no camera among these nine, so Mirror is dimmed and says why. It used to look live and
+    // do nothing (D16).
+    const mir = root.querySelector('[data-act="mirror"]');
+    check('*** with no camera on the screen, Mirror is dimmed and says there is no camera ***',
+      !!mir && mir.disabled && /no camera/.test(mir.title), mir ? `${mir.disabled} ${mir.title}` : 'no Mirror button');
+    const { paintMirror } = await import('../transport_bar.js');
+    const b = document.createElement('button');
+    paintMirror(b, { can: true, on: false });
+    const live = !b.disabled && b.getAttribute('aria-pressed') === 'false';
+    paintMirror(b, { can: true, on: true });
+    check('...and with a camera it is live, and says when it is showing (aria-pressed)',
+      live && !b.disabled && b.getAttribute('aria-pressed') === 'true');
+
     kiosk.destroy();
     root.innerHTML = '';
   }
