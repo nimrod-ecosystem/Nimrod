@@ -550,7 +550,8 @@ export const SETTINGS = [
       { value: 'on', label: 'Yes, unless set to keep movement low' },
       { value: 'off', label: 'No, keep them still' },
     ],
-    note: 'Only the themed pictures move, slowly. Nothing flashes. "Reduce motion" on the device always keeps them still.' },
+    note: 'The themed pictures move slowly, and an animated GIF a card was given plays (row 2.184). Kept still, a GIF shows its '
+      + 'first frame. "Reduce motion" on the device always keeps them still.' },
   // *** THE CHOICE CARD GOES BY ITSELF, AND THIS IS HOW SOON. ***
   //
   // Thirty seconds by default: long enough to close a settings menu, look at the board and read
@@ -1033,7 +1034,8 @@ registerModule(
     function releaseImages() { cardImages?.releaseAll(); }
 
     // The word beside the picture is the label, so the image itself is decoration: alt ''.
-    function loadImage(cardEl, ref) { return images().load(cardEl, ref, { alt: '' }); }
+    // (row 2.184 stage 3) A GIF on a card is drawn still (its first frame) whenever this board's pictures may not move.
+    function loadImage(cardEl, ref) { return images().load(cardEl, ref, { alt: '', still: !picturesMove() }); }
 
     function paint() {
       const showOne = cfg.reveal === 'one' && !!scan;

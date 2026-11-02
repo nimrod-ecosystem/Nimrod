@@ -43,6 +43,19 @@ export function cardFaceHTML({ word = '', symbol = '', image = false } = {}) {
     + `<span class="ab-word">${escapeHtml(word)}</span>`;
 }
 
+/** A GIF's first frame, drawn on a canvas; null for anything that is not a GIF, or where the browser cannot (row 2.184). */
+export async function gifStill(url) {
+  if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return null;
+  const blob = await (await fetch(url)).blob();
+  if (!/gif/i.test(blob.type)) return null;
+  const bmp = await createImageBitmap(blob);
+  const c = document.createElement('canvas');
+  c.width = bmp.width; c.height = bmp.height;
+  c.getContext('2d').drawImage(bmp, 0, 0);
+  try { bmp.close?.(); } catch { /* gone */ }
+  return c;
+}
+
 /**
  * A picture loader for one mounted module. `ref` is `{ sourceId, path }` — a reference into the
  * person's own media sources; nothing is uploaded, and nothing here could upload anything.
@@ -62,7 +75,14 @@ export function createCardImages({ sources = null, user = null, personId = null,
     releases = [];
   }
 
-  async function load(cardEl, ref, { alt = '' } = {}) {
+  // *** A GIF, KEPT STILL (row 2.184 stage 3, 2026-11-02). *** When the owner says its pictures may not move (reduced
+  // motion, a needs profile, a slow screen, "The pictures move: No"), an animated GIF is drawn as its FIRST frame:
+  // `createImageBitmap` on the file gives the first frame reliably (drawing an <img> would give whichever frame is
+  // current). Anything that fails falls back to the image itself, as before. Not for SVG: a person's own animated SVG
+  // cannot be paused here, and is shown as it is.
+  const stillOf = gifStill;
+
+  async function load(cardEl, ref, { alt = '', still = false } = {}) {
     try {
       if (!ref || !ref.sourceId || !ref.path) return false;
       if (!sourcesP) {
@@ -80,6 +100,18 @@ export function createCardImages({ sources = null, user = null, personId = null,
       const frame = cardEl.querySelector('[data-img]');
       if (!frame) { got.release(); return false; }
       releases.push(got.release);
+      if (still && /\.gif$/i.test(String(ref.path))) {
+        let c = null;
+        try { c = await stillOf(got.url); } catch (err) { console.warn('card: no still frame for a GIF', err); c = null; }
+        if (c && alive() && cardEl.isConnected) {
+          c.className = 'ab-still';
+          c.dataset.still = '';
+          c.setAttribute('role', 'img');
+          if (alt) c.setAttribute('aria-label', alt); else c.setAttribute('aria-hidden', 'true');
+          frame.append(c);
+          return true;
+        }
+      }
       const img = document.createElement('img');
       img.alt = alt;
       img.src = got.url;

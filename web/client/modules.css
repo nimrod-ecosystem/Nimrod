@@ -649,7 +649,7 @@
    frame keeps its size while the file loads so nothing jumps when the picture arrives. */
 .ab-card .ab-img{display:block;width:calc(var(--u,1px) * 44);height:calc(var(--u,1px) * 44);
   line-height:0;flex:0 0 auto}
-.ab-card .ab-img img{width:100%;height:100%;display:block;object-fit:contain;
+.ab-card .ab-img img,.ab-card .ab-img canvas.ab-still{width:100%;height:100%;display:block;object-fit:contain;
   border-radius:calc(var(--u,1px) * 3)}
 /* *** `hyphens:auto` BEFORE `break-word`, AND IT IS NOT TYPOGRAPHY. ***
  * This was `overflow-wrap:anywhere`, which breaks a word at whatever character the line runs out

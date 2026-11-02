@@ -639,6 +639,20 @@ try {
     check('undo gives back the board before, newest first', u.back()?.cells[0] === null && u.back()?.cells[0]?.word === 'Yes' && u.back() === null);
   }
 
+  section('*** a GIF kept still: its first frame (row 2.184, stage 3) ***');
+  {
+    const { gifStill } = await import('../card_face.js');
+    // A 2 × 1 two-frame GIF, red then blue, built here so nothing is fetched from anywhere.
+    const bytes = Uint8Array.from(atob('R0lGODlhAgABAPAAAP8AAAAA/yH5BAAKAAAAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAAgABAAACAoRRACH5BAAKAAAALAAAAAACAAEAgAAA/wAAAAICBAoAOw=='), (ch) => ch.charCodeAt(0));
+    const gifUrl = URL.createObjectURL(new Blob([bytes], { type: 'image/gif' }));
+    let c = null;
+    try { c = await gifStill(gifUrl); } catch (e) { c = String(e); }
+    check('*** a GIF gives a still canvas the size of the picture ***', c instanceof HTMLCanvasElement && c.width === 2 && c.height === 1, String(c));
+    const svgUrl = URL.createObjectURL(new Blob(['<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'], { type: 'image/svg+xml' }));
+    check('...and anything that is not a GIF gives nothing (shown as it is)', (await gifStill(svgUrl)) === null);
+    URL.revokeObjectURL(gifUrl); URL.revokeObjectURL(svgUrl);
+  }
+
   section('*** making a board in the one editor: a draft, never the live board ***');
   {
     const host = document.getElementById('host');
