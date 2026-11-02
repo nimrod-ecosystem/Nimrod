@@ -1022,6 +1022,73 @@ try {
     e.close();
     ow.arr.destroy();
   }
+
+  // ============================================================================================
+  section('*** adding a module, stage 1 (2026-11-02): the editor follows a panel added after it opened ***');
+  {
+    const ad = await make();
+    let mods = [...MODULES];
+    // A stand-in for the kiosk's own (kiosk.js `editorAdder`): the module is added, placed on the screen on top, and the
+    // screen put together again, the way the kiosk's rebuild does (setProfile, resolve, applyModules).
+    const rebuild = async () => { ad.arr.setProfile({ id: 'scr-A', name: 'Test dashboard', modules: mods }); ad.arr.resolve(ad.doc.kiosk.layout); await ad.arr.applyModules(); };
+    const calls = [];
+    let refuse = null;
+    const adder = {
+      add: async (type) => {
+        calls.push(['add', type]);
+        if (refuse) return { ok: false, why: refuse };
+        const id = `n${calls.length}`;
+        mods = [...mods, { id, type }];
+        const L = ad.doc.kiosk.layout;
+        ad.doc = { ...ad.doc, kiosk: { ...ad.doc.kiosk, layout: { ...L, placed: [...(L.placed || []), { id, place: 'screen', x: 50, y: 50, w: 30, h: 30, layer: 1 }] } } };
+        await rebuild();
+        return { ok: true, id, where: 'placed' };
+      },
+      remove: async (id) => {
+        calls.push(['remove', id]);
+        mods = mods.filter((m) => m.id !== id);
+        const L = ad.doc.kiosk.layout;
+        ad.doc = { ...ad.doc, kiosk: { ...ad.doc.kiosk, layout: { ...L, placed: (L.placed || []).filter((p) => p.id !== id) } } };
+        await rebuild();
+        return { ok: true };
+      },
+    };
+    let e = ad.open();
+    const none = await e.addModule('clock');
+    check('*** no host way to add (a preview, an embed): nothing is added, and it says why ***',
+      !none.ok && none.why === EDITOR_WORDS.addHere && !calls.length);
+    e.close();
+    e = ad.open({ adder });
+    check('(setup) the editor opened before the add knows only the clock as a placed panel', !!e.placedModel()?.item('k2') && !e.placedModel()?.item('n1'));
+    const r = await e.addModule('button');
+    check('*** the module is added through the host, once ***', r.ok && r.id === 'n1' && J(calls) === J([['add', 'button']]), J([r, calls]));
+    check('*** ...and the editor now knows it: the new panel is in its placed model, and CHOSEN ***',
+      !!e.placedModel()?.item('n1') && e.selected() === nodeIdFor('n1'), J([e.selected(), !!e.placedModel()?.item('n1')]));
+    check('...the status line says where it went and that Undo takes it away', (e.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.added);
+    // A move of the new panel saves a list that HAS it (the model built at open would have saved one entry short).
+    e.placedModel().select('n1');
+    e.placedModel().set('x', 20);
+    check('*** moving the new panel is saved, and the clock placed before stays ***',
+      await until(() => savedPlaced(ad, 'n1')?.x === 20 && !!savedPlaced(ad, 'k2')), J(ad.doc.kiosk.layout.placed));
+    // Undo: the move first (the newest thing done), then the add.
+    bar(e, 'undo').click();
+    check('Undo steps back the move first', await until(() => savedPlaced(ad, 'n1')?.x === 50), J(savedPlaced(ad, 'n1')));
+    check('...and Undo is still lit: the add is next', await until(() => !bar(e, 'undo').disabled));
+    bar(e, 'undo').click();
+    check('*** ...then Undo takes the added module away again, through the host ***',
+      await until(() => calls.some((c) => c[0] === 'remove' && c[1] === 'n1')) && await until(() => !savedPlaced(ad, 'n1') && !e.placedModel()?.item('n1')),
+      J(calls));
+    check('...said; the dashboard row is chosen; the clock is still placed',
+      await until(() => (e.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.addUndone) && e.selected() === ROOT_ID && !!savedPlaced(ad, 'k2'));
+    refuse = 'It waits until the call ends.';
+    const modsBefore = mods.length;
+    const no = await e.addModule('button');
+    check('*** the host refuses (a call on, say): nothing added, its reason on the status line ***',
+      !no.ok && no.why === refuse && (e.el.querySelector('[data-se-status]')?.textContent || '') === refuse && mods.length === modsBefore,
+      J([no, e.el.querySelector('[data-se-status]')?.textContent, mods.length, modsBefore]));
+    e.close();
+    ad.arr.destroy();
+  }
 } catch (err) {
   check('the suite ran to the end', false, String(err && err.stack || err));
 }

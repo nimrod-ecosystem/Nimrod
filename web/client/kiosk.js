@@ -3615,6 +3615,8 @@ export async function mountKiosk(root, {
             entryFor: (changed) => prebuiltDefaultEntry(dashOpts.settingsNow(), arr.layout(), changed),
           },
           level: () => complexity(),
+          // (2026-11-02, adding a module, stage 1) A new module on this screen, and its Undo (`editorAdder`, below).
+          adder: editorAdder(),
           notify: (text) => { try { output?.notify?.(text, { source: 'shell' }); } catch { /* the line still says it */ } },
           onClose: () => ownEditorClosed(),
           // A thing chosen in the view (a press there, not in the editor's own box) is somebody using it too.
@@ -5565,6 +5567,89 @@ export async function mountKiosk(root, {
     try { await profiles.addModule(profileId, 'clock'); } catch (err) { console.error('kiosk: adding a small clock', err); return false; }
     await rebuildHere(doc, next, cur);                 // (the base: read before the wait, merged in `rebuildHere`)
     return true;
+  }
+  // =================================================================================================
+  // *** A NEW MODULE FROM THE ONE EDITOR (row 2.145, adding a module, stage 1; 2026-11-02). *** What the editor's
+  // `adder` does (editor.js `addModule`): the module is added to this screen (`profiles.addModule`), placed ON THE
+  // SCREEN on top of what is placed there (its spot and size the render-time defaults, layout.js PLACED_DEFAULTS, so
+  // nothing is written for them), and the screen put together again the way "Over the dashboard" does (`rebuildHere`).
+  // A clock or a camera becomes the corner clock or the mirror, as it does from the library; one already there is
+  // not added twice (Undo would then have to tell "added" from "only turned on"). The one-at-a-time stage takes the
+  // module as one more turn. Its Undo (`remove`) takes the module off the screen and puts it together again.
+  // NOT WHILE A CALL IS ON (proposed, proposal_editor_add_module_20261102.md): putting the screen together again
+  // remounts every panel, and a call is the one thing that cannot be restarted without the other person.
+  // Only on a screen of its own (`canAddHere`), not on the dashboard path, whose editor is the windows.
+  // =================================================================================================
+  const EDITOR_ADD_WORDS = Object.freeze({
+    notHere: 'Modules are not added to this screen from here.',
+    unknown: 'There is no module of that kind.',
+    call: 'It waits until the call ends: adding puts the screen together again.',
+    corner: 'This screen has one in a corner already.',
+    failed: 'It could not be added. Nothing changed.',
+    takeBack: 'It could not be taken away from here.',
+  });
+  // A call on or ringing: the same test the version hold makes (`versionHold`, 'call') -- the notice object exists all the
+  // time, so it is whether it SHOWS; a Call panel's ring counts until the caller's own give-up time and a margin.
+  const callOnNow = () => {
+    try {
+      return !!(callTransport?.isLive?.() || callView || callNotice?.showing?.()
+        || (vRingingAt !== null && Date.now() - vRingingAt < NOTICE_RING_MS + 30 * 1000));
+    } catch { return true; }
+  };
+  function editorAdder() {
+    if (embedded || previewLayout) return null;
+    return { add: (type) => addFromEditor(type), remove: (id) => takeBackFromEditor(id) };
+  }
+  async function addFromEditor(type) {
+    if (torn) return { ok: false, why: '' };
+    if (!type || !getManifest(type)) return { ok: false, why: EDITOR_ADD_WORDS.unknown };
+    if ((useDashboard && dash) || !canAddHere()) return { ok: false, why: EDITOR_ADD_WORDS.notHere };
+    if (callOnNow()) return { ok: false, why: EDITOR_ADD_WORDS.call };
+    const doc = layoutDoc();
+    const cur = (doc.get?.() || {}).kiosk || {};
+    try {
+      if (HUD_TYPES.includes(type)) {
+        if (hudHere(type, cur.layout)) return { ok: false, why: EDITOR_ADD_WORDS.corner };
+        const c = clockCornerOf({ kiosk: cur });
+        const next = type === 'clock' && c === 'off' ? { ...cur, clock: { ...(cur.clock || {}), corner: SMALL_CLOCK_FIELD.default } } : cur;
+        const mod = await profiles.addModule(profileId, type);
+        await rebuildHere(doc, { ...next }, cur);
+        return { ok: true, id: mod.id, where: 'corner' };
+      }
+      const mod = await profiles.addModule(profileId, type);
+      // Placed on the key as it is AFTER the wait, as `overlayHere` does (its reasoning holds: a placement is a choice
+      // that can be made again on whatever the layout now is).
+      const now = (doc.get?.() || {}).kiosk || {};
+      if (!now.layout) { await rebuildHere(doc, { ...now }, now); return { ok: true, id: mod.id, where: 'stage' }; }
+      const placed = Array.isArray(now.layout.placed) ? now.layout.placed : [];
+      const layers = placed.filter((p) => p && p.place === 'screen' && Number.isFinite(Number(p.layer))).map((p) => Number(p.layer));
+      const onTop = placed.some((p) => p && p.place === 'screen') ? (layers.length ? Math.max(...layers) : 0) + 1 : 0;
+      const entry = { id: mod.id, place: 'screen', ...(onTop ? { layer: onTop } : {}) };
+      await rebuildHere(doc, { ...now, layout: { ...now.layout, placed: [...placed, entry] } }, now);
+      return { ok: true, id: mod.id, where: 'placed' };
+    } catch (err) {
+      console.error('kiosk: adding a module from the editor', err);
+      return { ok: false, why: EDITOR_ADD_WORDS.failed };
+    }
+  }
+  async function takeBackFromEditor(id) {
+    if (torn || !id) return { ok: false, why: '' };
+    if ((useDashboard && dash) || !canAddHere() || typeof profiles?.removeModule !== 'function') return { ok: false, why: EDITOR_ADD_WORDS.takeBack };
+    if (callOnNow()) return { ok: false, why: EDITOR_ADD_WORDS.call };
+    const doc = layoutDoc();
+    const cur = (doc.get?.() || {}).kiosk || {};
+    const L = cur.layout;
+    const next = L ? { ...cur, layout: { ...L,
+      ...(Array.isArray(L.placed) ? { placed: L.placed.filter((p) => p && p.id !== id) } : {}),
+      ...(Array.isArray(L.slots) ? { slots: L.slots.map((s) => (s === id ? null : s)) } : {}) } } : cur;
+    try {
+      await profiles.removeModule(profileId, id);
+      await rebuildHere(doc, next, cur);
+      return { ok: true };
+    } catch (err) {
+      console.error('kiosk: taking back a module added from the editor', err);
+      return { ok: false, why: EDITOR_ADD_WORDS.takeBack };
+    }
   }
   /** What the row shows: the corner clock's corner, or Off when this screen has none. */
   function smallClockNow() {

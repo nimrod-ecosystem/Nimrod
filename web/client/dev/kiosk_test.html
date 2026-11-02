@@ -4662,6 +4662,24 @@ const toTab = (m, id) => {
       kbus.publish('shell/edit-panel', { id: a.id, from: 'corner' });
       await sleep(50);
       check('...a second press (stop editing) does not open it again or close it by itself', !!k.sceneEditor() || !k.editView());
+      // (2026-11-02, adding a module, stage 1) The one editor adds a module through the kiosk (`editorAdder`): on the
+      // screen, on top of the clock, chosen; the editor still open and following it; Undo takes it off the screen.
+      k.closeEditView();
+      const ed3 = k.openEditView('scene');
+      const modsNow = async () => ((await profiles.get(S.id))?.modules || []);
+      const savedNow = async () => placedOf((await readOf(S.id)).kiosk?.layout);
+      const added = await ed3.addModule('button');
+      check('*** the one editor adds a module to this screen: a new module, placed on the screen on top, chosen ***',
+        added.ok && added.where === 'placed' && (await modsNow()).some((m) => m.id === added.id && m.type === 'button')
+          && await pollAsync(async () => (await savedNow())[added.id]?.place === 'screen' && (await savedNow())[added.id]?.layer === 1)
+          && ed3.isOpen() && ed3.selected() === `panel:${added.id}`,
+        JSON.stringify([added, await savedNow(), ed3.isOpen(), ed3.selected()]));
+      check('...the editor follows it (its placed model has the new panel) and the clock is still placed',
+        !!ed3.placedModel()?.item(added.id) && !!(await savedNow())[a.id]);
+      ed3.el.querySelector('[data-se="undo"]')?.click();
+      check('*** Undo takes it off the screen again: the module and its place ***',
+        await pollAsync(async () => !(await modsNow()).some((m) => m.id === added.id) && !(await savedNow())[added.id], 8000),
+        JSON.stringify(await savedNow()));
       k.closeEditView();
       k.destroy();
       // (2026-11-02) A moving theme somebody picked stands still on a screen set to keep movement low.

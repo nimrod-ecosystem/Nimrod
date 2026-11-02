@@ -110,6 +110,15 @@ export const EDITOR_WORDS = Object.freeze({
   copyPiece: 'There is only one of this, so it cannot be copied.',
   cannotCopy: 'This one cannot be copied.',
   addHere: 'Adding to the dashboard from here is not built yet. Choose a room, a scene or an open Town place to add a piece to it.',
+  // (2026-11-02, adding a module, stage 1) What the editor says as a module is added to the dashboard, and taken back.
+  adding: 'Adding it...',
+  addBusy: 'One thing is being added already.',
+  addFailed: 'It could not be added. Nothing changed.',
+  added: 'Added, in the middle on top. Move it or size it here; Undo takes it away.',
+  addedCorner: 'Added in a corner of the screen. Undo takes it away.',
+  addedStage: 'Added. This screen shows one thing at a time, so it takes its turn. Undo takes it away.',
+  addUndone: 'Taken away again.',
+  addUndoFailed: 'It could not be taken away. It is still on the dashboard.',
   slotTransform: 'Its place is its cell of the layout.',
   stageTransform: 'It fills the screen.',
   roomTransform: 'The room fills the screen behind the panels.',
@@ -246,11 +255,15 @@ const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', dupl
  *               prebuiltDefaultEntry ({ entry, why }): an owner's save of the whole dashboard. Absent: neither offered.
  *   owner       (5c) this person is one of the site's owners (/api/me `site_owner`): "Save as the site default" and
  *               "Copy the saved defaults" are drawn. Default false. The server checks again on every save.
+ *   adder       (row 2.145, adding a module, stage 1; 2026-11-02) the host's way to put a NEW module on this dashboard:
+ *               add(type) -> Promise<{ ok, id, where: 'placed'|'corner'|'stage', why }>, the module added and the screen
+ *               put together again; remove(id) -> Promise<{ ok, why }>, the same taken back (the editor's Undo). Absent:
+ *               nothing is added from here (a preview, an embed, a page). The chooser that calls `addModule` is stage 2.
  */
 export function openSceneEditor(opts = {}) {
   const { arr = null, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null,
     words: wordsAtOpen = false, clipboard = globalThis.navigator?.clipboard, now = () => new Date(),
-    pageRoot = null, pageTargets = null, list: listAtOpen = true, siteDefaults = null, owner = false } = opts;
+    pageRoot = null, pageTargets = null, list: listAtOpen = true, siteDefaults = null, owner = false, adder = null } = opts;
   const pageScope = !arr && !!pageRoot && typeof pageTargets?.tree === 'function';
   if (!arr && !pageScope) throw new Error('openSceneEditor: an arrangement (or a page and its targets) is required');
   const doc = mountIn?.ownerDocument || pageRoot?.ownerDocument || (typeof document !== 'undefined' ? document : null);
@@ -278,25 +291,36 @@ export function openSceneEditor(opts = {}) {
   const page = () => win.location?.pathname || '/';
 
   // ---- the placed panels' edit model: the edit windows' own, with no window open ----
+  // (2026-11-02, adding a module) OPENED AGAIN after the screen is put together with a panel more or less: the model is
+  // built once from the panels placed then, so a panel added later had no Transform, and every save was a list one short.
+  // Its history starts again with it -- what was done before the add is not undone after it (the add's own Undo is).
   let placed = null;
-  // (step 4) A page has no placed panels: no model.
-  if (!pageScope) try {
-    const { onClose: _c, mountIn: _m, host: _h, windows: _w, onChange: hostChange, ...rest } = dashOpts || {};   // eslint-disable-line no-unused-vars
-    placed = openDashboardEditor({
-      ...rest, arr, host: doc.createElement('div'), windows: [], onClose: null,
-      onChange: () => {
-        try { hostChange?.(); } catch (err) { console.error('editor: host onChange', err); }
-        render();
-      },
-    });
-  } catch (err) { console.error('editor: the placed panels', err); placed = null; }
+  let offPlaced = null;
+  function openPlaced() {
+    if (pageScope) return;                 // (step 4) A page has no placed panels: no model.
+    try { offPlaced?.(); } catch { /* gone */ }
+    offPlaced = null;
+    try { placed?.close(); } catch { /* gone */ }
+    placed = null;
+    try {
+      const { onClose: _c, mountIn: _m, host: _h, windows: _w, onChange: hostChange, ...rest } = dashOpts || {};   // eslint-disable-line no-unused-vars
+      placed = openDashboardEditor({
+        ...rest, arr, host: doc.createElement('div'), windows: [], onClose: null,
+        onChange: () => {
+          try { hostChange?.(); } catch (err) { console.error('editor: host onChange', err); }
+          render();
+        },
+      });
+    } catch (err) { console.error('editor: the placed panels', err); placed = null; }
+    // The toolbar follows the model AT ONCE (Undo lights the moment there is something to undo), not after the screen has
+    // been moved (the host's onChange comes after its apply, a moment later): a quick second press must find it lit.
+    // (row 2.145 step 5d) A change to the placed panels that is not a put back of ours is the newest thing done: the
+    // toolbar's Undo is the model's again, not the last "Put back the site default".
+    try { offPlaced = placed?.model?.subscribe?.((evt) => { if (evt && evt.type === 'items' && !puttingBack) putBackUndo = null; if (evt && evt.type === 'items' && box && !closed) { drawBar(tree?.nodes.get(selectedId) || null, editingNow()); paint(); } }) || null; }
+    catch (err) { console.error('editor: following the placed model', err); }
+  }
+  openPlaced();
   const model = () => placed?.model || null;
-  // The toolbar follows the model AT ONCE (Undo lights the moment there is something to undo), not after the screen has
-  // been moved (the host's onChange comes after its apply, a moment later): a quick second press must find it lit.
-  // (row 2.145 step 5d) A change to the placed panels that is not a put back of ours is the newest thing done: the
-  // toolbar's Undo is the model's again, not the last "Put back the site default".
-  try { offs.push(placed?.model?.subscribe?.((evt) => { if (evt && evt.type === 'items' && !puttingBack) putBackUndo = null; if (evt && evt.type === 'items' && box && !closed) { drawBar(tree?.nodes.get(selectedId) || null, editingNow()); paint(); } })); }
-  catch (err) { console.error('editor: following the placed model', err); }
 
   // ---- the box ----
   ensureEditCss(doc);
@@ -380,7 +404,9 @@ export function openSceneEditor(opts = {}) {
       t.undo = on(() => undoPutBack());
       t.redo = off(EDITOR_WORDS.noRedo);
     } else if (placedPanel || (group && m)) {
-      t.undo = m.canUndo() ? on(() => m.undo()) : off(EDITOR_WORDS.nothingToUndo);
+      // (2026-11-02) A module added from here is undone after what was done to the panels since (the model's history
+      // starts again at the add, so whatever it holds is newer).
+      t.undo = m.canUndo() ? on(() => m.undo()) : addUndo ? on(() => { undoAdd(); }) : off(EDITOR_WORDS.nothingToUndo);
       t.redo = m.canRedo() ? on(() => m.redo()) : off(EDITOR_WORDS.nothingToRedo);
     } else if (group) {
       t.undo = off(EDITOR_WORDS.chooseFirst); t.redo = off(EDITOR_WORDS.chooseFirst);
@@ -634,6 +660,53 @@ export function openSceneEditor(opts = {}) {
     return ownerNow;
   }
 
+  // =====================================================================================================
+  // *** A NEW MODULE ON THIS DASHBOARD (row 2.145, adding a module, stage 1; 2026-11-02). *** The host adds it and puts
+  // the screen together again (`adder.add`); then the placed model is opened again (it is built once, from the panels
+  // placed then) and the new panel is chosen, so where it is and its size are what is on show. A corner clock or mirror,
+  // or a screen that shows one thing at a time, has nothing here to choose: the status line says where it went. Undo
+  // takes it off the screen again (`adder.remove`), after anything done to the panels since. What CHOOSES the module
+  // (the library, or a row here) is stage 2 and Mike's decision (proposal_editor_add_module_20261102.md); until then
+  // only a host or the suite calls this, and the toolbar's Add says, as before, that it is not built here.
+  // =====================================================================================================
+  let addUndo = null;              // { id, where }: the module the last add put on this dashboard
+  let adding = false;
+  async function addModule(type) {
+    if (closed) return { ok: false, why: '' };
+    if (pageScope || !adder || typeof adder.add !== 'function') { note(EDITOR_WORDS.addHere); return { ok: false, why: EDITOR_WORDS.addHere }; }
+    if (adding) return { ok: false, why: EDITOR_WORDS.addBusy };
+    adding = true;
+    note(EDITOR_WORDS.adding);
+    let r = null;
+    try { r = await adder.add(type); } catch (err) { console.error('editor: adding a module', err); r = null; }
+    adding = false;
+    if (closed) return r || { ok: false, why: '' };
+    if (!r || !r.ok) { const why = r?.why || EDITOR_WORDS.addFailed; note(why); render(); return { ok: false, why }; }
+    openPlaced();
+    putBackUndo = null;
+    addUndo = { id: r.id, where: r.where };
+    const said = r.where === 'corner' ? EDITOR_WORDS.addedCorner : r.where === 'stage' ? EDITOR_WORDS.addedStage : EDITOR_WORDS.added;
+    if (r.where === 'placed' && r.id) choose(nodeIdFor(r.id));
+    else render();
+    note(said);
+    return r;
+  }
+  async function undoAdd() {
+    const u = addUndo;
+    if (closed || !u || !adder || typeof adder.remove !== 'function') return false;
+    addUndo = null;
+    const e = editingNow();
+    if (e && e.id === u.id) leaveEditMode();
+    let r = null;
+    try { r = await adder.remove(u.id); } catch (err) { console.error('editor: taking an added module back', err); r = null; }
+    if (closed) return !!r?.ok;
+    if (!r || !r.ok) { addUndo = u; note(r?.why || EDITOR_WORDS.addUndoFailed); render(); return false; }
+    openPlaced();
+    chosenLocal = ROOT_ID;
+    render();
+    note(EDITOR_WORDS.addUndone);
+    return true;
+  }
   function addInto(panelId) {
     try { arr.editPanel(panelId, true); arr.editSelect(null); } catch (err) { console.error('editor: add', err); return; }
     const b = insEl.querySelector('[data-se-sec="s"] [data-em-focus="addPiece:1"]');
@@ -1335,7 +1408,9 @@ export function openSceneEditor(opts = {}) {
     leaveEditMode();
     for (const v of views) { try { v.destroy(); } catch { /* gone */ } }
     views = [];
+    try { offPlaced?.(); } catch { /* gone */ }
     try { placed?.close(); } catch { /* gone */ }
+    addUndo = null;
     try { box.remove(); } catch { /* gone */ }
     try { onClose?.(reason); } catch (err) { console.error('editor: onClose', err); }
   }
@@ -1357,6 +1432,8 @@ export function openSceneEditor(opts = {}) {
     selected: () => selectedId,
     placedModel: () => model(),
     choose,
+    // (2026-11-02) A new module on this dashboard, and its Undo (stage 1; the chooser that calls it is stage 2).
+    addModule,
     tools: () => toolsFor(tree?.nodes.get(selectedId) || null, editingNow()),
     // (step 3) The words: shown or not, shown or hidden, and the Words section's three buttons (for a host and the suite).
     words: () => wordsOn,
