@@ -1100,6 +1100,8 @@ try {
     check('the rest of what the page said (video or audio) and the server’s caller are kept',
       w.video === true && w.by === 'acct-mike' && w.byOwner === false && w.session === S1, JSON.stringify(w));
     check('the screen’s own ring (the notice) hears the same caller', ringEv[0]?.name === 'Dad' && ringEv[0]?.personId === 'p-dad', JSON.stringify(ringEv));
+    // row 2.167 (2026-11-02): whether the call was placed from a screen - the server's word, `true` only.
+    check('a call from a person’s own sign-in is not "from a screen"', w.byScreen === false, JSON.stringify(w));
     t.hangup('declined');
     link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: newCallSession(), by: 'acct-x',
       from: { name: 'Robin', video: false, personId: 'p-forged' } });
@@ -1120,6 +1122,12 @@ try {
     link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: newCallSession(), by: 'acct-mike', byKey: 'acct-mike', from: { name: 'Mike', byKey: K } });
     check('*** a key not of the server\'s shape is dropped, and the page\'s own `from` cannot supply one ***',
       !('byKey' in (rings[4] || { byKey: 1 })), JSON.stringify(rings[4]));
+    t.hangup('declined');
+    const S9 = newCallSession();
+    link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: S9, by: 'acct-mike', byOwner: true, byScreen: true,
+      from: { name: 'Kitchen screen', video: true, byScreen: false } });
+    check('*** a call the server says came FROM A SCREEN carries byScreen, over anything the page said ***',
+      rings.at(-1)?.byScreen === true && rings.at(-1)?.session === S9, JSON.stringify(rings.at(-1)));
     t.destroy();
     {
       const dp = fakePeer(); const dl = fakeLink();

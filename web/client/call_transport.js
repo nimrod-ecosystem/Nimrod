@@ -883,7 +883,10 @@ export function createCallTransport({
       // `byKey` (row 2.144, 2026-11-01): who is calling, to remember an "Always" / "Never" by - the server's, the same
       // key this caller carries in a group call (drive.py ask_key), and not their login.
       const byKey = askKeyFrom(sig);
-      const known = { ...(byName ? { name: byName } : {}), personId: byPerson, ...(byKey ? { byKey } : {}) };
+      // `byScreen` (row 2.167, 2026-11-02): the server's word that the call was placed FROM A SCREEN (its device key).
+      // Such a call always rings and waits - no drop-in countdown (kiosk.js `dropIn`). Only `true` from the server counts.
+      const known = { ...(byName ? { name: byName } : {}), personId: byPerson, ...(byKey ? { byKey } : {}),
+        byScreen: sig.byScreen === true };
       const who = from && typeof from === 'object'
         ? { ...from, ...known, by: typeof sig.by === 'string' ? sig.by : null, byOwner, ...(session ? { session } : {}) }
         : (typeof sig.by === 'string' ? { ...known, by: sig.by, byOwner, ...(session ? { session } : {}) } : from);

@@ -1701,7 +1701,7 @@ def shared_with_me(user: str = Depends(current_user)):
 
 
 @app.post("/api/drive/ticket/{person_id}")
-def drive_ticket(person_id: str, user: str = Depends(current_user)):
+def drive_ticket(person_id: str, request: Request, user: str = Depends(current_user)):
     """Trade ordinary HTTP auth for something a browser CAN put on a socket."""
     _check(person_id, ID_RE, "person id")
     # NO LONGER `owned_person`. Owning the person is now one of two ways in; the other is
@@ -1711,7 +1711,9 @@ def drive_ticket(person_id: str, user: str = Depends(current_user)):
     # message (drive_socket below). `drive` says which kind this login holds, so a page can say so before trying.
     if not _may_reach(user, person_id):
         raise HTTPException(status_code=403, detail="not allowed to use this person's screens")
-    return {"ticket": _tickets.issue(user, person_id), "expires_in": 30, "drive": _may_drive(user, person_id)}
+    # row 2.167 (2026-11-02): whether a SCREEN bought it (its device key), so a call that screen places always rings.
+    return {"ticket": _tickets.issue(user, person_id, screen=via_device_key(request)), "expires_in": 30,
+            "drive": _may_drive(user, person_id)}
 
 
 @app.get("/api/drive/may/{person_id}")
@@ -2119,7 +2121,13 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
     if not ID_RE.match(person_id or "") or role not in ROLES:
         await ws.close(code=4400)
         return
-    user = _tickets.redeem(t, person_id)
+    _tk = _tickets.redeem_ticket(t, person_id)
+    user = _tk.user if _tk else None
+    # row 2.167 (2026-11-02; Mike: "good"): A CALL PLACED FROM A SCREEN ALWAYS RINGS AND WAITS. A screen calling a screen
+    # on the same login was answered by itself after the owner's drop-in countdown, so a stray press on a Call panel
+    # could open a camera in another room. Drop-in stays for a phone or computer somebody holds; the screen being called
+    # is told `byScreen` (stamped below, never the page's) and counts down for nobody.
+    from_screen = bool(_tk and _tk.screen)
     # row 2.167 (2026-10-31): WHICH OF THIS LOGIN'S PEOPLE IS CALLING - a screen's Call panel calls as the person the
     # screen is for. Kept only for a driver, and only when that person is this login's own; anything else is the login
     # itself (its first person), exactly as before. A page can name only its own login's people, never another's - and
@@ -2338,6 +2346,7 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                     # caller is the account that owns these screens (drop-in by default for the owner), and - on an
                     # intercom offer - the name the room should show (the list's, else their display name).
                     stamped["signal"]["byOwner"] = user == room_key
+                    stamped["signal"]["byScreen"] = from_screen   # row 2.167: placed from a screen, so it rings
                     # row 2.167 (2026-10-31): a CALL's offer says who is calling as the screen knows them - the caller's
                     # card among the owner's people (its name and, for its picture, its id). Before, only the page's own
                     # words for itself reached the screen. A purpose-less offer is a call too (an older caller page).

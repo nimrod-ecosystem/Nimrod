@@ -98,6 +98,9 @@ class _Ticket:
     user: str
     person_id: str
     expires: float
+    # row 2.167 (2026-11-02): bought with a SCREEN's device key, not a person's sign-in. A call placed from a screen
+    # always rings and waits (Mike: "good"), so the screen being called must know - from the server, never the page.
+    screen: bool = False
 
 
 class Tickets:
@@ -108,7 +111,7 @@ class Tickets:
         self._ttl = ttl_s
         self._now = now
 
-    def issue(self, user: str, person_id: str) -> str:
+    def issue(self, user: str, person_id: str, screen: bool = False) -> str:
         self._sweep()
         if len(self._by_id) >= MAX_TICKETS:
             # Oldest first. A flood evicts its own earlier attempts rather than anybody's
@@ -117,11 +120,16 @@ class Tickets:
                 self._by_id.pop(tid, None)
         tid = secrets.token_urlsafe(24)
         self._by_id[tid] = _Ticket(user=user, person_id=person_id,
-                                   expires=self._now() + self._ttl)
+                                   expires=self._now() + self._ttl, screen=bool(screen))
         return tid
 
     def redeem(self, tid: str, person_id: str) -> str | None:
         """Returns the user this ticket was issued to, or None. ALWAYS consumes it."""
+        t = self.redeem_ticket(tid, person_id)
+        return t.user if t else None
+
+    def redeem_ticket(self, tid: str, person_id: str) -> "_Ticket | None":
+        """`redeem`, but the whole ticket (who, and whether a screen bought it), or None. ALWAYS consumes it."""
         self._sweep()
         t = self._by_id.pop(tid or "", None)
         if t is None:
@@ -132,7 +140,7 @@ class Tickets:
         # a socket onto any screen in the account, which is not what was authorised.
         if t.person_id != person_id:
             return None
-        return t.user
+        return t
 
     def _sweep(self) -> None:
         now = self._now()
@@ -285,7 +293,7 @@ def stamp_signal(msg: dict, user: str) -> dict:
     return {"type": "signal", "signal": sig}
 
 
-SERVER_STAMPS = ("byOwner", "byName", "byPerson", "byKey")
+SERVER_STAMPS = ("byOwner", "byName", "byPerson", "byKey", "byScreen")
 
 
 # WHO A CALLER IS, TO REMEMBER AN ANSWER BY (row 2.144, 2026-11-01). A screen asked for subtitles of its person's voice

@@ -63,6 +63,15 @@ check(
 )
 check("and that attempt consumed it too, so it cannot be retried", tk.redeem(t3, "p1") is None)
 
+# row 2.167 (2026-11-02): a ticket a SCREEN bought (its device key) says so, so a call it places always rings.
+t4 = tk.issue("acct", "p1", screen=True)
+r4 = tk.redeem_ticket(t4, "p1")
+check("*** a screen's ticket redeems to the account AND says a screen bought it ***", r4 is not None and r4.user == "acct" and r4.screen is True)
+t5 = tk.issue("acct", "p1")
+r5 = tk.redeem_ticket(t5, "p1")
+check("...a person's sign-in ticket says it was not a screen (the default)", r5 is not None and r5.screen is False)
+check("redeem_ticket consumes it like redeem", tk.redeem_ticket(t4, "p1") is None and tk.redeem(t5, "p1") is None)
+
 check("garbage is refused", tk.redeem("not-a-ticket", "p1") is None)
 check("so is an empty string", tk.redeem("", "p1") is None)
 check("and so is None", tk.redeem(None, "p1") is None)
@@ -206,9 +215,10 @@ check("the rest of the signal is carried unchanged",
       stamped["signal"]["kind"] == "offer" and stamped["signal"]["sdp"] == "v=0" and stamped["type"] == "signal")
 check("the original message is not mutated (the stamp is a copy)", forged["signal"]["by"] == "someone-else")
 claimed = stamp_signal(parse_message({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "byOwner": True,
-                                                                   "byName": "Pat", "byPerson": "p1"}}), "eve")
-check("*** the other server-only fields a page writes (byOwner, byName, byPerson; row 2.167) are removed ***",
-      not any(k in claimed["signal"] for k in ("byOwner", "byName", "byPerson")), str(claimed))
+                                                                   "byName": "Pat", "byPerson": "p1",
+                                                                   "byScreen": False}}), "eve")
+check("*** the other server-only fields a page writes (byOwner, byName, byPerson, byScreen; row 2.167) are removed ***",
+      not any(k in claimed["signal"] for k in ("byOwner", "byName", "byPerson", "byScreen")), str(claimed))
 check("a verb passes through untouched (nothing but signals is stamped)",
       stamp_signal({"type": "verb", "verb": "select"}, "alice") == {"type": "verb", "verb": "select"})
 check("a pong passes through untouched", stamp_signal({"type": "pong"}, "alice") == {"type": "pong"})

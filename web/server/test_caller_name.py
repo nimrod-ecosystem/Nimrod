@@ -186,6 +186,22 @@ with ws_for(OWN, "screen") as S:
     g = ring(S, CALLONLY, {"byName": "Pat"}, purpose=None)
     check("a purpose-less offer (an older caller page) is a call, and stamped the same way", g.get("byName") == "Nurse Casey", J(g))
 
+    # row 2.167 (2026-11-02; Mike: "good"): a call placed FROM A SCREEN always rings and waits, so the screen being called
+    # is told so by the server. A screen is the one whose ticket was bought with its device key; the sign-in that bought
+    # it is stood in for here by making `via_device_key` say yes for one ticket.
+    section("*** a call placed from a screen says so (byScreen), and a page cannot claim or deny it ***")
+    g = ring(S, OWN, {"byScreen": True})
+    check("*** a person's own sign-in: byScreen False, even when the page claims True ***", g.get("byScreen") is False, J(g))
+    _real = appmod.via_device_key
+    appmod.via_device_key = lambda request: True
+    try:
+        g = ring(S, OWN, {"byScreen": False})
+    finally:
+        appmod.via_device_key = _real
+    check("*** a ticket a screen bought: byScreen True, whatever the page wrote ***", g.get("byScreen") is True, J(g))
+    check("...and it is still the owner calling (drop-in is the screen's to refuse for it, not the server's)",
+          g.get("byOwner") is True, J(g))
+
     # row 2.144 (2026-11-01): who is calling, to remember a screen's "Always" / "Never" by (drive.py ask_key).
     section("*** byKey: the same caller, the same key - and never their login ***")
     k_own, k_own2, k_friend = ring(S, OWN).get("byKey"), ring(S, OWN).get("byKey"), ring(S, FRIEND).get("byKey")

@@ -1952,7 +1952,9 @@ export async function mountKiosk(root, {
     // CALLS WAIT TO BE ANSWERED (Mike, 2026-10-12): a Call panel answers by itself only for a caller on the person's
     // "May drop in" list - `by` is the SERVER-STAMPED caller (drive.py stamp_signal), never a name a page sent.
     // `byOwner` (2026-10-14): the server's word that the caller owns these screens - the owner drops in by default.
-    mayDropIn: (from) => dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null),
+    // (row 2.167, 2026-11-02) A call placed FROM A SCREEN never drops in: it rings and waits (the server's `byScreen`).
+    mayDropIn: (from) => !(from && from.byScreen === true)
+      && dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null),
     // WHAT THE SCREEN LENDS THE CALLER DURING A CALL (2026-10-12; "see" or "drive", and how long, 2026-10-14): until the
     // call ends by default, a set time that still ends with it, or "always" for a caller with the guardian set. The
     // server checks this screen answered that call and lends it to that call's own caller (screen_access.py).
@@ -6227,7 +6229,9 @@ export async function mountKiosk(root, {
         openCall: (from, opts) => openCallView(from, opts),
         // Mike, 2026-10-12: a caller on the person's "May drop in" list is answered by itself after the person's own
         // countdown (`dropInSeconds`, 10 s by default); everybody else waits for Answer. null = wait.
-        dropIn: (from) => (dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null)
+        // (row 2.167, 2026-11-02; Mike: "good") a call placed from a screen rings and waits: no countdown for it.
+        dropIn: (from) => (!(from && from.byScreen === true)
+          && dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null)
           ? dropInSecondsOf(personRow || {}) : null),
         // row 2.167: the caller's picture, from the card the server named (the same faces "Who this screen is for" draws).
         avatars: () => whoAvatars(),
