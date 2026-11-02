@@ -158,6 +158,15 @@ try {
     check('a listener on window is counted', meter.read().listeners === before.listeners + 1);
     window.removeEventListener('resize', fn);
     check('...and removing it releases the count', meter.read().listeners === before.listeners);
+    // (2026-11-02) Removed by aborting its signal: the browser takes it off without removeEventListener.
+    const ac = new AbortController();
+    document.addEventListener('pointerdown', fn, { capture: true, signal: ac.signal });
+    check('a listener added with a signal is counted', meter.read().listeners === before.listeners + 1);
+    ac.abort();
+    check('...and aborting the signal releases the count (it was read as a leak in Comet and Press)', meter.read().listeners === before.listeners,
+      String(meter.read().listeners - before.listeners));
+    document.addEventListener('pointerdown', fn, { signal: ac.signal });
+    check('...and one added with a signal already aborted is not counted (the browser does not add it)', meter.read().listeners === before.listeners);
 
     // A module's own DOM goes when its host does. Counting those would bury a real finding under
     // a number so large nobody reads the report twice.

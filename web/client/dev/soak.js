@@ -113,7 +113,17 @@ export function installMeter({ target = window } = {}) {
   target.EventTarget.prototype.addEventListener = function (type, fn, opts) {
     if (survives(this)) {
       const k = `${nameOf(this)}:${type}`;
-      listeners.set(k, (listeners.get(k) || 0) + 1);
+      // (2026-11-02) A listener added with `{ signal }` is removed by aborting the signal, which never calls
+      // removeEventListener -- so the meter follows the signal too, or it reports a clean teardown as a leak (it did:
+      // settings.js's outside-press listeners read as +2 per cycle for Comet and Press). One already aborted is never added.
+      const sig = opts && typeof opts === 'object' ? opts.signal : null;
+      if (!sig?.aborted) {
+        listeners.set(k, (listeners.get(k) || 0) + 1);
+        sig?.addEventListener?.('abort', () => {
+          const n = (listeners.get(k) || 0) - 1;
+          if (n <= 0) listeners.delete(k); else listeners.set(k, n);
+        }, { once: true });
+      }
     }
     return orig.add.call(this, type, fn, opts);
   };
