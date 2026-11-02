@@ -402,6 +402,8 @@ export const SETTINGS = [
       // documentation for what a custom board looks like"* — which is a real use, and only
       // works if nobody mistakes it for a starter set built for them.
       { value: 'care',  label: 'Care board — an example (16 words)' },
+      // (2026-11-02, Mike via chat's note EB) chat's draft, labelled as not reviewed: aac_vocab.js MEALS.
+      { value: 'meals', label: 'Meals — an example, not reviewed by a speech-language person (12 words)' },
     ] },
   // *** SWITCHING BOARDS IS ON THE BOARD, NOT ONLY IN THE MENU. ***
   //

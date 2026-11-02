@@ -611,4 +611,34 @@ export const LIBRARY = {
   ],
 };
 
-export const BUILTIN_BOARDS = { yesno: YESNO, core: UNIVERSAL, care: CARE, library: LIBRARY };
+// *** THE MEALS BOARD — a NAMED EXAMPLE, never the default (row 2.146; Mike, 2026-11-02, via chat's note EB). ***
+//
+// Mike: "Meals can probably wait, unless you can make something up for it." Chat's draft: tier 12 (4 across, 3 down),
+// every word one Design has drawn (eat, drink, hungry and thirsty landed 2026-11-01). NOT REVIEWED BY A SPEECH-LANGUAGE
+// PERSON - said in its name so nobody mistakes it for a clinical vocabulary. Like every shipped board its order is
+// load-bearing from today (see UNIVERSAL above), so a reviewed version would ship as a new board, not a reflow of this.
+export const MEALS = {
+  version: VOCAB_VERSION,
+  id: 'meals',
+  name: 'Meals (example, not reviewed by a speech-language person)',
+  tier: 12,
+  cells: [
+    // row 1 — the meal itself
+    { id: 'eat',       word: 'Eat',       symbol: 'eat',       kind: 'plain' },
+    { id: 'drink',     word: 'Drink',     symbol: 'drink',     kind: 'plain' },
+    { id: 'hungry',    word: 'Hungry',    symbol: 'hungry',    kind: 'need' },
+    { id: 'thirsty',   word: 'Thirsty',   symbol: 'thirsty',   kind: 'need' },
+    // row 2 — more, enough, and what a person thinks of it
+    { id: 'more',      word: 'More',      symbol: 'more',      kind: 'plain' },
+    { id: 'done',      word: 'All done',  symbol: 'all_done',  kind: 'plain' },
+    { id: 'like',      word: 'Like',      symbol: 'like',      kind: 'love' },
+    { id: 'not',       word: 'Not',       symbol: 'not',       kind: 'no' },
+    // row 3 — what is wrong with it
+    { id: 'hot',       word: 'Hot',       symbol: 'hot',       kind: 'hot' },
+    { id: 'cold',      word: 'Cold',      symbol: 'cold',      kind: 'cold' },
+    { id: 'help',      word: 'Help',      symbol: 'help',      kind: 'need' },
+    { id: 'different', word: 'Different', symbol: 'different', kind: 'plain' },
+  ],
+};
+
+export const BUILTIN_BOARDS = { yesno: YESNO, core: UNIVERSAL, care: CARE, library: LIBRARY, meals: MEALS };

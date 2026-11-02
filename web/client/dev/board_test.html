@@ -310,6 +310,18 @@ try {
     // are. Until this landed there was nothing to hand somebody who does not yet have a board,
     // and that was the honest reason the AAC module could not be given to a stranger.
     check('*** there is a board written for nobody in particular ***', !!BUILTIN_BOARDS.core);
+    // (2026-11-02) Meals: chat's draft, a named example, every word one the board can draw.
+    {
+      const meals = normalizeBoard(BUILTIN_BOARDS.meals);
+      const { SYMBOLS } = await import('../aac_symbols.js');
+      const { SETTINGS } = await import('../modules/board.js');
+      check('*** the Meals example: twelve words, 4 x 3, no holes, every one with a drawing, said to be unreviewed ***',
+        meals.cells.length === 12 && meals.cells.every((c) => c && SYMBOLS[c.symbol]) && /not reviewed/.test(BUILTIN_BOARDS.meals.name)
+          && meals.cells.slice(0, 4).map((c) => c.symbol).join() === 'eat,drink,hungry,thirsty',
+        JSON.stringify(meals.cells.map((c) => c && c.symbol)));
+      check('...offered in "Which board", and not the default', SETTINGS.find((s) => s.key === 'boardId').options.some((o) => o.value === 'meals')
+        && SETTINGS.find((s) => s.key === 'boardId').default === 'yesno');
+    }
     const core = normalizeBoard(UNIVERSAL);
     check('it is thirty-six words', core.cells.filter(Boolean).length === 36,
       String(core.cells.filter(Boolean).length));
@@ -770,7 +782,7 @@ try {
     // exists; this is the check that says the hazard fix (and row 2.95) did not remove the feature it was protecting.
     const offered = () => (inst.impl.settingsChoices?.().boardId || []);
     check('the menu offers every built-in board',
-      JSON.stringify(offered().map((o) => o.value)) === '["yesno","core","care","library"]',
+      JSON.stringify(offered().map((o) => o.value)) === '["yesno","core","care","library","meals"]',
       JSON.stringify(offered().map((o) => o.value)));
     st.set({ ...st.get(), boardId: 'care' });
     await sleep(40);
@@ -792,7 +804,7 @@ try {
     check('somebody who wants the row can still have it',
       inst.impl.__probe().boardsShown === true);
     check('...and it offers the same boards the panel does',
-      JSON.stringify(inst.impl.__probe().boards) === '["yesno","core","care","library"]',
+      JSON.stringify(inst.impl.__probe().boards) === '["yesno","core","care","library","meals"]',
       JSON.stringify(inst.impl.__probe().boards));
     host.querySelector('[data-board="yesno"]')?.click();
     await sleep(40);
