@@ -346,12 +346,44 @@ try {
       text().includes(CALL_UP_FRONT) && !!root.querySelector(`[data-how-up-front][href="${PRIVATE_NETWORK_URL}"]`));
     M.page.destroy();
     const g = privateNetworkHTML();
-    check('*** the guide: why (no server of ours sees calls), Tailscale step by step for phone, computer and the screen ***',
-      /through no server of ours/.test(g) && /Tailscale/.test(g) && /Your phone/.test(g) && /A computer/.test(g) && /The screen/.test(g)
-      && /tailscale\.com\/install\.sh/.test(g));
+    // (row 2.167, 2026-11-02) The steps are per device now: with no device known, every device is listed and open.
+    check('*** the guide: why (no server of ours sees calls), Tailscale step by step for phones, computers and the screen ***',
+      /through no server of ours/.test(g) && /Tailscale/.test(g) && /An Android phone/.test(g) && /An iPhone/.test(g)
+      && /A Windows computer/.test(g) && /The screen \(a Raspberry Pi\)/.test(g) && /tailscale\.com\/install\.sh/.test(g));
     check('...someone on another account is given just the screen (Share, an invite link), and the others are named',
       /Someone on another account/.test(g) && /Share/.test(g) && /ZeroTier/.test(g) && /WireGuard/.test(g));
     check('the guide names nobody and says "not affiliated"', !/cici|her screen/i.test(g) && /not affiliated/.test(g));
+
+    // (row 2.167, Mike 2026-11-02, "(a) to (d) yes") This device's steps first; the rest behind "a different device".
+    const PN = await import('../private_network.js');
+    const ua = {
+      windows: { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36', platform: 'Win32' },
+      mac: { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Safari/605.1.15', platform: 'MacIntel', maxTouchPoints: 0 },
+      ipad: { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Safari/605.1.15', platform: 'MacIntel', maxTouchPoints: 5 },
+      iphone: { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148', platform: 'iPhone' },
+      android: { userAgent: 'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36', platform: 'Linux armv8l' },
+      pi: { userAgent: 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 Chrome/130 Safari/537.36', platform: 'Linux aarch64' },
+      linux: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36', platform: 'Linux x86_64' },
+    };
+    const got = Object.fromEntries(Object.entries(ua).map(([k, n]) => [k, PN.deviceKindOf(n)]));
+    check('*** the device is told from the browser: Windows, Mac, iPad (as an iPhone/iPad), iPhone, Android, a Pi, Linux ***',
+      JSON.stringify(got) === JSON.stringify({ windows: 'windows', mac: 'mac', ipad: 'iphone', iphone: 'iphone', android: 'android', pi: 'pi', linux: 'linux' }),
+      JSON.stringify(got));
+    check('...and an unknown one is not guessed', PN.deviceKindOf({ userAgent: 'something else' }) === null);
+    const box = document.createElement('div');
+    const pg = PN.mountPrivateNetworkPage(box, { nav: { ...ua.windows, clipboard: { writeText: async () => {} } } });
+    const here = box.querySelector('[data-here]');
+    check('*** on Windows: "This device" shows the winget line with a Copy button, and the other devices are folded away ***',
+      pg.device === 'windows' && !!here && /winget install tailscale\.tailscale/.test(here.textContent) && !!here.querySelector('[data-copy]')
+      && !box.querySelector('[data-other-devices]').open && !box.querySelector('[data-other-devices] [data-device="windows"]')
+      && !!box.querySelector('[data-other-devices] [data-device="android"]'));
+    here.querySelector('[data-copy]').click();
+    await new Promise((r) => setTimeout(r, 0));
+    check('...and Copy says it copied', here.querySelector('[data-copy]').textContent === 'Copied');
+    const ph = document.createElement('div');
+    PN.mountPrivateNetworkPage(ph, { nav: ua.android });
+    check('on an Android phone: the Google Play link, and "allow the VPN"', /play\.google\.com/.test(ph.querySelector('[data-here]').innerHTML)
+      && /Allow the VPN/.test(ph.querySelector('[data-here]').textContent));
   }
 
   // 2026-10-26 (note CT): a call that could not connect says what each end offered, so the next failure says why.

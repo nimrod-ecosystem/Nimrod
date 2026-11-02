@@ -431,6 +431,28 @@ EOF
   echo "  restart the kiosk to apply: systemctl --user restart nimrod-kiosk"
 fi
 
+# 11. (2026-11-02, row 2.167; Mike: "make it as simple as possible for everyone to set up", and decision (c) "yes") A
+#     PRIVATE NETWORK FOR CALLS: Tailscale, so a call that a network blocks still connects (private_network.js says why;
+#     there is no relay server of the project's). Only when asked: NIMROD_VPN=1. It is system-wide and DOWNLOADS (Tailscale's
+#     own installer, from tailscale.com, which adds its apt repository), so it asks for sudo, like step 6's policy. Then
+#     `tailscale up --qr` prints the sign-in link AS A QR CODE in this terminal, to scan with a phone and sign in to the
+#     same account as the phone that will call. Already installed = not installed again; already signed in = left alone.
+#     Undo: sudo tailscale down; sudo apt remove tailscale.
+if [ "${NIMROD_VPN:-0}" = "1" ]; then
+  if ! command -v tailscale >/dev/null 2>&1; then
+    echo "installing Tailscale (a private network for calls) from tailscale.com; it asks for sudo"
+    curl -fsSL https://tailscale.com/install.sh | sh
+  else
+    echo "Tailscale is already installed"
+  fi
+  if tailscale status >/dev/null 2>&1; then
+    echo "Tailscale is already signed in: $(tailscale ip -4 2>/dev/null | head -n1)"
+  else
+    echo "scan this with a phone and sign in to the SAME Tailscale account as the phone that will call:"
+    sudo tailscale up --qr || echo "  tailscale up did not finish; run it again: sudo tailscale up --qr" >&2
+  fi
+fi
+
 echo
 echo "installed. kiosk will launch $URL via systemd --user on next boot."
 echo "  start it now:  systemctl --user start nimrod-kiosk"
