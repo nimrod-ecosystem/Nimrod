@@ -253,6 +253,8 @@ export const SUITES = [
   'voice_model_guide',
   // 2026-10-02: the caller page - a family member calls a screen (call.html), gated on the drive grant.
   'call_page',
+  // 2026-11-02 (row 2.167): "Check the connection" on the Calls page - a silent test connection to a screen.
+  'call_check',
   // 2026-10-02: a call to a screen with no Call panel - a notice (Decline / Answer), and the call it answers
   // hosted over the panels. Mounts real kiosks and real sockets (needs the server).
   'call_notice',

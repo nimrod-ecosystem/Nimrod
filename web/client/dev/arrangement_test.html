@@ -228,7 +228,10 @@ try {
       // 2026-10-31 (row 2.145 step 1, deliberately): the records edit mode can edit, for the one editor's tree (editor_test drives it).
       'editRecs',
       // 2026-10-31 (row 2.145 step 4, deliberately): a part of a page moved, for the one editor's "Place on the page" (below, editor_test).
-      'movePagePart'];
+      'movePagePart',
+      // 2026-11-02 (row 2.145, deliberately): the panel a pressed element is in, for the one editor's "press a panel to
+      // choose it" (editor_test and kiosk_test drive it). Missing here from 90259c59 until the full sweep caught it.
+      'panelAt'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),

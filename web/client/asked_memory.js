@@ -84,7 +84,11 @@ export const ASKED_STATE_OPTIONS = Object.freeze({ merge: askedMerge });
 export function createAskedMemory(ctx, { game, cap = () => ASKED_CAP_DEFAULT } = {}) {
   const handles = new Map();   // row key -> handle
   const local = new Map();     // pid -> hashes (no row to keep them on)
+  // (2026-11-02, game_teardown_test) DESTROYED MEANS DESTROYED: a row still loading when the game went did start polling
+  // after it, and a call made after it opened a fresh row that nobody would close. After `destroy`, nothing opens a row.
+  let dead = false;
   const rowFor = (pid) => {
+    if (dead) return { handle: null, ready: Promise.resolve() };
     const person = typeof pid === 'string' && pid.startsWith('person:') ? pid.slice(7) : null;
     const key = person && typeof ctx?.makePersonState === 'function' ? `p:${person}` : 's';
     if (handles.has(key)) return handles.get(key);
@@ -96,7 +100,7 @@ export function createAskedMemory(ctx, { game, cap = () => ASKED_CAP_DEFAULT } =
     const entry = { handle: h || null, ready: Promise.resolve() };
     if (entry.handle) {
       entry.ready = Promise.resolve().then(() => entry.handle.load?.()).catch(() => {})
-        .then(() => { try { entry.handle?.startPolling?.(); } catch { /* none */ } });
+        .then(() => { if (dead) return; try { entry.handle?.startPolling?.(); } catch { /* none */ } });
     }
     handles.set(key, entry);
     return entry;
@@ -134,6 +138,7 @@ export function createAskedMemory(ctx, { game, cap = () => ASKED_CAP_DEFAULT } =
       write(pid, l.slice(Math.max(1, Math.ceil(l.length * fraction))));
     },
     destroy() {
+      dead = true;
       for (const e of handles.values()) { try { e.handle?.flush?.(); e.handle?.destroy?.(); } catch { /* gone */ } }
       handles.clear();
     },

@@ -53,6 +53,10 @@ const R = (saved = {}, opts = {}) => {
   return Object.assign(r, { ladder: store, item: () => r.probe().item, st: () => r.inst.impl.__state(),
     session: () => r.inst.impl.__session });
 };
+// A drawing with its ids set aside (the panel suffixes them, card_deck.js `cardArt` idSuffix).
+const noIds = (s) => s.replace(/\bk[a-z0-9]+-\d+(-[\w-]+)?/g, 'ID');
+// Where two drawings first differ, for a failed comparison's detail.
+const firstDiff = (a = '', b = '') => { let i = 0; while (i < a.length && a[i] === b[i]) i++; return i >= a.length && a.length === b.length ? 'same' : `at ${i}: want ...${a.slice(Math.max(0, i - 40), i + 80)} | got ...${String(b).slice(Math.max(0, i - 40), i + 80)}`; };
 const tap = (r, v) => r.host.querySelector(`[data-pick="${CSS.escape(String(v))}"]`)?.click();
 
 try {
@@ -148,10 +152,14 @@ try {
     check('no colour is written into the markup outside the card\'s own drawing', artEls.length >= 1
       && !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(outside.innerHTML));
     const want = document.createElement('div');
+    // (2026-11-02, deliberately changed) Ids aside, as the scenery check below: the panel gives its faces its own id suffix
+    // (card_sort.js `artId`), and since the default deck drew its town behind the cards (2026-10-25) a face has ids, so
+    // compared node for node this was red with nothing wrong.
     want.innerHTML = cardArt({ ...it.card, up: true }, r.st().theme, r.inst.impl.__api?.cfg?.() || DEFAULTS);
+    const shownArt = r.host.querySelector('.cs-card svg[data-card-art]');
     check('*** the card is Design\'s drawing of that card, in the theme\'s deck, hidden from a screen reader (the card element names it) ***',
-      want.firstElementChild.isEqualNode(r.host.querySelector('.cs-card svg[data-card-art]'))
-        && r.host.querySelector('.cs-card svg').getAttribute('aria-hidden') === 'true', r.st().theme);
+      noIds(want.firstElementChild.outerHTML) === noIds(shownArt?.outerHTML || '')
+        && r.host.querySelector('.cs-card svg').getAttribute('aria-hidden') === 'true', firstDiff(noIds(want.firstElementChild.outerHTML), noIds(shownArt?.outerHTML || '')));
     r.inst.impl.hear({ text: { S: 'spades', H: 'hearts', D: 'diamonds', C: 'clubs' }[it.card.s], confidence: 0.95 });
     check('*** saying the suit is answering it ***', r.phase() === 'celebrate', r.phase());
     r.timers.flush();
@@ -281,11 +289,12 @@ try {
     r.setCfg({ cardLayout: 'big', cardScenery: 'off' });
     const want = document.createElement('div');
     want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'big', suitColours: 'two', cardScenery: 'off' });
-    check('big faces: the card is redrawn in Design\'s big layout', want.firstElementChild.isEqualNode(art()));
+    // (2026-11-02, deliberately changed) Ids aside, as above.
+    check('big faces: the card is redrawn in Design\'s big layout', noIds(want.firstElementChild.outerHTML) === noIds(art()?.outerHTML || ''),
+      firstDiff(noIds(want.firstElementChild.outerHTML), noIds(art()?.outerHTML || '')));
     r.setCfg({ cardScenery: 'on' });
     want.innerHTML = cardArt({ ...it.card, up: true }, 'cyberpunk', { cardLayout: 'big', suitColours: 'two', cardScenery: 'on' });
-    // (ids aside: the panel gives its faces its own suffix, card_deck.js `cardArt` idSuffix)
-    const noIds = (s) => s.replace(/\bk[a-z0-9]+-\d+(-[\w-]+)?/g, 'ID');
+    // (ids aside: the panel gives its faces its own suffix, card_deck.js `cardArt` idSuffix -- `noIds`, at the top)
     check('*** scenery on: the card is redrawn with its place in the town behind it, its ids the panel\'s own ***',
       noIds(want.firstElementChild.outerHTML) === noIds(art().outerHTML) && /viewBox="0 0 960 540"/.test(art().outerHTML)
       && [...art().querySelectorAll('[id]')].every((e) => /-[\w]+$/.test(e.id) && e.id.split('-').length >= 3));

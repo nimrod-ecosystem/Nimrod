@@ -176,7 +176,9 @@ function unreachable(host) {
 function signature(host) {
   const cv = host.querySelector('canvas');
   if (cv) return `canvas:${cv.width}x${cv.height}`;
-  const root = host.firstElementChild;
+  // (2026-11-02, deliberately changed) The first element that is DRAWN: a module may put its <style> first (Profile does),
+  // and a style element measures 0x0 whatever the box does -- Profile read "unchanged" here though it re-fits.
+  const root = [...host.children].find((e) => !['STYLE', 'SCRIPT', 'LINK', 'TEMPLATE'].includes(e.tagName)) || null;
   if (!root) return 'empty';
   const r = root.getBoundingClientRect();
   return `root:${Math.round(r.width)}x${Math.round(r.height)}`;
