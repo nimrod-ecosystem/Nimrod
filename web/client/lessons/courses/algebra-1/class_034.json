@@ -1,0 +1,410 @@
+{
+ "about": {
+  "title": "Multiplying Polynomials",
+  "course": "algebra-1",
+  "class_n": 34,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class teaches one step at a time (monomials, then binomials, then bigger polynomials), and each step gets a short check. A learner who needs more time can stop after the area model and FOIL beats and finish the binomial-by-trinomial part next sitting."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we learn to multiply polynomials. We start small and build up, one step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Multiplying Polynomials"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, some names. A monomial has one term. A binomial has two terms. A trinomial has three."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Monomial: 5x²  |  Binomial: x + 3  |  Trinomial: x² + 5x − 7"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many terms does x² + 5x − 7 have, and what is it called?",
+    "right": "Three terms, a trinomial",
+    "wrong": [
+     "Two terms, a binomial",
+     "One term, a monomial",
+     "Three terms, a binomial"
+    ],
+    "why": "Terms are the pieces separated by plus or minus signs. x², 5x and −7 make three, and three terms is a trinomial."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our one big tool is the distributive property. Multiply the outside number by every term inside the parentheses."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Distribute: a(b + c) = ab + ac"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: 3(x + 4). The 3 hits the x and the 4. That gives 3x + 12."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "3(x + 4)  →  3·x + 3·4  →  3x + 12"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now two monomials. Multiply the numbers in front. Then add the exponents on x, using the exponent rule from earlier."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(3x)(4x²) = (3·4)(x·x²) = 12x³"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is (5x)(2x³)?",
+    "right": "10x⁴",
+    "wrong": [
+     "10x³",
+     "7x⁴",
+     "10x⁵"
+    ],
+    "why": "5 times 2 is 10. Then x is x¹, and x¹ times x³ adds the exponents to make x⁴."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, a monomial times a polynomial. Distribute the monomial to every term, one by one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2x(x² + 3x − 5) = 2x³ + 6x² − 10x"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is 4x(x − 2)?",
+    "right": "4x² − 8x",
+    "wrong": [
+     "4x² − 2",
+     "4x² + 8x",
+     "4x − 8"
+    ],
+    "why": "4x times x is 4x². 4x times −2 is −8x. Every term inside gets multiplied, and the minus sign stays."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a binomial times a binomial. We distribute twice. Each term of the first one gets multiplied by the whole second one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(x + 3)(x + 5) = x(x + 5) + 3(x + 5) = x² + 5x + 3x + 15 = x² + 8x + 15"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the same problem as a picture. Picture a rectangle that is x + 3 long and x + 5 wide. Split it into four boxes. The total area is the answer."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rectangle split into a 2-by-2 grid. The top edge is labeled x and 3. The side edge is labeled x and 5. The boxes read x², 5x, 3x and 15."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Add up the four boxes: x² + 5x + 3x + 15. The 5x and 3x are like terms, so they combine to 8x. The area is x² + 8x + 15."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Area model: draw the boxes, fill them in, add them up"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Use an area model for (x + 2)(x + 4). What is the total?",
+    "right": "x² + 6x + 8",
+    "wrong": [
+     "x² + 8",
+     "x² + 6x + 6",
+     "x² + 8x + 6"
+    ],
+    "why": "The boxes are x², 4x, 2x and 8. The 4x and 2x combine to 6x, so the total is x² + 6x + 8."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is a shortcut for two binomials. It is called FOIL: First, Outer, Inner, Last. It is the same four products as the four boxes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "First: x·x  |  Outer: x·(last term)  |  Inner: (first term)·x  |  Last: number·number"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: (2x + 1)(x + 6). First is 2x². Outer is 12x. Inner is 1x. Last is 6. Add 12x and x to get 13x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(2x + 1)(x + 6) = 2x² + 12x + x + 6 = 2x² + 13x + 6"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is (x + 4)(x − 3)?",
+    "right": "x² + x − 12",
+    "wrong": [
+     "x² − x − 12",
+     "x² + 7x − 12",
+     "x² + x + 12"
+    ],
+    "why": "First: x². Outer: −3x. Inner: 4x. Last: −12. Then −3x + 4x is x, so the answer is x² + x − 12."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watch the minus signs. A minus sign belongs to the term right after it, so it travels with that term when you multiply."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(x − 4)(x + 2) = x² + 2x − 4x − 8 = x² − 2x − 8"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is (x − 5)(x − 2)?",
+    "right": "x² − 7x + 10",
+    "wrong": [
+     "x² − 7x − 10",
+     "x² + 7x + 10",
+     "x² − 3x + 10"
+    ],
+    "why": "Outer is −2x and inner is −5x, which combine to −7x. Last is (−5)(−2), and a negative times a negative is +10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Bigger polynomials now. FOIL only works for two binomials. For anything bigger, go back to distributing, so every term in one gets multiplied by every term in the other."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Every term times every term"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: (x + 2)(x² + 3x + 4). First x times the trinomial. Then 2 times the trinomial. Then combine like terms."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x³ + 3x² + 4x + 2x² + 6x + 8 = x³ + 5x² + 10x + 8"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Count the products. Two terms times three terms gives six products. Here are six boxes for the six products. If you count fewer than six, you missed one."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 6,
+    "layout": "group",
+    "text": "2 terms × 3 terms = 6 products"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "How many separate products do you make when you multiply (x + 2) by (x² + 3x + 4), before combining?",
+    "right": "6",
+    "wrong": [
+     "5",
+     "3",
+     "7"
+    ],
+    "why": "Each of the 2 terms in the first factor multiplies each of the 3 terms in the second, and 2 × 3 = 6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try one yourself: (x + 1)(x² + 2x + 3). First x times everything, then 1 times everything. Then combine."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x³ + 2x² + 3x + x² + 2x + 3 = x³ + 3x² + 5x + 3"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is (x + 1)(x² + 2x + 3)?",
+    "right": "x³ + 3x² + 5x + 3",
+    "wrong": [
+     "x³ + 2x² + 3",
+     "x³ + 3x² + 5x + 4",
+     "x³ + 3x² + 6x + 3"
+    ],
+    "why": "The six products are x³, 2x², 3x, x², 2x and 3. Combine 2x² + x² to get 3x², and 3x + 2x to get 5x."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do you know you got it right? Pick a number for x, like 1. Put it in the problem and in your answer. Both sides should match."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x = 1:  (1 + 2)(1 + 3 + 4) = 3·8 = 24   and   1 + 5 + 10 + 8 = 24 ✓"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A student says (x + 1)(x + 4) = x² + 4. Try x = 1. What do you find?",
+    "right": "The left side is 10 and the right side is 5, so the claim is wrong.",
+    "wrong": [
+     "Both sides are 5, so the claim is right.",
+     "Both sides are 10, so the claim is right.",
+     "The left side is 5 and the right side is 10, so the claim is right."
+    ],
+    "why": "At x = 1 the left side is 2 × 5 = 10, and the right side is 1 + 4 = 5. They don't match, so the student missed a term. The real answer is x² + 5x + 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a game problem. A game map is x + 4 tiles wide and x + 7 tiles tall. The number of tiles is the area, so multiply."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rectangular game map with the width labeled x + 4 and the height labeled x + 7."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What expression gives the number of tiles on the map?",
+    "right": "x² + 11x + 28",
+    "wrong": [
+     "x² + 11x + 11",
+     "x² + 28",
+     "2x + 22"
+    ],
+    "why": "(x + 4)(x + 7) = x² + 7x + 4x + 28 = x² + 11x + 28. Check with x = 10: 14 × 17 = 238, and 100 + 110 + 28 = 238."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last trap. When something is squared, like (x + 3)², it means the binomial times itself. It does not mean x² + 9."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(x + 3)(x + 3) = x² + 3x + 3x + 9 = x² + 6x + 9"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is (x + 3)(x + 3)?",
+    "right": "x² + 6x + 9",
+    "wrong": [
+     "x² + 9",
+     "x² + 3x + 9",
+     "x² + 6x + 6"
+    ],
+    "why": "The outer and inner products are both 3x, and together they make the 6x in the middle. Skipping that middle term is the most common mistake. The next class covers this pattern in more detail."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Great work. To sum up: distribute every term to every term, use boxes or FOIL for two binomials, combine like terms, and check with a number."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Monomials: multiply numbers, add exponents  2. Distribute every term  3. Boxes or FOIL for two binomials  4. Combine like terms  5. Check with x = 1"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Sources: no outside sources were read when this lesson was written, so the sources list is empty. Every worked example was checked by computing it two ways, with the full expansion and by putting in a number for x. Before publishing, an editor should add a textbook reference such as OpenStax Algebra 1 or Elementary Algebra 2e.",
+   "links": []
+  },
+  {
+   "topic": "Distributive property and like terms",
+   "links": [
+    "[[Properties and Simplifying Expressions]]",
+    "[[Adding and Subtracting Polynomials]]"
+   ]
+  },
+  {
+   "topic": "Adding exponents when multiplying powers",
+   "links": [
+    "[[Exponent Rules]]"
+   ]
+  },
+  {
+   "topic": "Squaring a binomial and other patterns come next",
+   "links": [
+    "[[Special Products]]"
+   ]
+  },
+  {
+   "topic": "Multiplying backward is factoring",
+   "links": [
+    "[[Factoring x² + bx + c]]",
+    "[[Factoring ax² + bx + c]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "FOIL is a good way to multiply two binomials.",
+   "other_view": "Many teachers like FOIL because it is quick to remember. Others prefer distributing or the area model. FOIL only works for a binomial times a binomial, while distributing and boxes work for any size of polynomial, so some say learning FOIL first can hide the real idea. This lesson teaches the area model and distributing first and then shows FOIL as a shortcut. No source was read for this point.",
+   "cite": []
+  }
+ ]
+}

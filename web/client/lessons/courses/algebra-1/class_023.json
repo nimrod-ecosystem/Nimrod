@@ -1,0 +1,452 @@
+{
+ "about": {
+  "title": "Systems by Substitution",
+  "course": "algebra-1",
+  "class_n": 23,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class teaches one method in small steps: two worked examples, then the two special cases, then one practice problem. That is enough for 30 minutes without rushing, and every step gets a check question."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.2 Solving Systems of Equations by Substitution, Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/5-2-solving-systems-of-equations-by-substitution",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "9.1 Systems of Linear Equations: Two Variables, Precalculus 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/precalculus-2e/pages/9-1-systems-of-linear-equations-two-variables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "High School: Algebra, Common Core State Standards for Mathematics",
+   "publisher": "National Governors Association Center for Best Practices and Council of Chief State School Officers",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "2.3.6 Lesson Summary, Algebra 1",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2026-01-20",
+   "link": "https://openstax.org/books/algebra-1/pages/2-3-6-lesson-summary",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today's goal: solve a system of equations by substitution, then check the answer."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Systems by Substitution"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, what is a system? Two or more equations taken together. A solution has to make every one of them true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "System: a solution must satisfy every equation"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The big idea is substitution. It means swapping a letter for the number or expression it equals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Substitute: swap a letter for what it equals"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Say y = 4. Then 2y + 1 becomes 2(4) + 1. The brackets keep the multiplication safe."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "If y = 4 | 2y + 1 becomes 2(4) + 1 = 9"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "If y = 4, what does 3y − 2 become, and what is it worth?",
+    "right": "3(4) − 2 = 10",
+    "wrong": [
+     "3(4) − 2 = 2",
+     "34 − 2 = 32",
+     "3 + 4 − 2 = 5"
+    ],
+    "why": "Putting 4 in for y gives 3 times 4, which is 12. Then 12 − 2 = 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next word: isolate. To isolate a variable, get that letter alone on one side of an equation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Isolate: get one letter alone on one side"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the whole method in six steps. We'll walk through every one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Isolate a variable in one equation. 2. Substitute that into the other equation. 3. Solve the new equation. 4. Put the answer into an original equation to find the other letter. 5. Write the answer as an ordered pair. 6. Check the pair in both original equations."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example one. Solve y = 2x + 1 together with 3x + y = 11. The first equation already has y alone, so step 1 is done."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 2x + 1 | 3x + y = 11"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In 3x + y = 11, what do we put in place of y?",
+    "right": "(2x + 1)",
+    "wrong": [
+     "2x",
+     "y + 1",
+     "(3x + 1)"
+    ],
+    "why": "The first equation says y equals 2x + 1, so that whole expression takes y's place. The result is 3x + (2x + 1) = 11."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now solve. 3x + 2x + 1 = 11 gives 5x = 10, so x = 2. Put x = 2 back into y = 2x + 1 and you get y = 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5x + 1 = 11 | 5x = 10 | x = 2 | y = 2(2) + 1 = 5 | Answer: (2, 5)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step six: check in both original equations. The first one: is 5 equal to 2(2) + 1? Yes. Now the second."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 2x + 1: 5 = 2(2) + 1 = 5 ✓ | 3x + y = 11: 3(2) + 5 = ?"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is 3(2) + 5, and does (2, 5) pass the second equation?",
+    "right": "11, so yes it passes",
+    "wrong": [
+     "13, so no it fails",
+     "9, so no it fails",
+     "30, so no it fails"
+    ],
+    "why": "3 times 2 is 6, and 6 + 5 = 11. That matches the right side of 3x + y = 11."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why check both? A pair can fit one equation and miss the other. Take (0, 1). It fits y = 2x + 1."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 2x + 1: 1 = 2(0) + 1 ✓ | 3x + y = 11: 3(0) + 1 = 1, not 11 ✗"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "(0, 1) works in the first equation but not the second. Is it a solution of the system?",
+    "right": "No, it must work in both",
+    "wrong": [
+     "Yes, one equation is enough",
+     "Yes, if it works in the first one",
+     "No, because 0 is not allowed"
+    ],
+    "why": "A solution of a system has to make every equation true. (0, 1) fails the second one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example two: nothing starts out isolated. Sam makes 10 shots in a game. Some are 2-pointers (x), some are 3-pointers (y). He scores 23 points."
+   },
+   "show": {
+    "kind": "objects",
+    "text": "10 made shots",
+    "object": "ball",
+    "count": 10,
+    "layout": "group"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two facts make two equations. Shots: x + y = 10. Points: 2x + 3y = 23. Step one is to isolate. In x + y = 10, get y alone: y = 10 − x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x + y = 10 | 2x + 3y = 23"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: put (10 − x) in place of y in the points equation. Keep the brackets: 2x + 3(10 − x) = 23."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "2x + 3(10 − x) = 23"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is 3(10 − x) once you multiply it out?",
+    "right": "30 − 3x",
+    "wrong": [
+     "30 − x",
+     "13 − x",
+     "30 + 3x"
+    ],
+    "why": "The 3 multiplies both parts inside the brackets: 3 times 10 is 30, and 3 times x is 3x. The minus sign stays."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Solve it. 2x + 30 − 3x = 23 becomes −x + 30 = 23, then −x = −7, so x = 7. Then y = 10 − 7 = 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 30 − 3x = 23 | −x = −7 | x = 7 | y = 10 − 7 = 3 | Answer: (7, 3)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "If x = 7, what is y in y = 10 − x?",
+    "right": "3",
+    "wrong": [
+     "17",
+     "7",
+     "−3"
+    ],
+    "why": "10 − 7 = 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check both equations. Shots: 7 + 3 = 10 ✓. Points: 2(7) + 3(3) = 14 + 9 = 23 ✓. So Sam made seven 2-pointers and three 3-pointers."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "7 + 3 = 10 ✓ | 2(7) + 3(3) = 23 ✓"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a special case. Try y = 2x + 3 with y = 2x − 1. Substituting gives 2x + 3 = 2x − 1. Take away 2x from both sides and you get 3 = −1."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3 = −1 is false"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "3 never equals −1, so no x can fix it. A false statement means no solution. The lines are parallel and never meet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "False statement: no solution (parallel lines)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "After substituting, you reach 0 = −10. What does that tell you?",
+    "right": "The system has no solution",
+    "wrong": [
+     "The solution is (0, −10)",
+     "The solution is x = 0",
+     "The system has infinitely many solutions"
+    ],
+    "why": "0 = −10 is false. A false statement means the lines are parallel and the system has no solution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The other special case. Try y = 3x − 2 with 6x − 2y = 4. Substitute: 6x − 2(3x − 2) = 4. That becomes 6x − 6x + 4 = 4, so 4 = 4."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "4 = 4 is true"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is always true, whatever x is. A true statement like this means both equations describe the same line. There are infinitely many solutions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "True statement: infinitely many solutions (same line)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which ending means the two equations are the same line?",
+    "right": "A true statement such as 4 = 4",
+    "wrong": [
+     "A false statement such as 3 = −1",
+     "A single answer such as x = 2",
+     "An answer of x = 0"
+    ],
+    "why": "A true statement that holds for every x means every point on one line is also on the other. That gives infinitely many solutions."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Solve y = x − 4 with 2x + y = 11. Substitute first: 2x + (x − 4) = 11."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = x − 4 | 2x + y = 11"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Finish solving 2x + (x − 4) = 11, then find y. What is the solution pair (x, y)?",
+    "right": "(5, 1)",
+    "wrong": [
+     "(1, 5)",
+     "(5, −1)",
+     "(15, 11)"
+    ],
+    "why": "3x − 4 = 11 gives 3x = 15, so x = 5. Then y = 5 − 4 = 1. Check: 1 = 5 − 4 ✓ and 2(5) + 1 = 11 ✓."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Remember the steps: isolate, substitute, solve, find the other letter, write the pair, check both. Next class, we'll solve systems by elimination."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Isolate | Substitute | Solve | Find the other letter | Write the pair | Check both"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Systems by Substitution",
+   "links": [
+    "[[Systems of Equations by Graphing]]",
+    "[[Systems by Elimination]]",
+    "[[Choosing a Method and Solving Systems Word Problems]]",
+    "[[Multi-Step Equations and Variables on Both Sides]]",
+    "[[Properties and Simplifying Expressions]]"
+   ]
+  },
+  {
+   "topic": "Common Core standard HSA-REI.C.6: solve systems of linear equations exactly and approximately",
+   "links": [
+    "[[Systems of Equations by Graphing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Substitution is a good way to solve a system.",
+   "other_view": "No single method is always best. Graphing only gives an approximate answer. The Common Core standard asks students to solve systems both exactly and approximately. OpenStax also says to decide how to substitute based on how the equations are written. Class 25 will compare substitution with elimination.",
+   "cite": [
+    "s3",
+    "s4"
+   ]
+  }
+ ]
+}

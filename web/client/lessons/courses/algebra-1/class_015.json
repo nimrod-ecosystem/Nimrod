@@ -1,0 +1,549 @@
+{
+ "about": {
+  "title": "Point-Slope and Standard Form",
+  "course": "algebra-1",
+  "class_n": 15,
+  "audience": [
+   "Age 14 to 16",
+   "teenagers",
+   "Follows 8th-grade math and the earlier lessons on slope and slope-intercept form"
+  ],
+  "minutes": 35,
+  "length_note": "This class is a little over 30 minutes. It teaches two new forms plus the conversions between them, and each idea gets its own example and check. It is easy to pause after beat 7 (point-slope done) and pick up again at beat 8 (standard form)."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "4.6 Find the Equation of a Line - Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/4-6-find-the-equation-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "1.12.3 Writing an Equation Given the Slope and a Point - Algebra 1",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/1-12-3-writing-an-equation-given-the-slope-and-a-point",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "11.3 Graphing with Intercepts - Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/11-3-graphing-with-intercepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "4.3: Graph with Intercepts (Elementary Algebra 1e, OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/04:_Graphs/4.03:_Graph_with_Intercepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Section 3.4 Graphing Linear Equations in Standard Form",
+   "publisher": "Big Ideas Learning",
+   "date": "n.d.",
+   "link": "https://static.bigideasmath.com/protected/content/pe/hsim/int_math1_pe_03_04.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "0-05 Graph Equations of Lines",
+   "publisher": "Andrews University (R. Wright, Algebra 2 text)",
+   "date": "n.d.",
+   "link": "https://www.andrews.edu/~rwright/a2_book/text/a2_00-05.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "How to Find x- and y-intercepts in the Standard Form of Equation?",
+   "publisher": "Effortless Math",
+   "date": "n.d.",
+   "link": "https://www.effortlessmath.com/math-topics/finding-x-and-y-intercepts-in-the-standard-form-of-equation/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Ch. 3 Key Concepts - Intermediate Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/3-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Common Core State Standards for Mathematics: High School",
+   "publisher": "Washington Office of Superintendent of Public Instruction (hosting the Common Core text)",
+   "date": "n.d.",
+   "link": "https://ospi.k12.wa.us/sites/default/files/2022-12/mathstandards_highschool.pdf",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class you wrote lines as y = mx + b. Today we add two more ways to write the same line."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Two new ways to write a line: point-slope and standard form"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, point-slope form. Use it when you know the slope and just one point on the line, any point."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y − y₁ = m(x − x₁)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here m is the slope. The pair (x₁, y₁) is the point. It comes from the slope formula, with the fraction cleared away."
+   },
+   "show": {
+    "kind": "list",
+    "text": "m = the slope\n(x₁, y₁) = a point on the line\nx and y stay as letters"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In y − 5 = 2(x − 3), what is the slope?",
+    "right": "2",
+    "wrong": [
+     "5",
+     "3",
+     "−3"
+    ],
+    "why": "The slope m is the number multiplying the (x − x₁) part. Here that is 2. The point is (3, 5)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example. Sam has 50 gems after 2 hours of play, and he earns 15 gems an hour. The point is (2, 50) and the slope is 15."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y − 50 = 15(x − 2)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A line has slope 4 and goes through (1, 9). Which is its point-slope form?",
+    "right": "y − 9 = 4(x − 1)",
+    "wrong": [
+     "y − 1 = 4(x − 9)",
+     "y + 9 = 4(x + 1)",
+     "y − 4 = 9(x − 1)"
+    ],
+    "why": "Slope 4 goes in front of the bracket. The point (1, 9) gives y − 9 and x − 1, with y first."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Watch the signs. The form has minus signs in it, so a negative coordinate turns the minus into a plus."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slope 3, point (−2, 4): y − 4 = 3(x + 2)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the point-slope form for slope 3 through (−2, 4)?",
+    "right": "y − 4 = 3(x + 2)",
+    "wrong": [
+     "y + 4 = 3(x − 2)",
+     "y − 4 = 3(x − 2)",
+     "y + 2 = 3(x − 4)"
+    ],
+    "why": "x − (−2) becomes x + 2. The y-coordinate 4 stays positive, so it is y − 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You can turn point-slope into slope-intercept. Spread the slope over the bracket, then get y alone."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y − 5 = 2(x − 3)\ny − 5 = 2x − 6\ny = 2x − 1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Rewrite y − 1 = 3(x − 2) as y = mx + b.",
+    "right": "y = 3x − 5",
+    "wrong": [
+     "y = 3x − 1",
+     "y = 3x + 5",
+     "y = 3x − 6"
+    ],
+    "why": "3(x − 2) = 3x − 6. Add 1 to both sides and you get 3x − 5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check that the line really goes through the point. Put the point into the equation and see if both sides match. For y = 2x − 1 and (3, 5): 2·3 − 1 = 5. Yes."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(3, 5) ✓"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New form. Standard form puts the x-term and the y-term together on one side, and a plain number on the other."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ax + By = C   (example: 2x + 3y = 12)"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which equation is in standard form?",
+    "right": "3x + 4y = 24",
+    "wrong": [
+     "y = 3x + 4",
+     "y − 2 = 3(x − 1)",
+     "y = −x/2"
+    ],
+    "why": "Standard form has x and y on the left and just a number on the right. The others are slope-intercept or point-slope."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Before using it, a word we need: intercepts. They are the spots where the line crosses the axes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x-intercept: crosses the x-axis, looks like (a, 0)\ny-intercept: crosses the y-axis, looks like (0, b)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is always true about the y-coordinate of an x-intercept?",
+    "right": "It is 0",
+    "wrong": [
+     "It is 1",
+     "It equals the slope",
+     "It is the same as x"
+    ],
+    "why": "On the x-axis you are zero units up or down, so y = 0. That is why x-intercepts look like (a, 0)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Standard form makes intercepts easy. For the x-intercept, set y = 0. For the y-intercept, set x = 0. Then solve."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 3y = 12\ny = 0: 2x = 12, x = 6 → (6, 0)\nx = 0: 3y = 12, y = 4 → (0, 4)"
+   },
+   "cite": [
+    "s4",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What are the intercepts of 4x + 2y = 16?",
+    "right": "(4, 0) and (0, 8)",
+    "wrong": [
+     "(16, 0) and (0, 16)",
+     "(8, 0) and (0, 4)",
+     "(0, 4) and (8, 0)"
+    ],
+    "why": "Set y = 0: 4x = 16, so x = 4. Set x = 0: 2y = 16, so y = 8."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now graph it. Plot the two intercepts and draw a line through them. A third point is a safety check."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. The line 2x + 3y = 12 crosses the x-axis at (6, 0) and the y-axis at (0, 4). A third dot at (3, 2) sits on the same line."
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why find a third point?",
+    "right": "To check that all three points line up",
+    "wrong": [
+     "Because a line needs three points",
+     "To find the slope",
+     "To change the equation"
+    ],
+    "why": "Two points are enough to draw a line. A third that lines up tells you that you did not make a mistake."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A common mix-up: C is not the y-intercept. It only is when B equals 1."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y-intercept = C ÷ B"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the y-intercept of 2x + 5y = 10?",
+    "right": "(0, 2)",
+    "wrong": [
+     "(0, 10)",
+     "(0, 5)",
+     "(5, 0)"
+    ],
+    "why": "Set x = 0: 5y = 10, so y = 2. (5, 0) is the x-intercept, not the y-intercept."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, convert. Standard to slope-intercept: get y alone."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 3y = 12\n3y = −2x + 12\ny = −(2/3)x + 4"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Rewrite x + 2y = 8 as y = mx + b.",
+    "right": "y = −(1/2)x + 4",
+    "wrong": [
+     "y = (1/2)x + 4",
+     "y = −2x + 8",
+     "y = −(1/2)x + 8"
+    ],
+    "why": "Subtract x: 2y = −x + 8. Divide everything by 2: y = −(1/2)x + 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Point-slope to standard: spread, then move x and y to one side. Many books want whole numbers with A positive."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y − 2 = 3(x − 1)\ny − 2 = 3x − 3\n−3x + y = −1\n3x − y = 1"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is y − 5 = 2(x − 3) in standard form, with A positive?",
+    "right": "2x − y = 1",
+    "wrong": [
+     "2x + y = 1",
+     "2x − y = −1",
+     "y = 2x − 1"
+    ],
+    "why": "Spread: y − 5 = 2x − 6. Move terms: −2x + y = −1. Multiply by −1: 2x − y = 1. The last choice is slope-intercept form."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If the slope is a fraction, multiply by the bottom number to clear it. Slope 1/2 through (4, 1)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y − 1 = (1/2)(x − 4)\n2y − 2 = x − 4\nx − 2y = 2"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Write y = (1/3)x + 2 in standard form with whole numbers and A positive.",
+    "right": "x − 3y = −6",
+    "wrong": [
+     "x + 3y = −6",
+     "x − 3y = 6",
+     "3x − y = −6"
+    ],
+    "why": "Multiply by 3: 3y = x + 6. Move terms: −x + 3y = 6. Multiply by −1: x − 3y = −6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two special lines fit too. x = 4 is a vertical line through 4 on the x-axis. y = 3 is a horizontal line through 3 on the y-axis."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x = a: vertical line\ny = b: horizontal line"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the graph of x = 5 look like?",
+    "right": "A vertical line crossing the x-axis at 5",
+    "wrong": [
+     "A horizontal line crossing the y-axis at 5",
+     "A line with slope 5",
+     "A line through the origin"
+    ],
+    "why": "Every point on x = 5 has x equal to 5 and any y. That stacks up into a vertical line."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So which form should you pick? Match the form to what you are told."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Slope and y-intercept → y = mx + b\nSlope and a point → y − y₁ = m(x − x₁)\nTwo amounts that add to a total, or fast graphing → Ax + By = C"
+   },
+   "cite": [
+    "s8",
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You know a line has slope 4 and passes through (1, 9). Which form is the fastest to write?",
+    "right": "Point-slope form",
+    "wrong": [
+     "Standard form",
+     "Slope-intercept form, with no other steps",
+     "None of them can be used"
+    ],
+    "why": "The slope and a point are exactly what point-slope form asks for. You can still convert later if you want y = mx + b."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Standard form is good for budgets. A game shop sells tickets for 4 coins and snacks for 3 coins. You spend exactly 24 coins."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "4x + 3y = 24   (x tickets, y snacks)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "If you buy no tickets, how many snacks can you buy with 24 coins?",
+    "right": "8",
+    "wrong": [
+     "6",
+     "12",
+     "24"
+    ],
+    "why": "No tickets means x = 0. So 3y = 24 and y = 8. That is the y-intercept (0, 8). The x-intercept (6, 0) is 6 tickets and no snacks."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the class. Point-slope needs a slope and a point. Standard form gives easy intercepts. You can convert between all three."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Point-slope: y − y₁ = m(x − x₁)\nStandard: Ax + By = C\nIntercepts: set y = 0, then x = 0\nConvert by spreading, moving terms, or clearing fractions"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Point-slope form comes from the slope formula; the course standard HSA-CED.A.2 asks students to create equations in two variables and graph them with labels and scales (see s9).",
+   "links": [
+    "[[Slope and Rate of Change]]",
+    "[[Slope-Intercept Form and Graphing Lines]]"
+   ]
+  },
+  {
+   "topic": "Writing a line from two points uses point-slope form too; that is practised next class.",
+   "links": [
+    "[[Writing Linear Equations from Information]]"
+   ]
+  },
+  {
+   "topic": "Standard form is used again when solving systems by elimination.",
+   "links": [
+    "[[Systems by Elimination]]",
+    "[[Linear Inequalities in Two Variables]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Standard form must have whole-number A, B and C, with A positive.",
+   "other_view": "Books differ. One university text says A, B and C are integers and A is usually positive. A high-school text says they can be any real numbers, as long as A and B are not both zero. Follow your own teacher's or test's rule.",
+   "cite": [
+    "s6",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Slope-intercept form is the best form for real-world problems.",
+   "other_view": "OpenStax notes that most applications of linear equations use slope-intercept form. But it also says intercepts are often the quickest way to graph a line, and standard form gives them directly. Which is best depends on what the problem gives you and asks for.",
+   "cite": [
+    "s1",
+    "s3"
+   ]
+  }
+ ]
+}

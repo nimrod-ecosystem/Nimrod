@@ -1,0 +1,491 @@
+{
+ "about": {
+  "title": "Congruent Figures",
+  "course": "math-grade-8",
+  "class_n": 25,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has four linked ideas: what congruent means, sequences of moves, matching parts, and explaining a yes or no. Each one gets a worked example and a check question. That fits a half-hour class when you pause on each question. Stop after any beat and pick up there next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Geometry (standard 8.G.A.2)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/G/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Unit 1 Rigid Transformations and Congruence (Family Materials), Grade 8",
+   "publisher": "Open Up Resources (Illustrative Mathematics based)",
+   "date": "n.d.",
+   "link": "https://access.openupresources.org/curricula/our6-8math-v3/en/default/grade-8/unit-1/family.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "8.1 Rigid Transformations and Congruence (teacher unit overview)",
+   "publisher": "Illustrative Mathematics, Kendall Hunt",
+   "date": "n.d.",
+   "link": "https://im.kendallhunt.com/MS/teachers/3/1/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Rigid Motion Transformations Summary (Grade 8, Topic 1)",
+   "publisher": "Carnegie Learning",
+   "date": "n.d.",
+   "link": "https://www.carnegielearning.com/shared/TX-SC/G8/G8_M01_T01_Topic_Summary.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Using Rigid Motions to Transform Figures and Determine Congruence",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/geometry/lessons/congruence-via-rigid-motions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Rigid Motion and Congruence",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Geometry/CongruentTriangles/CTRigidMotion.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Understanding Congruence in Terms of Rigid Motions (instructional task)",
+   "publisher": "Louisiana Department of Education",
+   "date": "n.d.",
+   "link": "https://doe.louisiana.gov/docs/default-source/teacher-toolbox-resources/geometry-instructional-tasks.pdf?sfvrsn=2",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 25. Today you will learn how to show that two shapes are exactly the same size and shape, using moves you already know."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Congruent Figures"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The word for it is congruent. Congruent figures have the same size and the same shape."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "congruent = same size, same shape"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pair of figures is congruent?",
+    "right": "Two squares with 3-unit sides, one of them turned on its corner",
+    "wrong": [
+     "A square with 3-unit sides and a square with 6-unit sides",
+     "A square with 3-unit sides and a 3-by-4 rectangle",
+     "A small circle and a large circle"
+    ],
+    "why": "Congruent needs the same size and the same shape. Turning a square does not change either one. The other pairs differ in size or in shape."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick reminder from class 23. There are three moves: a slide, a flip and a turn. Their proper names are translation, reflection and rotation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Translation = slide | Reflection = flip | Rotation = turn"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These moves are called rigid. They do not stretch, shrink or bend a shape. Side lengths and angle sizes stay the same."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "rigid = lengths and angles stay the same"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A side of a triangle is 4 units long. You slide the triangle 5 units to the right. How long is that side now?",
+    "right": "Still 4 units",
+    "wrong": [
+     "9 units",
+     "1 unit",
+     "It depends on which way you slide"
+    ],
+    "why": "A slide is a rigid move, so it keeps lengths the same. The 5 tells you how far the shape moves. It does not change the size."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we can say exactly what congruent means. Two figures are congruent if a sequence of rigid moves takes one onto the other."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Congruent: a sequence of slides, flips and turns maps one figure exactly onto the other"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A sequence is just one or more moves, done in order. So our test is simple: can you find moves that land one shape exactly on the other?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two paper triangles on a table. One is lifted, slid across and laid exactly on the other."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You can try this with tracing paper. Trace one shape, then move the paper. You may turn it, or flip it over. If the tracing lines up exactly, the shapes are congruent."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand holding a sheet of tracing paper with a triangle traced on it, lined up over a second triangle."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is it fair to flip the tracing paper over?",
+    "right": "A flip is a reflection, and a reflection is a rigid move",
+    "wrong": [
+     "It is not fair. Only slides count",
+     "Flipping changes the side lengths a little",
+     "Flipping is only allowed for triangles"
+    ],
+    "why": "Reflections are one of the three rigid moves, so flipping is allowed. It keeps every length and angle the same. That is why a flipped copy can still be congruent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example one. Triangle ABC has corners A(1,1), B(4,1) and C(1,3). Triangle DEF has corners D(5,2), E(8,2) and F(5,4). Are they congruent?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. A small triangle ABC sits at the lower left. A same-looking triangle DEF sits to the right and one step higher."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try one slide: 4 right and 1 up. A(1,1) goes to (5,2), which is D. B and C should land on E and F. Check B."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A(1,1) → D(5,2) | B(4,1) → ? | C(1,3) → F(5,4)"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Slide 4 right and 1 up. Where does B(4,1) land?",
+    "right": "(8,2)",
+    "wrong": [
+     "(5,2)",
+     "(8,1)",
+     "(4,5)"
+    ],
+    "why": "Add 4 to the x-coordinate: 4 + 4 = 8. Add 1 to the y-coordinate: 1 + 1 = 2. So B lands on (8,2), which is E. One slide maps ABC onto DEF, so they are congruent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example two. Same triangle ABC. Now triangle PQR has corners P(2,-3), Q(-1,-3) and R(2,-1). It looks like a mirror image, so a slide alone won't do. Start with a flip across the y-axis."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. Triangle ABC is in the upper right. Triangle PQR is in the lower right and faces the other way."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: flip across the y-axis. Each point jumps to the same height on the other side. A goes to (-1,1), B to (-4,1) and C to (-1,3). Step two: slide 3 right and 4 down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Reflect across the y-axis | 2. Translate 3 right, 4 down | A → (-1,1) → P(2,-3) | B → (-4,1) → Q(-1,-3)"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "After the flip, C is at (-1,3). Then you slide 3 right and 4 down. Where does C end up?",
+    "right": "(2,-1)",
+    "wrong": [
+     "(4,-1)",
+     "(-1,-1)",
+     "(-1,3)"
+    ],
+    "why": "Start at (-1,3). Add 3 to x: -1 + 3 = 2. Subtract 4 from y: 3 - 4 = -1. So C lands on (2,-1), which is R. Two rigid moves, done in order, map ABC onto PQR, so they are congruent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example three. Sometimes one move is enough, and it can be a turn. Turn ABC half way round the origin, which is 180 degrees. A(1,1) goes to (-1,-1), and both signs flip."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. Triangle ABC is in the upper right. Its half-turn copy is in the lower left, pointing the opposite way."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Turn the point C(1,3) half way round the origin. Where does it land?",
+    "right": "(-1,-3)",
+    "wrong": [
+     "(1,-3)",
+     "(-1,3)",
+     "(3,1)"
+    ],
+    "why": "A half-turn about the origin flips both signs. So (1,3) becomes (-1,-3). Changing only one sign is a flip, not a half-turn. Swapping the numbers does something else again."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the matching parts. When ABC lands on PQR, A lands on P, B on Q and C on R. Parts in the same spot are called corresponding."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Triangle ABC: A, B, C, side AB, side AC | Triangle PQR: P, Q, R, side PQ, side PR"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We write congruent with the sign ≅. The letters go in matching order. Triangle ABC ≅ triangle PQR tells you A matches P, B matches Q and C matches R."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "△ABC ≅ △PQR"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "If triangle ABC ≅ triangle PQR, which side matches side BC?",
+    "right": "QR",
+    "wrong": [
+     "PQ",
+     "PR",
+     "We can't tell"
+    ],
+    "why": "The letters are in matching order. B matches Q and C matches R, so side BC matches side QR."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is why matching parts help. Rigid moves keep lengths and angles. So in congruent figures, matching sides are equal and matching angles are equal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Congruent figures: matching sides equal, matching angles equal"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Triangle ABC ≅ triangle PQR. Angle B measures 40 degrees. How big is angle Q?",
+    "right": "40 degrees",
+    "wrong": [
+     "50 degrees",
+     "140 degrees",
+     "We can't tell"
+    ],
+    "why": "B and Q match, and rigid moves keep angle sizes the same. So angle Q is also 40 degrees."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the other direction: showing figures are not congruent. Start by checking measurements. If matching sides or angles are different, no sequence of rigid moves can work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Different matching lengths or angles → not congruent"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. Rectangle one is 2 by 6. Rectangle two is 3 by 4. Both have area 12 and four right angles. But the side lengths differ."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rectangle 1: 2 by 6, area 12 | Rectangle 2: 3 by 4, area 12"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Are the 2-by-6 and the 3-by-4 rectangles congruent?",
+    "right": "No. Their side lengths are different, and rigid moves keep lengths the same",
+    "wrong": [
+     "Yes. They both have area 12",
+     "Yes. They are both rectangles",
+     "Yes. They both have four right angles"
+    ],
+    "why": "Rigid moves keep side lengths. A 2-by-6 rectangle can never become 3 by 4. Equal area and four right angles are not enough, because the side lengths must match too."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Angles can give the answer too. Picture a square with sides of 4. Now picture a slanted four-sided shape with all sides 4 and angles of 60 and 120 degrees."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Square: all sides 4, all angles 90 degrees | Slanted shape: all sides 4, angles 60 and 120 degrees"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Are the square and the slanted shape congruent?",
+    "right": "No. Their angles are different, and rigid moves keep angle sizes",
+    "wrong": [
+     "Yes. All the sides are 4",
+     "Yes. Both have four sides",
+     "Yes, if you turn one of them"
+    ],
+    "why": "Rigid moves keep angle sizes. A 90-degree corner can never become 60 degrees. Matching sides are not enough on their own. The angles must match too."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When you explain congruence, do three things. Name each move in order. Say where the corners land. Then state your conclusion."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Name each move, in order | 2. Say where each corner lands | 3. Say: so the figures are congruent"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which is a complete explanation that triangle ABC is congruent to triangle PQR from Example two?",
+    "right": "Reflect across the y-axis, then translate 3 right and 4 down. This maps A to P, B to Q and C to R, so they are congruent",
+    "wrong": [
+     "They look the same, so they are congruent",
+     "They are both triangles, so they are congruent",
+     "Their areas are about equal, so they are congruent"
+    ],
+    "why": "A good explanation names the rigid moves in order and shows where the corners land. Looking alike, being the same kind of shape, or having similar area does not prove congruence."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Congruent means one figure can be mapped onto the other by slides, flips and turns. Matching parts are equal. If lengths or angles don't match, they are not congruent. Well done today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Congruent = same size and shape | Show it with a sequence of rigid moves | Matching sides and angles are equal | Mismatch → not congruent"
+   },
+   "cite": [
+    "s1",
+    "s4",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Congruent figures",
+   "links": [
+    "[[rigid motions]]",
+    "[[translations, reflections and rotations]]",
+    "[[transformations on the coordinate plane]]"
+   ]
+  },
+  {
+   "topic": "Corresponding sides and angles",
+   "links": [
+    "[[similar figures]]",
+    "[[angles in triangles]]"
+   ]
+  },
+  {
+   "topic": "Explaining why figures are or are not congruent",
+   "links": [
+    "[[dilations and similar figures]]",
+    "[[the Pythagorean theorem]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "In 8th grade, congruent is defined by rigid motions: one figure maps onto the other by slides, flips and turns.",
+   "other_view": "Many books and classrooms define congruent by measurements: same size and shape, with all matching sides and angles equal. A tutoring source says the first definition rests on a motion existing, and the second on matching all the measurements. Both ideas agree on which figures are congruent. The motion definition tells you how to show it, and the measurement definition tells you what to check.",
+   "cite": [
+    "s1",
+    "s4",
+    "s5"
+   ]
+  }
+ ]
+}

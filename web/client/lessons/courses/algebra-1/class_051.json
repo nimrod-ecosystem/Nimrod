@@ -1,0 +1,797 @@
+{
+ "about": {
+  "title": "Capstone: Solve a Real Problem with Algebra",
+  "course": "algebra-1",
+  "class_n": 51,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 45,
+  "length_note": "This is the last class and it pulls together linear, exponential and quadratic models. It runs about 45 minutes, a bit longer than the usual half hour. Each of the five steps stands alone, so you can pause between steps or split the class over two sittings."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Mathematical Modeling: A Structured Process (Mathematics Teacher)",
+   "publisher": "ERIC / NCTM",
+   "date": "2015-02",
+   "link": "https://eric.ed.gov/?id=EJ1051696",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "6.1 Exponential Functions, Algebra and Trigonometry 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/6-1-exponential-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "10.4 Solve Applications Modeled by Quadratic Equations, Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/10-4-solve-applications-modeled-by-quadratic-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "10.5 Graphing Quadratic Equations, Elementary Algebra",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra/pages/10-5-graphing-quadratic-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "12.3 The Regression Equation, Introductory Statistics 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introductory-statistics-2e/pages/12-3-the-regression-equation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "12.3 The Regression Equation, Introductory Statistics (first edition)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introductory-statistics/pages/12-3-the-regression-equation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Comparing Growth of Linear, Quadratic & Exponential Functions",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Algebra1/Exponentials/EXCompareGrowth.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Comparing Linear, Exponential, and Quadratic Functions (Algebra 1)",
+   "publisher": "Mathleaks",
+   "date": "n.d.",
+   "link": "https://mathleaks.com/study/comparing_linear,_exponential,_and_quadratic_functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "5.14.2 Using Tables to Compare Linear and Exponential Growth Functions, Algebra 1",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/5-14-2-using-tables-to-compare-linear-and-exponential-growth-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Projectile (Vertical) Motion",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Algebra1/Quadratics/QDprojectilemotion.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Comparing Linear, Quadratic, Polynomial, Exponential Growth",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/algebra-1/lessons/comparing-linear-quadratic-polynomial-exponential-growth",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "2.3 Analyzing Findings, Psychology 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/psychology-2e/pages/2-3-analyzing-findings",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s13",
+   "title": "Correlation does not imply causation",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. Today you use what you know to answer a real question, from start to finish."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Capstone: Solve a Real Problem with Algebra"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First word: model. A model is math that stands in for a real situation, so we can understand it and make better choices."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Model: math that stands in for a real situation"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We will work in five steps, one at a time: ask, pick data, build, compare, then check and explain."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Ask a question\n2. Pick or collect data\n3. Build models\n4. Compare them\n5. Check and explain"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step one: choose a question. A good one has numbers in it, and asks which is better or when something happens."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Good: On which day does Plan B pass Plan A? | Weak: Is this game fun?"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which question could we answer with a model?",
+    "right": "How many days until a savings account reaches $500?",
+    "wrong": [
+     "Which song is the best?",
+     "Is my team cool?",
+     "Is it fair that I have homework?"
+    ],
+    "why": "A model needs numbers that change. Savings over time can be counted and predicted. The other questions are matters of opinion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our example, with made-up numbers. A game offers two daily reward plans. Plan A adds 40 coins a day. Plan B starts with 1 coin and doubles every day. Which should Sam pick?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Plan A: +40 coins each day, starting at 0\nPlan B: starts at 1 coin, doubles each day\nQuestion: which plan is better?"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two: get data. Here we just write a table by hand. Real projects can use a game stats page, a bank's posted rate, or a team's scores."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plan A, days 0 to 4: 0, 40, 80, 120, 160 | Plan B, days 0 to 4: 1, 2, 4, 8, 16"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three: build models. Look at how the numbers change. Adding the same amount each time means linear. Multiplying by the same number each time means exponential."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same amount added: linear | Same number multiplied: exponential"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A table reads 3, 6, 12, 24. Which kind of model fits?",
+    "right": "Exponential, because each number is the one before times 2.",
+    "wrong": [
+     "Linear, because it goes up by 3 each time.",
+     "Quadratic, because the numbers get bigger.",
+     "No model can fit it."
+    ],
+    "why": "From 3 to 6 is plus 3, but 6 to 12 is plus 6, so it is not linear. The multiplier is always 2, so it is exponential."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Plan A adds 40 coins a day from 0. So the balance is 40 times the day. That is a line with slope 40."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A(d) = 40d"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Using A(d) = 40d, how many coins does Plan A have on day 7?",
+    "right": "280",
+    "wrong": [
+     "47",
+     "240",
+     "320"
+    ],
+    "why": "40 times 7 is 280. 47 comes from adding instead of multiplying. 320 is the day 8 balance."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Plan B doubles. Day 0 is 1 coin, day 1 is 2, day 2 is 4, day 3 is 8. Each day is the day before times 2, so B(d) = 2 to the power d. Doubling is a steady percent growth, which is what exponential means."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "coin",
+    "count": 8,
+    "layout": "group",
+    "text": "Day 3 of Plan B: 8 coins. B(d) = 2^d"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Using B(d) = 2^d, how many coins does Plan B have on day 5?",
+    "right": "32",
+    "wrong": [
+     "10",
+     "25",
+     "64"
+    ],
+    "why": "2 to the 5th power is 2 times 2 times 2 times 2 times 2, which is 32. 10 is 2 times 5, 25 is 5 squared, and 64 is day 6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four: compare. On day 8, A has 320 and B has 256. On day 9, A has 360 and B has 512. So Plan B passes Plan A on day 9."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Coins on day 8 and day 9 (made-up example)",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "bars-grow",
+   "ask": {
+    "q": "If Sam will only play for 8 days, which plan gives more coins?",
+    "right": "Plan A, with 320 against 256.",
+    "wrong": [
+     "Plan B, because doubling is always better.",
+     "They are the same.",
+     "Neither plan gives any coins."
+    ],
+    "why": "Doubling needs time to catch up. By day 8 the line is still ahead. The answer depends on how long you play."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This is not a fluke. Given enough time, an exponential passes a line and a parabola. At x = 20, the line y = 2x gives 40, the parabola y = x squared gives 400, and y = 2 to the x gives over a million."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Three functions at x = 20",
+    "chart": "c3"
+   },
+   "cite": [
+    "s7",
+    "s11"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "At x = 20, which of these functions is largest?",
+    "right": "y = 2^x",
+    "wrong": [
+     "y = 2x",
+     "y = x²",
+     "They are all equal."
+    ],
+    "why": "2 to the 20th is 1,048,576. That is far bigger than 400 or 40."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a third kind of model: quadratic. When you throw or shoot something, its height over time follows a parabola."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "h = −16t² + v₀t + h₀"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The letters: t is seconds. v-zero is the upward starting speed in feet per second. h-zero is the starting height in feet. This ignores air resistance."
+   },
+   "show": {
+    "kind": "list",
+    "text": "t = seconds\nv₀ = starting speed (ft/s)\nh₀ = starting height (ft)\nAir resistance ignored"
+   },
+   "cite": [
+    "s4",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In h = −16t² + 24t + 6, what is the starting height?",
+    "right": "6 feet",
+    "wrong": [
+     "24 feet",
+     "16 feet",
+     "0 feet"
+    ],
+    "why": "At t = 0 the first two terms are 0, so h = 6. The 24 is the starting speed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Made-up shot: it starts 6 feet up at 24 feet per second. So h = −16t² + 24t + 6. The peak time is −b over 2a from the vertex lesson. That is 24 over 32, or 0.75 seconds. The height then is 15 feet."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Height of the shot, in feet, by time (made-up example)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Using h = −16t² + 24t + 6, what is the height at t = 1 second?",
+    "right": "14 feet",
+    "wrong": [
+     "15 feet",
+     "30 feet",
+     "6 feet"
+    ],
+    "why": "−16 plus 24 plus 6 is 14. 15 feet is the peak, at 0.75 seconds."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How does data show it is quadratic? Heights every quarter second: 6, 11, 14, 15, 14, 11, 6. Differences: 5, 3, 1, −1, −3, −5. Differences of those: always −2. Constant second differences mean quadratic."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Heights: 6, 11, 14, 15, 14, 11, 6\nFirst differences: 5, 3, 1, −1, −3, −5\nSecond differences: −2, −2, −2, −2, −2"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A table reads 2, 5, 10, 17, 26. The first differences are 3, 5, 7, 9. Which model fits?",
+    "right": "Quadratic, because the second differences are all 2.",
+    "wrong": [
+     "Linear, because it keeps going up.",
+     "Exponential, because it grows fast.",
+     "It cannot be told."
+    ],
+    "why": "The first differences change, so it is not linear. The numbers are not multiplied by one constant, so it is not exponential. The second differences are 2, 2, 2, so it is quadratic."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Shape helps too. A line is steady. An exponential starts slow, then rockets. A quadratic goes up then down, or down then up, with one turning point."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Line: steady\nExponential: slow then fast\nQuadratic: one turning point"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A ball goes up and then comes down. Which model fits best?",
+    "right": "Quadratic",
+    "wrong": [
+     "Linear",
+     "Exponential growth",
+     "None of them"
+    ],
+    "why": "It rises, turns, then falls. That one turning point is the sign of a parabola."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real data is messy. Points often almost follow a line but not exactly. We draw a line of best fit and accept that predictions are rough."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scatter plot of points rising left to right, with one straight line through the middle of them"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Ten game results sit close to a line but not exactly on it. What do we do?",
+    "right": "Fit a best-fit line and treat its predictions as rough.",
+    "wrong": [
+     "Throw the data away.",
+     "Say the line is exact.",
+     "Connect every dot with straight pieces."
+    ],
+    "why": "Data rarely fits a straight line exactly. A best-fit line is still useful, as long as we remember it is only an approximation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step five: check. A residual is the actual value minus the predicted value. Plot them. A good fit looks random, with no pattern."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Residuals should look random"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The residuals make a clear U shape. What does that tell you?",
+    "right": "The line is not the best model, so try a curve.",
+    "wrong": [
+     "The line fits perfectly.",
+     "The data must be wrong.",
+     "Nothing at all."
+    ],
+    "why": "A good fit leaves residuals with no pattern. A U shape means the line is missing a curve in the data."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Also check how far you stretch. A model is reasonable inside the x-values you have, but not necessarily outside them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stay inside your data"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You have data for days 1 to 10. How much should you trust a prediction for day 100?",
+    "right": "Less, because day 100 is far outside the data.",
+    "wrong": [
+     "Exactly as much as day 5.",
+     "Fully, if the line is steep.",
+     "It is always exact."
+    ],
+    "why": "Day 5 is inside the data. Day 100 is far outside, so the pattern may change."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Exponential models have limits too. The math can keep doubling, but a real game, or a real population, runs into limits."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Real-world exponential growth usually slows down due to resource limits. (paraphrase of Varsity Tutors)"
+   },
+   "cite": [
+    "s11",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A game caps coins at 1,000,000. Plan B math gives 1,048,576 on day 20. What do you say?",
+    "right": "The model breaks down near day 20, because the game stops the doubling.",
+    "wrong": [
+     "The game must be wrong.",
+     "The model is perfect forever.",
+     "Doubling stops mattering."
+    ],
+    "why": "A model is only as good as the real situation behind it. Past the cap, the real world and the math disagree. So we trust the real rules."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more caution. When two things move together, it does not mean one causes the other. Say 'goes with', not 'causes'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Correlation is not causation"
+   },
+   "cite": [
+    "s5",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Players with more skins tend to have higher scores. What can you say?",
+    "right": "The two go together, but this does not show that skins cause higher scores.",
+    "wrong": [
+     "Skins cause higher scores.",
+     "Higher scores cause skins.",
+     "It proves skins are worth buying."
+    ],
+    "why": "A strong link does not tell us why. Something else, such as hours played, could drive both."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last, explain in plain words. Give the answer, the numbers, the limit of your model, and what you would do."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Answer\nNumbers\nLimit\nDecision"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is the best explanation of our Plan A and Plan B result?",
+    "right": "Plan B passes Plan A on day 9, 512 coins to 360. If I play 9 days or more, B wins. If fewer, A wins. This assumes doubling keeps going.",
+    "wrong": [
+     "Plan B wins because exponential is better.",
+     "The answer is 2^d.",
+     "Plan A, because 40 is bigger than 2."
+    ],
+    "why": "The best explanation gives the answer, the numbers, the limit and a decision. The others skip the numbers or the limit."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Pick a situation: a game with level costs that grow, money in savings, or a sports stat like shot height."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Game: costs or rewards that grow each level\nMoney: savings that earn interest\nSports: shot height, or points per game"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Money models are exponential. The compound interest formula is A = P(1 + r/n)^(nt). P is the starting amount, r is the yearly rate as a decimal, n is times per year, and t is years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A(t) = P(1 + r/n)^(nt)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Made-up: $200 earns 5% a year, added once a year. How much after 2 years?",
+    "right": "$220.50",
+    "wrong": [
+     "$220.00",
+     "$210.00",
+     "$400.00"
+    ],
+    "why": "200 times 1.05 is 210. Then 210 times 1.05 is 220.50. The interest earns interest. $220 would be adding $10 twice."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You built a line and an exponential model for the same question. What comes next?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Build models → Compare → Check against the real situation → Explain"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the right next move after building two models?",
+    "right": "Compare them and check them against the real situation.",
+    "wrong": [
+     "Pick the one with the bigger numbers.",
+     "Stop, because the models are done.",
+     "Delete the one you built first."
+    ],
+    "why": "Building is only part of the job. The comparing, the checking and the explaining are what turn the math into a decision."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You have used expressions, equations, functions, models and data. Take your time, and pause between steps whenever you need to."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Nice work. You have finished Algebra 1."
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Coins on day 8 and day 9 (made-up example numbers)",
+   "rows": [
+    {
+     "label": "Day 8, Plan A",
+     "value": 320,
+     "source": ""
+    },
+    {
+     "label": "Day 8, Plan B",
+     "value": 256,
+     "source": ""
+    },
+    {
+     "label": "Day 9, Plan A",
+     "value": 360,
+     "source": ""
+    },
+    {
+     "label": "Day 9, Plan B",
+     "value": 512,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "line",
+   "title": "Height in feet of h = −16t² + 24t + 6 (made-up example)",
+   "rows": [
+    {
+     "label": "0 s",
+     "value": 6,
+     "source": ""
+    },
+    {
+     "label": "0.25 s",
+     "value": 11,
+     "source": ""
+    },
+    {
+     "label": "0.5 s",
+     "value": 14,
+     "source": ""
+    },
+    {
+     "label": "0.75 s",
+     "value": 15,
+     "source": ""
+    },
+    {
+     "label": "1 s",
+     "value": 14,
+     "source": ""
+    },
+    {
+     "label": "1.25 s",
+     "value": 11,
+     "source": ""
+    },
+    {
+     "label": "1.5 s",
+     "value": 6,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Three functions at x = 20 (y = 2x calculated from the formula)",
+   "rows": [
+    {
+     "label": "y = 2x",
+     "value": 40,
+     "source": "s7"
+    },
+    {
+     "label": "y = x²",
+     "value": 400,
+     "source": "s7"
+    },
+    {
+     "label": "y = 2^x",
+     "value": 1048576,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Choosing a model type: differences, ratios and second differences",
+   "links": [
+    "[[Comparing Linear, Exponential and Quadratic Functions]]",
+    "[[Geometric Sequences and Linear vs Exponential]]"
+   ]
+  },
+  {
+   "topic": "Quadratic models of height over time",
+   "links": [
+    "[[Quadratic Models]]",
+    "[[Quadratic Functions and Their Graphs]]"
+   ]
+  },
+  {
+   "topic": "Compound interest as an exponential model",
+   "links": [
+    "[[Exponential Models and Compound Interest]]"
+   ]
+  },
+  {
+   "topic": "Checking a model with residuals and staying inside the data",
+   "links": [
+    "[[Correlation, Residuals and Causation]]",
+    "[[Building Linear Models from Data]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Given enough time, an exponential model always beats a linear or quadratic one.",
+   "other_view": "In pure math this is true. In real life, growth usually hits limits such as caps, resources or space. So a real exponential trend can level off, and the model should be checked against the real rules.",
+   "cite": [
+    "s7",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Correlation does not imply causation.",
+   "other_view": "A strong link alone cannot show cause, which is why the statement is widely taught. Even so, a link can be a clue worth following. Statisticians study cause and effect with carefully designed experiments rather than by ignoring correlations.",
+   "cite": [
+    "s5",
+    "s13"
+   ]
+  }
+ ]
+}

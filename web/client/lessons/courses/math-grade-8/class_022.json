@@ -1,0 +1,693 @@
+{
+ "about": {
+  "title": "Systems in the Real World",
+  "course": "math-grade-8",
+  "class_n": 22,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "This class runs about 35 minutes, a little over the usual half hour. It covers four linked skills (name the unknowns, write two equations, solve, check) and works three full examples. There are natural stopping points after the kayak example (beat 14) and after the ticket example (beat 22). You can split it there if you need a break."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Expressions & Equations (standard 8.EE.C.8.c)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "5.4: Solve Applications with Systems of Equations (Elementary Algebra, OpenStax)",
+   "publisher": "LibreTexts Mathematics, from OpenStax",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/05:_Systems_of_Linear_Equations/5.04:_Solve_Applications_with_Systems_of_Equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8 Mathematics, Unit 4, Lesson 15: Writing Systems of Equations",
+   "publisher": "Open Up Resources",
+   "date": "n.d.",
+   "link": "https://access.openupresources.org/curricula/our6-8math/en/grade-8/unit-4/lesson-15/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "5.9 Systems of Linear Equations in Two Variables (Contemporary Mathematics)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/5-9-systems-of-linear-equations-in-two-variables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Illustrative Mathematics Grade 8, Unit 4.15 - Teachers (Writing Systems of Equations)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://curriculum.illustrativemathematics.org/MS/teachers/3/4/15/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "4.2 Solve Applications with Systems of Equations (Intermediate Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/4-2-solve-applications-with-systems-of-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Ch. 11 Key Concepts - Algebra and Trigonometry 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/11-key-concepts",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 22. Today we turn a story into two equations, solve them, and say what the answer means."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Systems in the Real World"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick reminder. A system of equations is two equations that share the same unknowns."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "System of equations"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The answer to a system is a pair of numbers. It has to make both equations true at the same time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution = a pair that works in BOTH equations"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our recipe for stories. Read. Identify. Name. Translate. Solve. Check. We will use it three times today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Read the story. 2. Identify what you want to find. 3. Name the unknowns (pick letters). 4. Translate into two equations. 5. Solve. 6. Check that it makes sense."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our first story. Noah is planning a kayak trip. Rental A charges $15 plus $4.50 per hour. Rental B charges $12.50 plus $5 per hour."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rental A: $15 + $4.50 per hour | Rental B: $12.50 + $5 per hour"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our question: after how many hours do the two rentals cost the same? And how much is that?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Goal: the hour count where the costs match"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three is naming the unknowns. Say what each letter stands for, and what it is counted in."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Define variables: letter = what it means + unit"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In this story, two things change together: the hours, and the total cost. Let h be hours and c be total cost in dollars."
+   },
+   "show": {
+    "kind": "list",
+    "text": "h = number of hours | c = total cost in dollars"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check you have the idea. Which choice names the unknowns well?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Which one defines variables well?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "In Noah's kayak story, which choice defines the variables well?",
+    "right": "h = number of hours; c = total cost in dollars",
+    "wrong": [
+     "h = hours; c = money",
+     "h = Rental A; c = Rental B",
+     "h = 4.50; c = 15"
+    ],
+    "why": "A good definition says what the letter counts and in what unit. 'Money' is vague, because it does not say which cost. Rental A and Rental B are the two equations, not the unknowns. And 4.50 and 15 are numbers the story already gives us, so they are not unknown."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four is translating. Each rental has a starting fee and a price per hour. So cost equals starting fee plus rate times hours."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "cost = starting fee + (rate x hours)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For Rental A, the starting fee is 15 and the rate is 4.50. That gives c = 15 + 4.5h."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rental A: c = 15 + 4.5h | Rental B: c = ? (your turn)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now you write Rental B. Look for its starting fee first, then its price per hour."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rental B: $12.50 start, $5 per hour"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which equation matches Rental B ($12.50 plus $5 per hour)?",
+    "right": "c = 12.5 + 5h",
+    "wrong": [
+     "c = 5 + 12.5h",
+     "c = 12.5 - 5h",
+     "c = 17.5h"
+    ],
+    "why": "The $12.50 is paid once, so it stands alone. The $5 is paid for every hour, so it multiplies h. Swapping them would charge $12.50 per hour. Subtracting would make the bill shrink as you paddle. And 17.5h would charge $17.50 for every hour."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we solve. Both equations say c equals something. So those two somethings must be equal when the costs match."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "15 + 4.5h = 12.5 + 5h"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take away 4.5h from both sides: 15 = 12.5 + 0.5h. Take away 12.5 from both sides: 2.5 = 0.5h. So h = 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "15 + 4.5h = 12.5 + 5h | 15 = 12.5 + 0.5h | 2.5 = 0.5h | h = 5"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We have h, but the system has two unknowns. We still need c. Put h = 5 into either equation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Put h = 5 into c = 15 + 4.5h"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "We found h = 5. What is the next step?",
+    "right": "Put h = 5 into one of the equations to find c.",
+    "wrong": [
+     "Stop, because h is the answer to everything.",
+     "Add 5 to 15 and 12.5.",
+     "Divide 5 by 0.5 again."
+    ],
+    "why": "A system has two unknowns, so the solution is a pair of numbers. We have only half of the pair. Putting 5 in for h gives c = 15 + 4.5(5) = 37.5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the pair is h = 5 and c = 37.5. That means: at 5 hours, both rentals cost $37.50."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5 hours, $37.50"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Say what it means in the story. Before 5 hours, Rental B costs less, since its starting fee is lower. After 5 hours, Rental A costs less, since its hourly price is lower."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Costs at 3, 5 and 7 hours",
+    "chart": "c1"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try it. Noah plans to paddle for 3 hours. Which rental is cheaper?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3 hours: which is cheaper?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Noah paddles for 3 hours. Which rental is cheaper?",
+    "right": "Rental B: $27.50 compared with $28.50 for Rental A",
+    "wrong": [
+     "Rental A: $27.50 compared with $28.50 for Rental B",
+     "They cost the same",
+     "Rental A, because its hourly price is lower, so it wins at every length"
+    ],
+    "why": "At 3 hours, A is 15 + 4.5(3) = 28.5 and B is 12.5 + 5(3) = 27.5. The costs only match at 5 hours. Before that point B's smaller starting fee is what counts. After it, A's smaller hourly price wins."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step six is checking. Put your pair into both equations. If either one fails, something went wrong."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check in BOTH equations"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A: 15 + 4.5(5) = 37.5. B: 12.5 + 5(5) = 37.5. Both give 37.5, so the check works. Also ask: does it make sense? Five hours is a sensible time."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A: 15 + 22.5 = 37.5 ✓ | B: 12.5 + 25 = 37.5 ✓"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second story, a different kind. Some stories give a total count and a total value. A school sells 60 tickets in all. Student tickets cost $4 and adult tickets cost $7. The sales total $297."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "60 tickets, $297 in sales. Student $4, adult $7."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Name the unknowns. Let s be the number of student tickets and a be the number of adult tickets. Both are counts of tickets."
+   },
+   "show": {
+    "kind": "list",
+    "text": "s = number of student tickets | a = number of adult tickets"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Translate. Equation one counts tickets: s + a = 60. Equation two counts dollars. Each student ticket brings 4 dollars, each adult ticket 7: 4s + 7a = 297."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Tickets: s + a = 60 | Dollars: 4s + 7a = 297"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice that each equation adds up one kind of thing. One adds tickets. The other adds dollars. Never mix them in one equation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One kind of thing per equation"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which equation counts the dollars?",
+    "right": "4s + 7a = 297",
+    "wrong": [
+     "4s + 7a = 60",
+     "s + a = 297",
+     "7s + 4a = 297"
+    ],
+    "why": "Dollars come from price times number of tickets: 4 for each student ticket and 7 for each adult ticket. That total is 297. Setting it equal to 60 mixes dollars with tickets. s + a = 297 would say there were 297 tickets. And 7s + 4a swaps the prices."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Solve with elimination. Multiply the ticket equation by 4: 4s + 4a = 240. Take it away from 4s + 7a = 297. The s terms cancel and we get 3a = 57, so a = 19."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4s + 7a = 297 | 4s + 4a = 240 | subtract: 3a = 57 | a = 19"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now use s + a = 60. With a = 19, s = 41. In words: 41 student tickets and 19 adult tickets."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "41 student, 19 adult"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check both equations. 41 + 19 = 60 ✓. Dollars: 4 times 41 is 164, 7 times 19 is 133, and 164 + 133 = 297 ✓."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "41 + 19 = 60 ✓ | 164 + 133 = 297 ✓"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Checking can catch mistakes. A classmate says s = 45 and a = 15. Test it in both equations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Test s = 45, a = 15"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Does s = 45, a = 15 solve the ticket story?",
+    "right": "No. The tickets add to 60, but the money is $285, not $297.",
+    "wrong": [
+     "Yes. It works in both equations.",
+     "No. The tickets do not add to 60.",
+     "Yes. Passing one equation is enough."
+    ],
+    "why": "45 + 15 = 60, so the first equation passes. But 4(45) + 7(15) = 180 + 105 = 285, which is not 297. A solution must make BOTH equations true, so passing only one is not enough."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more habit. Ask, does the answer fit the real world? Tickets, people and coins come in whole numbers, so 12.5 adult tickets would be a warning sign."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Does it make sense? Whole things stay whole."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A solution says a = 12.5 adult tickets. What should you do?",
+    "right": "Go back and look for a mistake, because you cannot sell half a ticket.",
+    "wrong": [
+     "Round it to 12 and move on.",
+     "Accept it, because the algebra was neat.",
+     "Change the story so tickets can be split."
+    ],
+    "why": "The algebra can be tidy and still give an answer the story cannot have. A half ticket means an equation or a calculation is wrong. Check the translation and each step again."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last story, to try on your own. Maya has 12 coins. They are dimes and quarters, worth $2.40 in all. Let d be dimes and q be quarters. Work in cents so the units match."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dime",
+    "count": 12,
+    "layout": "scattered",
+    "text": "12 coins in all, dimes and quarters mixed (some shown as dimes)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which system matches Maya's coins (dime = 10 cents, quarter = 25 cents, $2.40 = 240 cents)?",
+    "right": "d + q = 12 and 10d + 25q = 240",
+    "wrong": [
+     "d + q = 2.40 and 10d + 25q = 12",
+     "d + q = 12 and 0.10d + 25q = 2.40",
+     "d + q = 240 and 10d + 25q = 12"
+    ],
+    "why": "One equation counts coins (total 12). The other counts value, in cents (total 240). Mixing cents and dollars in one equation, as in 0.10d + 25q = 2.40, breaks the units. The other wrong choices swap the totals, putting 2.40 or 240 where the coin count should be."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Solve it. From d + q = 12, d = 12 - q. Put that into 10d + 25q = 240: 120 - 10q + 25q = 240. So 15q = 120, and q = 8. Then d = 4."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "quarter",
+    "count": 8,
+    "layout": "group",
+    "text": "q = 8 quarters (and d = 4 dimes)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "We found d = 4 and q = 8. Which sentence says what that means in the story?",
+    "right": "Maya has 4 dimes and 8 quarters.",
+    "wrong": [
+     "Maya has 8 dimes and 4 quarters.",
+     "Maya has 12 quarters.",
+     "Maya's coins are worth $8."
+    ],
+    "why": "We defined d as dimes and q as quarters, so d = 4 means 4 dimes and q = 8 means 8 quarters. Check: 4 + 8 = 12 coins, and 40 + 200 = 240 cents, which is $2.40. Swapping the labels would give 8(10) + 4(25) = 180 cents, which is wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is the whole routine. Name the unknowns with units. Write one equation per kind of total. Solve. Check in both. Then say the answer in words."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Name with units | One kind of total per equation | Solve | Check in both | Say it in words"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Next class we start transformations, beginning with moving shapes around: translations, reflections and rotations."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Rigid Motions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Kayak rental total cost in dollars (computed from the posted prices)",
+   "rows": [
+    {
+     "label": "Rental A, 3 hours",
+     "value": 28.5,
+     "source": "s3"
+    },
+    {
+     "label": "Rental B, 3 hours",
+     "value": 27.5,
+     "source": "s3"
+    },
+    {
+     "label": "Rental A, 5 hours",
+     "value": 37.5,
+     "source": "s3"
+    },
+    {
+     "label": "Rental B, 5 hours",
+     "value": 37.5,
+     "source": "s3"
+    },
+    {
+     "label": "Rental A, 7 hours",
+     "value": 46.5,
+     "source": "s3"
+    },
+    {
+     "label": "Rental B, 7 hours",
+     "value": 47.5,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Writing equations from a story",
+   "links": [
+    "[[Modeling with Linear Functions]]",
+    "[[Lines: y = mx and y = mx + b]]"
+   ]
+  },
+  {
+   "topic": "Solving the system you wrote",
+   "links": [
+    "[[Systems by Substitution]]",
+    "[[Systems by Elimination]]",
+    "[[Systems of Equations by Graphing]]"
+   ]
+  },
+  {
+   "topic": "Interpreting the solution",
+   "links": [
+    "[[Comparing Two Functions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Word problems are easier to set up with two variables than with one.",
+   "other_view": "OpenStax says some people find two variables easier to set up than one. Its earlier algebra chapter handled the same kinds of stories with a single variable, and that also works. Naming the two quantities there can be a challenge. Neither way is wrong. If the two-variable setup feels hard, a one-variable equation is a fair choice.",
+   "cite": [
+    "s6",
+    "s2"
+   ]
+  }
+ ]
+}

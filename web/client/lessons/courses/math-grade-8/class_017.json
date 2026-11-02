@@ -1,0 +1,577 @@
+{
+ "about": {
+  "title": "Modeling with Linear Functions",
+  "course": "math-grade-8",
+  "class_n": 17,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes, a little over the usual half hour. There are three separate ideas: building an equation, saying what its numbers mean, and reading a graph as a story. Each gets its own worked example and a check question. You can pause after beat 12 and come back for the graph half."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 - Functions (standards 8.F.B.4 and 8.F.B.5)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/F/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "4.6 Find the Equation of a Line - Elementary Algebra",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra/pages/4-6-find-the-equation-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Interpret Slope and y-intercept: Mini-Lesson Review - Algebra 1",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/3-interpret-slope-and-y-intercept-mini-lesson-review",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Modeling with a Linear Function - Illustrative Math Tasks (Grade 8, 8.F.B)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/F/B/tasks/417",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Illustrative Mathematics Grade 8, Unit 5, Lesson 8: Linear Functions (lesson summary)",
+   "publisher": "Online Math Learning, reproducing Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://www.onlinemathlearning.com/linear-functions-illustrative-math.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Illustrative Mathematics Grade 8, Unit 5, Lesson 6: Even More Graphs of Functions",
+   "publisher": "Online Math Learning, reproducing Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://www.onlinemathlearning.com/graph-story-illustrative-math.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "More Graphs of Functions (Grade 8, Unit 5, Lesson 5 video lesson)",
+   "publisher": "PBS LearningMedia / Open Up Resources",
+   "date": "n.d.",
+   "link": "https://opb.pbslearningmedia.org/resource/our20-math-855/more-graphs-of-functions/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Illustrative Mathematics Grade 8, Unit 5.9 Preparation (Linear Models) - Teachers",
+   "publisher": "Illustrative Mathematics / Kendall Hunt",
+   "date": "n.d.",
+   "link": "https://im.kendallhunt.com/MS/teachers/3/5/9/preparation.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "5.8 Graphing Functions - Contemporary Mathematics",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/5-8-graphing-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Common Core Standards: CCSS.Math.Content.8.F.B.5",
+   "publisher": "Shmoop",
+   "date": "n.d.",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-8-f-5.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Grade 8 Mathematics, Unit 5.9 - Linear Models",
+   "publisher": "Open Up Resources",
+   "date": "n.d.",
+   "link": "https://access.openupresources.org/curricula/our6-8math/en/grade-8/unit-5/lesson-9/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "4.5 Use the Slope-Intercept Form of an Equation of a Line - Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/4-5-use-the-slope-intercept-form-of-an-equation-of-a-line",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we turn real stories into equations, say what the numbers mean, and read graphs like stories."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Modeling with Linear Functions"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, one word: a model. It is an equation, function or shape we use to stand in for a real-life situation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "model"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our models are lines, written y = mx + b. Two numbers do the work. The first is m, the rate of change: how much y changes for each 1 more of x."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "m = rate of change"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The second is b, the initial value. It is where the story starts, the value of y when x is 0."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "b = initial value"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a story. Andy has 5 dollars and saves 2 dollars every week. The start is 5 and the change is 2 per week, so y = 2x + 5."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dollar-bill",
+    "count": 5,
+    "layout": "row",
+    "text": "Andy's starting 5 dollars"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Sam has 10 dollars and saves 3 dollars each week. What is the rate of change?",
+    "right": "3 dollars per week",
+    "wrong": [
+     "10 dollars",
+     "13 dollars per week",
+     "3 dollars in total"
+    ],
+    "why": "The rate of change is the 'per' number, how much changes each week. The 10 dollars is the starting amount, not the rate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The pattern: the 'per' number multiplies x, and the starting number is added on its own. A bike rental with a 6 dollar fee plus 4 dollars per hour is y = 4x + 6."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "per hour (rate): 4, goes with x || fee at the start: 6, added once"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A skate rental costs a 3 dollar fee plus 2 dollars per hour. Which equation fits?",
+    "right": "y = 2x + 3",
+    "wrong": [
+     "y = 3x + 2",
+     "y = 5x",
+     "y = 2x - 3"
+    ],
+    "why": "The 2 dollars per hour grows with the hours, so it multiplies x. The 3 dollar fee is paid once, even at 0 hours, so it is added. That makes y = 2x + 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some things go down. A tank holds 51 liters and loses 5 liters each minute. The rate is negative: y = -5x + 51."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "going down means m is negative"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In y = -3x + 20, what does the -3 tell you?",
+    "right": "y goes down by 3 for each 1 more of x",
+    "wrong": [
+     "y goes up by 3 for each 1 more of x",
+     "y starts at -3",
+     "y goes down by 20 for each 1 more of x"
+    ],
+    "why": "The number multiplying x is the rate of change. A negative rate means y falls as x grows. The 20 is the starting value."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So far the story handed us the numbers. Sometimes we only get two data points. Then we work out m and b ourselves."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "From two data points"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one is the slope: change in y divided by change in x. For (2, 18) and (5, 33), that is 33 minus 18 over 5 minus 2. 15 over 3 is 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slope = (y2 - y1) / (x2 - x1) || (33 - 18) / (5 - 2) || 15 / 3 = 5"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Two points are (1, 7) and (3, 13). What is the slope?",
+    "right": "3",
+    "wrong": [
+     "6",
+     "2",
+     "1/3"
+    ],
+    "why": "Change in y is 13 - 7 = 6. Change in x is 3 - 1 = 2. Then 6 divided by 2 is 3. Stopping at 6 forgets to divide. The 2 is only the x change. 1/3 turns the fraction upside down."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two is b. Put the slope and one point into y = mx + b. With the point (2, 18): 18 = 5 times 2 plus b. That is 18 = 10 + b, so b = 8."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = mx + b || 18 = 5(2) + b || b = 8"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "For (1, 7) and (3, 13) the slope is 3. Use the point (1, 7). What is b?",
+    "right": "4",
+    "wrong": [
+     "7",
+     "10",
+     "3"
+    ],
+    "why": "Put the numbers in: 7 = 3(1) + b. That is 7 = 3 + b, so b = 4. The 7 is the y of the point, not b. Adding the slope to 7 does not solve the equation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three is a check. Try the other point: 5 times 5 plus 8 is 33. It matches, so our model is y = 5x + 8."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "y = 5x + 8"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the meaning, with units. Say the points were weeks and dollars saved. The 5 is 5 dollars more each week. The 8 is 8 dollars at week 0."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "5: dollars saved per week (rate of change) || 8: dollars at week 0 (initial value)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A tank model is y = -5x + 51, with liters and minutes. What does the 51 mean?",
+    "right": "The tank holds 51 liters at minute 0",
+    "wrong": [
+     "The tank loses 51 liters every minute",
+     "The tank is empty after 51 minutes",
+     "The tank starts with -5 liters"
+    ],
+    "why": "b is the value of y when x is 0. That is 51 liters at the start. The loss each minute is the rate, which is 5 liters per minute."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On a graph, b is where the line crosses the vertical axis. The slope sets the tilt: up if positive, down if negative."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A straight line starts at 8 on the vertical axis and climbs 5 for every 1 step to the right."
+   },
+   "cite": [
+    "s3",
+    "s12",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A line crosses the vertical axis at 4 and slopes down as you move right. Which equation is it?",
+    "right": "y = -2x + 4",
+    "wrong": [
+     "y = 2x + 4",
+     "y = -4x + 2",
+     "y = 4x - 2"
+    ],
+    "why": "It crosses at 4, so b = 4. It goes down, so m is negative. Only y = -2x + 4 has both."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now graphs as stories. Read a graph from left to right, like reading a story. Time runs along the bottom, and the line shows what changes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a graph tells a story"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A story has three kinds of parts. Going up is increasing, where the rate is positive. Going down is decreasing, where the rate is negative. Flat is constant."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Up = increasing || Down = decreasing || Flat (horizontal) = constant"
+   },
+   "cite": [
+    "s5",
+    "s9",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try one. Jo walks away from home to a shop at a steady pace, stays in the shop, then walks home faster. The graph shows distance from home against minutes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A line rises steadily, goes flat for a while, then falls steeply down to zero."
+   },
+   "cite": [
+    "s7",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "While Jo is in the shop, what does the line do?",
+    "right": "It stays flat",
+    "wrong": [
+     "It goes up",
+     "It goes down",
+     "It drops to zero"
+    ],
+    "why": "Time keeps passing, but Jo's distance from home does not change. So the line runs flat, and a flat line is constant."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the other direction: sketching a graph from words. Name each axis with its unit. Mark the start. Then draw one part at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Label both axes, with units || 2. Mark the starting point || 3. Draw each part in turn"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a tub. It starts with 10 cm of water and fills steadily for 6 minutes to 40 cm. It stays there 4 minutes. Then it drains steadily to 0 in 5 minutes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Height in cm against minutes. A line climbs from 10 to 40, runs flat, then falls steeply to 0."
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which part of the tub graph is steepest?",
+    "right": "The draining part",
+    "wrong": [
+     "The filling part",
+     "The part where the height stays the same",
+     "They are all equally steep"
+    ],
+    "why": "The rates are +5 cm per minute filling, 0 while it stays, and -8 cm per minute draining. Steepness is the size of the rate. 8 is the biggest, and the minus sign only means the line tilts down."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last care. Real data is rarely perfectly straight, so a line may only fit for some values."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Is the model reasonable?"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A candle model is y = -2x + 20, with height in cm and x in hours. Does it make sense at 15 hours?",
+    "right": "No. It gives -10 cm, which is impossible, so the model only works up to 10 hours",
+    "wrong": [
+     "Yes, a model works for every x",
+     "Yes, the candle is 10 cm below the table",
+     "No, because 15 is bigger than 2"
+    ],
+    "why": "Plug in 15: -2(15) + 20 = -10. A candle cannot have a negative height. The candle is gone at 10 hours, so the model only fits from 0 to 10."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it all together. A taxi ride of 3 miles costs 9 dollars. A ride of 7 miles costs 17 dollars."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Points: (3, 9) and (7, 17) || Find m, then b, then check"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which equation fits both rides?",
+    "right": "y = 2x + 3",
+    "wrong": [
+     "y = 3x + 2",
+     "y = 2x + 9",
+     "y = 4x - 3"
+    ],
+    "why": "Slope: (17 - 9) / (7 - 3) = 8/4 = 2. Then 9 = 2(3) + b gives b = 3. Check the other point: 2(7) + 3 = 17. The choice y = 4x - 3 fits the first ride but gives 25 for 7 miles."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Same taxi, now the meaning. Say it with units."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "y = 2x + 3"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In y = 2x + 3, what does the 3 mean?",
+    "right": "The ride costs 3 dollars before any miles are driven, a starting fee",
+    "wrong": [
+     "The ride costs 3 dollars per mile",
+     "The ride is 3 miles long",
+     "The taxi goes 3 miles per minute"
+    ],
+    "why": "The 3 is b, the value when x is 0 miles. It is a fee paid at the start. The 2 is the 'per' number, 2 dollars per mile."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To wrap up: find m from two points, find b by substituting, check, and say what both mean with units. Next class we compare two functions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "m = change in y / change in x || b = y when x is 0 || Up, down, flat = increasing, decreasing, constant || Check the model makes sense"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Modeling with Linear Functions",
+   "links": [
+    "[[Slope]]",
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[What Is a Function?]]",
+    "[[Four Ways to Show a Function]]",
+    "[[Comparing Two Functions]]",
+    "[[Lines of Best Fit]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A straight line is a good model for real situations.",
+   "other_view": "Often it is, but curriculum authors point out that real data is rarely perfectly linear. A line may fit only some values, or different lines may fit different time periods. Part of modeling is judging whether a line is reasonable and for which values.",
+   "cite": [
+    "s8"
+   ]
+  }
+ ]
+}

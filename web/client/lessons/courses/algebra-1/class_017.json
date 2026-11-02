@@ -1,0 +1,603 @@
+{
+ "about": {
+  "title": "Parallel and Perpendicular Lines",
+  "course": "algebra-1",
+  "class_n": 17,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. Parallel and perpendicular lines share one method, so a single half-hour class covers both. Pause and replay any beat you want to hear again."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "4.6 Find the Equation of a Line, Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/4-6-find-the-equation-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "4.1 Linear Functions, College Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/4-1-linear-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "3.2 Slope of a Line, Intermediate Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/3-2-slope-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "High School: Geometry (Common Core State Standards, HSG-GPE.B.5 and introduction)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSG/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "4.5 Use the Slope-Intercept Form of an Equation of a Line, Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/4-5-use-the-slope-intercept-form-of-an-equation-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Parallel and Perpendicular Lines",
+   "publisher": "Math Is Fun",
+   "date": "n.d.",
+   "link": "https://www.mathsisfun.com/algebra/line-parallel-perpendicular.html",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 17. Today's goal: write the equation of a line that is parallel or perpendicular to a given line, and passes through a point you are given."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Parallel and Perpendicular Lines"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, two tools from earlier classes. Slope-intercept form is y = mx + b. Point-slope form is y − y₁ = m(x − x₁). Today we use both."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Slope-intercept: y = mx + b (m is the slope, b is where the line crosses the y-axis) | Point-slope: y − y₁ = m(x − x₁) (use it when you know the slope m and one point (x₁, y₁))"
+   },
+   "cite": [
+    "s5",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea one: parallel lines. They sit in the same flat plane and never meet. The key fact is that parallel lines have the same slope."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Parallel = same slope"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. y = −2x + 3 and y = −2x − 1 both have slope −2. Their y-intercepts differ, 3 and −1, so they are two separate lines that never cross."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with two lines sloping down to the right at the same steepness. One crosses the y-axis at 3 and the other at −1. They never touch."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check. Look only at the slopes, which are the numbers in front of x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 3x + 2 | y = 3x − 5"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Are the lines y = 3x + 2 and y = 3x − 5 parallel?",
+    "right": "Yes, because both have slope 3.",
+    "wrong": [
+     "No, because their y-intercepts are different.",
+     "No, because 3 and −5 are not the same number.",
+     "Yes, because 2 and −5 are opposites."
+    ],
+    "why": "Parallel lines need equal slopes. The intercepts are allowed to differ. That is what keeps the lines apart."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if an equation is not in y = mx + b form? Solve for y first, then read the slope."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2x + y = 7 becomes y = −2x + 7, so the slope is −2 | y = −2x + 1 has slope −2, so the two lines are parallel"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why will we get exactly one answer today? In flat geometry, through a point not on a line there is exactly one parallel line."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Through a point not on a given line there is exactly one parallel line."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the method for a parallel line through a point. Step one: take the slope from the given line. Step two: put that slope and the point into point-slope form. Step three: simplify."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Read the slope of the given line | 2. Use the same slope in y − y₁ = m(x − x₁) with your point | 3. Simplify to y = mx + b"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: find the line parallel to y = 2x + 1 through (3, 4). The slope is 2, so the new line also has slope 2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slope = 2, point = (3, 4)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Point-slope form gives y − 4 = 2(x − 3). Multiply out to get y − 4 = 2x − 6. Add 4 to both sides to get y = 2x − 2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y − 4 = 2(x − 3) | y − 4 = 2x − 6 | y = 2x − 2"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Always check. Put x = 3 into y = 2x − 2. You get 6 − 2 = 4. That matches the point (3, 4), so the line passes through it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2(3) − 2 = 4"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Take your time. Use the three steps: slope, point-slope, simplify."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Parallel to y = −x + 4, through (2, 1)"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which equation is the line parallel to y = −x + 4 that passes through (2, 1)?",
+    "right": "y = −x + 3",
+    "wrong": [
+     "y = −x + 4",
+     "y = x − 1",
+     "y = −x + 1"
+    ],
+    "why": "The slope stays −1. Then y − 1 = −1(x − 2) simplifies to y = −x + 3. Copying the old intercept, 4, is a common slip, so the new b has to be found from the point."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea two: perpendicular lines. These cross at a right angle, like the corner of a square, which is 90 degrees."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Perpendicular = meet at 90°"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their slopes are not equal. They are negative reciprocals of each other. To get one, flip the fraction, then change the sign."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Negative reciprocal: flip it, then change the sign"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Examples: 2/3 flips to 3/2, then changes sign to −3/2. And −4 is −4/1. It flips to −1/4, and the sign changes to 1/4."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2/3 → −3/2 | −4 → 1/4"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A whole number counts too. Write 5 as 5/1, flip it to 1/5, then change the sign."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "5 = 5/1 → flip → 1/5 → change sign → −1/5"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the negative reciprocal of 5?",
+    "right": "−1/5",
+    "wrong": [
+     "1/5",
+     "−5",
+     "5"
+    ],
+    "why": "Flip 5 (which is 5/1) to get 1/5. Then change the sign to get −1/5. Only flipping, or only changing the sign, is not enough."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more, with a fraction that is already negative."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slope −3/4"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the negative reciprocal of −3/4?",
+    "right": "4/3",
+    "wrong": [
+     "−4/3",
+     "3/4",
+     "−3/4"
+    ],
+    "why": "Flip −3/4 to get −4/3. Then change the sign to get 4/3. The sign must end up opposite to the one you started with."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a quick test. Multiply two perpendicular slopes and you always get −1."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(2/3) × (−3/2) = −1"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Use that test to check a pair of slopes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Product of slopes = −1"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pair of slopes belongs to two perpendicular lines?",
+    "right": "4 and −1/4",
+    "wrong": [
+     "4 and 1/4",
+     "−4 and −1/4",
+     "4 and −4"
+    ],
+    "why": "4 × (−1/4) = −1. The pairs 4 and 1/4, and −4 and −1/4, give a product of +1, so the sign is wrong. 4 and −4 give −16."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A special case. Horizontal and vertical lines are always perpendicular to each other. A vertical line has no defined slope, so the flip-and-change-sign rule is only for lines that are not vertical."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat horizontal line crossing an up-and-down vertical line, making a square corner."
+   },
+   "cite": [
+    "s5",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The method for a perpendicular line is the same as before, with one extra move. Find the slope, flip it and change the sign, then use point-slope form."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Read the slope of the given line | 2. Find its negative reciprocal | 3. Use that new slope in y − y₁ = m(x − x₁) with your point | 4. Simplify and check"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: find the line perpendicular to y = 3x − 2 through (6, 5). The slope is 3, so the new slope is −1/3."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3 → −1/3, point = (6, 5)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Point-slope gives y − 5 = −1/3(x − 6). Multiply out: y − 5 = −1/3x + 2. Add 5 to both sides to get y = −1/3x + 7."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y − 5 = −1/3(x − 6) | y − 5 = −1/3x + 2 | y = −1/3x + 7"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check it. Put x = 6 into y = −1/3x + 7. That gives −2 + 7 = 5. It matches (6, 5), so the line passes through the point."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "−1/3(6) + 7 = 5"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn with the perpendicular steps."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Perpendicular to y = 4x − 3, through (8, 1)"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which equation is the line perpendicular to y = 4x − 3 that passes through (8, 1)?",
+    "right": "y = −1/4x + 3",
+    "wrong": [
+     "y = −4x + 33",
+     "y = −1/4x + 1",
+     "y = 1/4x − 1"
+    ],
+    "why": "The new slope is −1/4. Then y − 1 = −1/4(x − 8) gives y = −1/4x + 2 + 1, which is y = −1/4x + 3. y = −4x + 33 forgets to flip. y = −1/4x + 1 uses the point's y-value as the intercept. y = 1/4x − 1 forgets to change the sign."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sometimes the given line is in standard form. Then solve for y first. Take 4x + 2y = 10. Subtract 4x: 2y = −4x + 10. Divide by 2: y = −2x + 5. The slope is −2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x + 2y = 10 | 2y = −4x + 10 | y = −2x + 5"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now find the line perpendicular to it through (−2, 3). The new slope is 1/2. Then y − 3 = 1/2(x + 2), so y = 1/2x + 1 + 3, which is y = 1/2x + 4."
+   },
+   "show": {
+    "kind": "list",
+    "text": "slope: −2 → 1/2 | y − 3 = 1/2(x + 2) | y = 1/2x + 4"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A game example. Say a river on your map runs along y = −x + 6, and your house sits at (1, 1). You want a bridge that crosses the river at a right angle. What slope should the bridge have?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A game map grid with a river running down to the right along y = −x + 6, and a small house at (1, 1) to the lower left of the river."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What slope should the bridge have so it crosses the river at a right angle?",
+    "right": "1",
+    "wrong": [
+     "−1",
+     "6",
+     "−6"
+    ],
+    "why": "The river's slope is −1. Its negative reciprocal is 1, because −1 flips to −1 and the sign change makes it 1. Check: (−1) × 1 = −1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With slope 1 and the point (1, 1): y − 1 = 1(x − 1), so y = x. The bridge hits the river where x = −x + 6, which is x = 3. That is the point (3, 3)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y − 1 = 1(x − 1) | y = x | Meets the river at (3, 3), because −3 + 6 = 3"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watch out for these three common slips."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Flipping but forgetting to change the sign | Changing the sign but forgetting to flip | Copying the old y-intercept instead of working out a new one from the point"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Summary. Parallel lines have the same slope. Perpendicular lines have negative reciprocal slopes. Either way, use the new slope and the point in point-slope form, simplify, and check."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Parallel: same slope | Perpendicular: negative reciprocal slope (product is −1)"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. You can now write a parallel or a perpendicular line through any point. Next class we move on to linear inequalities in two variables."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Linear Inequalities in Two Variables"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Parallel and perpendicular lines through a point",
+   "links": [
+    "[[Slope-Intercept Form and Graphing Lines]]",
+    "[[Point-Slope and Standard Form]]",
+    "[[Writing Linear Equations from Information]]",
+    "[[Linear Inequalities in Two Variables]]",
+    "[[Systems of Equations by Graphing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The rule 'perpendicular slopes are negative reciprocals' is the name used in this lesson.",
+   "other_view": "Some books say 'opposite reciprocals' for the same thing. The meaning is identical: flip the fraction and change the sign. Either name leads to the same product of −1.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "claim": "Writing a parallel or perpendicular line through a point is taught here in Algebra 1.",
+   "other_view": "The Common Core standard that names this skill sits in the high school geometry strand, where students are also asked to prove the slope rules. Some courses teach it in Geometry rather than Algebra 1. OpenStax includes it in an algebra textbook.",
+   "cite": [
+    "s4",
+    "s1"
+   ]
+  }
+ ]
+}

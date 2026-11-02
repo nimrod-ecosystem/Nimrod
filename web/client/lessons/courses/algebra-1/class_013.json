@@ -1,0 +1,542 @@
+{
+ "about": {
+  "title": "Slope and Rate of Change",
+  "course": "algebra-1",
+  "class_n": 13,
+  "audience": [
+   "Ages 14 to 16",
+   "teenagers",
+   "Anyone following Algebra 1 after 8th-grade math"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class covers one main idea (slope) in four forms: a graph, two points, a table and a real-world rate. Each idea has a short check question, so it fits a half-hour class. If it feels rushed, stop after beat 12 and do the table and rate-of-change beats next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "4.4 Understand Slope of a Line, Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/4-4-understand-slope-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "3.2 Slope of a Line, Intermediate Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/3-2-slope-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "3.4: Graph Using the y-Intercept and Slope (Elementary Algebra)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_(LibreTexts)/03:_Graphing_Lines/3.04:_Graph_Using_the_y-Intercept_and_Slope",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "HSF-IF.B.6 (Calculate and interpret the average rate of change)",
+   "publisher": "Illustrative Mathematics, Common Core standard",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/HSF/IF/B/6",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "F-IF.B.6: Rate of Change (lesson plan)",
+   "publisher": "JMAP (Joint Math Applications Project)",
+   "date": "n.d.",
+   "link": "https://jmap.org/LessonPlans/F.IF.B.6.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Lesson Plan: Slope As Rate of Change",
+   "publisher": "Media4Math",
+   "date": "n.d.",
+   "link": "https://www.media4math.com/LessonPlans/SlopeRateOfChange",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Undefined Slope: Why Vertical Lines Have No Slope (Examples)",
+   "publisher": "Mathwords",
+   "date": "n.d.",
+   "link": "https://www.mathwords.com/u/undefined_slope.htm",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Slope",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Slope",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Common Core Standards: CCSS.Math.Content.HSF-IF.B.6",
+   "publisher": "Shmoop",
+   "date": "n.d.",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-hs-f-if-6.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "4.5 Use the Slope-Intercept Form of an Equation of a Line, Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/4-5-use-the-slope-intercept-form-of-an-equation-of-a-line",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 13. Today we learn one number that describes a whole straight line: its slope."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Slope and Rate of Change"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of a ramp. Some ramps are gentle and some are steep. Slope is the math word for that tilt."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two skate ramps side by side. The left ramp is gentle and the right ramp is steep. Both climb from left to right."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To measure the tilt, we use two moves. Rise is how far you go up or down. Run is how far you go across."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rise = vertical change (up or down) | Run = horizontal change (left or right)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Slope is the rise compared with the run. We write it as m equals rise over run."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "slope: m = rise / run"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a line through (1, 2) and (4, 8). Draw a right triangle between the points. Count the rise: 2 up to 8 is 6. Count the run: 1 across to 4 is 3."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with a line through (1, 2) and (4, 8). A right triangle sits under it. The vertical side is labeled 6 and the horizontal side is labeled 3."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now divide: 6 over 3 is 2. The slope is 2. That means up 2 for every 1 across."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "m = 6 / 3 = 2"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. A line goes up 6 while it goes across 4. What is its slope?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "rise 6, run 4"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A line rises 6 and runs 4. What is its slope?",
+    "right": "6/4, which simplifies to 3/2",
+    "wrong": [
+     "4/6, which simplifies to 2/3",
+     "24",
+     "2"
+    ],
+    "why": "Slope is rise over run, so the rise 6 goes on top and the run 4 goes on the bottom. Flipping them gives 2/3, which is a different tilt."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Signs matter. Up is a positive rise and down is a negative rise. Right is a positive run and left is a negative run."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rise: up = positive, down = negative | Run: right = positive, left = negative"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Read the line from left to right, like a book. If it climbs, the slope is positive. If it falls, the slope is negative. Example: down 3 while going right 2 gives rise -3 over run 2, so the slope is -3/2."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two lines on a grid. One climbs left to right and is labeled positive. One falls left to right and is labeled negative. A small triangle on the falling line shows rise -3 and run 2."
+   },
+   "cite": [
+    "s10",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You read a line from left to right and it goes downhill. Is its slope positive or negative?",
+    "right": "Negative",
+    "wrong": [
+     "Positive",
+     "Zero",
+     "Undefined"
+    ],
+    "why": "A line that falls from left to right has a negative rise for a positive run, so the slope is negative."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if the line is flat? Then you never go up or down. The rise is 0, so the slope is 0. Take y = 4: rise 0, run 3, and 0 over 3 is 0."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Horizontal line y = b has slope 0"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the slope of the line y = -5?",
+    "right": "0",
+    "wrong": [
+     "-5",
+     "5",
+     "Undefined"
+    ],
+    "why": "y = -5 is a horizontal line. Every horizontal line has slope 0 because the rise is 0."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a straight-up wall. A vertical line has run 0, so we would be dividing by zero. We can't do that, so we say the slope is undefined."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vertical line x = a has undefined slope"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the slope of the line x = 8?",
+    "right": "Undefined",
+    "wrong": [
+     "0",
+     "8",
+     "1"
+    ],
+    "why": "x = 8 is a vertical line, so the run is 0. Dividing by 0 is not allowed, so the slope is undefined. A slope of 0 belongs to flat, horizontal lines."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A memory trick: zero slope is flat, like a floor. Undefined slope is straight up, like a wall."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Zero slope = horizontal (floor) | Undefined slope = vertical (wall)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes there is no graph, only two points. Then use the slope formula: change in y over change in x."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "m = (y2 - y1) / (x2 - x1)"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try (2, 7) and (6, 1). Rise: 1 minus 7 is -6. Run: 6 minus 2 is 4. So the slope is -6/4, or -3/2. Keep the same point first on the top and the bottom."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(1 - 7) / (6 - 2) = -6/4 = -3/2"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn with the formula. Use the points (1, 2) and (3, 8)."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(1, 2) and (3, 8)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the slope of the line through (1, 2) and (3, 8)?",
+    "right": "3",
+    "wrong": [
+     "1/3",
+     "6",
+     "10"
+    ],
+    "why": "The rise is 8 - 2 = 6 and the run is 3 - 1 = 2. So the slope is 6/2 = 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tables work the same way. Each row is a point. In this game, x is minutes played and y is coins earned."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Minutes x: 0, 2, 4, 6 | Coins y: 10, 40, 70, 100"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pick two rows, (0, 10) and (2, 40). The rise is 30 coins and the run is 2 minutes. 30 over 2 is 15."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30 / 2 = 15"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Does it matter which two rows we pick? For a straight line, no. The rate is the same between any two points."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A line has the same slope everywhere"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Use the rows (2, 40) and (6, 100) from the table. What is the slope?",
+    "right": "15",
+    "wrong": [
+     "60",
+     "1/15",
+     "4"
+    ],
+    "why": "The rise is 100 - 40 = 60 and the run is 6 - 2 = 4. So 60/4 = 15, the same as before. A line has the same slope between any two points."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That 15 is a rate of change. It tells how much y changes for each 1 step in x. Here it is 15 coins per minute."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15 coins per minute"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A rate compares two different units, like coins and minutes. So say the units when you say the slope: y-units per x-unit."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slope with units = rate of change"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try it with money. A job pays $30 for 2 hours and $90 for 5 hours. Find the slope and say what it means."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2 hours -> $30 | 5 hours -> $90"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "2 hours pays $30 and 5 hours pays $90. What does the slope tell you?",
+    "right": "$20 per hour: each extra hour adds $20",
+    "wrong": [
+     "$60 per hour",
+     "$30 per hour",
+     "$3 per hour"
+    ],
+    "why": "The rise is 90 - 30 = 60 dollars and the run is 5 - 2 = 3 hours. 60/3 = 20, so the pay rises $20 for each hour."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One preview. A straight line has one constant rate. A curve has a rate that changes, so later we find an average rate of change between two points."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Line: constant rate of change | Curve: rate of change varies"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it together. Slope is rise over run. From a graph you count it. From two points or a table you subtract. In a story it is a rate with units."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Graph: count rise and run | Two points: (y2 - y1)/(x2 - x1) | Table: pick two rows | Horizontal: 0 | Vertical: undefined"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A line goes through (0, 4) and (2, 0). What is its slope?",
+    "right": "-2",
+    "wrong": [
+     "2",
+     "-1/2",
+     "4"
+    ],
+    "why": "The rise is 0 - 4 = -4 and the run is 2 - 0 = 2. So -4/2 = -2. The line falls from left to right, so a negative slope makes sense."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Slope",
+   "links": [
+    "[[Graphs of Functions: Domain, Range and Behavior]]",
+    "[[Slope-Intercept Form and Graphing Lines]]"
+   ]
+  },
+  {
+   "topic": "Rate of change",
+   "links": [
+    "[[Relations and Functions]]",
+    "[[Writing Linear Equations from Information]]",
+    "[[Comparing Linear, Exponential and Quadratic Functions]]"
+   ]
+  },
+  {
+   "topic": "Zero and undefined slope",
+   "links": [
+    "[[Parallel and Perpendicular Lines]]",
+    "[[Point-Slope and Standard Form]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The slope of a vertical line is called undefined, not zero.",
+   "other_view": "Some sources say a vertical line's slope can be treated as infinite, since the run is 0. Other sources say infinity is not a real number, so in algebra courses the right answer is simply undefined. In this course we use undefined.",
+   "cite": [
+    "s8",
+    "s7"
+   ]
+  }
+ ]
+}

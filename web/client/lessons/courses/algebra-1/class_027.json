@@ -1,0 +1,495 @@
+{
+ "about": {
+  "title": "Exponent Rules",
+  "course": "algebra-1",
+  "class_n": 27,
+  "audience": [
+   "age 14 to 16",
+   "teenagers",
+   "follows 8th-grade math"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class teaches four rules: product, quotient, power of a power and power of a product. Each rule gets its own short step and a check question. Go at your own pace and pause after any step. If you need more time on one rule, take it, because the later rules lean on the earlier ones."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "6.2 Use Multiplication Properties of Exponents, Elementary Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/6-2-use-multiplication-properties-of-exponents",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "6.5 Divide Monomials, Elementary Algebra",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra/pages/6-5-divide-monomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Ch. 6 Key Concepts, Elementary Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/6-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "NWEA Assessment Item Illustrating 8.EE.A.1",
+   "publisher": "Achieve the Core (item by NWEA)",
+   "date": "2020",
+   "link": "https://achievethecore.org/content/upload/8.EE.A.1_NWEA.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "6.7 Integer Exponents and Scientific Notation, Elementary Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/6-7-integer-exponents-and-scientific-notation",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 27. Today we learn the rules that make exponents quick to work with. Take your time. There is no rush."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Exponent Rules"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You met exponents in 8th grade, so this is a refresher with new tools. The goal today is to simplify expressions using three rules: product, quotient and power."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Product rule | Quotient rule | Power rules"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, what an exponent means. It is a short way to write repeated multiplication. The numbers you multiply are called factors."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 3,
+    "layout": "row",
+    "text": "x³ = x · x · x (three factors of x)"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In x³, the x is the base. It is the thing being multiplied. The small 3 is the exponent. It tells you how many factors of the base to write."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "base and exponent"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What does 4³ mean?",
+    "right": "4 · 4 · 4, which equals 64",
+    "wrong": [
+     "4 · 3, which equals 12",
+     "4 + 4 + 4, which equals 12",
+     "3 · 3 · 3 · 3, which equals 81"
+    ],
+    "why": "The exponent 3 says to use three factors of the base 4. So it is 4 · 4 · 4 = 64. It does not mean 4 times 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the product rule. Let's multiply x² by x³ and just count the factors."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x² · x³ | (x · x) · (x · x · x) = x⁵"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We wrote five x's in a row, and 5 is 2 + 3. So when you multiply powers with the same base, keep the base and add the exponents."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same base, multiply: add the exponents. aᵐ · aⁿ = aᵐ⁺ⁿ"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: y⁵ · y⁶. The base is y both times, so add 5 + 6. The answer is y¹¹."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "y⁵ · y⁶ = y¹¹"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Simplify a⁴ · a⁵.",
+    "right": "a⁹",
+    "wrong": [
+     "a²⁰",
+     "2a⁹",
+     "a¹"
+    ],
+    "why": "The bases match, so add the exponents: 4 + 5 = 9. Multiplying 4 · 5 = 20 is a different rule. A power of a power, which we meet soon, does that."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rule works when numbers sit in front, too. Multiply the front numbers, then add the exponents. For 3x² · 4x³, 3 · 4 = 12 and 2 + 3 = 5. So the answer is 12x⁵."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3x² · 4x³ = 12x⁵"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One warning. The bases must match. The rule is only for powers of the same base. So x² · y³ has two different bases and stays as it is. And x² + x³ is addition, not multiplication, so the rule does not apply."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Works: 5² · 5⁴ = 5⁶ | Does not combine: 5² · 3⁴"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which one can you simplify with the product rule?",
+    "right": "7³ · 7⁵",
+    "wrong": [
+     "7³ · 2⁵",
+     "x² + x⁴",
+     "x³ · y³"
+    ],
+    "why": "The product rule needs multiplication and the same base. 7³ · 7⁵ has both, so it equals 7⁸. 7³ · 2⁵ and x³ · y³ have different bases. x² + x⁴ is addition."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A game example. Say your coins double every round. Three rounds multiply them by 2³. Four more rounds multiply them by 2⁴. Together that is 2³ · 2⁴ = 2⁷, so 128 times as many coins."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2³ · 2⁴ = 2⁷ = 128"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the quotient rule. Dividing is the opposite of multiplying. Look at x⁵ ÷ x². Write out the factors and cancel pairs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x⁵ / x² | (x·x·x·x·x) / (x·x) = x·x·x = x³"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two x's on top cancel the two on the bottom, and three are left. 5 − 2 = 3. So when you divide powers with the same base, keep the base and subtract the exponents."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same base, divide: subtract the exponents. aᵐ / aⁿ = aᵐ⁻ⁿ"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Simplify y⁹ / y⁴.",
+    "right": "y⁵",
+    "wrong": [
+     "y¹³",
+     "y³⁶",
+     "y²"
+    ],
+    "why": "The bases match and you are dividing, so subtract the exponents: 9 − 4 = 5. Adding gives y¹³, which is the product rule. Multiplying gives y³⁶, and dividing 9 ÷ 4 gives about 2. Neither is the rule."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Numbers in front work the same way. Divide the front numbers, then subtract the exponents. For 12a⁷ / 3a², 12 ÷ 3 = 4 and 7 − 2 = 5. The answer is 4a⁵."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12a⁷ / 3a² = 4a⁵"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if the bigger exponent is on the bottom? Then the leftover factors stay on the bottom. x² / x⁵ cancels two pairs and leaves three x's below, so it equals 1 / x³. You subtract the smaller exponent from the larger and keep the answer on the side that had more."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "x² / x⁵ = 1 / x³"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Simplify z³ / z⁷.",
+    "right": "1 / z⁴",
+    "wrong": [
+     "z⁴",
+     "1 / z¹⁰",
+     "1 / z³"
+    ],
+    "why": "There are more z's on the bottom: 7 on the bottom and 3 on top. Cancel 3 pairs and 7 − 3 = 4 are left, and they stay on the bottom. So the answer is 1 / z⁴."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A sports example. 64 players is 2⁶. If you split them into groups of 4, which is 2², the number of groups is 2⁶ / 2² = 2⁴. That is 16 groups."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2⁶ / 2² = 2⁴ = 16"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the power of a power. In (x²)³, we have x² used as a factor three times. Write it out and then use the product rule."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(x²)³ | x² · x² · x² = x²⁺²⁺² = x⁶"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Three groups of two x's gives six x's, and 2 · 3 = 6. So when you raise a power to a power, multiply the exponents. This is the power rule."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Power of a power: multiply the exponents. (aᵐ)ⁿ = aᵐⁿ"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Simplify (a³)⁴.",
+    "right": "a¹²",
+    "wrong": [
+     "a⁷",
+     "a⁸¹",
+     "a³⁴"
+    ],
+    "why": "A power of a power means multiply the exponents: 3 · 4 = 12. Adding gives a⁷. That is the product rule, which is for multiplying two powers, not for raising a power to a power."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Keep the two rules apart. Two powers multiplied side by side: add. A power inside brackets raised to another power: multiply."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x² · x³ = x⁵ (add) | (x²)³ = x⁶ (multiply)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Simplify (m²)⁵ · m³.",
+    "right": "m¹³",
+    "wrong": [
+     "m¹⁰",
+     "m³⁰",
+     "m⁷"
+    ],
+    "why": "Do the bracket first and multiply: (m²)⁵ = m¹⁰. Then multiply by m³ and add: 10 + 3 = 13. That makes m¹³."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last rule: a power of a product. In (ab)³, the whole product ab is used three times. Write it out: ab · ab · ab. That is three a's and three b's, so a³b³. Everything inside the brackets gets the exponent."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Power of a product: (ab)ᵐ = aᵐbᵐ"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This includes a number in front. (2x)³ = 2³ · x³ = 8x³. A common slip is to write 2x³ and forget to cube the 2."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(2x)³ = 8x³"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Simplify (3y)².",
+    "right": "9y²",
+    "wrong": [
+     "3y²",
+     "6y²",
+     "9y"
+    ],
+    "why": "The exponent 2 applies to both the 3 and the y. 3² = 9 and y² stays y². So the answer is 9y². 6 would come from 3 · 2, which is not squaring."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we put the rules together. Take (2x²)³ · x⁴. Go one step at a time. First the power of a product: (2x²)³ = 2³ · (x²)³. Then the power of a power: (x²)³ = x⁶. So we have 8x⁶ · x⁴, and the product rule gives 8x¹⁰."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(2x²)³ · x⁴ | = 8x⁶ · x⁴ | = 8x¹⁰"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Simplify (2a³)².",
+    "right": "4a⁶",
+    "wrong": [
+     "2a⁶",
+     "4a⁵",
+     "4a⁹"
+    ],
+    "why": "Square each factor inside the brackets. 2² = 4. For (a³)², multiply the exponents: 3 · 2 = 6. So the answer is 4a⁶."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's recap. Multiply same bases: add. Divide same bases: subtract. Power of a power: multiply. Power of a product: give the exponent to every factor. Well done for getting this far."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Multiply: add | Divide: subtract | Power of a power: multiply | Power of a product: share the exponent"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we meet zero and negative exponents. They come straight from the quotient rule you just learned."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Zero and Negative Exponents"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Exponent rules",
+   "links": [
+    "[[zero and negative exponents]]",
+    "[[scientific notation]]",
+    "[[multiplying polynomials]]",
+    "[[exponential functions]]"
+   ]
+  },
+  {
+   "topic": "Common slips",
+   "links": [
+    "[[order of operations]]",
+    "[[evaluating expressions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Today the quotient rule has two forms, depending on which exponent is bigger.",
+   "other_view": "Textbooks handle this differently. OpenStax first gives two forms, one for each case: a bigger exponent on top, and a bigger exponent on the bottom. Once negative exponents are allowed, the same book says only one form is needed: subtract the exponents every time. We use the two-form version today and meet the single form in class 28.",
+   "cite": [
+    "s3",
+    "s5"
+   ]
+  }
+ ]
+}

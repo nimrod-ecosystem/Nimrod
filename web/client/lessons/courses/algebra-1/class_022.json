@@ -1,0 +1,439 @@
+{
+ "about": {
+  "title": "Systems of Equations by Graphing",
+  "course": "algebra-1",
+  "class_n": 22,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has one idea per step and a quick check after each one. That covers what a system is, what the crossing point means, and the three possible outcomes. It ends with a real-world comparison."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.1 Solve Systems of Equations by Graphing, Elementary Algebra",
+   "publisher": "OpenStax, Rice University",
+   "date": "undated",
+   "link": "https://openstax.org/books/elementary-algebra/pages/5-1-solve-systems-of-equations-by-graphing",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Chapter 5 Key Concepts, Elementary Algebra",
+   "publisher": "OpenStax, Rice University",
+   "date": "undated",
+   "link": "https://openstax.org/books/elementary-algebra/pages/5-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "High School: Algebra, Reasoning with Equations & Inequalities (Common Core State Standards)",
+   "publisher": "National Governors Association Center for Best Practices and Council of Chief State School Officers",
+   "date": "undated",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/REI/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "High School: Algebra, overview (Common Core State Standards)",
+   "publisher": "National Governors Association Center for Best Practices and Council of Chief State School Officers",
+   "date": "undated",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 22. Today's goal: solve a system of equations by graphing, and say what the crossing point means."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Systems of Equations by Graphing"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick warm-up. An equation with x and y has answers that are pairs, like (2, 3). You plug in x and y and see if the equation comes out true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution = an (x, y) pair that makes the equation true"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pair is a solution of y = x + 1?",
+    "right": "(2, 3)",
+    "wrong": [
+     "(3, 2)",
+     "(1, 3)",
+     "(0, 2)"
+    ],
+    "why": "Put x = 2 in: 2 + 1 = 3, so y = 3 works. The other pairs give a different y when you plug in x."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the new idea. A system of equations is two or more equations grouped together. We will use two."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "System of equations"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our first system: y = x + 1 and y = −x + 5. We use a brace to show the two equations belong together."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = x + 1  |  y = −x + 5"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To solve a system, we look for a pair of values that works in both equations at once. Try (0, 1). In the first equation, 1 = 0 + 1 is true. In the second, 1 = −0 + 5 is false. So (0, 1) is not a solution."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Test (0, 1):\nEquation 1: 1 = 0 + 1 ✓\nEquation 2: 1 = −0 + 5 ✗\nNot a solution of the system"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "For the system y = x + 1 and y = −x + 5, which pair works in BOTH equations?",
+    "right": "(2, 3)",
+    "wrong": [
+     "(0, 1)",
+     "(0, 5)",
+     "(3, 4)"
+    ],
+    "why": "(2, 3) gives 3 = 2 + 1 and 3 = −2 + 5, so both are true. (0, 1) and (0, 5) each fit only one equation. (3, 4) fits the first but gives 4 = 2 in the second."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why graph? The graph of a line is every solution of its equation, drawn as points. A point where the two lines cross sits on both lines, so it works in both equations."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two straight lines on a grid crossing at one point. That point is circled and labeled 'on both lines'."
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So here is the plan. Graph the first equation. Graph the second on the same grid. Find where they cross. Then check that point in both equations."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Graph equation 1\n2. Graph equation 2 on the same grid\n3. Do the lines cross, run parallel, or match?\n4. Read the crossing point\n5. Check it in both equations"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's do it. Equation 1 is y = x + 1. Start at (0, 1) on the y-axis. The slope is 1, so go up 1 and right 1 to reach (1, 2), then (2, 3). Draw the line."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with a line through (0, 1), (1, 2) and (2, 3), going up to the right."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Equation 2 is y = −x + 5. Start at (0, 5). The slope is −1, so go down 1 and right 1 to reach (1, 4), then (2, 3). Draw this line on the same grid."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same grid. A second line through (0, 5), (1, 4) and (2, 3), going down to the right, crossing the first line."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The lines cross at (2, 3). That is our solution. Last step: check it in both equations. 3 = 2 + 1 is true, and 3 = −2 + 5 is true. So x = 2 and y = 3."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(2, 3)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why do we check the crossing point in BOTH equations?",
+    "right": "A solution of a system has to work in both equations, and a check catches a misread graph.",
+    "wrong": [
+     "Because one equation is always wrong.",
+     "Because the point only needs to work in the first equation.",
+     "Because checking makes the lines cross."
+    ],
+    "why": "A system's solution must make both equations true. Reading a point off a drawing can be slightly off, so plugging in proves it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a real-world one. Sam is picking a game subscription. Plan A costs a $10 sign-up fee plus $5 a month. Plan B has no fee but costs $10 a month."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plan A: $10 fee + $5 per month  |  Plan B: $0 fee + $10 per month"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let x be the number of months and y be the total cost in dollars. Plan A is y = 5x + 10. Plan B is y = 10x. That is a system."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A: y = 5x + 10  |  B: y = 10x"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Graph both. Plan A starts at (0, 10) and goes up 5 each month. Plan B starts at (0, 0) and goes up 10 each month. Plan B climbs faster, so it catches up."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Months along the bottom and total dollars up the side. A line from (0, 10) rising gently and a steeper line from (0, 0). They cross at (2, 20)."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They cross at (2, 20). The meaning in the story: after 2 months, both plans have cost a total of $20. The point is both numbers together, not just one."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2 months, $20"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What does the point (2, 20) mean for Sam?",
+    "right": "After 2 months, both plans have cost the same total, $20.",
+    "wrong": [
+     "Plan A costs $2 a month.",
+     "Plan B costs $20 a month.",
+     "Plan A costs $20 for 2 years."
+    ],
+    "why": "x is months and y is total dollars. At x = 2 both lines say y = 20, so both plans cost $20 in total by then."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now use the graph to compare. Before month 2, Plan B's line is lower, so B is cheaper. After month 2, Plan B's line is higher, so A is cheaper."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Under 2 months: B is cheaper  |  Over 2 months: A is cheaper"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Sam expects to play for 6 months. Which plan costs less?",
+    "right": "Plan A: $40 total, against $60 for Plan B.",
+    "wrong": [
+     "Plan B: $40 total, against $60 for Plan A.",
+     "They cost the same.",
+     "You can't tell without more information."
+    ],
+    "why": "Plan A: 5(6) + 10 = 40. Plan B: 10(6) = 60. After the crossing point at 2 months, A stays cheaper."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a link to earlier work. The crossing point has an x-value, and it shows where the two rules give the same output. That x-value solves 5x + 10 = 10x, which gives x = 2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Both rules give the same y at the crossing x"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two lines can meet in different ways. They can cross once, which is one solution. They can run parallel, which is no solution. Or they can be the same line, which is infinitely many solutions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cross once: one solution\nParallel: no solution\nSame line: infinitely many solutions"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "No solution first. Take y = 2x + 1 and y = 2x − 3. Both have slope 2, so they climb at the same rate. Their y-intercepts differ, so they are different lines. They never touch."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two parallel lines slanting up to the right, one through (0, 1) and one through (0, −3), never meeting."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How many solutions does y = 3x + 2 and y = 3x + 7 have?",
+    "right": "None. Same slope, different intercepts, so the lines are parallel.",
+    "wrong": [
+     "Exactly one",
+     "Exactly two",
+     "Infinitely many"
+    ],
+    "why": "Both lines have slope 3 but start at different heights (2 and 7). Parallel lines never meet, so no point works in both."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Infinitely many next. Take y = x + 4 and 2y = 2x + 8. Divide the second by 2 and you get y = x + 4. It is the same line, so every point on it works in both."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One line drawn on a grid, labeled with both equations, so the two lines sit exactly on top of each other."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How many solutions does y = x + 4 and 2y = 2x + 8 have?",
+    "right": "Infinitely many, because they are the same line.",
+    "wrong": [
+     "None",
+     "Exactly one",
+     "Exactly two"
+    ],
+    "why": "Dividing 2y = 2x + 8 by 2 gives y = x + 4. With the same line, every point on it works in both equations. Two straight lines can't cross exactly twice."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One caution. Reading a graph is often a bit approximate. Graphing finds solutions approximately, and algebra can find them exactly. So we always check the point in both equations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Graphing: great for seeing. Always check."
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Your graph seems to cross near (2.9, 4.1). What is the smart next step?",
+    "right": "Plug the point into both equations to see if it truly works.",
+    "wrong": [
+     "Round it to the nearest 10 and call it done.",
+     "Trust the picture and skip the check.",
+     "Throw out the graph and guess."
+    ],
+    "why": "A drawing can be a little off. Plugging into both equations shows whether the point is exact or needs a better reading."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Great work today. A system is two equations together. The crossing point works in both, and in a story it tells you when two things are equal. Next class we solve systems with substitution, which gives exact answers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "System = two equations together\nCrossing point = solution\nOne, none, or infinitely many\nIn a story: the point says when two options match"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Systems of equations by graphing",
+   "links": [
+    "[[Slope-intercept form and graphing lines]]",
+    "[[Slope and rate of change]]",
+    "[[Systems by substitution]]",
+    "[[Systems by elimination]]",
+    "[[Parallel and perpendicular lines]]"
+   ]
+  },
+  {
+   "topic": "Comparing two options with a crossing point",
+   "links": [
+    "[[Choosing a method and solving systems word problems]]",
+    "[[Linear models]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Graphing is a good way to solve a system.",
+   "other_view": "Graphing is useful for seeing the situation, but a hand-drawn graph usually gives only an approximate answer. The Common Core standard asks students to solve linear systems both exactly and approximately. Exact answers come from algebra methods, which come next in this course, so many teachers treat graphing as a first look rather than a final answer.",
+   "cite": [
+    "s3",
+    "s4"
+   ]
+  }
+ ]
+}

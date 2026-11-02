@@ -1,0 +1,644 @@
+{
+ "about": {
+  "title": "Linear and Nonlinear Functions",
+  "course": "math-grade-8",
+  "class_n": 16,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes fits. There are four small ideas: constant rate of change, straight-line graphs, y = mx + b, and nonlinear examples. Each gets a worked example and a check, then there is a short practice set. The practice can be paused and picked up later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "8.F.A.3 - Illustrative Mathematics (Grade 8 Functions standard and area-of-a-square example)",
+   "publisher": "Illustrative Mathematics",
+   "date": "not stated",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/F/A/3",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Common Core State Standards for Mathematics, Grade 8",
+   "publisher": "Washington Office of Superintendent of Public Instruction (copy of the Common Core standards)",
+   "date": "not stated",
+   "link": "https://ospi.k12.wa.us/sites/default/files/2022-12/mathstandards_grade8.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Section 4.4 Comparing Linear and Nonlinear Functions (Grade 8, Chapter 4 Functions)",
+   "publisher": "Big Ideas Math",
+   "date": "not stated",
+   "link": "https://www.bigideasmath.com/protected/content/ipe/grade%208/04/g8_04_04.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "4.8.4 Rate of Change of Linear Functions - Algebra 1",
+   "publisher": "OpenStax, Rice University",
+   "date": "Jan 20, 2026 (copyright line on page)",
+   "link": "https://openstax.org/books/algebra-1/pages/4-8-4-rate-of-change-of-linear-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "2.1 Linear Functions - Precalculus 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "not stated",
+   "link": "https://openstax.org/books/precalculus-2e/pages/2-1-linear-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Illustrative Mathematics Grade 8, Unit 5, Lesson 8: Linear Functions (teacher notes)",
+   "publisher": "Illustrative Mathematics / Kendall Hunt",
+   "date": "not stated",
+   "link": "https://curriculum.illustrativemathematics.org/MS/teachers/3/5/8/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "5.10.0 Lesson Overview - Algebra 1",
+   "publisher": "OpenStax, Rice University",
+   "date": "not stated",
+   "link": "https://openstax.org/books/algebra-1/pages/5-10-0-lesson-overview",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "8th Grade Math, Functions unit summary",
+   "publisher": "Fishtank Learning",
+   "date": "not stated",
+   "link": "https://www.fishtanklearning.org/curriculum/math/8th-grade/functions/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "8th Grade Functions, Lesson 8: Are You Sure?",
+   "publisher": "Fishtank Learning",
+   "date": "not stated",
+   "link": "https://www.fishtanklearning.org/curriculum/math/8th-grade/functions/lesson-8/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today we learn to tell straight-line functions from ones that bend. Take your time, and pause whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Linear and Nonlinear Functions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a reminder from last class. A function is a rule that gives each input exactly one output."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "function: each input gets exactly one output"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In a function, how many outputs does each input get?",
+    "right": "Exactly one",
+    "wrong": [
+     "Two",
+     "As many as you like",
+     "None"
+    ],
+    "why": "A function is a rule that gives each input exactly one output. That is what makes it a rule you can rely on."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a new idea: rate of change. It tells how much the output changes when the input changes. You divide the change in y by the change in x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3  |  y: 5, 8, 11, 14  |  y goes up 3 each time x goes up 1, so the rate of change is 3"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Here is a table. x: 1, 2, 3. y: 4, 7, 10. What is the rate of change?",
+    "right": "3",
+    "wrong": [
+     "1",
+     "4",
+     "7"
+    ],
+    "why": "y goes from 4 to 7, which is up 3. Then it goes from 7 to 10, which is up 3 again. x goes up 1 each time, so the rate of change is 3 divided by 1, which is 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A linear function has a constant rate of change. Constant means the same everywhere. You can pick any two points and get the same answer."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 3, 6, 9, 12  |  y: 40, 32, 24, 16  |  every time x goes up 3, y goes down 8. The rate is constant, so it is linear."
+   },
+   "cite": [
+    "s5",
+    "s4",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Is this table linear? x: 0, 2, 4, 6. y: 1, 5, 9, 13.",
+    "right": "Yes. y goes up 4 every time x goes up 2.",
+    "wrong": [
+     "No, because y changes every time.",
+     "No, because x does not go up by 1.",
+     "There is not enough information to tell."
+    ],
+    "why": "Every step has the same pattern: x up 2 and y up 4. The rate of change is the same each time, so the function is linear. y is allowed to change, and x does not have to go up by 1. What matters is that the rate stays the same."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One careful point. If the x steps are not equal, divide each y change by its x change. The answers should match."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 1, 2, 4  |  y: 3, 6, 12  |  3 ÷ 1 = 3 and 6 ÷ 2 = 3. The rate is 3 both times, so it is linear."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is this table linear? x: 0, 1, 3. y: 2, 4, 8.",
+    "right": "Yes. The rate is 2 both times.",
+    "wrong": [
+     "No, because y goes up by 2 and then by 4.",
+     "No, because the x steps are different.",
+     "Not enough information."
+    ],
+    "why": "From x = 0 to 1, y goes up 2, so the rate is 2 divided by 1, which is 2. From x = 1 to 3, y goes up 4 while x goes up 2, so the rate is 4 divided by 2, which is also 2. The rates match, so it is linear."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If the rate of change is not constant, the function is nonlinear. Look at the table and compare the jumps."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3  |  y: 2, 4, 8, 16  |  y jumps by 2, then 4, then 8. The rate keeps changing, so it is nonlinear."
+   },
+   "cite": [
+    "s3",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Linear or nonlinear? x: 0, 1, 2, 3. y: 1, 3, 6, 10.",
+    "right": "Nonlinear. The jumps are 2, then 3, then 4.",
+    "wrong": [
+     "Linear, because y always goes up.",
+     "Linear, because the numbers get bigger in order.",
+     "Linear, because x goes up by 1 each time."
+    ],
+    "why": "x goes up by 1 each time, but y jumps by 2, then 3, then 4. The rate of change is not constant. Going up is not the test. The test is going up by the same amount."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now graphs. A constant rate means the same steepness everywhere. So the graph of a linear function is a straight line."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "A straight line: y = 2x + 1"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A function's graph is a straight line. What does that tell you about its rate of change?",
+    "right": "It is constant.",
+    "wrong": [
+     "It keeps getting bigger.",
+     "It keeps getting smaller.",
+     "It is always zero."
+    ],
+    "why": "A straight line has the same steepness everywhere. Same steepness means the same rate of change. The rate does not have to be zero. A line can slope up or down."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A nonlinear function has a graph that is not a straight line. It bends, because the rate keeps changing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "nonlinear: not a straight line"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the classic nonlinear example: the area of a square. If the side is s, the area is A = s times s, written s². A side of 3 uses 9 blocks."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 9,
+    "layout": "group",
+    "text": "Side 3: area 9 (A = s²)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Using A = s², what is the area of a square with side 2?",
+    "right": "4",
+    "wrong": [
+     "2",
+     "6",
+     "8"
+    ],
+    "why": "s² means s times s. So 2 times 2 is 4. The answers 6 and 8 come from adding or doubling by mistake."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's test it. Sides 1, 2 and 3 give areas 1, 4 and 9. The area goes up by 3, then by 5. The rate is not constant."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "A = s²: the points (1,1), (2,4), (3,9) are not on a straight line"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Is the area function A = s² linear?",
+    "right": "No. Its rate of change is not constant, and its graph bends.",
+    "wrong": [
+     "Yes, because the area always gets bigger.",
+     "Yes, because it has just one letter, s.",
+     "There is no way to tell."
+    ],
+    "why": "The points (1,1), (2,4) and (3,9) do not lie on one straight line. The area grows by 3 and then by 5, so the rate is not constant. That makes it nonlinear."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now equations. If a function can be written as y = mx + b, it is linear, and its graph is a straight line."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = mx + b  →  linear"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is what the letters mean. m is the rate of change, which is also the slope. b is where the line crosses the y-axis. In y = 3x + 2, start at 2 and go up 3 for each step in x."
+   },
+   "show": {
+    "kind": "list",
+    "text": "m = rate of change (slope)  |  b = where the line crosses the y-axis  |  y = 3x + 2 has m = 3 and b = 2"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In y = 5x - 4, what is the rate of change?",
+    "right": "5",
+    "wrong": [
+     "-4",
+     "4",
+     "1"
+    ],
+    "why": "In y = mx + b, the rate of change is m, the number multiplied by x. Here m is 5. The -4 is b, where the line crosses the y-axis."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The sign of m tells you the direction. A positive m means y goes up as x goes up. A negative m means y goes down. If m is 0, the line is flat."
+   },
+   "show": {
+    "kind": "list",
+    "text": "m positive: rising  |  m negative: falling (like the table where y dropped by 8)  |  m = 0: flat"
+   },
+   "cite": [
+    "s6",
+    "s5",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is the line y = -2x + 7 rising or falling?",
+    "right": "Falling",
+    "wrong": [
+     "Rising",
+     "Flat",
+     "It is not a line."
+    ],
+    "why": "m is -2, which is negative, so y goes down as x goes up. The equation still has the form y = mx + b, so it is a line."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For nonlinear equations, a good clue is that x gets squared, as in s². Those do not fit y = mx + b. Sometimes an equation needs tidying first. For example, 2x + y = 9 becomes y = -2x + 9."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Linear: y = 4x - 7  |  Nonlinear: A = s²"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which equation is linear?",
+    "right": "y = 6x + 1",
+    "wrong": [
+     "y = x²",
+     "y = x² + 2",
+     "y = 2x²"
+    ],
+    "why": "y = 6x + 1 has the form y = mx + b, with m = 6 and b = 1. The other three have x squared, so they are not in that form. Their graphs are not straight lines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So you have three ways to check. In a table, look for the same change in y for the same change in x. In a graph, look for a straight line. In an equation, look for y = mx + b."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Table: constant rate  |  Graph: straight line  |  Equation: y = mx + b"
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time to practise. Take it slowly. Each question uses a tool we just learned."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Practice"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A gym charges $20 to join, plus $10 each month. The cost is C = 10m + 20, where m is the number of months."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "C = 10m + 20"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Is the gym cost function linear or nonlinear?",
+    "right": "Linear. It has the form y = mx + b with m = 10 and b = 20.",
+    "wrong": [
+     "Nonlinear, because the cost keeps growing.",
+     "Nonlinear, because there are two numbers.",
+     "Not enough information."
+    ],
+    "why": "The equation fits y = mx + b. The cost goes up $10 every month, so the rate of change is constant. The $20 joining fee is b, the starting amount."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now compare two squares. Perimeter is P = 4s. Area is A = s². Both start at side 1 and grow."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "s: 1, 2, 3  |  P: 4, 8, 12  |  A: 1, 4, 9"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which one is linear: the perimeter P = 4s or the area A = s²?",
+    "right": "The perimeter, P = 4s",
+    "wrong": [
+     "The area, A = s²",
+     "Both are linear.",
+     "Neither is linear."
+    ],
+    "why": "P goes up by 4 every time s goes up by 1, so its rate is constant. It also fits y = mx + b, with m = 4 and b = 0. A goes up by 3, then 5, so it is not constant. Area is the nonlinear one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more table. This one is going down."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3  |  y: 10, 7, 4, 1"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Is this table linear? If it is, what is the rate of change?",
+    "right": "Linear, with a rate of change of -3.",
+    "wrong": [
+     "Linear, with a rate of change of 3.",
+     "Nonlinear, because y is going down.",
+     "Nonlinear, because the numbers are not the same."
+    ],
+    "why": "y drops by 3 every time x goes up by 1, so the rate is constant. Since y goes down, the rate is negative: -3. A function can go down and still be linear."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last one, a tricky one. A flat line has m = 0. Its y never changes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 1, 2, 3, 4  |  y: 6, 6, 6, 6  |  y = 0x + 6"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Is a flat, horizontal line a linear function?",
+    "right": "Yes. It has the form y = mx + b with m = 0.",
+    "wrong": [
+     "No, because y never changes.",
+     "No, because it has no slope.",
+     "No, because it is not going up or down."
+    ],
+    "why": "A flat line has a constant rate of change, and that rate is 0. It fits y = mx + b with m = 0, so it is linear. Its graph is a straight line."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. To finish, here are the big ideas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Linear: constant rate of change, straight-line graph, y = mx + b  |  Nonlinear: the rate changes and the graph bends, like A = s²  |  Next class: using linear functions to model real life"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "A linear function made for this class: y = 2x + 1",
+   "rows": [
+    {
+     "label": "x = 0",
+     "value": 1,
+     "source": "s6"
+    },
+    {
+     "label": "x = 1",
+     "value": 3,
+     "source": "s6"
+    },
+    {
+     "label": "x = 2",
+     "value": 5,
+     "source": "s6"
+    },
+    {
+     "label": "x = 3",
+     "value": 7,
+     "source": "s6"
+    },
+    {
+     "label": "x = 4",
+     "value": 9,
+     "source": "s6"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "line",
+   "title": "Area of a square: A = s²",
+   "rows": [
+    {
+     "label": "s = 1",
+     "value": 1,
+     "source": "s1"
+    },
+    {
+     "label": "s = 2",
+     "value": 4,
+     "source": "s1"
+    },
+    {
+     "label": "s = 3",
+     "value": 9,
+     "source": "s1"
+    },
+    {
+     "label": "s = 4",
+     "value": 16,
+     "source": "s1"
+    },
+    {
+     "label": "s = 5",
+     "value": 25,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Constant rate of change",
+   "links": [
+    "[[Slope]]",
+    "[[Proportional Relationships and Unit Rate]]"
+   ]
+  },
+  {
+   "topic": "y = mx + b as the linear form",
+   "links": [
+    "[[Lines: y = mx and y = mx + b]]"
+   ]
+  },
+  {
+   "topic": "Nonlinear functions such as the area of a square",
+   "links": [
+    "[[Solving with Squares and Cubes]]",
+    "[[Four Ways to Show a Function]]"
+   ]
+  },
+  {
+   "topic": "Using linear functions in real situations",
+   "links": [
+    "[[Modeling with Linear Functions]]",
+    "[[Comparing Two Functions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

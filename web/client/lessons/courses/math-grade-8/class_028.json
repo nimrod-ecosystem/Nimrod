@@ -1,0 +1,556 @@
+{
+ "about": {
+  "title": "The Pythagorean Theorem: Why It Works",
+  "course": "math-grade-8",
+  "class_n": 28,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has three topics: legs and hypotenuse, the rule a² + b² = c², and finding the hypotenuse, plus a picture proof in the middle. The proof is the slowest part, so it gets several small steps. The algebra beat and the history beat are optional and can be skipped if you need a shorter class."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Geometry (standards 8.G.B.6 to 8.G.B.8)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "not stated on page",
+   "link": "https://www.thecorestandards.org/Math/Content/8/G/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "9.3 Use Properties of Angles, Triangles, and the Pythagorean Theorem - Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/9-3-use-properties-of-angles-triangles-and-the-pythagorean-theorem",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Proofs of the Pythagorean Theorem (Proof by Rearrangement)",
+   "publisher": "Brilliant.org",
+   "date": "not stated on page",
+   "link": "https://brilliant.org/wiki/proofs-of-the-pythagorean-theorem/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Pythagoras Theorem: Formula, Proof, Examples",
+   "publisher": "Cuemath",
+   "date": "not stated on page",
+   "link": "https://www.cuemath.com/geometry/pythagoras-theorem/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "The Pythagoras' Theorem (section 2, History)",
+   "publisher": "arXiv (preprint 1310.0986)",
+   "date": "2013 (from the arXiv number 1310)",
+   "link": "https://arxiv.org/pdf/1310.0986",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "ON-Math 2006-2007",
+   "publisher": "ERIC (U.S. Department of Education), document ED502075",
+   "date": "2006-2007",
+   "link": "https://files.eric.ed.gov/fulltext/ED502075.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Intro to the Pythagorean theorem",
+   "publisher": "Khan Academy",
+   "date": "not stated on page",
+   "link": "https://www.khanacademy.org/math/cc-eighth-grade-math/cc-8th-geometry/cc-8th-pythagorean-theorem/v/the-pythagorean-theorem",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Pythagorean Theorem Calculator: Hypotenuse, Legs and Triples",
+   "publisher": "Calcuris",
+   "date": "not stated on page",
+   "link": "https://calcuris.com/us/pythagorean-theorem-calculator/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we meet one famous rule about right triangles, and we see why it is true. Go at your own pace, and pause whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Pythagorean Theorem: Why It Works"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the shape. A right triangle has one square corner. That corner is exactly 90 degrees, and we mark it with a tiny square."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A triangle with a small square drawn in one corner to mark the 90° angle."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The two sides that touch the square corner are called legs. The side across from the corner is called the hypotenuse."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Legs: the two sides that touch the square corner | Hypotenuse: the side across from the square corner"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The hypotenuse is also the longest side of a right triangle. Let's check that you can spot it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hypotenuse = opposite the right angle, and the longest side"
+   },
+   "cite": [
+    "s7",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which side of a right triangle is the hypotenuse?",
+    "right": "The side across from the square corner",
+    "wrong": [
+     "A side that touches the square corner",
+     "The shortest side",
+     "Whichever side is at the bottom"
+    ],
+    "why": "The legs touch the square corner. The hypotenuse is the side opposite it, and it is the longest side. Turning the triangle around does not change which side it is."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mathematicians give the sides short names. The two legs are a and b. The hypotenuse is c."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "legs: a and b | hypotenuse: c"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rule is about squares. Squaring a number means multiplying it by itself. A square with side 4 has area 4 × 4, which is 16."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "area of a square = side × side"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A square has sides of length 6. What is its area?",
+    "right": "36",
+    "wrong": [
+     "12",
+     "24",
+     "6"
+    ],
+    "why": "Area of a square is side × side, so 6 × 6 = 36. Adding 6 + 6 gives 12. Counting around the edge, 4 × 6, gives 24, which is the distance around the square, not the area."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now draw a square on each side of a right triangle. Here the legs are 3 and 4, and the hypotenuse is 5."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A right triangle with legs 3 and 4 and hypotenuse 5. A square is drawn outward on each of the three sides."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The two small squares have areas 9 and 16. The big square has area 25. Notice that 9 + 16 = 25."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Areas of the three squares",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the Pythagorean theorem. The two leg squares together have the same area as the hypotenuse square. As a short sentence: a² + b² = c²."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a² + b² = c²"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A right triangle has legs 6 and 8. What is a² + b²?",
+    "right": "100",
+    "wrong": [
+     "14",
+     "48",
+     "70"
+    ],
+    "why": "Square each leg first: 6² = 36 and 8² = 64. Then add: 36 + 64 = 100. Adding 6 + 8 = 14 skips the squaring. Multiplying 6 × 8 = 48 is a different idea."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One warning. This rule is only for right triangles. A triangle with no square corner does not follow it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Right triangles only"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So far we checked one triangle. Eighth-grade math asks for more: explain why the rule is true. A proof does that for every right triangle."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why is it true?"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take four identical copies of a right triangle. Fit them inside a big square whose side is a + b."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big square with side a + b. Four identical right triangles sit inside it, each with legs a and b and hypotenuse c."
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the first arrangement, the long sides of the triangles meet in the middle. They leave a tilted square with side c. Its area is c²."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Big square. Four triangles in the corners. The empty space in the middle is a tilted square, side c, labelled c²."
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now slide the same four triangles into new places in the same big square. The empty space becomes two squares: one with area a², one with area b²."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same big square. The four triangles are pushed into two corners. Two empty squares remain, one labelled a² and one labelled b²."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why must the empty space be the same amount in both pictures?",
+    "right": "It is the same big square with the same four triangles, so what is left over is the same.",
+    "wrong": [
+     "Because the triangles grow when they move",
+     "Because a, b and c are always equal",
+     "Because the empty shapes look alike"
+    ],
+    "why": "We did not add or remove anything. The big square is the same, and the four triangles take up the same room. So the leftover space has to be the same in both pictures: c² on one side and a² + b² on the other."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the two empty spaces match: c² = a² + b². We used letters, not numbers, so the proof fits any right triangle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "c² = a² + b²"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Optional, for the curious: the same idea in algebra. The big square's area is (a + b)². It also equals four triangles plus c². Skip this if it feels like too much."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(a + b)² = 4 × (½ab) + c² | a² + 2ab + b² = 2ab + c² | Take 2ab from both sides: a² + b² = c²"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's use the rule. When we know both legs, we can find the hypotenuse."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Finding the hypotenuse"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three steps. Square both legs. Add the results. Then take the square root."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Square both legs | 2. Add them | 3. Take the square root"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try it on our picture. Legs 3 and 4. 3² is 9, and 4² is 16. The sum is 25, and the square root of 25 is 5. So c = 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3² + 4² = 9 + 16 = 25 | √25 = 5 | c = 5"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more. Legs 5 and 12. 5² is 25, and 12² is 144. The sum is 169. Since 13 × 13 = 169, c = 13."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5² + 12² = 25 + 144 = 169 | √169 = 13 | c = 13"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A right triangle has legs 9 and 12. What is the hypotenuse?",
+    "right": "15",
+    "wrong": [
+     "21",
+     "225",
+     "3"
+    ],
+    "why": "Square each leg: 81 and 144. Add: 225. Take the square root: 15, because 15 × 15 = 225. The answer 21 comes from adding the legs. The answer 225 stops before the square root, and that is c², not c."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two common slips. One is adding the legs: 3 + 4 is 7, but the hypotenuse is 5. The other is stopping before the square root."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Slip: c = 3 + 4 = 7 | Right: c² = 9 + 16 = 25, so c = 5"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sometimes the sum is not a perfect square. Legs 2 and 3 give 4 + 9 = 13. So c = √13, an irrational number, like in classes 2 and 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2² + 3² = 4 + 9 = 13 | c = √13"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Between which two whole numbers is √13?",
+    "right": "3 and 4",
+    "wrong": [
+     "2 and 3",
+     "6 and 7",
+     "13 and 14"
+    ],
+    "why": "3² = 9 and 4² = 16. Since 13 sits between 9 and 16, √13 sits between 3 and 4. It must also be longer than the leg of 3, which fits."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A fun fact. The rule carries Pythagoras's name, but a Babylonian tablet with closely related number sets is more than a thousand years older."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Babylonian tablet Plimpton 322, written between 1790 and 1750 BC, has entries closely related to Pythagorean triples."
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: legs touch the square corner, and the hypotenuse is opposite and longest. For every right triangle, a² + b² = c². Next class we use it more."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Legs a and b, hypotenuse c | a² + b² = c² | Four triangles in a square show why | To find c: square, add, square root"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Areas of the squares on a 3-4-5 right triangle",
+   "rows": [
+    {
+     "label": "Square on leg (side 3)",
+     "value": 9,
+     "source": "s4"
+    },
+    {
+     "label": "Square on leg (side 4)",
+     "value": 16,
+     "source": "s4"
+    },
+    {
+     "label": "Square on hypotenuse (side 5)",
+     "value": 25,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Pythagorean theorem",
+   "links": [
+    "[[Irrational Numbers and Roots]]",
+    "[[Estimating and Ordering Irrational Numbers]]",
+    "[[Solving with Squares and Cubes]]",
+    "[[Congruent Figures]]",
+    "[[Using the Pythagorean Theorem and Its Converse]]"
+   ]
+  },
+  {
+   "topic": "Legs and hypotenuse",
+   "links": [
+    "[[Angles in Triangles and with Parallel Lines]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1790 to 1750 BC",
+   "elsewhere": "The Babylonian tablet Plimpton 322 was written during the reign of Hammurabi the Great.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "when": "About 600 BC and the centuries around it",
+   "elsewhere": "In India, the Sulba Sutra texts included a statement of the theorem. One of them, the Apastamba, has a numerical proof using area.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "when": "About 570 to 495 BC",
+   "elsewhere": "Pythagoras lived in these years. According to Proclus's commentary on Euclid, he used algebraic methods to build Pythagorean triples.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "when": "About 500 to 200 BC",
+   "elsewhere": "In China the theorem was called the Gougu theorem. It appears in the Zhoubi Suanjing, an ancient text on astronomy and mathematics.",
+   "cite": [
+    "s6"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Pythagoras discovered the Pythagorean theorem.",
+   "other_view": "The evidence points the other way, though it is not settled. Babylonian, Indian and Chinese sources show the relationship was known earlier, and historians debate whether it was found once or many times. One summary notes that no surviving Greek text from the five centuries after Pythagoras clearly credits him with it. It also says he may have learned it from the Babylonians. On the other side, a later commentator credits him with building Pythagorean triples. So the name is a tradition, and the history is more shared than the name suggests.",
+   "cite": [
+    "s5",
+    "s6"
+   ]
+  }
+ ]
+}

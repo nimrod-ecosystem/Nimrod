@@ -1,0 +1,436 @@
+{
+ "about": {
+  "title": "Two-Way Tables and Categorical Data",
+  "course": "algebra-1",
+  "class_n": 49,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class teaches four ideas in order: joint frequency, marginal frequency, relative frequency, then spotting an association. Each idea gets its own example and check question, and the last idea needs the extra time. Pause after any check question."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Two-Way Frequency Tables (Algebra 1)",
+   "publisher": "MathBitsNotebook",
+   "date": "undated",
+   "link": "https://mathbitsnotebook.com/Algebra1/StatisticsReg/ST2TwoWayTable.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "8.02 Relative frequency tables",
+   "publisher": "Mathspace",
+   "date": "undated",
+   "link": "https://mathspace.co/textbooks/syllabuses/Syllabus-1139/topics/Topic-21695/subtopics/Subtopic-279704/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Two-Way Frequency Tables",
+   "publisher": "Varsity Tutors",
+   "date": "undated",
+   "link": "https://www.varsitytutors.com/practice/subjects/statistics/lessons/summarizing-categorical-data-two-way-tables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Two-Way Frequency Tables",
+   "publisher": "MathBitsNotebook (Junior Math)",
+   "date": "undated",
+   "link": "https://www.mathbitsnotebook.com/JuniorMath/Statistics/SDTwoWayTable.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Section 11.4 Two-Way Tables (Algebra 1 student edition)",
+   "publisher": "Big Ideas Learning",
+   "date": "undated",
+   "link": "https://static.bigideasmath.com/protected/content/pe/hs/sections/alg1_pe_11_04.pdf",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 49. Last time we looked at box plots and outliers. Today we meet a table that sorts people in two ways at once."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Two-Way Tables and Categorical Data"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some data is not a number you measure. It is a group people fall into, like 'phone games' or 'console games'. That is called categorical data."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Categorical data: sorted into groups"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A two-way frequency table counts how many people land in each pairing of two categories. Here is a made-up survey. We asked 100 students their grade and which kind of game they like best."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A table. Rows: Grade 9, Grade 10, Total. Columns: Phone games, Console games, Total. Grade 9 row: 30, 20, 50. Grade 10 row: 18, 32, 50. Total row: 48, 52, 100. (Made-up example data.)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The numbers in the middle of the table are called joint frequencies. Each one counts people who fit a row AND a column together. For example, 30 ninth graders prefer phone games."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Joint frequency: a count inside the table, for one row and one column together"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In our table, how many 10th graders prefer console games?",
+    "right": "32",
+    "wrong": [
+     "50",
+     "52",
+     "18"
+    ],
+    "why": "Go to the Grade 10 row and the Console column. The cell where they meet says 32. The 50 and 52 are totals. The 18 is the Grade 10 phone cell."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now look at the edges. The totals around the outside are called marginal frequencies. Each one is a row or column of joint frequencies added up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Marginal frequency: a row or column total"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For phone games we add down the column: 30 plus 18 is 48. So 48 students in all prefer phone games, whatever their grade."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30 + 18 = 48"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many students prefer console games, counting both grades?",
+    "right": "52",
+    "wrong": [
+     "20",
+     "32",
+     "100"
+    ],
+    "why": "Add down the Console column: 20 + 32 = 52. The 20 and 32 are single cells. The 100 is everyone surveyed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The bottom right corner, 100, is the grand total. That is everyone in the survey. This source does not call it a marginal frequency, but we will need it next."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "100 students"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Counts are useful, but they are hard to compare. So we turn them into relative frequencies. That means a part divided by the whole."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Relative frequency: part ÷ whole (the grand total)"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A joint relative frequency is one cell divided by the grand total. Ninth graders who like phone games: 30 out of 100 is 0.30, or 30 percent."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30 ÷ 100 = 0.30 = 30%"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is the joint relative frequency for 9th graders who prefer console games?",
+    "right": "20 ÷ 100 = 0.20, or 20%",
+    "wrong": [
+     "20 ÷ 50 = 0.40, or 40%",
+     "20 ÷ 52, about 38%",
+     "20 ÷ 2 = 10"
+    ],
+    "why": "A joint relative frequency divides the cell (20) by the grand total (100). That gives 0.20. Dividing by 50 or 52 is a different calculation, and we get to it soon."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A marginal relative frequency works the same way, but with a row or column total on top. Phone games overall: 48 out of 100 is 0.48, or 48 percent."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "48 ÷ 100 = 0.48 = 48%"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What percent of all the students surveyed are in Grade 10?",
+    "right": "50%, because 50 ÷ 100 = 0.50",
+    "wrong": [
+     "18%, because 18 ÷ 100",
+     "32%, because 32 ÷ 100",
+     "100%"
+    ],
+    "why": "The Grade 10 row total is 50. A marginal relative frequency is that total over the grand total: 50 ÷ 100 = 0.50."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a harder question. Is the game people like connected to their grade? Overall percentages cannot tell us. We need to compare the grades fairly."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Is game choice linked to grade?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fair tool is a conditional relative frequency. Divide a cell by the total of the group you are asking about. If the question is about 9th graders, divide by the Grade 9 total, 50."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Conditional relative frequency: cell ÷ the row or column total for the group you are asking about"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Of the 9th graders, 30 out of 50 prefer phone games. That is 0.60, or 60 percent."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30 ÷ 50 = 60%"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Of the 10th graders, what percent prefer phone games?",
+    "right": "18 ÷ 50 = 36%",
+    "wrong": [
+     "18 ÷ 100 = 18%",
+     "18 ÷ 48 = 37.5%",
+     "48%"
+    ],
+    "why": "The question is 'of the 10th graders', so the Grade 10 total (50) goes on the bottom. 18 ÷ 100 uses the grand total. 18 ÷ 48 uses the phone total. Neither is the group we asked about."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put the two percentages side by side. 60 percent of 9th graders like phone games, against 36 percent of 10th graders."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Percent who prefer phone games, by grade (made-up example)",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If the percentages were the same or close, there would be little or no association. Here they are far apart, so in this survey, grade and game choice are associated."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Association: the percentages differ between groups"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In a different survey, 40% of 9th graders and 41% of 10th graders prefer phone games. What does that suggest?",
+    "right": "Little or no association between grade and game choice",
+    "wrong": [
+     "A strong association",
+     "10th graders cause 9th graders to change their minds",
+     "Nothing, because percentages cannot be compared"
+    ],
+    "why": "When the relative frequencies are the same or close across groups, there is little or no association. 40% and 41% are very close."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One careful note. An association means two things go together in this data. It does not mean one causes the other. We will dig into that in the next class."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Association is not the same as cause."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more check. The group named after 'of' or 'who' tells you which total to use. Try a column this time."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same table. Console column: Grade 9 is 20, Grade 10 is 32, Total is 52."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Of the students who prefer console games, what percent are in Grade 10?",
+    "right": "32 ÷ 52, about 61.5%",
+    "wrong": [
+     "32 ÷ 100 = 32%",
+     "32 ÷ 50 = 64%",
+     "52 ÷ 100 = 52%"
+    ],
+    "why": "The group is 'students who prefer console', so the Console total (52) goes on the bottom. 32 ÷ 100 is a joint relative frequency. 32 ÷ 50 is the row total, which answers a different question."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it together. Read the cells, add for totals, divide by the grand total for relative frequency, and divide by a group's total to compare groups."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Joint = a cell | Marginal = a row or column total | Relative = divide by the grand total | Conditional = divide by the group's total | Close percentages = little association"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Percent who prefer phone games, by grade (made-up example data)",
+   "rows": [
+    {
+     "label": "Grade 9",
+     "value": 60,
+     "source": ""
+    },
+    {
+     "label": "Grade 10",
+     "value": 36,
+     "source": ""
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Two-way frequency tables",
+   "links": [
+    "[[Describing Data: Displays, Center and Spread]]",
+    "[[Correlation, Residuals and Causation]]"
+   ]
+  },
+  {
+   "topic": "Relative frequency as a percent",
+   "links": [
+    "[[Ratios, Rates, Proportions and Percent]]"
+   ]
+  },
+  {
+   "topic": "Joint, marginal and conditional frequency",
+   "links": [
+    "[[Capstone: Solve a Real Problem with Algebra]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Percentages that differ between groups show an association.",
+   "other_view": "How big a gap counts as 'close' is a judgment call. The source only says that the same or close percentages mean little or no association. It does not give a cutoff. With a small survey, a gap can come from chance. Statisticians use extra tests, beyond this class, for that.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "claim": "The bottom right corner of a table is not a marginal frequency.",
+   "other_view": "This is one source's labeling. Other textbooks may name the grand total differently. The calculations are the same whatever it is called.",
+   "cite": [
+    "s1",
+    "s5"
+   ]
+  }
+ ]
+}

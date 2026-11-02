@@ -1,0 +1,535 @@
+{
+ "about": {
+  "title": "Choosing a Method and Solving Systems Word Problems",
+  "course": "algebra-1",
+  "class_n": 25,
+  "audience": [
+   "Ages 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes, as planned. There are four worked word problems, and each one is split into small steps with a check after it. You can pause after any step and come back. Note for the editor: web search was not available while this lesson was written, so no outside source was read. The sources list is empty and the cite lists are empty. Every number below was worked out and checked by hand inside the lesson. Please add reviewed sources, such as OpenStax Elementary Algebra or the Common Core standard HSA-REI.C.6, before publishing. The other_side list is empty for the same reason."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 25. You already know three ways to solve a system: graphing, substitution and elimination."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Choosing a Method and Solving Systems Word Problems"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today we learn to pick the quickest method. Then we use it on tickets, mixtures and sports. Pause whenever you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Today: 1. Pick a method. 2. Name your unknowns. 3. Solve real problems. 4. Say what the answer means."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a reminder. A system is two equations with the same two unknowns. Its solution is the pair of numbers that makes both equations true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution of a system = one pair (x, y) that works in BOTH equations"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For the system x + y = 10 and x − y = 4, which pair is the solution?",
+    "right": "(7, 3)",
+    "wrong": [
+     "(6, 4)",
+     "(5, 5)",
+     "(8, 2)"
+    ],
+    "why": "7 + 3 = 10 and 7 − 3 = 4, so both work. (6, 4) gives 6 − 4 = 2. (5, 5) gives 0. (8, 2) gives 6. Each of those fails the second equation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the choice. Each method has a situation where it is the easiest. Look at how each equation is written."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Look for → Use\nA variable already alone (y = 2x + 1) → Substitution\nBoth in x and y form, with matching or opposite terms (3y and −3y) → Elimination\nBoth lines y = mx + b, small whole-number crossing, or you want a picture → Graphing"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example one. y = 2x + 1 and 3x + y = 11. The first equation already says what y equals. So we use substitution."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = 2x + 1\n3x + y = 11\nSubstitute: 3x + (2x + 1) = 11\n5x + 1 = 11\n5x = 10, so x = 2\ny = 2(2) + 1 = 5\nSolution: (2, 5)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why was substitution the easy choice for this system?",
+    "right": "y was already alone in the first equation.",
+    "wrong": [
+     "Because the lines are parallel.",
+     "Because substitution always works and the others never do.",
+     "Because the numbers are small."
+    ],
+    "why": "When a variable is already alone, you can swap it straight into the other equation. That skips extra steps."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example two. 2x + 3y = 12 and 5x − 3y = 9. No variable is alone. But 3y and −3y are opposites, so elimination fits."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 3y = 12\n5x − 3y = 9\nAdd the equations: 7x = 21\nx = 3\n2(3) + 3y = 12, so 3y = 6, y = 2\nSolution: (3, 2)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For x + 4y = 9 and x − 2y = 3, what is a quick first step?",
+    "right": "Subtract the second equation from the first, because both have x.",
+    "wrong": [
+     "Graph both lines on a grid.",
+     "Add the equations, because 4y and −2y are opposites.",
+     "Nothing can be done until you multiply by 10."
+    ],
+    "why": "Both equations start with x. Subtracting removes x and leaves 6y = 6. Adding does not remove a variable, because 4y and −2y are not opposites."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What about graphing? A graph is great for seeing the story. But if the lines cross between grid marks, you only get an estimate."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two lines on a grid crossing at a point that falls between grid lines, with a question mark over the crossing."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "When is graphing the weakest choice?",
+    "right": "When you need an exact answer and the lines cross between grid marks.",
+    "wrong": [
+     "When both equations are y = mx + b with small whole numbers.",
+     "When you want to see both lines at once.",
+     "When the lines cross at a whole-number point."
+    ],
+    "why": "A graph can only be read as accurately as your drawing. For exact answers with fractions, substitution or elimination is safer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Choosing is half the job. The other half is word problems. Step one is to say what your letters mean."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Define your variables: one letter for each unknown, with what it counts"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which is the clearest way to define a variable?",
+    "right": "Let a = the number of adult tickets sold.",
+    "wrong": [
+     "Let a = adults.",
+     "Let a = tickets.",
+     "Let a = money."
+    ],
+    "why": "A good definition says what is being counted or measured. 'Adults' and 'tickets' are unclear. 'Money' is too vague to use."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two. Hunt for two separate facts in the story. In many problems one fact is a count and the other is a total value."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fact 1: how many (a count)\nFact 2: how much (money, points, weight)\nTwo facts → two equations"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our first problem. A school game sold 120 tickets. Student tickets cost $4 and adult tickets cost $7. The school collected $600."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Total tickets: 120\nStudent ticket: $4\nAdult ticket: $7\nTotal money: $600\nQuestion: how many of each kind?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Define the letters. Let s be the number of student tickets and a the number of adult tickets. Fact 1 is a count. Fact 2 is money."
+   },
+   "show": {
+    "kind": "list",
+    "text": "s = number of student tickets\na = number of adult tickets\nCount: s + a = 120\nMoney: 4s + 7a = 600"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which equation says how much money was collected?",
+    "right": "4s + 7a = 600",
+    "wrong": [
+     "s + a = 120",
+     "4s + 7a = 120",
+     "7s + 4a = 600"
+    ],
+    "why": "Each student ticket brings in $4, so s tickets bring in 4s. Each adult ticket brings in $7, so a tickets bring in 7a. Together that is $600. The first equation counts tickets, not dollars. The third swaps the prices."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Which method? In s + a = 120, we can get s alone in one step. So we pick substitution."
+   },
+   "show": {
+    "kind": "list",
+    "text": "s + a = 120 → s = 120 − a\nPut into 4s + 7a = 600:\n4(120 − a) + 7a = 600"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now solve it one line at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "480 − 4a + 7a = 600\n480 + 3a = 600\n3a = 120\na = 40\ns = 120 − 40 = 80"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Never stop at the numbers. Check both equations. Then say the answer in a sentence."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Count: 80 + 40 = 120 ✓\nMoney: 4(80) + 7(40) = 320 + 280 = 600 ✓\nAnswer: 80 student tickets and 40 adult tickets."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How much money came from adult tickets?",
+    "right": "$280",
+    "wrong": [
+     "$320",
+     "$40",
+     "$600"
+    ],
+    "why": "40 adult tickets at $7 each is 40 × 7 = $280. The $320 came from student tickets."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second type: a mixture problem. You combine two things with different prices. The pattern is the same: one equation for amounts, one for value."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mixture problem: amounts add up, and values add up"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A snack stand mixes nuts at $6 per pound with raisins at $3 per pound. They want 12 pounds of mix that works out to $4 per pound. So the total value is 12 × 4 = $48."
+   },
+   "show": {
+    "kind": "list",
+    "text": "n = pounds of nuts\nr = pounds of raisins\nAmount: n + r = 12\nValue: 6n + 3r = 48"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Both equations have r terms, 1r and 3r. If we multiply the first equation by −3, we get −3r. That cancels the 3r. So elimination fits."
+   },
+   "show": {
+    "kind": "list",
+    "text": "−3(n + r) = −3(12) → −3n − 3r = −36\n 6n + 3r = 48\nAdd: 3n = 12\nn = 4\n4 + r = 12, so r = 8"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "After multiplying the first equation by −3 and adding, what do you get?",
+    "right": "3n = 12",
+    "wrong": [
+     "9n = 12",
+     "3n = 84",
+     "3r = 12"
+    ],
+    "why": "−3n + 6n = 3n. The r terms cancel because −3r + 3r = 0. On the right, −36 + 48 = 12. So 3n = 12."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check and say the answer. 4 pounds of nuts is $24. 8 pounds of raisins is $24. That makes $48 for 12 pounds, which is $4 per pound."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 lb nuts + 8 lb raisins"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third type: sports. A player scored 22 points using only 2-point shots and 3-point shots. She made 10 shots in all. How many of each?"
+   },
+   "show": {
+    "kind": "objects",
+    "object": "ball",
+    "count": 10,
+    "layout": "ten-frame",
+    "text": "10 shots made. Some count 2 points, some count 3."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let t be the number of 2-pointers and h the number of 3-pointers. Count the shots in one equation. Count the points in the other."
+   },
+   "show": {
+    "kind": "list",
+    "text": "t = number of 2-point shots\nh = number of 3-point shots\nShots: t + h = 10\nPoints: 2t + 3h = 22"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Substitution works here. t = 10 − h. Put that into the points equation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2(10 − h) + 3h = 22\n20 − 2h + 3h = 22\n20 + h = 22\nh = 2\nt = 10 − 2 = 8"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check: 8 + 2 = 10 shots. Points: 8 × 2 = 16 and 2 × 3 = 6, so 16 + 6 = 22. She made eight 2-pointers and two 3-pointers."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "8 two-pointers, 2 three-pointers"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Suppose you solved a shots problem and got h = 2.5. What does that tell you?",
+    "right": "Something is off, because you cannot make half a shot. Recheck the setup and the arithmetic.",
+    "wrong": [
+     "She made two and a half shots, so it is fine.",
+     "The answer is right, but it should be rounded up to 3.",
+     "Delete the second equation and try again."
+    ],
+    "why": "The answer must make sense in the story. Shots are whole numbers, so 2.5 signals a mistake in the equations or the steps."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last type: comparing two deals. Sam can pay for a game plan in two ways. Plan A costs a $10 fee plus $2 per game. Plan B has no fee and costs $4 per game."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x = number of games\ny = total cost in dollars\nPlan A: y = 2x + 10\nPlan B: y = 4x"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Both equations are in y = form. Set the two costs equal to find when the plans cost the same."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x = 2x + 10\n2x = 10\nx = 5\ny = 4(5) = 20\nCrossing point: (5, 20)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is what the answer means. At 5 games, both plans cost $20. Graphing helps us see which line is lower on each side of that point."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph with games on the bottom and cost up the side. Plan B starts at 0 and climbs steeply. Plan A starts at $10 and climbs gently. They cross at (5, 20)."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Sam plans to buy 8 games. Which plan costs less?",
+    "right": "Plan A, at $26 compared with $32.",
+    "wrong": [
+     "Plan B, at $26 compared with $32.",
+     "They cost the same.",
+     "You cannot tell without more equations."
+    ],
+    "why": "Plan A: 2(8) + 10 = $26. Plan B: 4(8) = $32. After the crossing point at 5 games, Plan A is the cheaper one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's collect the habit into steps. These work for every problem today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Define each unknown with a letter.\n2. Write two equations from two facts.\n3. Choose a method.\n4. Solve.\n5. Check in BOTH equations.\n6. Answer in a sentence with units."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. 3 snacks and 2 drinks cost $13. 1 snack and 2 drinks cost $9. Let s be the price of a snack and d the price of a drink."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3s + 2d = 13\ns + 2d = 9"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which first step is quickest?",
+    "right": "Subtract the second equation from the first, because the 2d terms match.",
+    "wrong": [
+     "Graph both lines to find the exact answer.",
+     "Add the equations, because 2d and 2d are opposites.",
+     "Solve for d in the first equation and then guess."
+    ],
+    "why": "Subtracting removes d and leaves 2s = 4. Adding would make 4d, which does not help. The 2d terms are the same, not opposites."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Finish it. 2s = 4, so s = 2. Put that into s + 2d = 9. That gives 2 + 2d = 9."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2s = 4 → s = 2\n2 + 2d = 9\n2d = 7\nd = 3.50"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does one drink cost?",
+    "right": "$3.50",
+    "wrong": [
+     "$2",
+     "$4",
+     "$3"
+    ],
+    "why": "2d = 7, so d = 3.50. Check: 3(2) + 2(3.50) = 6 + 7 = 13, and 2 + 2(3.50) = 2 + 7 = 9. Both work."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Remember: look at the equations, then choose. Define your letters. Check in both equations. Say what the answer means."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Alone already → substitution\nMatching terms → elimination\nPicture or whole numbers → graphing\nAlways: define, check, explain"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class, 26, we use shaded regions to solve systems of inequalities. See you there."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Systems of Linear Inequalities"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Choosing a method for a system",
+   "links": [
+    "[[Systems of Equations by Graphing]]",
+    "[[Systems by Substitution]]",
+    "[[Systems by Elimination]]"
+   ]
+  },
+  {
+   "topic": "Defining variables and writing equations from words",
+   "links": [
+    "[[Variables and Expressions]]",
+    "[[Formulas and Literal Equations]]",
+    "[[Writing Linear Equations from Information]]"
+   ]
+  },
+  {
+   "topic": "Ticket, mixture and sports problems",
+   "links": [
+    "[[Ratios, Rates, Proportions and Percent]]",
+    "[[Multi-Step Equations and Variables on Both Sides]]"
+   ]
+  },
+  {
+   "topic": "Interpreting the answer and comparing plans",
+   "links": [
+    "[[Slope-Intercept Form and Graphing Lines]]",
+    "[[Building Linear Models from Data]]",
+    "[[Systems of Linear Inequalities]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

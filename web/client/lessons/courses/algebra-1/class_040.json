@@ -1,0 +1,591 @@
+{
+ "about": {
+  "title": "Quadratic Functions and Their Graphs",
+  "course": "algebra-1",
+  "class_n": 40,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are six small ideas (shape, direction, vertex, axis, intercepts, table of values). Each has its own check question, and the last part puts them together. You can pause after any beat and pick up again without losing the thread."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.1 Quadratic Functions, College Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/5-1-quadratic-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "3.2 Quadratic Functions, Precalculus 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/precalculus-2e/pages/3-2-quadratic-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "3.2: Quadratic Functions (OpenStax Precalculus 1e)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Precalculus/Precalculus_1e_(OpenStax)/03:_Polynomial_and_Rational_Functions/3.02:_Quadratic_Functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "7.11.4 Using the Vertex and Axis of Symmetry of Quadratics, Algebra 1",
+   "publisher": "OpenStax, Rice University",
+   "date": "2026",
+   "link": "https://openstax.org/books/algebra-1/pages/7-11-4-using-the-vertex-and-axis-of-symmetry-of-quadratics",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "9.7 Graph Quadratic Functions Using Transformations, Intermediate Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/9-7-graph-quadratic-functions-using-transformations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Graph Quadratic Functions Using Properties (Intermediate Algebra)",
+   "publisher": "BCcampus Open Education",
+   "date": "n.d.",
+   "link": "https://pressbooks.bccampus.ca/algebraintermediate/chapter/graph-quadratic-functions-using-properties/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Quadratic Functions (College Algebra)",
+   "publisher": "University of Texas at San Antonio, Pressbooks",
+   "date": "n.d.",
+   "link": "https://utsa.pressbooks.pub/mat1073collegealgebra/chapter/quadratic-functions/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "High School: Functions » Interpreting Functions (HSF-IF.C.7.a)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSF/IF/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we graph a parabola, and name its vertex, axis of symmetry, intercepts and direction. We'll go one piece at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Graphing a Parabola: five things to name"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the kind of equation. A quadratic function looks like y = ax² + bx + c. The letters a, b and c are numbers, and a can't be zero."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = ax² + bx + c   (a ≠ 0)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is a quadratic function?",
+    "right": "y = 2x² + 3x − 1",
+    "wrong": [
+     "y = 3x + 5",
+     "y = −4x",
+     "y = 7"
+    ],
+    "why": "A quadratic has an x² term with a number in front that is not zero. The other three have no x² term, so they are lines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's find a, b and c in y = x² + 4x + 3. A is the number with x², b is the number with x, and c is the number on its own."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = x² + 4x + 3  →  a = 1,  b = 4,  c = 3"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In y = 2x² − 5x + 7, what is b?",
+    "right": "−5",
+    "wrong": [
+     "5",
+     "2",
+     "7"
+    ],
+    "why": "B is the number that goes with x, and it keeps its minus sign. Here that is −5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the picture. The graph of a quadratic function is a U-shaped curve called a parabola."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A smooth U-shaped curve on a grid, like a bowl, with its lowest point in the middle."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first thing to name is direction. If a is positive, the U opens up. If a is negative, it opens down."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "a > 0: opens up (like a smile)  |  a < 0: opens down (like a frown)"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which way does y = −3x² + 1 open?",
+    "right": "Down, because a = −3 is negative",
+    "wrong": [
+     "Up, because c = 1 is positive",
+     "Up, because 3 is positive",
+     "Down, because b = 0"
+    ],
+    "why": "Only a decides the direction. Here a = −3, so the parabola opens down."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second is the vertex. It is the turning point of the parabola. If the U opens up, the vertex is the lowest point. If it opens down, it is the highest."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vertex = the turning point (lowest if up, highest if down)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A parabola opens down. What is its vertex?",
+    "right": "The highest point on the graph",
+    "wrong": [
+     "The lowest point on the graph",
+     "The point where it crosses the y-axis",
+     "The point where it crosses the x-axis"
+    ],
+    "why": "When the parabola opens down, it rises, turns, and falls. The turning point at the top is the vertex, the maximum."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third is the axis of symmetry. It is an imaginary vertical line through the vertex. It cuts the parabola into two mirror-image halves."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A U-shaped parabola with a dashed vertical line through its lowest point. The left side is the mirror of the right side."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A parabola has its vertex at (2, 7). What is the axis of symmetry?",
+    "right": "x = 2",
+    "wrong": [
+     "x = 7",
+     "y = 2",
+     "y = 7"
+    ],
+    "why": "The axis goes straight up and down through the vertex. So its equation is x equals the x-coordinate of the vertex, which is 2."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We can find the axis from the equation. Use x = −b ÷ (2a). For y = x² + 4x + 3, that is −4 ÷ (2 × 1), which is −2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Axis of symmetry: x = −b / (2a)"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the axis of symmetry of y = x² + 6x + 1?",
+    "right": "x = −3",
+    "wrong": [
+     "x = 3",
+     "x = −6",
+     "x = 6"
+    ],
+    "why": "Here a = 1 and b = 6. So −b ÷ (2a) = −6 ÷ 2 = −3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The vertex sits on that axis, so its x-coordinate is −2. To get its y-coordinate, put −2 into the equation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x = −2:  y = (−2)² + 4(−2) + 3 = 4 − 8 + 3 = −1  →  vertex (−2, −1)"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For y = x² − 2x − 3 the axis is x = 1. What is the vertex?",
+    "right": "(1, −4)",
+    "wrong": [
+     "(1, 4)",
+     "(−1, −4)",
+     "(2, −3)"
+    ],
+    "why": "Put x = 1 into the equation: 1 − 2 − 3 = −4. So the vertex is (1, −4)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fourth are the intercepts, the places where the parabola crosses the axes. The y-intercept is where it crosses the y-axis. That happens when x is 0."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y-intercept: put x = 0. The answer is c."
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the y-intercept of y = x² − 5x + 9?",
+    "right": "(0, 9)",
+    "wrong": [
+     "(9, 0)",
+     "(0, −5)",
+     "(0, 1)"
+    ],
+    "why": "Put x = 0 and the x terms disappear, leaving y = 9. So the point is (0, 9)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The x-intercepts are where the parabola crosses the x-axis, and there y is 0. In our example they are (−3, 0) and (−1, 0). Check the middle: the axis x = −2 is halfway between them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = x² + 4x + 3  →  x-intercepts (−3, 0) and (−1, 0); axis x = −2 is halfway between"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A parabola has x-intercepts at (1, 0) and (5, 0). What is its axis of symmetry?",
+    "right": "x = 3",
+    "wrong": [
+     "x = 1",
+     "x = 5",
+     "x = 6"
+    ],
+    "why": "The axis is halfway between the two x-intercepts. Halfway between 1 and 5 is 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A parabola can cross the x-axis twice, once, or never. If it opens up and its vertex is above the x-axis, it never crosses."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A U-shaped parabola that opens up, floating entirely above the x-axis. Its vertex is at (3, 1)."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A parabola opens up and its vertex is (3, 1). How many x-intercepts does it have?",
+    "right": "None",
+    "wrong": [
+     "One",
+     "Two",
+     "Three"
+    ],
+    "why": "It opens up, and its lowest point is already above the x-axis. So it never reaches y = 0."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fifth is a table of values. Pick x-values on both sides of the axis, and work out y for each. Here is our example."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Table of values for y = x² + 4x + 3",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Look at the table. The y-values at x = −4 and x = 0 are both 3. Why?",
+    "right": "They are the same distance from the axis x = −2, so they mirror each other",
+    "wrong": [
+     "It is a mistake in the table",
+     "Every parabola has the same y at x = −4 and x = 0",
+     "Because they are both even numbers"
+    ],
+    "why": "x = −4 and x = 0 are each 2 steps from the axis x = −2, on opposite sides. Mirror points always have equal y-values."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we can graph it. Find the axis, then the vertex, then the y-intercept. Then use the mirror to get a free point, and find any x-intercepts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Direction (look at a)  2. Axis x = −b/(2a)  3. Vertex  4. y-intercept, and its mirror point  5. x-intercepts  6. Draw a smooth curve"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our example: it opens up. The axis is x = −2 and the vertex is (−2, −1). The y-intercept (0, 3) is 2 steps right of the axis, so its mirror is 2 steps left, at (−4, 3)."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Points on a grid: vertex (−2, −1), y-intercept (0, 3), mirror point (−4, 3), and x-intercepts (−3, 0) and (−1, 0). A smooth U joins them, with a dashed line at x = −2."
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The axis is x = −2 and a point on the parabola is (0, 3). Which point is its mirror?",
+    "right": "(−4, 3)",
+    "wrong": [
+     "(−2, 3)",
+     "(4, 3)",
+     "(0, −3)"
+    ],
+    "why": "(0, 3) is 2 steps right of the axis. Its mirror is 2 steps left of the axis, at x = −4, with the same height, 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try one that opens down, like a ball thrown through the air. Take y = −x² + 2x + 3. Here a = −1, so it opens down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = −x² + 2x + 3:  a = −1, b = 2, c = 3.  Opens down.  Axis x = −2/(2·−1) = 1.  Vertex (1, 4).  y-intercept (0, 3).  x-intercepts (−1, 0) and (3, 0)."
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "For y = −x² + 2x + 3, what is the highest point of the ball's path (the vertex)?",
+    "right": "(1, 4)",
+    "wrong": [
+     "(1, 3)",
+     "(−1, 0)",
+     "(2, 3)"
+    ],
+    "why": "The axis is x = 1. Put in x = 1: −1 + 2 + 3 = 4. So the vertex is (1, 4), and since it opens down, that is the maximum."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This is why the vertex matters outside class. For things like a thrown ball, the vertex tells you the maximum height. Textbooks use this same idea to find the peak of a ball's path."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vertex = maximum height (opens down) or minimum (opens up)"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This skill is also on the official list. The Common Core standard says to graph quadratic functions and show the intercepts, maxima and minima."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Graph linear and quadratic functions and show intercepts, maxima, and minima."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it together. Name the direction, axis, vertex and y-intercept for each parabola you meet. That is the whole plan."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Direction: sign of a  |  Axis: x = −b/(2a)  |  Vertex: put the axis x-value into the equation  |  y-intercept: c  |  x-intercepts: where y = 0"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "For y = x² − 4x + 3, what is the vertex?",
+    "right": "(2, −1)",
+    "wrong": [
+     "(−2, 15)",
+     "(2, 3)",
+     "(4, 3)"
+    ],
+    "why": "The axis is x = −(−4) ÷ (2 × 1) = 2. Then y = 4 − 8 + 3 = −1. So the vertex is (2, −1)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Next class, class 41, we look at vertex form. It gives you the vertex straight from the equation."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Vertex Form and Transformations of Parabolas"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "y = x² + 4x + 3: y-value at each x",
+   "rows": [
+    {
+     "label": "x = −5",
+     "value": 8,
+     "source": "s1"
+    },
+    {
+     "label": "x = −4",
+     "value": 3,
+     "source": "s1"
+    },
+    {
+     "label": "x = −3",
+     "value": 0,
+     "source": "s1"
+    },
+    {
+     "label": "x = −2",
+     "value": -1,
+     "source": "s1"
+    },
+    {
+     "label": "x = −1",
+     "value": 0,
+     "source": "s1"
+    },
+    {
+     "label": "x = 0",
+     "value": 3,
+     "source": "s1"
+    },
+    {
+     "label": "x = 1",
+     "value": 8,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Parabola features: direction, vertex, axis of symmetry, intercepts",
+   "links": [
+    "[[Function Notation]]",
+    "[[Slope-Intercept Form and Graphing Lines]]",
+    "[[Vertex Form and Transformations of Parabolas]]",
+    "[[Solving Quadratics by Factoring]]",
+    "[[The Quadratic Formula and the Discriminant]]"
+   ]
+  },
+  {
+   "topic": "Table of values and mirror points",
+   "links": [
+    "[[Graphs of Functions: Domain, Range and Behavior]]",
+    "[[Quadratic Models]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The best way to find the axis of symmetry is the formula x = −b/(2a).",
+   "other_view": "Textbooks teach a second route. If you already know the two x-intercepts, the vertex is halfway between them, so the axis is at the midpoint. Both give the same answer. The formula always works, even when there are no x-intercepts. The midpoint trick is quicker when the equation is already factored.",
+   "cite": [
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Students should graph parabolas by hand.",
+   "other_view": "The standard asks for graphing by hand in simple cases, and says to use technology for more complicated cases. Hand graphing builds understanding, and graphing tools handle messy numbers.",
+   "cite": [
+    "s8"
+   ]
+  }
+ ]
+}

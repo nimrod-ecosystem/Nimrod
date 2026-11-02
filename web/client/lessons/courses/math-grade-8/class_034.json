@@ -1,0 +1,550 @@
+{
+ "about": {
+  "title": "Lines of Best Fit",
+  "course": "math-grade-8",
+  "class_n": 34,
+  "audience": [
+   "ages 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. This class has four linked steps (draw the line, find the slope, write the equation, predict). Each step gets one example and one check question, and none of them can be skipped."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Statistics & Probability (standards 8.SP.A.2 and 8.SP.A.3)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/SP/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Scatter (XY) Plots",
+   "publisher": "Math Is Fun",
+   "date": "n.d.",
+   "link": "https://www.mathsisfun.com/data/scatter-xy-plots.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Scatterplot - Math Steps, Examples & Questions",
+   "publisher": "Third Space Learning (US)",
+   "date": "n.d.",
+   "link": "https://thirdspacelearning.com/us/math-resources/topic-guides/statistics-and-probability/scatterplot/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Line of Best Fit: Learn It 5 (Introductory Statistics)",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://content.one.lumenlearning.com/introstatstest/chapter/line-of-best-fit-learn-it-5/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "4.4: Fitting Linear Models to Data (Algebra and Trigonometry 2e, OpenStax)",
+   "publisher": "Mathematics LibreTexts / OpenStax",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Workbench/Algebra_and_Trigonometry_2e_(OpenStax)/04:_Linear_Functions/4.04:_Fitting_Linear_Models_to_Data",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "2.4: Fitting Linear Models to Data (Precalculus 1e, OpenStax)",
+   "publisher": "Mathematics LibreTexts / OpenStax",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Precalculus/Precalculus_1e_(OpenStax)/02:_Linear_Functions/2.04:_Fitting_Linear_Models_to_Data",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 34. Today we draw a line through a scatter plot, write its equation, and use it to make predictions."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Lines of Best Fit"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You already know three things. A scatter plot shows pairs of numbers as dots. Slope tells how steep a line is. And y = mx + b is the rule for a line. Today they all work together."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Scatter plot: dots for pairs of numbers\nSlope: how steep the line is\ny = mx + b: the rule for a line"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In y = mx + b, which letter is the slope?",
+    "right": "m",
+    "wrong": [
+     "b",
+     "x",
+     "y"
+    ],
+    "why": "m is multiplied by x, so it says how much y changes for each step in x. That is the slope. b is where the line crosses the y-axis."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A line of best fit is a straight line drawn through the middle of a scatter plot's pattern. It shows the trend. Some people call it a trend line."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "line of best fit = trend line"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why bother? Real data is messy, and the dots never sit perfectly on one line. A straight line is a simple model, a tidy way to describe the pattern."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Straight lines are widely used to model relationships between two quantities. (paraphrase of Common Core 8.SP.A.2)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our example. It is made up for practice. Each dot is one student: hours studied in a week, and quiz score out of 100."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scatter plot. The horizontal axis is hours studied per week, from 0 to 8. The vertical axis is quiz score, from 40 to 100. Seven dots climb from left to right: (1, 57), (2, 60), (3, 69), (4, 73), (5, 81), (6, 85), (7, 93)."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step one: check the pattern. A line only makes sense if the dots roughly follow a straight band. Ours climb in a rough straight band, so a line works."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Step 1: Is the pattern roughly straight?"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which scatter plot is a good one for a line of best fit?",
+    "right": "Dots that climb in a rough straight band",
+    "wrong": [
+     "Dots that make a U-shaped curve",
+     "Dots spread all over with no pattern",
+     "Dots packed into a circle"
+    ],
+    "why": "A line can only describe a straight trend. A curve needs a curved model, and a cloud with no pattern has no trend for a line to show."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: draw the line. Use a ruler. Put it through the middle of the dots, as close to all of them as you can. Aim for about as many dots above the line as below it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same scatter plot, now with a straight line drawn through the middle of the seven dots. Some dots sit just above the line and some just below it."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The line does not have to pass through any dots. It may touch some, and that is fine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Close to all, not through all"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A line goes through only 2 of 10 dots. It has 4 dots above it and 4 below it, and all the dots are fairly close to it. Is it a good line?",
+    "right": "Yes. It is close to the dots overall and balanced above and below.",
+    "wrong": [
+     "No. A line of best fit must go through every dot.",
+     "No. It must go through the first and last dots.",
+     "No. It must go through at least half of the dots."
+    ],
+    "why": "The aim is closeness and balance, not touching dots. Real data scatters around the trend, so a good line often misses most dots."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How good is the fit? Look at how close the dots are to the line. Dots hugging the line mean a strong fit. Dots far away mean a weaker one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fit = how close the dots are to the line"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the equation. Suppose our line crosses the grid exactly at (2, 62) and (6, 86). Those are two spots on the line. They are not dots."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The scatter plot with the line. Two points on the line are marked and labeled: (2, 62) and (6, 86). They are slightly different from the nearby dots at (2, 60) and (6, 85)."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three: pick two points on your line, far apart from each other. Use points on the line, not dots, because the equation describes the line."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Step 3: Pick two points ON the line"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Your line passes through (4, 74). The nearest dot is (4, 73). Which point do you use for your equation?",
+    "right": "(4, 74), because it is on the line",
+    "wrong": [
+     "(4, 73), because it is real data",
+     "Neither one, you need three points",
+     "Whichever has the bigger number"
+    ],
+    "why": "The equation is for the line. Only points on the line fit it exactly. The dots are the real data, and the line is our model of them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four: find the slope. Rise over run. Take the change in y and divide by the change in x. Our points give 86 minus 62 over 6 minus 2."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rise (change in y) | 86 − 62 = 24\nRun (change in x) | 6 − 2 = 4\nSlope | 24 ÷ 4 = 6"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A line goes through (1, 10) and (5, 30). What is its slope?",
+    "right": "5",
+    "wrong": [
+     "20",
+     "4",
+     "0.2"
+    ],
+    "why": "Rise is 30 − 10 = 20. Run is 5 − 1 = 4. Then 20 ÷ 4 = 5. Answering 20 forgets to divide by the run. Answering 0.2 turns the fraction upside down."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A slope of 6 has a meaning in real life. A standard example: a slope of 1.5 cm per hour means each extra hour of sunlight goes with 1.5 cm more plant height. For us, each extra hour of study goes with about 6 more points."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6 points per hour"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does a slope of 6 mean for our line?",
+    "right": "Each extra hour studied goes with about 6 more points on the line.",
+    "wrong": [
+     "Every student who studies 1 hour scores exactly 6.",
+     "A student who studies 0 hours scores 6.",
+     "Studying is proven to cause exactly 6 more points for every student."
+    ],
+    "why": "Slope is the change in y for each 1-step change in x. The data shows an association, not proof of cause, and the line gives averages, not exact scores for each student."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step five: find b. Put the slope and one point into y = mx + b. Use (2, 62) and m = 6. That gives 62 = 6 × 2 + b. So 62 = 12 + b, and b = 50."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Start | y = mx + b\nPut in m = 6, point (2, 62) | 62 = 6(2) + b\nSimplify | 62 = 12 + b\nSolve | b = 50"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our equation is y = 6x + 50. Always check it with your other point. Put in x = 6: 6 × 6 + 50 = 86. That matches (6, 86), so we are good."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "y = 6x + 50"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A line goes through (1, 10) and (5, 30), and its slope is 5. What is b?",
+    "right": "5",
+    "wrong": [
+     "10",
+     "0",
+     "25"
+    ],
+    "why": "Put in m = 5 and the point (1, 10): 10 = 5(1) + b, so b = 5. Check with (5, 30): 5(5) + 5 = 30. It works. The equation is y = 5x + 5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What does b mean here? When x is 0 hours, the line gives a score of 50. Our dots start at 1 hour, so 0 hours is a little outside our data. Treat that number with some care."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "b = the line's value when x is 0"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In y = 6x + 50, what does the 50 tell us?",
+    "right": "The score the line gives at 0 hours studied",
+    "wrong": [
+     "The number of hours studied",
+     "The number of students",
+     "The highest score possible"
+    ],
+    "why": "b is the y-value when x = 0. For our line that is the score at 0 hours, which is 50."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the fun part: predicting. Put an x-value into the equation and find y. Try 4.5 hours. 6 × 4.5 is 27. Add 50 to get 77."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x = 4.5 | y = 6(4.5) + 50\nMultiply | y = 27 + 50\nPrediction | y = 77 points"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Use y = 6x + 50 to predict the score for 3.5 hours of study.",
+    "right": "71",
+    "wrong": [
+     "21",
+     "62",
+     "74"
+    ],
+    "why": "6 × 3.5 = 21, then 21 + 50 = 71. The answer 21 forgets to add b. The answers 62 and 74 are the line's values at 2 and 4 hours."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A prediction is an estimate, not a promise. Real dots sit above and below the line, so a real student could land a few points either way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prediction = a good estimate, not a promise"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two words to know. Interpolation means predicting inside the range of your data. Extrapolation means predicting outside it. Our data runs from 1 to 7 hours."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Interpolation | x inside the data, such as 4.5 hours\nExtrapolation | x outside the data, such as 10 hours"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Our data runs from 1 to 7 hours. Which prediction is extrapolation?",
+    "right": "Predicting the score for 10 hours",
+    "wrong": [
+     "Predicting the score for 2.5 hours",
+     "Predicting the score for 6 hours",
+     "Predicting the score for 4 hours"
+    ],
+    "why": "2.5, 4 and 6 are all between 1 and 7, so they are inside the data. 10 is past the end of the data, so using it is extrapolation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's see why that matters. At 10 hours our equation says 6 × 10 + 50 = 110. But the quiz is out of 100. The line kept going past what the data knows."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "110 out of 100?"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why should we not trust the prediction of 110 for 10 hours?",
+    "right": "10 hours is outside our data, and a score can't go over 100.",
+    "wrong": [
+     "The slope was calculated wrongly.",
+     "Equations can never be used for predictions.",
+     "Because 10 is an even number."
+    ],
+    "why": "We don't know if the pattern keeps going past the data. Here it clearly can't, since scores stop at 100. Predictions inside the data range are much safer."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A textbook example is cricket chirps and temperature. The model is only safe for chirp counts inside the range that was measured: about 18.5 to 44. Outside that range, it is extrapolation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stay inside the data"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the whole recipe. You can use it on any scatter plot with a straight-line pattern."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Check the dots follow a roughly straight pattern\n2. Draw a line through the middle, close to all dots\n3. Pick two points on the line, far apart\n4. Find the slope: rise ÷ run\n5. Find b with one point\n6. Write y = mx + b\n7. Predict inside the data range"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check that uses everything. A line y = 5x + 5 was built from data with x between 1 and 5."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = 5x + 5, data from x = 1 to 5"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which prediction from y = 5x + 5 is the most trustworthy?",
+    "right": "x = 3, which gives 20",
+    "wrong": [
+     "x = 20, which gives 105",
+     "x = 50, which gives 255",
+     "x = −4, which gives −15"
+    ],
+    "why": "x = 3 is inside the data range of 1 to 5, so it is interpolation. 5(3) + 5 = 20. The other three x-values are far outside the data, so they are extrapolation. We can't know the pattern continues there."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. You drew a line, found its slope, wrote its equation and made a prediction. You also know when to stop trusting it. Next class: two-way tables."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Two-Way Tables"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Lines of best fit",
+   "links": [
+    "[[Scatter Plots and Patterns]]",
+    "[[Slope]]",
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[Modeling with Linear Functions]]",
+    "[[Two-Way Tables]]"
+   ]
+  },
+  {
+   "topic": "Interpolation and extrapolation",
+   "links": [
+    "[[Linear and Nonlinear Functions]]",
+    "[[Scatter Plots and Patterns]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A line of best fit drawn by eye is good enough.",
+   "other_view": "For learning, a hand-drawn line is the goal in 8th grade, and the standards ask for an informal fit. But two people drawing by eye will get slightly different lines. Calculation gives more accuracy, and a calculated regression line is the single closest line to the data.",
+   "cite": [
+    "s1",
+    "s2",
+    "s6"
+   ]
+  },
+  {
+   "claim": "You should never predict outside the range of the data.",
+   "other_view": "Some statistics texts say to avoid extrapolation because we can't know if the pattern continues. Other sources say it can be done with care, but that you should not go too far, and that the result can quickly stop making sense.",
+   "cite": [
+    "s4",
+    "s2"
+   ]
+  }
+ ]
+}

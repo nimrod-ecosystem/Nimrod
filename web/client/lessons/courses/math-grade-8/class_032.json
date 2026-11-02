@@ -1,0 +1,653 @@
+{
+ "about": {
+  "title": "Volume of Cones and Spheres",
+  "course": "math-grade-8",
+  "class_n": 32,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. There are four topics: the cone, the sphere, mixed solids, and exact versus rounded answers. Each one gets a worked example and a check question. You can pause after any question and carry on later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "8.G.C.9 (Grade 8 Geometry standard)",
+   "publisher": "Illustrative Mathematics",
+   "date": "undated",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/G/C/9",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Cone vs Sphere vs Cylinder",
+   "publisher": "Math Is Fun",
+   "date": "undated",
+   "link": "https://www.mathsisfun.com/geometry/cone-sphere-cylinder.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Archimedes",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/Archimedes",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Volume of Cylinders, Cones & Spheres (video lesson page)",
+   "publisher": "Generation Genius",
+   "date": "undated",
+   "link": "https://www.generationgenius.com/videolessons/volume-of-cylinders-cones-spheres/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "How to Find the Volume of Cylinders, Cones, and Spheres?",
+   "publisher": "Effortless Math",
+   "date": "undated",
+   "link": "https://www.effortlessmath.com/math-topics/volume-of-cylinders-cones-and-spheres/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "How to Find the Volume of a Cylinder, Cone, and Sphere",
+   "publisher": "Effortless Math",
+   "date": "undated",
+   "link": "https://www.effortlessmath.com/math-topics/how-to-find-volume/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "How to Find Volume",
+   "publisher": "CalcTypes",
+   "date": "undated",
+   "link": "https://calctypes.com/how-to-find-volume/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "8.G.C.9 Lesson: Volume of Cylinders, Cones, Spheres",
+   "publisher": "SVHS",
+   "date": "undated",
+   "link": "https://svhs.co/lesson/8-g-c-9/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Volume: Cylinders, Cones & Spheres Practice A (8.G.C.9)",
+   "publisher": "Pagine App",
+   "date": "undated",
+   "link": "https://www.pagineapp.com/worksheets/grade-8-math-volume-cylinders-cones-and-spheres-1",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "On the Sphere and Cylinder",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/On-the-Sphere-and-Cylinder",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Volume of a sphere",
+   "publisher": "Math Open Reference",
+   "date": "undated",
+   "link": "https://www.mathopenref.com/spherevolume.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "Volume of Cones and Spheres Worksheets",
+   "publisher": "Math Worksheets Land",
+   "date": "undated",
+   "link": "https://www.mathworksheetsland.com/geometry/45volconesset.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s13",
+   "title": "Archimedes and the Volume of a Sphere",
+   "publisher": "That's Maths",
+   "date": "2019-11-28",
+   "link": "https://thatsmaths.com/2019/11/28/archimedes-and-the-volume-of-a-sphere/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome! Last class you found the volume of cylinders. Today we add two more solids: the cone and the sphere."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Volume of Cones and Spheres"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick reminder. A cylinder's volume is pi times the radius squared times the height."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cylinder: V = πr²h"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A cylinder has radius 3 and height 5. What is its volume, leaving π as a symbol?",
+    "right": "45π",
+    "wrong": [
+     "15π",
+     "30π",
+     "225π"
+    ],
+    "why": "Square the radius first: 3 × 3 = 9. Then multiply by the height: 9 × 5 = 45, so the volume is 45π. 15π means the radius was never squared. 30π comes from 2 × 3 × 5, which is doubling instead of squaring. 225π comes from squaring 3 × 5 instead of just the radius."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the cone. A cone has a flat round base that narrows to a point at the other end."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cone, like an ice-cream cone or a party hat: a flat circle at the bottom, narrowing up to one point."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture a cone standing inside a cylinder. They have the same base and the same height. The cone fills only part of the cylinder."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A glass cylinder with a cone sitting inside it. Both have the same circle on the bottom and reach the same height."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How much of it? Try pouring. Fill the cone with water and pour it into the cylinder. It takes exactly three cones to fill it."
+   },
+   "show": {
+    "kind": "objects",
+    "text": "Three cone-fulls fill one cylinder",
+    "object": "cup",
+    "count": 3,
+    "layout": "row"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So a cone holds exactly one third of the cylinder with the same base and height."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1/3"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A cylinder holds 60 cm³. A cone has the same base and the same height. How much does the cone hold?",
+    "right": "20 cm³",
+    "wrong": [
+     "180 cm³",
+     "30 cm³",
+     "57 cm³"
+    ],
+    "why": "The cone is one third of the cylinder, so divide by 3: 60 ÷ 3 = 20. 180 comes from multiplying by 3, which would be a bigger solid than the cylinder. 30 is half, not a third. 57 comes from subtracting 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Since the cone is one third of the cylinder, its formula is the cylinder formula times one third. Here r is the radius and h is the height."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cone: V = ⅓πr²h"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: a cone with radius 4 cm and height 10 cm. The base part is π × 16. Times 10 gives 160π. One third of that is 160π/3, about 167.55 cm³."
+   },
+   "show": {
+    "kind": "list",
+    "text": "r² = 16 | 16 × 10 = 160, so 160π | ⅓ of 160π = 160π/3 ≈ 167.55 cm³"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. For now, leave π as a symbol and give your answer as a number times π."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "V = ⅓πr²h"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A cone has radius 3 and height 7. What is its volume?",
+    "right": "21π",
+    "wrong": [
+     "63π",
+     "7π",
+     "147π"
+    ],
+    "why": "Square the radius: 3 × 3 = 9. Multiply by the height: 9 × 7 = 63. Take one third: 63 ÷ 3 = 21, so 21π. 63π forgets the one third. 7π forgets to square the radius. 147π squares 3 × 7 by mistake and then takes a third."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watch out for diameter. The formulas need the radius, which is half the diameter. A cone has diameter 12 cm and height 14 cm. So r = 6, and the volume is ⅓ × π × 36 × 14 = 168π cm³."
+   },
+   "show": {
+    "kind": "list",
+    "text": "diameter 12, so radius 6 | 6² = 36 | ⅓ × 36 × 14 = 168 | V = 168π cm³"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A cone has diameter 10 and height 9. What is its volume?",
+    "right": "75π",
+    "wrong": [
+     "300π",
+     "225π",
+     "15π"
+    ],
+    "why": "Halve the diameter to get the radius: 5. Then ⅓ × 25 × 9 = 75, so 75π. 300π uses 10 as the radius. 225π forgets the one third. 15π forgets to square the radius."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On to the sphere. A sphere is a perfectly round solid, like a ball. It has no height to measure. The only measurement is the radius."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A ball with a line from its centre to its surface, labelled r for radius."
+   },
+   "cite": [
+    "s12",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The sphere formula is four thirds times pi times the radius cubed. Cubed means r × r × r, not r squared."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sphere: V = ⁴⁄₃πr³"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: a sphere with radius 3 m. First 3 × 3 × 3 = 27. Then ⁴⁄₃ of 27 is 36. So the volume is 36π, about 113.10 m³."
+   },
+   "show": {
+    "kind": "list",
+    "text": "r³ = 27 | ⁴⁄₃ × 27 = 36 | V = 36π ≈ 113.10 m³"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A sphere has radius 6. What is its volume?",
+    "right": "288π",
+    "wrong": [
+     "48π",
+     "864π",
+     "24π"
+    ],
+    "why": "Cube the radius: 6 × 6 × 6 = 216. Then ⁴⁄₃ × 216 = 288, so 288π. 48π squares the radius instead of cubing it. 864π multiplies by 4 but forgets to divide by 3. 24π multiplies the radius by 3 instead of cubing it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where does the four thirds come from? Fit a sphere snugly inside a cylinder. The cylinder's height is then 2r. The sphere fills exactly two thirds of it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A ball fitting perfectly inside a cylinder. It touches the sides, the top and the bottom. The cylinder's height is 2r."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A sphere fits snugly inside a cylinder that holds 90 cm³. How much does the sphere hold?",
+    "right": "60 cm³",
+    "wrong": [
+     "30 cm³",
+     "45 cm³",
+     "120 cm³"
+    ],
+    "why": "The sphere is two thirds of the cylinder: 90 ÷ 3 = 30, then 30 × 2 = 60. 30 is only one third. 45 is half. 120 is bigger than the cylinder, which can't be right because the sphere sits inside it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A Greek mathematician named Archimedes worked this out over two thousand years ago. He was so proud of it that a sphere and cylinder were put on his tomb."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A sphere inside a cylinder, the picture Archimedes asked to have on his tomb."
+   },
+   "cite": [
+    "s3",
+    "s10",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a neat link. Take a cone and a sphere with the same radius, where the height is 2r. Put their volumes together and you get the cylinder. So the sphere holds two cones' worth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "cone + sphere = cylinder (when h = 2r)"
+   },
+   "cite": [
+    "s2",
+    "s4",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A cone, a sphere and a cylinder share the same radius, and the height is 2r. The cone holds 12 mL. How much does the sphere hold?",
+    "right": "24 mL",
+    "wrong": [
+     "36 mL",
+     "4 mL",
+     "16 mL"
+    ],
+    "why": "The sphere holds as much as two cones: 2 × 12 = 24. 36 mL is the whole cylinder, which is three cones. 4 mL divides by 3 instead of multiplying by 2. 16 mL multiplies by ⁴⁄₃, which mixes up the formulas."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's see it as bars. The radius is 3 and the height is 6. In units of π, the cone is 18, the sphere is 36 and the cylinder is 54."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Same radius 3, height 6",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now mixed solids. A hemisphere is half a sphere, so its volume is half of ⁴⁄₃. That makes it ⅔πr³."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hemisphere: V = ⅔πr³"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A hemisphere has radius 6. What is its volume?",
+    "right": "144π",
+    "wrong": [
+     "288π",
+     "24π",
+     "432π"
+    ],
+    "why": "⅔ × 216 = 144, so 144π. 288π is the whole sphere. 24π squares the radius instead of cubing it. 432π multiplies by 2 but forgets to divide by 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mixed problem: an ice-cream cone with a half-ball of ice cream on top. Both have radius 3 cm, and the cone is 8 cm tall. Split it into two solids and add."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cone: ⅓ × π × 9 × 8 = 24π | Hemisphere: ⅔ × π × 27 = 18π | Total: 24π + 18π = 42π cm³"
+   },
+   "cite": [
+    "s2",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Same idea for a toy: a cylinder with a cone on top, both with radius 2. The cylinder is 5 tall. The cone is 3 tall."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A toy made of a cylinder with a pointed cone sitting on its top circle. Both have radius 2."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The cylinder has radius 2 and height 5. The cone on top has radius 2 and height 3. What is the total volume?",
+    "right": "24π",
+    "wrong": [
+     "32π",
+     "16π",
+     "20π"
+    ],
+    "why": "Cylinder: 4 × 5 = 20, so 20π. Cone: ⅓ × 4 × 3 = 4, so 4π. Add them: 24π. 32π forgets the one third on the cone. 16π subtracts instead of adding. 20π leaves the cone out."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last topic: how to write the answer. Leaving π as a symbol, like 288π, is exact. Rounding means using a number for π. That gives an approximate answer, and you write cubic units."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sphere, radius 6 | Exact: 288π | With π ≈ 3.14: 904.32 | With a calculator's π: about 904.78"
+   },
+   "cite": [
+    "s8",
+    "s6",
+    "s9",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is the exact volume of a sphere with radius 6?",
+    "right": "288π",
+    "wrong": [
+     "904.32",
+     "904.78",
+     "288"
+    ],
+    "why": "Only 288π keeps π as a symbol, so nothing has been rounded. 904.32 and 904.78 are approximations. 288 on its own has lost the π, so it is a different number."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When a question says use 3.14, do exactly that. Your answer may differ slightly from a calculator's answer, and that's fine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Follow the question: π ≈ 3.14, or in terms of π"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Use π ≈ 3.14. A cone has radius 3 and height 7, so its volume is 21π. What is the volume as a decimal?",
+    "right": "65.94",
+    "wrong": [
+     "197.82",
+     "65.97",
+     "21.98"
+    ],
+    "why": "21 × 3.14 = 65.94. 197.82 is 63 × 3.14, which forgets the one third. 65.97 uses a calculator's π, but the question said to use 3.14. 21.98 is 7 × 3.14, which forgets to square the radius."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. The cylinder is πr²h. The cone is a third of that. The sphere is ⁴⁄₃πr³, and the hemisphere is half of the sphere. Always use the radius."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cylinder: πr²h | Cone: ⅓πr²h | Sphere: ⁴⁄₃πr³ | Hemisphere: ⅔πr³ | Same base and height: cone = ⅓ cylinder"
+   },
+   "cite": [
+    "s2",
+    "s5",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A cone and a cylinder have the same base and height. The cone's volume is 8π. What is the cylinder's volume?",
+    "right": "24π",
+    "wrong": [
+     "8π/3",
+     "16π",
+     "11π"
+    ],
+    "why": "The cone is one third of the cylinder, so the cylinder is three times the cone: 3 × 8π = 24π. 8π/3 divides when you should multiply. 16π would be only twice the cone. 11π adds 3 instead of multiplying by 3."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Volumes with radius 3 and height 6 (in multiples of π)",
+   "rows": [
+    {
+     "label": "Cone",
+     "value": 18,
+     "source": "s2"
+    },
+    {
+     "label": "Sphere",
+     "value": 36,
+     "source": "s2"
+    },
+    {
+     "label": "Cylinder",
+     "value": 54,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Volume of a cone",
+   "links": [
+    "[[Volume of Cylinders]]",
+    "[[Exponent Rules for Whole Numbers]]"
+   ]
+  },
+  {
+   "topic": "Volume of a sphere",
+   "links": [
+    "[[Solving with Squares and Cubes]]",
+    "[[Volume of Cylinders]]"
+   ]
+  },
+  {
+   "topic": "Leaving answers in terms of pi",
+   "links": [
+    "[[Irrational Numbers and Roots]]",
+    "[[Rational Numbers and Their Decimals]]"
+   ]
+  },
+  {
+   "topic": "Mixed solid problems",
+   "links": [
+    "[[Course Review and Mixed Practice]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Pouring water shows that a cone is one third of a cylinder.",
+   "other_view": "Pouring is a good demonstration, but it is measuring, not proof. A full proof needs more advanced tools. One source says the usual proof uses calculus. Archimedes got there by comparing slices of the shapes.",
+   "cite": [
+    "s4",
+    "s6",
+    "s13"
+   ]
+  },
+  {
+   "claim": "You should round π to 3.14 when you need a decimal answer.",
+   "other_view": "Teachers and worksheets differ. Some use 3.14 and some use a calculator's π. Some prefer exact answers like 288π. The same sphere comes out as 904.32 with 3.14 and about 904.78 with a calculator. Follow what each question asks for.",
+   "cite": [
+    "s8",
+    "s9",
+    "s6"
+   ]
+  }
+ ]
+}

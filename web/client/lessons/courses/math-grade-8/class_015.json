@@ -1,0 +1,520 @@
+{
+ "about": {
+  "title": "Four Ways to Show a Function",
+  "course": "math-grade-8",
+  "class_n": 15,
+  "audience": [
+   "teenagers aged 13 to 15"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are four ways to show a function, and each one gets a short example and a check question. That fits in half an hour without rushing."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Functions (CCSS.Math.Content.8.F)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/F/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Unit 5 Family Materials: Functions and Volume (Grade 8)",
+   "publisher": "Illustrative Mathematics (Kendall Hunt)",
+   "date": "n.d.",
+   "link": "https://im.kendallhunt.com/MS/families/3/5/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "11.2 Graphing Linear Equations, Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/11-2-graphing-linear-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Graphing Linear Equations (Developmental Math course text)",
+   "publisher": "NROC Project",
+   "date": "n.d.",
+   "link": "http://content.nroc.org/DevelopmentalMath/COURSE_TEXT2_RESOURCE/U13_L1_T2_text_final.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Chapter 6 Functions: 6.1 Relations and Functions (Grade 8)",
+   "publisher": "Big Ideas Math",
+   "date": "n.d.",
+   "link": "https://static.bigideasmath.com/protected/content/pe/ca/g8_06.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "8th Grade Math: Functions (Unit 4)",
+   "publisher": "Fishtank Learning",
+   "date": "n.d.",
+   "link": "https://www.fishtanklearning.org/curriculum/math/8th-grade/functions/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class you met functions. Today we show one function in four different ways."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Four Ways to Show a Function"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick reminder. A function is a rule that gives each input exactly one output."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Function: a rule that gives each input exactly one output"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A function can be shown as words, as a table, as a graph, or as an equation. It is the same function every time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Words\n2. Table\n3. Graph\n4. Equation"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with words and equations. Say the rule is: the output is 2 more than the input. Call the input x and the output y. The equation is y = x + 2."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Words: The output is 2 more than the input.\nEquation: y = x + 2"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Watch the words 'less than'. Say the output is 5 less than the input. You take 5 away from the input, so y = x − 5."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Words: The output is 5 less than the input.\nEquation: y = x − 5"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The output is 5 less than the input. Which equation says that?",
+    "right": "y = x − 5",
+    "wrong": [
+     "y = 5 − x",
+     "y = x + 5",
+     "y = 5x"
+    ],
+    "why": "'5 less than the input' means start with the input and take 5 away. Test it with input 8: the output should be 3. y = x − 5 gives 3. y = 5 − x gives −3, so the order is backwards."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some rules have two steps. 'Double the input, then add 3' becomes y = 2x + 3. Multiply first, then add."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Words: Double the input, then add 3.\nEquation: y = 2x + 3"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Triple the input, then subtract 1. Which equation says that?",
+    "right": "y = 3x − 1",
+    "wrong": [
+     "y = 3(x − 1)",
+     "y = 3x + 1",
+     "y = x/3 − 1"
+    ],
+    "why": "Triple the input first (3x), then subtract 1. Try input 2: triple is 6, minus 1 is 5, and 3(2) − 1 = 5. The version 3(x − 1) subtracts before tripling, which gives 3 instead."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next: from an equation to a table. Pick some inputs, run each one through the rule, and write down the outputs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3, 4\ny = 2x + 3: 3, 5, 7, 9, 11"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Using y = 2x + 3, what is the output when the input is 5?",
+    "right": "13",
+    "wrong": [
+     "10",
+     "8",
+     "16"
+    ],
+    "why": "Double 5 to get 10, then add 3 to get 13. The answer 10 forgets the +3. The answer 8 adds 3 but never doubles. The answer 16 adds first (5 + 3) and then doubles, which is the wrong order."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Every row of the table is a point. The input goes first and the output goes second, so x = 2 and y = 7 is the point (2, 7)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(0, 3)\n(1, 5)\n(2, 7)\n(3, 9)\n(4, 11)"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A table row has input 2 and output 7. Which point is that?",
+    "right": "(2, 7)",
+    "wrong": [
+     "(7, 2)",
+     "(2, 2)",
+     "(7, 7)"
+    ],
+    "why": "By convention we write the input first and the output second, so the point is (input, output) = (2, 7). Swapping them to (7, 2) would describe a different row."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the graph. Plot each point, check that they line up, and draw a line through them. The points on the chart are the ones from our table."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Graph of y = 2x + 3: each point is an input and its output",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Two points are enough to fix a straight line. Why plot more than two anyway?",
+    "right": "Extra points let you catch a slip, because a wrong point will not line up with the others.",
+    "wrong": [
+     "Two points can never make a line.",
+     "More points make the line steeper.",
+     "A graph must have exactly five points."
+    ],
+    "why": "Two points do fix a line. But if one of them has an arithmetic slip, you would draw the wrong line and never know. A third or fourth point that does not line up warns you."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we read the graph. To find an output, find the input on the horizontal axis. Go up to the line, then across to the vertical axis. If the line falls between gridlines, you are estimating."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Input to output: find x, go to the line, read y",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On the graph of y = 2x + 3, what is the output when the input is 4?",
+    "right": "11",
+    "wrong": [
+     "9",
+     "8",
+     "4"
+    ],
+    "why": "At input 4 the point on the line is (4, 11), so the output is 11. The answer 9 is the output for input 3. The answer 8 is just 2 times 4 and leaves out the +3. The answer 4 is the input, not the output."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You can also read it backwards. Find the output on the vertical axis. Go across to the line, then down to read the input."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Output to input: find y, go to the line, read x",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "On the same graph, which input gives an output of 7?",
+    "right": "2",
+    "wrong": [
+     "7",
+     "3",
+     "5"
+    ],
+    "why": "Find 7 on the vertical axis and go across to the line. You land on the point (2, 7), so the input is 2. The answer 7 mixes up the two axes. Input 3 gives 9, and 5 is the output when the input is 1."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we go backwards, from a table to an equation. Look for two clues: the output when the input is 0, and how much the output grows each time the input goes up by 1."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3\ny: 3, 5, 7, 9\nStarts at 3. Goes up 2 each step.\nSo y = 2x + 3"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Find the starting value, then the step size."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3\ny: 5, 8, 11, 14"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which equation matches this table: x = 0, 1, 2, 3 and y = 5, 8, 11, 14?",
+    "right": "y = 3x + 5",
+    "wrong": [
+     "y = 5x + 3",
+     "y = x + 5",
+     "y = 3x + 8"
+    ],
+    "why": "When the input is 0 the output is 5, so the equation ends in +5. The output rises by 3 every time the input rises by 1, so it starts with 3x. Check: 3(2) + 5 = 11, which matches the table."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Equations can tell a story too. An arcade charges $3 for a card plus $2 per game. With C for cost and g for games, that is C = 2g + 3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Words: $3 for a card, plus $2 for each game.\nEquation: C = 2g + 3"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In C = 2g + 3, what does the 3 stand for?",
+    "right": "The cost with zero games: the fee for the card.",
+    "wrong": [
+     "The cost of each game.",
+     "The number of games played.",
+     "The most you can spend."
+    ],
+    "why": "If g is 0, then C = 2(0) + 3 = 3, so 3 is what you pay before any game. The 2 is the cost of each game. The number of games is g, the input."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So which form is best? Each one is good at different jobs. Pick the one that fits the question."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Words: what it means\nTable: exact outputs for chosen inputs\nGraph: the whole pattern at a glance\nEquation: any input, fast"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try it. You want the cost of 50 games at the arcade."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "C = 2g + 3"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You need the cost of 50 games. Which form gets you there fastest?",
+    "right": "The equation: put in g = 50 and get 2(50) + 3 = 103 dollars.",
+    "wrong": [
+     "A table that only lists 0 to 4 games",
+     "The words alone, with no numbers",
+     "A graph that stops at 4 games"
+    ],
+    "why": "An equation works for any input, even one far past what you wrote down. The short table and the short graph do not reach 50 games, and the words alone have nothing to calculate with."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Graphs shine for shape. Think of temperature as a function of time, from noon to midnight. A graph shows where it climbed and where it dropped."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A line graph with hours after noon along the bottom and temperature up the side. The line climbs, peaks, and curves back down."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You want to see when the temperature stopped rising and started falling. Which form shows that best?",
+    "right": "A graph",
+    "wrong": [
+     "A table with just two readings",
+     "Only the words 'temperature depends on time'",
+     "An equation, because every real day follows a neat formula"
+    ],
+    "why": "A graph shows the rise and fall in one look, and the top of the curve is where it turns. Two readings cannot show a turn. The words say nothing about the shape. Real temperatures usually have no simple equation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check that puts it all together. Start from words and find the matching table."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Words → Table"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The output is 5 less than the input. Which table matches? (Inputs are 5, 6, 7.)",
+    "right": "Outputs 0, 1, 2",
+    "wrong": [
+     "Outputs 10, 11, 12",
+     "Outputs 25, 30, 35",
+     "Outputs 0, −1, −2"
+    ],
+    "why": "Take 5 away from each input: 5 − 5 = 0, 6 − 5 = 1, 7 − 5 = 2. Adding 5 would give 10, 11, 12. Multiplying by 5 would give 25, 30, 35. Outputs 0, −1, −2 go down while the inputs go up, which is not this rule."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today you moved between words, tables, graphs and equations. You made tables from rules, plotted them, read values off the graph, and worked backwards to the equation. Well done."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Words ↔ Equation\nEquation → Table → Graph\nGraph → Table → Equation\nPick the form that fits the question"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class we ask a new question: how can you tell whether a function makes a straight line?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Linear and Nonlinear Functions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "y = 2x + 3 (points worked out from the rule with the table method)",
+   "rows": [
+    {
+     "label": "x = 0",
+     "value": 3,
+     "source": "s3"
+    },
+    {
+     "label": "x = 1",
+     "value": 5,
+     "source": "s3"
+    },
+    {
+     "label": "x = 2",
+     "value": 7,
+     "source": "s3"
+    },
+    {
+     "label": "x = 3",
+     "value": 9,
+     "source": "s3"
+    },
+    {
+     "label": "x = 4",
+     "value": 11,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Function rules in words and equations",
+   "links": [
+    "[[What Is a Function?]]",
+    "[[Solving Linear Equations in One Variable]]"
+   ]
+  },
+  {
+   "topic": "Making tables and plotting points",
+   "links": [
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[Slope]]"
+   ]
+  },
+  {
+   "topic": "Reading values off a graph",
+   "links": [
+    "[[Scatter Plots and Patterns]]"
+   ]
+  },
+  {
+   "topic": "Choosing the best representation",
+   "links": [
+    "[[Modeling with Linear Functions]]",
+    "[[Comparing Two Functions]]",
+    "[[Linear and Nonlinear Functions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

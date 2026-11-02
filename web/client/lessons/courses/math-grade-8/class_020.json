@@ -1,0 +1,568 @@
+{
+ "about": {
+  "title": "Systems by Substitution",
+  "course": "math-grade-8",
+  "class_n": 20,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has five steps to learn, two worked examples and eleven short questions. Each step gets its own beat, so you can pause and replay any one of them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.2 Solve Systems of Equations by Substitution (Elementary Algebra)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra/pages/5-2-solve-systems-of-equations-by-substitution",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "5.9 Systems of Linear Equations in Two Variables (Contemporary Mathematics)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/5-9-systems-of-linear-equations-in-two-variables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8 » Expressions & Equations (8.EE.C.8)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "8.EE.C.8 - Illustrative Mathematics Tasks",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/EE/C/8",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Grade 8: Simultaneous Equations (task 8.EE.C.8)",
+   "publisher": "Achieve the Core",
+   "date": "n.d.",
+   "link": "https://achievethecore.org/content/upload/Gr%208.P.4%20Simultaneous%20Equations_Final.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "7.1 Systems of Linear Equations: Two Variables (College Algebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/7-1-systems-of-linear-equations-two-variables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "4.1 Solve Systems of Linear Equations with Two Variables (Intermediate Algebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/4-1-solve-systems-of-linear-equations-with-two-variables",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 20. Last time we found where two lines cross by graphing. Today we get exact answers using algebra. Go at your own pace. You can pause or replay any step."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Systems by Substitution"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, two words. A system is two equations that use the same variables. A solution is a pair of values that makes both equations true at the same time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution of a system = a pair that makes BOTH equations true"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To test a pair, put the numbers into each equation. Try (8, 2) in x + y = 10 and x − y = 6. First: 8 + 2 = 10, true. Second: 8 − 2 = 6, true. Both work, so it's a solution."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x + y = 10 → 8 + 2 = 10 ✓ | x − y = 6 → 8 − 2 = 6 ✓"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is (5, 5) a solution of the system x + y = 10 and x − y = 6?",
+    "right": "No. It works in the first equation, but 5 − 5 = 0, not 6.",
+    "wrong": [
+     "Yes, because 5 + 5 = 10.",
+     "Yes, because both equations use the same two numbers.",
+     "No, because 5 + 5 is not 10."
+    ],
+    "why": "A solution has to make both equations true. (5, 5) passes x + y = 10 but fails x − y = 6, so it is not a solution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Graphing shows where two lines cross, but it's hard to read an exact point off a drawing. The standard for this topic asks you to solve algebraically, and to use graphs to estimate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Algebra gives the exact answer"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our algebra tool is substitution. To substitute means to swap one thing for another thing that is equal to it. If y = 3x, then anywhere you see y, you may write 3x instead."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Substitute: swap in something equal"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's a tiny swap. If y = 3x, then y + 2 becomes 3x + 2. We only replaced y. Nothing else changed."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 3x | y + 2  →  3x + 2"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "If y = 4x, what does 5 + y become after you substitute?",
+    "right": "5 + 4x",
+    "wrong": [
+     "9x",
+     "5 + 4",
+     "5 · 4x"
+    ],
+    "why": "You replace y with 4x and leave the rest alone. 5 and 4x are not like terms, so they can't be added into 9x."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the whole method. There are five steps. We'll learn them one at a time, so you don't need to memorise them yet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Solve one equation for one variable. 2. Substitute that into the other equation. 3. Solve the new equation. 4. Substitute back to find the other variable. 5. Check in both equations."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step 1 is solving for one variable. That means getting one variable alone on one side, like y = something. Example: x + y = 10. Subtract x from both sides and you get y = 10 − x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x + y = 10 | y = 10 − x"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Solve 2x + y = 7 for y.",
+    "right": "y = 7 − 2x",
+    "wrong": [
+     "y = 7 + 2x",
+     "y = 2x − 7",
+     "y = 7 − x"
+    ],
+    "why": "To get y alone, subtract 2x from both sides. That leaves y = 7 − 2x. The 2x stays attached to its x, so it is not turned into plain x."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes step 1 is already done for you. Take y = 2x + 1 and x + y = 10. The first equation already says what y equals. We'll use this system for the next few steps."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 2x + 1 | x + y = 10"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step 2: substitute into the OTHER equation. In x + y = 10, swap y for 2x + 1. Use brackets to keep the whole expression together: x + (2x + 1) = 10."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + y = 10  →  x + (2x + 1) = 10"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why the other equation? Put y = 2x + 1 back into itself and you only get 2x + 1 = 2x + 1. That's always true and tells you nothing. Try one yourself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Substitute into the other equation"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The system is y = 5x and x + y = 12. Substitute the first equation into the second. What do you get?",
+    "right": "x + 5x = 12",
+    "wrong": [
+     "y + 5x = 12",
+     "5x + 5x = 12",
+     "x + y = 5x"
+    ],
+    "why": "In x + y = 12, swap y for 5x. The x stays, so you get x + 5x = 12. Now there is only one variable."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step 3: solve the new equation. It has just one variable, so it's like class 12. Back to our example: x + 2x + 1 = 10. Combine to get 3x + 1 = 10, then 3x = 9, so x = 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + 2x + 1 = 10 → 3x + 1 = 10 → 3x = 9 → x = 3"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn, with the equation from your last question: x + 5x = 12."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x + 5x = 12"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Solve x + 5x = 12.",
+    "right": "x = 2",
+    "wrong": [
+     "x = 12",
+     "x = 6",
+     "x = 3"
+    ],
+    "why": "x + 5x is 6x. Then 6x = 12, so divide both sides by 6 to get x = 2."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We now know x = 3, but that's only half of the answer. Step 4: put x = 3 into one of the original equations to find y. The easy one is y = 2x + 1. So y = 2(3) + 1 = 7. The solution is the pair (3, 7)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = 2(3) + 1 = 7  →  solution (3, 7)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Finish the other system. You found x = 2 for y = 5x and x + y = 12. Now do step 4."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = 5x, and x = 2"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is y?",
+    "right": "y = 10",
+    "wrong": [
+     "y = 7",
+     "y = 2.5",
+     "y = 12"
+    ],
+    "why": "Use y = 5x with x = 2. That gives y = 5 · 2 = 10. The solution is (2, 10), and 2 + 10 = 12 fits the other equation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step 5: check in both original equations. For (3, 7): is 7 = 2(3) + 1? Yes, 7 = 7. Is 3 + 7 = 10? Yes. Both are true, so we're done."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 2x + 1 → 7 = 2(3) + 1 ✓ | x + y = 10 → 3 + 7 = 10 ✓"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's a subtle point. We built y from the first equation, so (3, 7) will always pass that one. If x was wrong, only the other equation can catch it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The check that matters most: the equation you did NOT use to find y"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A student made a slip and got x = 4. Then they found y = 2(4) + 1 = 9. Which check catches the mistake?",
+    "right": "x + y = 10, because 4 + 9 = 13, not 10.",
+    "wrong": [
+     "y = 2x + 1, because 9 is not 2(4) + 1.",
+     "Neither check catches it.",
+     "Only graphing can catch it."
+    ],
+    "why": "y was built from y = 2x + 1, so that equation always checks out. The other equation, x + y = 10, fails because 4 + 9 = 13. That tells you something went wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a full example where neither equation is solved. The system is 3x + y = 11 and x − 2y = −1. Step 1: in the first equation y has no number in front, so it's easy to get alone. y = 11 − 3x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "3x + y = 11 → y = 11 − 3x | x − 2y = −1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step 2: put 11 − 3x in place of y in the second equation. Brackets are important here: x − 2(11 − 3x) = −1. The −2 has to multiply both parts inside."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x − 2(11 − 3x) = −1"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Expand x − 2(11 − 3x).",
+    "right": "x − 22 + 6x",
+    "wrong": [
+     "x − 22 − 6x",
+     "x − 22 − 3x",
+     "x − 11 + 3x"
+    ],
+    "why": "−2 times 11 is −22, and −2 times −3x is +6x. A negative times a negative is positive."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step 3: solve. x − 22 + 6x = −1. Combine to get 7x − 22 = −1. Add 22: 7x = 21. So x = 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x − 22 + 6x = −1 → 7x − 22 = −1 → 7x = 21 → x = 3"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step 4: use y = 11 − 3x with x = 3. That gives y = 11 − 9 = 2. Step 5: check both. 3(3) + 2 = 11, true. 3 − 2(2) = −1, true. The solution is (3, 2)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = 11 − 3(3) = 2 | 3(3) + 2 = 11 ✓ | 3 − 2(2) = −1 ✓ | Solution (3, 2)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now try a whole system by yourself, start to finish. Take your time. The system is y = x + 2 and 2x + y = 11."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = x + 2 | 2x + y = 11"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the solution, written as (x, y)?",
+    "right": "(3, 5)",
+    "wrong": [
+     "(5, 3)",
+     "(9, 11)",
+     "(3, 2)"
+    ],
+    "why": "Substitute: 2x + (x + 2) = 11, so 3x + 2 = 11, then 3x = 9 and x = 3. Then y = 3 + 2 = 5. Check: 5 = 3 + 2 is true, and 2(3) + 5 = 11 is true. Write x first, so it's (3, 5), not (5, 3)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When is substitution the easiest method? When one equation already says y = something or x = something, or when a variable has no number in front. Then you avoid messy fractions."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Easy: y = 4x − 3, or x + 2y = 9 (x alone is easy) | Harder: 5x + 3y = 12 and 2x − 7y = 4 (fractions)"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which system is easiest to solve by substitution?",
+    "right": "y = 4x − 3 and 5x + 2y = 7",
+    "wrong": [
+     "5x + 3y = 12 and 2x − 7y = 4",
+     "7x + 2y = 9 and 3x − 5y = 1",
+     "4x + 6y = 10 and 3x + 5y = 7"
+    ],
+    "why": "In the first system, y is already alone, so you can substitute straight away. In the others, every variable has a number in front. Getting one alone would mean dividing, and that leads to fractions."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You can start with either variable and either equation. You'll land on the same solution. Pick whichever makes step 1 easiest. The fraction-heavy systems have a better tool, and that's next class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pick the easiest start. Same answer."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last question to tie it together. You've solved the new equation and found x = 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Solve for one variable. 2. Substitute into the other equation. 3. Solve. 4. Substitute back. 5. Check both."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In a system you've just found x = 3. What do you do next?",
+    "right": "Put x = 3 into an original equation to find y, then check in both equations.",
+    "wrong": [
+     "Stop, because x = 3 is the whole answer.",
+     "Substitute x = 3 back into the new equation you just solved.",
+     "Start again by graphing both lines."
+    ],
+    "why": "A solution to a system is a pair, so you still need y. Put x = 3 into an original equation to get it. Then check the pair in both equations."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Today you learned to get one variable alone, swap it into the other equation, solve, go back for the second variable, and check. Next class: elimination."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 20 done: Systems by Substitution"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Solution of a system",
+   "links": [
+    "[[Systems of Equations by Graphing]]",
+    "[[Systems by Elimination]]"
+   ]
+  },
+  {
+   "topic": "Solving for one variable",
+   "links": [
+    "[[Solving Linear Equations in One Variable]]",
+    "[[Lines: y = mx and y = mx + b]]"
+   ]
+  },
+  {
+   "topic": "Substituting an expression",
+   "links": [
+    "[[Solving Linear Equations in One Variable]]"
+   ]
+  },
+  {
+   "topic": "Checking a solution in both equations",
+   "links": [
+    "[[Systems in the Real World]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Substitution is a good first algebra method for solving systems.",
+   "other_view": "Textbooks don't treat it as the best method for every system. One OpenStax guide suggests graphing when you need a picture, substitution when one equation is already solved, and elimination when the equations are in standard form. Another notes that substitution works best without many fractions.",
+   "cite": [
+    "s7",
+    "s2"
+   ]
+  }
+ ]
+}

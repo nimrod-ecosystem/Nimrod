@@ -1,0 +1,613 @@
+{
+ "about": {
+  "title": "Distance and Real-World Right Triangles",
+  "course": "math-grade-8",
+  "class_n": 30,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "This class is a little over the usual half hour. It covers four linked ideas (drawing the triangle, using the theorem, ladders and diagonals, rounding and units). Each one gets a worked example and a check question, and rushing them was the problem in earlier lessons."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "8.G.B - Standards (8.G.B.8)",
+   "publisher": "Illustrative Mathematics",
+   "date": "undated",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/G/B",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Finding the distance between points (task)",
+   "publisher": "Illustrative Mathematics",
+   "date": "undated",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/G/B/8/tasks/1919",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "9.3 Use Properties of Angles, Triangles, and the Pythagorean Theorem, Prealgebra 2e",
+   "publisher": "OpenStax",
+   "date": "2020-03-11",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/9-3-use-properties-of-angles-triangles-and-the-pythagorean-theorem",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "9.5: Use Properties of Angles, Triangles, and the Pythagorean Theorem (Part 2), Prealgebra 1e (OpenStax)",
+   "publisher": "LibreTexts",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_1e_(OpenStax)/09:_Math_Models_and_Geometry/9.05:_Use_Properties_of_Angles_Triangles_and_the_Pythagorean_Theorem_(Part_2)",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "29 CFR 1926.1053 Ladders",
+   "publisher": "Electronic Code of Federal Regulations (eCFR)",
+   "date": "current edition",
+   "link": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XVII/part-1926/subpart-X/section-1926.1053",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Clarification of personal ladder boom system requirements (letter of interpretation)",
+   "publisher": "U.S. Occupational Safety and Health Administration (OSHA)",
+   "date": "2015-04-27",
+   "link": "https://www.osha.gov/laws-regs/standardinterpretations/2015-04-27",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "5.9: The Pythagorean Theorem (Prealgebra, Arnold)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_(Arnold)/05:_Decimals/5.09:__The_Pythagorean_Theorem",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Finding the Distance Between Two Points Using the Pythagorean Theorem",
+   "publisher": "Varsity Tutors",
+   "date": "undated",
+   "link": "https://www.varsitytutors.com/practice/subjects/8th-grade-math/lessons/find-distance-using-pythagorean-theorem",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "6.1: The Pythagorean Theorem, Distance and Midpoint",
+   "publisher": "LibreTexts Mathematics (College of the Desert)",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Courses/College_of_the_Desert/College_Algebra_for_Liberal_Arts_and_Humanities/06:_Analytic_Geometry_with_Conic_Sections/6.01:_The_Pythagorean_Theorem_Distance_and_Midpoint",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Common Core Standards: CCSS.Math.Content.8.G.B.8",
+   "publisher": "Shmoop",
+   "date": "undated",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-8-g-8.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "The 4 to 1 Ladder Rule Explained for Safe Extension Ladder Setup",
+   "publisher": "Occupational Safety Academy",
+   "date": "undated",
+   "link": "https://occupationalsafetyacademy.com/blogs/news/the-4-to-1-ladder-rule-explained-for-safe-extension-ladder-setup",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "Distance Formula: Finding the Distance Between Two Points",
+   "publisher": "HowStuffWorks",
+   "date": "undated",
+   "link": "https://science.howstuffworks.com/math-concepts/distance-formula.htm",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today we measure how far apart two points are, using a tool you already own: the Pythagorean theorem."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Distance and Real-World Right Triangles"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick reminder. In a right triangle, the two short sides are the legs, a and b. The long side across from the right angle is c, the hypotenuse. Then a squared plus b squared equals c squared."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a² + b² = c²"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is today's puzzle. Two points sit on a grid, one up and across from the other. How long is the slanted line between them?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with two dots joined by a slanted line. The line is neither flat nor straight up."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The trick is to draw a right triangle. Go across from one point, then up to the other. The slanted line becomes the long side of that triangle."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Draw a right triangle between the points"
+   },
+   "cite": [
+    "s2",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One easy case first. If two points share an x or a y, they sit in a straight line. Just subtract. For (2, 4) and (2, -4), 4 minus -4 is 8. No triangle needed."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same row or column: subtract, no triangle. | Slanted: draw a right triangle."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How far apart are (-6, 4) and (5, 4)?",
+    "right": "11 units",
+    "wrong": [
+     "1 unit",
+     "9 units",
+     "-11 units"
+    ],
+    "why": "The y-coordinates match, so the points sit on one horizontal line. Count across by subtracting: 5 minus -6 is 11. Subtracting a negative means adding, so it is not 1 or 9. A distance is a length, so it can't be negative."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a slanted pair. A is at (1, 2) and B is at (5, 5). Go across from A to (5, 2) and call that C. The corner at C is a right angle."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with A at (1, 2), B at (5, 5) and C at (5, 2). A flat line joins A to C, an upright line joins C to B, and a slanted line joins A to B."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We get the leg lengths by subtracting. Across: 5 minus 1 is 4. Up: 5 minus 2 is 3. Now we have two sides of a right triangle."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Across leg: 5 - 1 = 4 | Up leg: 5 - 2 = 3 | Slanted side: the distance we want"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check you can find legs. Take the points (2, 1) and (7, 13)."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Find the two legs"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "For (2, 1) and (7, 13), what are the across leg and the up leg?",
+    "right": "5 across and 12 up",
+    "wrong": [
+     "9 across and 14 up",
+     "7 across and 13 up",
+     "5 across and 14 up"
+    ],
+    "why": "Each leg is the difference between matching coordinates. Across: 7 minus 2 is 5. Up: 13 minus 1 is 12. Adding the coordinates gives 9 and 14, which is wrong. Using only the second point's numbers gives 7 and 13, which is also wrong. Mixing a right subtraction with a wrong addition gives 5 and 14."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to A and B. 4 squared is 16 and 3 squared is 9. Add them to get 25. The square root of 25 is 5. So A and B are 5 units apart."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5 units"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn, with the legs you just found: 5 and 12. The distance between (2, 1) and (7, 13) is the long side."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "5² + 12² = d²"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the distance between (2, 1) and (7, 13)?",
+    "right": "13 units",
+    "wrong": [
+     "17 units",
+     "169 units",
+     "60 units"
+    ],
+    "why": "5 squared is 25 and 12 squared is 144. Together that is 169, and the square root of 169 is 13. Adding the legs, 5 plus 12, gives 17, but the slanted side is shorter than going across and then up. 169 is d squared, not d, so you still need the square root. Multiplying the legs has no meaning here."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Negative coordinates? Same method. Take (-3, -1) and (2, 3). Across: 2 minus -3 is 5. Up: 3 minus -1 is 4. Take care with the double negatives."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Across: 2 - (-3) = 5 | Up: 3 - (-1) = 4 | d² = 5² + 4²"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "25 plus 16 is 41, so the distance is the square root of 41. That isn't a whole number, so it's irrational, like lesson 2. Since 6.4 squared is 40.96, it is about 6.4 units."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "√41 ≈ 6.4"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more with negatives. Use (-4, -3) and (1, 9). Find both legs first, then the theorem."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Try it: negative coordinates"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the distance between (-4, -3) and (1, 9)?",
+    "right": "13 units",
+    "wrong": [
+     "√45, about 6.7 units",
+     "17 units",
+     "5 units"
+    ],
+    "why": "Across: 1 minus -4 is 5. Up: 9 minus -3 is 12. 25 plus 144 is 169, and the square root is 13. Adding the coordinates instead of subtracting gives legs of -3 and 6, and the answer √45. Adding the legs gives 17. The across leg alone is 5, but it is only one side of the triangle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real life is full of right triangles. A ladder leaning on a wall is one. The wall and the ground meet at a right angle, so the ladder is the hypotenuse."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A house wall and flat ground meeting at a right angle, with a ladder leaning on the wall. The ladder is the slanted side, the wall is the up leg, and the ground from wall to ladder foot is the across leg."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: a 13-foot ladder has its base 5 feet from the wall. How high does it reach? The unknown is a leg, h. So 5 squared plus h squared equals 13 squared."
+   },
+   "show": {
+    "kind": "list",
+    "text": "25 + h² = 169 | h² = 144 | h = 12 feet"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the subtraction. When the unknown is a leg, we take the leg squared away from the hypotenuse squared. Now you try one."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Unknown leg: subtract"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A 10-foot ladder has its base 6 feet from the wall. How high up the wall does it reach?",
+    "right": "8 feet",
+    "wrong": [
+     "About 11.7 feet",
+     "4 feet",
+     "16 feet"
+    ],
+    "why": "The ladder is the hypotenuse, 10. So 6 squared plus h squared equals 10 squared. That gives 36 plus h squared equals 100, so h squared is 64 and h is 8. Adding 36 and 100 gives about 11.7, which is taller than the ladder itself, so that can't be right. 4 and 16 come from subtracting or adding the lengths without squaring."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Builders have a safety rule for leaning ladders. OSHA says the foot should be about one quarter of the working length from the wall. Working length means measured along the ladder, from the foot to the top support."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Base distance ≈ ¼ of working length"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That makes the ladder lean at roughly 76 degrees from flat. Example: a 16-foot working length means the base goes 4 feet out. The height is 16 squared minus 4 squared, which is 240. The square root is about 15.5 feet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Base: 16 ÷ 4 = 4 ft | h² = 256 - 16 = 240 | h ≈ 15.5 ft"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a 20-foot working length. First find the base distance, a quarter of 20. Then find the height, to the nearest tenth."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Try it: ladder set-up"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A ladder has a 20-foot working length and is set up with the quarter rule. About how high does it reach?",
+    "right": "About 19.4 feet",
+    "wrong": [
+     "15 feet",
+     "About 20.6 feet",
+     "5 feet"
+    ],
+    "why": "The base is 20 divided by 4, which is 5 feet. Then h squared is 20 squared minus 5 squared, so 400 minus 25, which is 375. The square root of 375 is about 19.4. 15 comes from 20 minus 5, which doesn't use the theorem. 20.6 comes from adding the squares, which treats a leg like the hypotenuse. 5 is only the base distance."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Diagonals work the same way. A rectangle's corner is a right angle, so its diagonal is a hypotenuse. This also shows the shortest path. Cutting straight across a 60 by 80 yard field is 100 yards. Walking round the edges is 140."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Along the edges: 60 + 80 = 140 yd | Straight across: √(60² + 80²) = 100 yd"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Screens are measured by their diagonal. Let's find one. A screen is 24 inches wide and 18 inches tall. Its diagonal is the hypotenuse."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rectangular screen 24 inches wide and 18 inches tall, with a dashed diagonal line from one corner to the opposite corner."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the diagonal of a 24-inch by 18-inch screen?",
+    "right": "30 inches",
+    "wrong": [
+     "42 inches",
+     "900 inches",
+     "15 inches"
+    ],
+    "why": "24 squared is 576 and 18 squared is 324. Together they make 900, and the square root of 900 is 30. 42 is 24 plus 18, which is the long way round the edges. 900 is the diagonal squared, so you still need the square root. 15 has no connection to these numbers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most answers aren't whole numbers, so we round. Keep the exact value, like the square root of 84, until the last step. Then round to whatever place the question asks for. An OpenStax example gets the square root of 50, and it asks for the nearest tenth: 7.1 inches."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Round last, not first"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a case to round. A 10-foot ladder has its base 4 feet from a wall. So h squared is 100 minus 16, which is 84."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "√84 = ?"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is the square root of 84, to the nearest tenth?",
+    "right": "9.2",
+    "wrong": [
+     "9.1",
+     "9.0",
+     "42"
+    ],
+    "why": "9.1 squared is 82.81 and 9.2 squared is 84.64. 84 is only 0.64 from 84.64 but 1.19 from 82.81, so 9.2 is closer. 9.1 comes from chopping off digits instead of rounding. 9.0 is too rough, since 9 squared is only 81. 42 is just 84 divided by 2, which isn't a square root."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Units next. Every side must be in the same unit before you square. Say a 10-foot ladder has its base 30 inches from the wall. Change 30 inches to 2.5 feet. Then h squared is 100 minus 6.25, or 93.75. That makes h about 9.7 feet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "30 in = 2.5 ft | h² = 100 - 6.25 = 93.75 | h ≈ 9.7 ft"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Maps and grids have a scale too. Suppose each grid square stands for 2 miles. Find the distance in squares, then multiply by the scale. The final answer is in miles."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Scale and units"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "On a map where each square is 2 miles, two towns are 3 squares across and 4 squares up from each other. How far apart are they?",
+    "right": "10 miles",
+    "wrong": [
+     "5 miles",
+     "14 miles",
+     "25 miles"
+    ],
+    "why": "3 squared plus 4 squared is 25, so the distance is 5 squares. Each square is 2 miles, so 5 times 2 is 10 miles. 5 miles forgets the scale. 14 miles is 3 plus 4 squares, which is 7, times 2, going the long way round. 25 is the squared distance in squares, not the distance."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it together. These are the steps for every problem today, whether it's two points, a ladder or a screen."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Draw the right triangle. | 2. Find the legs: subtract coordinates, or read the lengths. | 3. Use a² + b² = c², subtracting when a leg is unknown. | 4. Take the square root, round last, and keep the units."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last check, mixing it all together. Take your time, and draw the triangle if it helps."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Final check"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the distance between (-2, 5) and (4, -3)?",
+    "right": "10 units",
+    "wrong": [
+     "14 units",
+     "About 2.8 units",
+     "100 units"
+    ],
+    "why": "Across: 4 minus -2 is 6. Up: 5 minus -3 is 8, which is a length of 8 even though one point is below the axis. 36 plus 64 is 100, and the square root is 10. 14 is 6 plus 8, which is the long way round. About 2.8 comes from adding the coordinates, giving legs of 2 and 2. 100 is the distance squared."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Distance between two points",
+   "links": [
+    "[[The Pythagorean Theorem: Why It Works]]",
+    "[[Using the Pythagorean Theorem and Its Converse]]",
+    "[[Transformations on the Coordinate Plane]]"
+   ]
+  },
+  {
+   "topic": "Ladder and diagonal problems",
+   "links": [
+    "[[Using the Pythagorean Theorem and Its Converse]]",
+    "[[Solving with Squares and Cubes]]"
+   ]
+  },
+  {
+   "topic": "Rounding and units",
+   "links": [
+    "[[Irrational Numbers and Roots]]",
+    "[[Estimating and Ordering Irrational Numbers]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The ladder safety rule is 'one foot out for every four feet up the wall.'",
+   "other_view": "Many popular guides phrase it that way, using height. OSHA's wording uses the working length along the ladder, which is the hypotenuse, not the height. One safety-training source calls height-based examples field approximations rather than OSHA's definition. The two versions give nearly the same angle, but they are not the same measurement. This lesson uses OSHA's wording.",
+   "cite": [
+    "s5",
+    "s11"
+   ]
+  },
+  {
+   "claim": "You should always draw a triangle and use the Pythagorean theorem, rather than memorizing the distance formula.",
+   "other_view": "The grade 8 standard asks students to apply the Pythagorean theorem to find distance. Later algebra courses often write the same idea as a formula, d = √((x₂ − x₁)² + (y₂ − y₁)²). Some teachers say it is simply the theorem in coordinate form, so knowing one means knowing the other. Others prefer starting with the formula for speed once the idea is secure.",
+   "cite": [
+    "s1",
+    "s8",
+    "s9"
+   ]
+  }
+ ]
+}

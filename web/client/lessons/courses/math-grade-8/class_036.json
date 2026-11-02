@@ -1,0 +1,1043 @@
+{
+ "about": {
+  "title": "Course Review and Mixed Practice: Choosing the Right Tool",
+  "course": "math-grade-8",
+  "class_n": 36,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 45,
+  "length_note": "About 45 minutes, a bit over the usual half hour. This is the last class, so it revisits all four strands of the course (numbers, lines and equations, shapes, data), then checking answers and the toughest ideas. Stop at any question and come back later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 Introduction, Common Core State Standards for Mathematics",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/introduction/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Grade 8 Expressions & Equations, Common Core State Standards",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8 Geometry, Common Core State Standards",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/G/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Converse of the Pythagorean Theorem (task 724)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/G/8/B/6/tasks/724",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Cone vs Sphere vs Cylinder",
+   "publisher": "Math Is Fun",
+   "date": "n.d.",
+   "link": "https://www.mathsisfun.com/geometry/cone-sphere-cylinder.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Checking Reasonableness",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/prealgebra/lessons/checking-reasonableness",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Checking With Estimation",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/shsat-math/lessons/checking-with-estimation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Common Core State Standards for Mathematics, Grade 8 (Oregon Department of Education copy)",
+   "publisher": "Oregon Department of Education",
+   "date": "n.d.",
+   "link": "https://www.oregon.gov/ode/educator-resources/standards/mathematics/Documents/ccssm8.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Grade 8 Common Core Standards",
+   "publisher": "Math Is Fun",
+   "date": "n.d.",
+   "link": "https://www.mathsisfun.com/links/core-grade-8.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "How to Find the Volume of Cylinders, Cones, and Spheres",
+   "publisher": "Effortless Math",
+   "date": "n.d.",
+   "link": "https://www.effortlessmath.com/math-topics/volume-of-cylinders-cones-and-spheres/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Literacy Is Every Subject: Math and Word Problems (Part 1 of 2)",
+   "publisher": "University of Iowa, Iowa Reading Research Center",
+   "date": "2025",
+   "link": "https://irrc.education.uiowa.edu/blog/2025/05/literacy-every-subject-math-and-word-problems-part-1-2",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "\"More\" Effective Ways to Solve Word Problems",
+   "publisher": "The Reading Teacher (Wiley, International Literacy Association)",
+   "date": "2025",
+   "link": "https://ila.onlinelibrary.wiley.com/doi/full/10.1002/trtr.70022",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s13",
+   "title": "8th Grade Math Common Core Standards For Teachers",
+   "publisher": "Helping With Math",
+   "date": "n.d.",
+   "link": "https://helpingwithmath.com/common-core-standards/8th-grade/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s14",
+   "title": "Grade 8 Introduction (Common Core State Standards copy)",
+   "publisher": "MathEd.net",
+   "date": "n.d.",
+   "link": "https://mathed.net/corestandards/docs/math/8/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s15",
+   "title": "No More Keywords for Math Word Problems",
+   "publisher": "The Routty Math Teacher",
+   "date": "n.d.",
+   "link": "https://therouttymathteacher.com/keywords-for-math-word-problems/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s16",
+   "title": "Converse of the Pythagorean Theorem: Definition, Formula & Examples",
+   "publisher": "Mathwords",
+   "date": "n.d.",
+   "link": "https://www.mathwords.com/c/converse_of_the_pythagorean_theorem.htm",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s17",
+   "title": "Common Core State Standards for Mathematics, Grade 8 (Washington OSPI copy)",
+   "publisher": "Washington Office of Superintendent of Public Instruction",
+   "date": "n.d.",
+   "link": "https://ospi.k12.wa.us/sites/default/files/2022-12/mathstandards_grade8.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s18",
+   "title": "Estimating for Reasonableness",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/math-1/lessons/estimating-for-reasonableness",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 36, the last one. There is no new rule today. Your job is to look at a problem and choose the right tool from the course."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 36: Choosing the Right Tool"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Grade 8 math has three big areas: equations and lines, functions, and shapes and space. Today we use all of them, one strand at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Equations and systems | Functions | Shapes, distance and space"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The plan: three questions to ask, then a clue list, a worked example and a question for each strand. After that we check answers for sense and look back at the trickiest ideas. Pause whenever you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3 questions | Clues by strand | Checking for sense | Toughest ideas"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Question one: what am I asked to find? A length, a rate, a count, a comparison? Say it in your own words before touching a number."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1. What am I asked to find?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Question two: what am I given? Side lengths, a start amount and a rate, a list of dots, the size of a solid?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "2. What am I given?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Question three: what is the shape of the situation? A right angle, a steady change, two things being compared, a solid, dots on a graph?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3. What is the shape of the situation?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One warning. Don't just hunt for magic words. Research says keyword hunting can mislead, because the same word can point different ways. Read the whole situation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Read the situation, not just keywords"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the clue lists are hints about situations, not rules. Start with numbers. A square root of a number that is not a perfect square, like √50, is irrational. We estimate it with a nearby rational number."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Clue: a root like √50, not a perfect square | Tool: estimate it, then compare or place it on a number line"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Powers with the same base point to the exponent rules. Very big or very tiny numbers point to scientific notation."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Clue: powers with the same base | Tool: exponent rules. Clue: huge or tiny numbers | Tool: scientific notation"
+   },
+   "cite": [
+    "s9",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example one: which is bigger, √50 or 7.1? The clue is a root of a non-perfect square, so we approximate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "√50 or 7.1?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "7 times 7 is 49, so √50 is just above 7. Now square 7.1: that gives 50.41. It is more than 50, so 7.1 is the bigger number."
+   },
+   "show": {
+    "kind": "list",
+    "text": "7 × 7 = 49 | 7.1 × 7.1 = 50.41 | 49 < 50 < 50.41"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check for sense: √50 is about 7.07, only a little over 7. And 7.1 is a touch more. That fits."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "√50 ≈ 7.07 < 7.1"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn with the same tool. Which is bigger, √30 or 5.4?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "√30 or 5.4?"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is bigger, √30 or 5.4, and why?",
+    "right": "√30, because 5.4 squared is 29.16, which is less than 30",
+    "wrong": [
+     "5.4, because 5 × 6 = 30, so √30 is about 5",
+     "They can't be compared, because √30 is irrational and 5.4 is not",
+     "They are equal, because √30 rounds to 5"
+    ],
+    "why": "√30 is not a perfect square, so we compare using a rational approximation. Squaring 5.4 gives 29.16, which is under 30, so the number whose square is 30 must be larger than 5.4. Irrational numbers can be compared using rational approximations."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next strand: lines and equations. A steady rate, like dollars per month, points to a linear function. The rate is the slope and the starting amount is the y-intercept."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Clue: a steady rate plus a start amount | Tool: y = mx + b, slope m is the rate, b is the start"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One equation with one unknown means solve a linear equation. Two conditions at once, or a question like 'when are they equal?', points to a system. Its answer is the point where the two lines cross."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One unknown: solve the equation | Two conditions: a system | Solution: where the lines cross"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example two. Gym A costs $10 to join plus $5 a month. Gym B has no joining fee and costs $10 a month. When do they cost the same?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "10 + 5m  or  10m ?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Both have a start amount and a steady rate, so each is a line. A is 10 + 5m, and B is 10m. 'Same cost' means set them equal. 10 + 5m = 10m, so 10 = 5m, and m = 2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A: 10 + 5m | B: 10m | 10 + 5m = 10m | m = 2"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check by putting 2 back in. A is 10 + 10 = 20. B is 10 × 2 = 20. Both cost $20 at month 2. That matches the story."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Month 2: both $20"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the answer to the system is the point (2, 20). Think about what that point means on a graph of the two plans."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(2, 20)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On a graph of the two gym plans, what does the point (2, 20) mean?",
+    "right": "It is where the two lines cross: both plans cost $20 at month 2",
+    "wrong": [
+     "It is the y-intercept of Gym A's line",
+     "It is the slope of Gym B's line",
+     "It is the monthly fee for Gym A"
+    ],
+    "why": "The crossing point is on both lines, so it satisfies both equations at once. That is why it is the solution of the system. The y-intercept of Gym A is its joining fee, 10, and Gym B's slope is 10 dollars per month."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third strand: shapes. A right angle plus known lengths points to the Pythagorean theorem. The two shorter sides, squared and added, equal the longest side squared."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a² + b² = c²  (c is the longest side)"
+   },
+   "cite": [
+    "s4",
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The same idea finds distance on a coordinate grid. Draw a right triangle between two points, and the distance is its longest side."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with two points joined by a slanted line; a horizontal and a vertical side are drawn to make a right triangle."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A solid, plus the question 'how much does it hold?', points to volume. Cylinders, cones and spheres each have a formula."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Clue: a solid, 'how much does it hold?' | Tool: volume formula for cylinder, cone or sphere"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Slides, flips and turns point to rigid motions. If one figure can be moved onto another that way, they are congruent. Enlarging or shrinking points to dilations and similar figures."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Slide, flip, turn: congruent figures | Scaled bigger or smaller: dilation, similar figures"
+   },
+   "cite": [
+    "s3",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example three. A 10-foot ladder leans on a wall. Its foot is 6 feet from the wall. How high up the wall does it reach?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A ladder leaning on a wall. The ground is 6 ft along the bottom, the ladder is 10 ft long, and the height up the wall is unknown. The wall and ground meet at a right angle."
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The wall and the ground make a right angle, and we want a missing side. So 6² + h² = 10². That is 36 + h² = 100, so h² = 64, and h = 8 feet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6² + h² = 10² | 36 + h² = 100 | h² = 64 | h = 8 ft"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try a new one with the same clue. A ramp's two straight sides, 9 feet and 12 feet, meet at a right angle. How long is the sloped side? Pick the tool."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "9 ft, 12 ft, right angle, third side?"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which tool finds the length of the sloped side?",
+    "right": "The Pythagorean theorem: 9² + 12² = c², so c = 15 feet",
+    "wrong": [
+     "The volume formula for a cone",
+     "Solving a system of equations to find where two lines cross",
+     "Scientific notation to shrink the numbers"
+    ],
+    "why": "We have a right angle, two known sides, and we want the third. That is the Pythagorean theorem: 81 + 144 = 225, and the square root of 225 is 15."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example four. A paper cup is a cone, 6 cm across the top and 10 cm tall. How much water does it hold? A solid and 'how much' means volume."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cone-shaped paper cup, point down, with 6 cm marked across the top and 10 cm marked for the height."
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A cone holds exactly one third of a cylinder with the same base and height. Across the top is the diameter, 6 cm. The formulas use the radius, which is half: 3 cm."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cone: V = ⅓ π r² h | Diameter 6 cm, so r = 3 cm | h = 10 cm"
+   },
+   "cite": [
+    "s5",
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Using 3.14 for π: one third times 3.14 times 3 times 3 times 10. That is about 94.2 cubic centimeters."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "94.2 cm³"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a way to see it. The cylinder with the same base and height holds 282.6. The cone holds one third of that."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Cylinder and cone volumes, r = 3 cm, h = 10 cm",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The radius is the easy place to slip, so let's practise it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Radius is half the diameter"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A cone has a diameter of 8 cm and a height of 9 cm. Which number do you use for r in the volume formula?",
+    "right": "4 cm, which is half the diameter",
+    "wrong": [
+     "8 cm, the diameter",
+     "9 cm, the height",
+     "16 cm, double the diameter"
+    ],
+    "why": "The volume formulas use the radius, the distance from the centre to the edge. That is half of the diameter, so 8 ÷ 2 = 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fourth strand: data. Two measurements for each person or thing, shown as dots, point to a scatter plot. A line of best fit can model the pattern with a linear equation."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Clue: two numbers for each item, shown as dots | Tool: scatter plot, then line of best fit"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When you count things by two categories, you use a two-way table. Both tools help you look for patterns of association between two kinds of data."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Counts by two categories | Tool: two-way table"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now try picking a tool for a data problem."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sleep hours and quiz score"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Twenty students each report hours of sleep and a quiz score. You want to see whether more sleep goes with higher scores. Which tool fits?",
+    "right": "A scatter plot, maybe with a line of best fit",
+    "wrong": [
+     "The Pythagorean theorem",
+     "Solving a system of two equations",
+     "The volume formula for a cylinder"
+    ],
+    "why": "Each student gives two numbers, so each student is one dot. A scatter plot shows the pattern of association, and a line of best fit can model it with a linear equation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You now have tools for all four strands. Next is the habit that protects you from slips: checking your answer for sense."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Checking answers for sense"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After you get an answer, ask: does this make sense? Estimating would catch a shirt that costs $4,000. Round the numbers, do quick math, and compare."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Round the numbers | Do quick math | Compare with your answer"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Three quick checks: estimate with round numbers, put your answer back into the problem, and ask whether the size and units fit the story. Using two different checks is stronger than one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Estimate | 2. Put it back in | 3. Does it fit the story?"
+   },
+   "cite": [
+    "s6",
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the ladder problem, the answer 8 is less than the ladder's 10 feet. In a right triangle the longest side sits opposite the right angle, so each leg must be shorter than it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Legs are shorter than the longest side"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A student solves the ladder problem and gets a height of 12 feet for the 10-foot ladder. What is the quickest sense check?",
+    "right": "A leg can't be longer than the longest side, and 12 is more than the ladder's 10 feet",
+    "wrong": [
+     "Nothing is wrong, because 6 + 12 is more than 10",
+     "Only the units need checking",
+     "12 must be wrong only because it is an even number"
+    ],
+    "why": "The ladder is the longest side, opposite the right angle, so the wall height has to be shorter than 10 feet. An answer of 12 fails this at once. The correct value is 8."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Estimating works on the cone too. Round 3.14 to 3. A cylinder would be about 3 × 9 × 10 = 270, and a third of that is about 90. So 94.2 fits."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3 × 9 × 10 = 270 | 270 ÷ 3 = 90 | 94.2 is close to 90"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Estimation is good at catching wildly wrong answers. See how it works on this one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Estimate says about 90"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A student gets 942 cm³ for the cone cup. The rounded estimate says about 90. What probably happened?",
+    "right": "A decimal point slipped. The answer should be near 94.2",
+    "wrong": [
+     "Nothing is wrong, because estimates are too rough to judge",
+     "942 is correct because bigger numbers are more careful",
+     "They forgot to square the 10"
+    ],
+    "why": "942 is ten times the estimate, which is the sign of a slipped decimal point. An estimate can't prove an exact answer, but it flags answers that are far off."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last section: the ideas that trip people up most. These are the hard parts of the course, so slow down here."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Looking back at the toughest ideas"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tough idea one: the theorem and its converse. The theorem starts with a right angle and gives you the equation. The converse starts with the equation and tells you the angle is right."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Theorem: right angle, so a² + b² = c² | Converse: a² + b² = c², so right angle"
+   },
+   "cite": [
+    "s4",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To use the converse, call the longest side c. For sides 5, 12 and 13: 25 + 144 = 169, which is 13². So it is a right triangle."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5² + 12² = 25 + 144 = 169 | 13² = 169 | Right triangle"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now you try it with a triangle that has sides 6, 8 and 11."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sides 6, 8, 11: right triangle?"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A triangle has sides 6, 8 and 11. Is it a right triangle?",
+    "right": "No: 6² + 8² = 100, but 11² = 121, so there is no right angle",
+    "wrong": [
+     "Yes, because 6 + 8 is bigger than 11",
+     "Yes, because all three sides are whole numbers",
+     "It can't be told without measuring the angle"
+    ],
+    "why": "The converse says to test the longest side as c. 36 + 64 = 100, which is not 121. So the equation fails and the triangle is not right. You don't need to measure an angle."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tough idea two: systems can have one solution, none, or infinitely many. Lines that cross give one. Parallel lines never meet and give none. The same line twice gives infinitely many."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cross: one solution | Parallel: no solution | Same line: infinitely many"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You can sometimes see it by inspection. 3x + 2y = 5 and 3x + 2y = 6 can't both be true, because the same expression can't equal 5 and 6. So there is no solution."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same left side, different right sides: no solution"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "y = 2x + 1 and y = 2x + 4 both have slope 2, but start at different heights. How many solutions does this system have?",
+    "right": "None: the lines are parallel and never cross",
+    "wrong": [
+     "Exactly one, where x = 0",
+     "Infinitely many",
+     "Exactly two"
+    ],
+    "why": "The lines have the same slope but different y-intercepts, so they are parallel and never meet. No point can be on both lines, so the system has no solution."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tough idea three: negative exponents. Multiplying powers of the same base means adding the exponents. A negative exponent means one over the power. 3² × 3⁻⁵ = 3⁻³ = 1/27."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3² × 3⁻⁵ = 3⁻³ = 1/27"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What is 2³ × 2⁻⁵?",
+    "right": "2⁻², which is 1/4",
+    "wrong": [
+     "2⁻¹⁵",
+     "−4",
+     "4"
+    ],
+    "why": "Same base, so add the exponents: 3 + (−5) = −2. Then 2⁻² means 1 over 2², which is 1/4. A negative exponent doesn't make the number negative."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tough idea four: 'how many times as large?' in scientific notation. Divide the front numbers and subtract the exponents. 6 × 10⁸ divided by 3 × 10⁵ is 2 × 10³, which is 2,000 times."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(6 × 10⁸) ÷ (3 × 10⁵) = 2 × 10³"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "How many times as large is 8 × 10⁶ as 4 × 10²?",
+    "right": "2 × 10⁴, or 20,000 times",
+    "wrong": [
+     "2 × 10⁸",
+     "2 × 10³",
+     "4 × 10⁴"
+    ],
+    "why": "Divide the front numbers: 8 ÷ 4 = 2. Subtract the exponents: 6 − 2 = 4. That gives 2 × 10⁴, which is 20,000."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the whole map in one list. Ask the three questions, find the strand, choose the tool, then check for sense."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Roots and ordering: approximate | Powers: exponent rules | Huge or tiny: scientific notation | Rate and start: y = mx + b | Two conditions: system | Right angle: Pythagorean theorem | Solid: volume | Slide, flip, turn: rigid motions | Dots: scatter plot"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s8",
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A last mixed question, with no hints about which strand. Use your three questions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Which problem needs the Pythagorean theorem?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which problem needs the Pythagorean theorem?",
+    "right": "How far apart are the points (0, 0) and (6, 8) on a grid?",
+    "wrong": [
+     "When do two phone plans cost the same?",
+     "How many times larger is 5 × 10⁷ than 5 × 10³?",
+     "How much does a ball with radius 3 cm hold?"
+    ],
+    "why": "Going 6 across and 8 up makes a right triangle with legs 6 and 8, and the distance is the longest side. 36 + 64 = 100, so the distance is 10. The other problems use a system, scientific notation and a sphere volume."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the end of the course. You don't need to remember everything. Keep a clue list, ask the three questions, and check for sense. Well done for getting here."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Well done: course complete"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Volume in cubic centimeters (radius 3 cm, height 10 cm, π ≈ 3.14)",
+   "rows": [
+    {
+     "label": "Cylinder",
+     "value": 282.6,
+     "source": "s5"
+    },
+    {
+     "label": "Cone (same base and height)",
+     "value": 94.2,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Choosing a tool for a mixed problem",
+   "links": [
+    "[[Pythagorean theorem and its converse]]",
+    "[[Systems of equations]]",
+    "[[Volume of cylinders, cones and spheres]]",
+    "[[Scientific notation]]",
+    "[[Scatter plots and lines of best fit]]"
+   ]
+  },
+  {
+   "topic": "Checking answers for sense",
+   "links": [
+    "[[Estimating irrational numbers]]",
+    "[[Substituting back into an equation]]"
+   ]
+  },
+  {
+   "topic": "Toughest ideas of the course",
+   "links": [
+    "[[Theorem versus converse]]",
+    "[[One, none or infinitely many solutions]]",
+    "[[Zero and negative exponents]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Hunting for keywords is a poor way to choose a tool, so read the whole situation.",
+   "other_view": "Researchers and many teachers say keyword hunting can mislead, because a word can point to the wrong operation and many problems have no keywords. Some teachers point out that keyword lists have long been a quick, familiar strategy for classroom and test success. They agree that keywords alone don't make students think about the situation.",
+   "cite": [
+    "s11",
+    "s12",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Estimating is a good way to check an answer.",
+   "other_view": "Estimation is fast and catches wildly wrong answers, but it doesn't help with answers that are close but wrong. For an exact check you also need another method, such as putting the answer back into the problem.",
+   "cite": [
+    "s6",
+    "s18"
+   ]
+  }
+ ]
+}

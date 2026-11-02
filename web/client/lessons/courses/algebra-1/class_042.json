@@ -1,0 +1,450 @@
+{
+ "about": {
+  "title": "Solving Quadratics by Factoring",
+  "course": "algebra-1",
+  "class_n": 42,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes fits this class. It teaches one idea at a time: the zero product property, setting equal to zero, solving, then x-intercepts. Only one of my web searches returned results. The sources below back the link between zeros, factors and x-intercepts. The zero product property itself is standard algebra, but I have no textbook source for it, so those beats carry no citation."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "CCSS.Math.Content.HSA-APR.B.3: Identify zeros of polynomials when suitable factorizations are available, and use the zeros to construct a rough graph",
+   "publisher": "Smithsonian Learning Lab (listing the Common Core State Standards for Mathematics)",
+   "date": "undated",
+   "link": "https://learninglab.si.edu/standards/CCSS.Math.Content.HSA-APR.B.3/497",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Graphing polynomials (Algebra blueprint, Graphing from Factors tasks)",
+   "publisher": "Illustrative Mathematics",
+   "date": "undated",
+   "link": "https://tasks.illustrativemathematics.org/blueprints/M3/3/2",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 42. Today we solve quadratic equations by factoring. You already know how to factor from classes 36 to 39, so this is where it pays off."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Solving Quadratics by Factoring"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, what are we solving? A quadratic equation has an x² term in it. For example: x² + 5x + 6 = 0."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quadratic equation: an equation with an x² term, like x² + 5x + 6 = 0"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our goal is to find every x that makes the equation true. Those values are called solutions. To get there, we need one small fact about zero."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution: a value of x that makes the equation true"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here it is. If two numbers multiply to make 0, then at least one of them has to be 0. That is the zero product property."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Zero product property: if a × b = 0, then a = 0 or b = 0 (or both)"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "See it with numbers. 0 × 7 is 0, and 5 × 0 is 0. But 3 × 4 is 12, and neither factor is zero. Only zero makes a product zero."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Product is 0: 0 × 7 = 0 and 5 × 0 = 0 | Product is not 0: 3 × 4 = 12 (no zero factor)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You know a × b = 0, and a = 4. What must b be?",
+    "right": "b = 0",
+    "wrong": [
+     "b = 4",
+     "b = 1",
+     "b = -4"
+    ],
+    "why": "4 is not zero, so the zero has to come from b. Only zero times anything gives 0."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This only works when the product equals ZERO. If (x − 2)(x + 5) = 10, we can't say either factor is 10 or 0. We know nothing yet."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Works: (x − 2)(x + 5) = 0 | Does not work: (x − 2)(x + 5) = 10"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "On which equation can you use the zero product property right away?",
+    "right": "(x − 2)(x + 5) = 0",
+    "wrong": [
+     "(x − 2)(x + 5) = 10",
+     "(x − 2)(x + 5) = 1",
+     "(x − 2)(x + 5) = 7"
+    ],
+    "why": "The property needs a product that equals 0. The other equations have products equal to other numbers, so it says nothing about them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So step one is to get zero on one side. Add or subtract terms until one side is 0. For x² + 3x = 10, subtract 10 from both sides."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² + 3x = 10 | subtract 10 from both sides | x² + 3x − 10 = 0"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is x² − 4x = 12 rewritten with zero on one side?",
+    "right": "x² − 4x − 12 = 0",
+    "wrong": [
+     "x² − 4x + 12 = 0",
+     "x² − 4x = 0",
+     "x² + 4x − 12 = 0"
+    ],
+    "why": "Subtract 12 from both sides. The −4x stays as it is, and the 12 becomes −12 on the left."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two is to factor the side that isn't zero. Our first example is x² + 5x + 6 = 0. We need two numbers that multiply to 6 and add to 5. Those are 2 and 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² + 5x + 6 = 0 | (x + 2)(x + 3) = 0"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three is to set each factor equal to zero. Now the zero product property applies: either x + 2 = 0 or x + 3 = 0."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + 2 = 0  or  x + 3 = 0"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four is to solve each little equation. x + 2 = 0 gives x = −2. x + 3 = 0 gives x = −3. Two solutions."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "x = −2 or x = −3"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Always check. Put −2 into the original: 4 − 10 + 6 = 0. It works. Put −3 in: 9 − 15 + 6 = 0. That works too."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x = −2: (−2)² + 5(−2) + 6 = 4 − 10 + 6 = 0 | x = −3: (−3)² + 5(−3) + 6 = 9 − 15 + 6 = 0"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Solve x² − 7x + 12 = 0. It's already zero on one side, so factor first, then set each factor to zero."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Try it: x² − 7x + 12 = 0"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What are the solutions of x² − 7x + 12 = 0?",
+    "right": "x = 3 or x = 4",
+    "wrong": [
+     "x = −3 or x = −4",
+     "x = 12",
+     "x = 7"
+    ],
+    "why": "It factors as (x − 3)(x − 4) = 0. Then x − 3 = 0 gives x = 3 and x − 4 = 0 gives x = 4. The signs flip, because the factor is x − 3, not x + 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick vocabulary. The solutions of an equation like this are also called roots. If we write it as f(x) = 0, the same numbers are called zeros of the function. Three names, same numbers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solutions = roots = zeros (the x values that make the expression equal 0)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Common Core standard for this uses the word zeros. It says to find zeros from a factorization, then use them to sketch a graph. That is where we go next."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Find zeros when a factorization is available, then use them for a rough graph (paraphrase of standard A-APR.B.3)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's the picture link. If a is a zero, then the point (a, 0) is on the graph. So the graph touches the x-axis at x = a. Zeros are x-intercepts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A U-shaped parabola opening upward. It crosses the horizontal x-axis at two points, x = −3 and x = −2, and dips below the axis between them."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So when we solved x² + 5x + 6 = 0, we also found where the graph of y = x² + 5x + 6 crosses the x-axis: at −3 and −2. Factored form shows the intercepts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Equation: x² + 5x + 6 = 0 gives x = −2, −3 | Graph: y = x² + 5x + 6 crosses the x-axis at (−2, 0) and (−3, 0)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A parabola crosses the x-axis at x = 1 and x = 5. What are the solutions of the equation where y = 0?",
+    "right": "x = 1 and x = 5",
+    "wrong": [
+     "x = 0 and x = 6",
+     "x = −1 and x = −5",
+     "x = 5 only"
+    ],
+    "why": "Where y = 0 is exactly where the graph meets the x-axis. So the x-intercepts are the solutions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, a trap. Try x² − 9x = 0. There's no constant term, but we can still factor out a common x: x(x − 9) = 0."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² − 9x = 0 | x(x − 9) = 0 | x = 0  or  x − 9 = 0 | x = 0 or x = 9"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Don't divide both sides by x. You'd lose the solution x = 0. Factor instead, and both solutions show up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Factor out x. Don't divide by x. Dividing loses a solution."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What are the solutions of x² + 4x = 0?",
+    "right": "x = 0 or x = −4",
+    "wrong": [
+     "x = −4 only",
+     "x = 4 only",
+     "x = 0 or x = 4"
+    ],
+    "why": "Factor x(x + 4) = 0. Then x = 0, or x + 4 = 0 gives x = −4. The 0 is a real solution, so keep it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The same steps work when the x² has a number in front. Solve 2x² + 5x − 3 = 0. It factors as (2x − 1)(x + 3) = 0. You can check by multiplying it back out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x² + 5x − 3 = 0 | (2x − 1)(x + 3) = 0 | 2x − 1 = 0  or  x + 3 = 0"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now solve each piece. 2x − 1 = 0 means 2x = 1, so x = 1/2. And x + 3 = 0 gives x = −3. Solutions can be fractions, and that's fine."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "x = 1/2 or x = −3"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "In (3x + 6)(x − 2) = 0, what does the factor 3x + 6 = 0 give?",
+    "right": "x = −2",
+    "wrong": [
+     "x = 2",
+     "x = 6",
+     "x = −6"
+    ],
+    "why": "Subtract 6 to get 3x = −6, then divide by 3 to get x = −2. You have to do both steps to isolate x."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a game-style problem. A ball is kicked up, and its height in meters after t seconds is h = −5t² + 20t. These numbers are made up to keep the math clean. When is the height 0?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "−5t² + 20t = 0 | −5t(t − 4) = 0 | t = 0  or  t = 4"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The two zeros tell a story. At t = 0 the ball is on the ground, about to leave. At t = 4 it's back on the ground. Both are x-intercepts of the path."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An upside-down U-shaped arc. It starts on the ground at 0 seconds, peaks at 2 seconds, and lands at 4 seconds."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Using h = −5t² + 20t, when does the ball land?",
+    "right": "At t = 4 seconds",
+    "wrong": [
+     "At t = 0 seconds",
+     "At t = 2 seconds",
+     "At t = 20 seconds"
+    ],
+    "why": "The ball is at height 0 at t = 0 (the start) and t = 4 (the landing). The later time is the landing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it all together. Four steps: zero on one side, factor, set each factor to zero, solve each. Then check, and connect the answers to the x-intercepts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Get 0 on one side | 2. Factor | 3. Set each factor = 0 | 4. Solve each | Check, then link to x-intercepts"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watch for three slips. Using the property when the product isn't zero. Dividing by x and losing a solution. Forgetting that (x − 3) gives x = +3. Nice work today. Next class is square roots and completing the square."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slip 1: product not 0 | Slip 2: dividing by x | Slip 3: sign flip, (x − 3) gives x = 3"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Zero product property",
+   "links": [
+    "[[Factoring x² + bx + c]]",
+    "[[Factoring ax² + bx + c]]",
+    "[[Special Factoring and a Factoring Strategy]]"
+   ]
+  },
+  {
+   "topic": "Zeros, roots and x-intercepts",
+   "links": [
+    "[[Quadratic Functions and Their Graphs]]",
+    "[[Graphs of Functions: Domain, Range and Behavior]]"
+   ]
+  },
+  {
+   "topic": "Next steps when a quadratic won't factor",
+   "links": [
+    "[[Square Roots and Completing the Square]]",
+    "[[The Quadratic Formula and the Discriminant]]"
+   ]
+  },
+  {
+   "topic": "Quadratic word problems",
+   "links": [
+    "[[Quadratic Models]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Factoring is the best first way to solve a quadratic.",
+   "other_view": "Factoring only works neatly when the numbers factor nicely. Many quadratics don't, so completing the square and the quadratic formula (classes 43 and 44) work on every quadratic. A calculator can also graph it and read the x-intercepts. Factoring is quick and shows the structure, but it is one tool among several. This is a teaching-order note from the course plan, not from a source I read.",
+   "cite": []
+  }
+ ]
+}

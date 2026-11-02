@@ -1,0 +1,533 @@
+{
+ "about": {
+  "title": "Arithmetic Sequences as Linear Functions",
+  "course": "algebra-1",
+  "class_n": 19,
+  "audience": [
+   "teenagers aged 14 to 16"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, which fits a half-hour class. The class has two rules (recursive and explicit) and then one link to lines. The beats are short, with a check after each new idea. Stop after any beat and pick up there next time if you need to."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "High School: Functions, Interpreting Functions (standards HSF-IF.A.3 and HSF-IF.B.5)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "2010",
+   "link": "https://www.thecorestandards.org/Math/Content/HSF/IF/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "4.16.2 What Is an Arithmetic Sequence? (Algebra 1)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/4-16-2-what-is-an-arithmetic-sequence",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Chapter 13 key concepts: Arithmetic Sequences (Algebra and Trigonometry 2e)",
+   "publisher": "OpenStax",
+   "date": "2026-01-14",
+   "link": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/13-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Formulas for Arithmetic Sequences (College Algebra with Corequisite Support)",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/ntcc-collegealgebracorequisite/chapter/formulas-for-arithmetic-sequences/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Arithmetic & Geometric Sequences: Recursive & Explicit Formulas (Algebra 1)",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/algebra-1/lessons/arithmetic-and-geometric-sequences-as-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "13.2 Arithmetic Sequences (Algebra and Trigonometry)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-and-trigonometry/pages/13-2-arithmetic-sequences",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we look at number patterns that grow by the same amount every step, and we turn them into a rule."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Patterns that add the same amount"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A sequence is just a list of numbers in order. Each number in the list is called a term."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sequence = a list of numbers in order. Each number is a term."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Say Sam starts a game day with 20 coins and earns 15 more each day. His coins at the end of each day are 20, 35, 50, 65."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "coin",
+    "count": 20,
+    "layout": "group",
+    "text": "Day 1: 20 coins. Then 35, 50, 65 ..."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same number, 15, gets added every time. That is what makes this an arithmetic sequence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Arithmetic sequence: each term is the previous term plus a constant. That constant is the common difference, d."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To find d, take any term and subtract the one just before it. Here 35 minus 20 is 15, and 50 minus 35 is 15 too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "35 − 20 = 15\n50 − 35 = 15\n65 − 50 = 15\nSo d = 15"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Look at 50, 44, 38, 32. Subtract each term from the next one. What is d?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "50, 44, 38, 32 → d = ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the common difference of 50, 44, 38, 32?",
+    "right": "−6",
+    "wrong": [
+     "6",
+     "−12",
+     "There is no common difference"
+    ],
+    "why": "Next term minus previous term: 44 − 50 = −6, and 38 − 44 = −6 too. The sequence goes down, so d is negative."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful: the differences must all match. Take 2, 4, 8, 16. The jumps are 2, then 4, then 8."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4 − 2 = 2\n8 − 4 = 4\n16 − 8 = 8\nThe jumps differ, so this is NOT arithmetic."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which list is an arithmetic sequence?",
+    "right": "3, 7, 11, 15",
+    "wrong": [
+     "3, 6, 12, 24",
+     "1, 2, 4, 7",
+     "2, 3, 5, 8"
+    ],
+    "why": "3, 7, 11, 15 adds 4 every time. The others have jumps that change: 3, 6, 12, 24 jumps by 3, 6, 12, and 1, 2, 4, 7 jumps by 1, 2, 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now for the first rule. A recursive rule says where you start, and how to get each term from the one before."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Recursive rule: a₁ = start, aₙ = aₙ₋₁ + d"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For Sam's coins, the start is 20, and each new day is the day before plus 15. We write a₁ = 20 and aₙ = aₙ₋₁ + 15."
+   },
+   "show": {
+    "kind": "list",
+    "text": "a₁ = 20\na₂ = 20 + 15 = 35\na₃ = 35 + 15 = 50\na₄ = 50 + 15 = 65"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A sequence has a₁ = 7 and aₙ = aₙ₋₁ + 3. What is a₃?",
+    "right": "13",
+    "wrong": [
+     "10",
+     "16",
+     "9"
+    ],
+    "why": "a₂ = 7 + 3 = 10, then a₃ = 10 + 3 = 13. You have to go through a₂ to reach a₃."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is one problem with the recursive rule. To get the 50th term, you need all 49 terms before it."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Recursive means you need the previous term first, so term 50 takes 49 steps."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The explicit rule fixes that. You plug in the term number n and get that term straight away."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Explicit rule: aₙ = a₁ + d(n − 1)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why n − 1? To get from term 1 to term n, you make n − 1 jumps. Each jump adds d."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Term 1 to term 4 = 3 jumps\n3 = 4 − 1\nSo a₄ = 20 + 15·3 = 65 ✓"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the 10th day. Nine jumps of 15 from 20 gives a₁₀ = 20 + 15(9) = 155 coins. We did not need the first nine days."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "a₁₀ = 20 + 15(9) = 155"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "The sequence is 5, 8, 11, 14, ... Use aₙ = a₁ + d(n − 1). What is a₂₀?",
+    "right": "62",
+    "wrong": [
+     "65",
+     "60",
+     "23"
+    ],
+    "why": "a₁ = 5 and d = 3. So a₂₀ = 5 + 3(19) = 62. Using 20 in place of 19 gives 65. That is the usual slip."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To write the explicit rule from a list, do two things. Find d, then put d and the first term into the formula."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. d = a₂ − a₁\n2. aₙ = a₁ + d(n − 1)\n3. Simplify if you like"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try 20, 35, 50. Here d = 15, so aₙ = 20 + 15(n − 1). Distribute and combine: 20 + 15n − 15, which gives 15n + 5."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before simplifying: aₙ = 20 + 15(n − 1)  |  After simplifying: aₙ = 15n + 5"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A quick check: put n = 1 into 15n + 5. You get 20, which is the first term. So the rule works."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "n = 1 → 15(1) + 5 = 20 ✓"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the big link. A sequence is a function. The input is the term number n, and the output is the term."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sequence = a function. Input: n (1, 2, 3, ...). Output: the term."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The inputs are only whole numbers, like 1, 2, 3. There is no day 2.5, so the domain is a set of whole numbers, not every number."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The domain of a sequence is a subset of the integers."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at Sam's coins as points: day 1, 20 coins; day 2, 35 coins; and so on. The dots line up in a straight line."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Sam's coins by day",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is because an arithmetic sequence has a constant rate of change. That makes it a linear function."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Arithmetic sequence = linear function on whole-number inputs"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The common difference is the slope. Look at aₙ = 15n + 5. It matches y = mx + b, with m = 15 and b = 5."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = mx + b  |  aₙ = 15n + 5\nm = slope = d = 15"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A sequence has the rule aₙ = 4n + 3. What is its common difference?",
+    "right": "4",
+    "wrong": [
+     "3",
+     "7",
+     "n"
+    ],
+    "why": "In a rule that looks like mx + b, the number on n is the slope. For a sequence, the slope is the common difference, so d = 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What about the +5? It is what you would have on day 0, before the first day. Textbooks sometimes start at term 0 for this reason."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Start at term 1: aₙ = a₁ + d(n − 1)\nStart at term 0: aₙ = a₀ + dn\nHere a₀ = 5"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sequences can go down too. Say your phone battery is 100%, then 96%, 92%. Now d = −4, so the line slopes down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "100, 96, 92, ...\nd = −4\naₙ = 100 − 4(n − 1) = 104 − 4n"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice that the rule is 104 − 4n, not 100 − 4n. Check n = 1: 104 − 4 = 100 ✓. If we used 100 − 4n we would get 96 for term 1, which is wrong."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "n = 1 → 104 − 4(1) = 100 ✓"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Which explicit rule matches 30, 27, 24, 21, ...?",
+    "right": "aₙ = 33 − 3n",
+    "wrong": [
+     "aₙ = 30 − 3n",
+     "aₙ = 30 + 3n",
+     "aₙ = 27n + 3"
+    ],
+    "why": "Here d = −3 and a₁ = 30. So aₙ = 30 − 3(n − 1) = 33 − 3n. Check n = 1: 33 − 3 = 30 ✓. The rule 30 − 3n gives 27 for n = 1, so it is wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's pull it together. Find d. Write the recursive rule or the explicit rule. And see that d is the slope of a line."
+   },
+   "show": {
+    "kind": "list",
+    "text": "d = next − previous\nRecursive: a₁ = start, aₙ = aₙ₋₁ + d\nExplicit: aₙ = a₁ + d(n − 1)\nd = slope; inputs are whole numbers"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nice work today. Coming up, we look at functions made of pieces, and at how to shift and flip graphs."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next class: Piecewise and Absolute Value Functions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Sam's coins at the end of each day (made-up example, computed from aₙ = 15n + 5)",
+   "rows": [
+    {
+     "label": "Day 1",
+     "value": 20,
+     "source": "s3"
+    },
+    {
+     "label": "Day 2",
+     "value": 35,
+     "source": "s3"
+    },
+    {
+     "label": "Day 3",
+     "value": 50,
+     "source": "s3"
+    },
+    {
+     "label": "Day 4",
+     "value": 65,
+     "source": "s3"
+    },
+    {
+     "label": "Day 5",
+     "value": 80,
+     "source": "s3"
+    },
+    {
+     "label": "Day 6",
+     "value": 95,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Arithmetic sequences",
+   "links": [
+    "[[Slope and Rate of Change]]",
+    "[[Slope-Intercept Form and Graphing Lines]]",
+    "[[Function Notation]]",
+    "[[Relations and Functions]]",
+    "[[Geometric Sequences and Linear vs Exponential]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The explicit rule for an arithmetic sequence is written aₙ = a₁ + d(n − 1), counting from term 1.",
+   "other_view": "Textbooks do not all count from term 1. In application problems, OpenStax says the formula is sometimes changed to start at term 0, as aₙ = a₀ + dn. This is useful when the starting amount is the value before any steps. Both forms give the same sequence. Use whichever one your class or test uses.",
+   "cite": [
+    "s3"
+   ]
+  }
+ ]
+}

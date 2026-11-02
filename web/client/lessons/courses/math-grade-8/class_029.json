@@ -1,0 +1,609 @@
+{
+ "about": {
+  "title": "Using the Pythagorean Theorem and Its Converse",
+  "course": "math-grade-8",
+  "class_n": 29,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes, a little over the usual half hour. There are two jobs (find a missing leg, test for a right triangle) plus triples and a wrap-up on choosing the form. Each idea gets its own short step and a check question. You can pause after any question and pick up from there."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "9.3 Use Properties of Angles, Triangles, and the Pythagorean Theorem (Prealgebra 2e)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/9-3-use-properties-of-angles-triangles-and-the-pythagorean-theorem",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Grade 8 » Geometry (Common Core State Standards for Mathematics)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/G/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Pythagorean Theorem (Missing Sides and Right Triangles)",
+   "publisher": "Calcworkshop",
+   "date": "n.d.",
+   "link": "https://calcworkshop.com/radicals/pythagorean-theorem/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Pythagorean Theorem: How to Find a Missing Side",
+   "publisher": "CalcOcean",
+   "date": "n.d.",
+   "link": "https://calcocean.com/en/blog/pythagorean-theorem-missing-side",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Proposition 1.48: The Converse of the Pythagorean Theorem (Euclid's Elements, Book 1)",
+   "publisher": "Book of Proofs",
+   "date": "n.d.",
+   "link": "https://bookofproofs.github.io/branches/geometry/elements-euclid/book--1-plane-geometry/the-converse-of-the-pythagorean-theorem.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "The Pythagorean theorem. Euclid I. 47 (and Proposition 48)",
+   "publisher": "TheMathPage",
+   "date": "n.d.",
+   "link": "https://www.themathpage.com/aBookI/propI-47.htm",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Pythagorean triple",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Pythagorean_triple",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "What are Pythagorean Triples? 3-4-5, 5-12-13 Explained",
+   "publisher": "TecAdmin",
+   "date": "n.d.",
+   "link": "https://tecadmin.net/pythagorean-triples/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Identifying Sets of Pythagorean Triples",
+   "publisher": "CK-12 FlexBooks",
+   "date": "n.d.",
+   "link": "https://flexbooks.ck12.org/cbook/ck-12-trigonometry-concepts/section/1.2/primary/lesson/identifying-sets-of-pythagorean-triples-trig/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Pythagorean Theorem Study Guide",
+   "publisher": "CK-12",
+   "date": "n.d.",
+   "link": "https://www.ck12.org/studyguides/geometry/pythagorean-theorem-study-guide.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Read Euclid backwards: history and purpose of Pythagorean Theorem",
+   "publisher": "Intellectual Mathematics",
+   "date": "n.d.",
+   "link": "https://intellectualmathematics.com/blog/read-euclid-backwards-history-and-purpose-of-pythagorean-theorem/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "Pythagorean Triples: Complete List, Formula & Examples",
+   "publisher": "righttrianglecalculator.net",
+   "date": "n.d.",
+   "link": "https://righttrianglecalculator.net/blog/pythagorean-triples/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class you saw why a² + b² = c² works. Today you put it to work."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Using the Pythagorean Theorem and Its Converse"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two jobs today. One: find a missing leg of a right triangle. Two: test whether three side lengths make a right triangle."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Job 1: find a missing leg\nJob 2: test three sides for a right angle"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the names. The hypotenuse is the side across from the 90° angle. The other two sides are the legs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "hypotenuse"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The theorem says: leg squared plus leg squared equals hypotenuse squared. We write a² + b² = c². The hypotenuse, c, is always the longest side."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a² + b² = c²"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A right triangle has sides 6, 8 and 10. Which side is c?",
+    "right": "10, because it is the longest side, across from the right angle",
+    "wrong": [
+     "6, because it is listed first",
+     "8, because it is in the middle",
+     "Any of them. It does not matter which one is c"
+    ],
+    "why": "c is the hypotenuse, and the hypotenuse is the longest side. Check: 6² + 8² = 36 + 64 = 100, and 10² = 100. If you put 6 or 8 in the c spot, the equation breaks."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Job one: a missing leg. Say you know the hypotenuse and one leg. Start with c², take away the known leg's square, then take the square root."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Job 1: Find a missing leg"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example. One leg is 9. The hypotenuse is 15. Call the missing leg b. Put the numbers in: 9² + b² = 15²."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Known leg: 9\nHypotenuse: 15\nMissing leg: b\nWrite: 9² + b² = 15²"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Square the numbers: 81 + b² = 225. Now subtract 81 from both sides, just like solving any equation. That leaves b² = 144."
+   },
+   "show": {
+    "kind": "list",
+    "text": "81 + b² = 225\nb² = 225 − 81\nb² = 144"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last step: the square root. b = 12. A side length can't be negative, so we only use the positive root. The missing leg is 12."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "b = 12"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A right triangle has one leg of 6 and a hypotenuse of 10. How long is the other leg?",
+    "right": "8",
+    "wrong": [
+     "4",
+     "√136, about 11.7",
+     "64"
+    ],
+    "why": "Write 6² + b² = 10². That is 36 + b² = 100, so b² = 64, and b = 8. Taking 10 − 6 = 4 is the trap: you subtract the squares, not the lengths. √136 comes from adding 36 and 100, which is the wrong direction for a leg. 64 is b², so you still need the square root."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not every answer is a whole number. Try a leg of 4 and a hypotenuse of 7. Then 16 + b² = 49, so b² = 33. And 33 is not a perfect square."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4² + b² = 7²\n16 + b² = 49\nb² = 33"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You get b² = 33. Which is the best way to finish?",
+    "right": "b = √33, which is about 5.7",
+    "wrong": [
+     "b = 33",
+     "b = 16.5",
+     "b = 6, because 36 is the next square"
+    ],
+    "why": "b² = 33 means b is the number that multiplies by itself to make 33. Since 5² = 25 and 6² = 36, b sits between 5 and 6, about 5.7. Halving 33 is not how square roots work. Rounding up to 6 would give 36, not 33."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next: Pythagorean triples. A triple is a set of three whole numbers that fit a² + b² = c² exactly. They make a right triangle with no messy roots."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pythagorean triple"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Three to know: 3-4-5, 5-12-13 and 8-15-17. Check the first. 3² + 4² is 9 + 16, which is 25, and that is 5²."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3, 4, 5\n5, 12, 13\n8, 15, 17"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's a bonus. Multiply a triple by any number and you get another triple. 3-4-5 times 2 is 6-8-10. Times 3 is 9-12-15. Hey, that's our 9, 12, 15 from the leg example!"
+   },
+   "show": {
+    "kind": "list",
+    "text": "3-4-5 × 2 = 6-8-10\n3-4-5 × 3 = 9-12-15\n3-4-5 × 4 = 12-16-20"
+   },
+   "cite": [
+    "s9",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A right triangle has legs 9 and 12. How long is the hypotenuse?",
+    "right": "15",
+    "wrong": [
+     "21",
+     "225",
+     "13"
+    ],
+    "why": "9 and 12 are 3 and 4 times 3, so the hypotenuse is 5 times 3 = 15. Check: 81 + 144 = 225, and √225 = 15. Adding the legs gives 21, which is too long. 225 is c², not c. 13 belongs to a different triple, 5-12-13."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So if you spot a triple, you can skip the squaring. If you are not sure, the equation always works."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A right triangle with a short leg labeled 5, a hypotenuse labeled 13, and the other leg labeled with a question mark."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A right triangle has a leg of 5 and a hypotenuse of 13. What is the missing leg?",
+    "right": "12",
+    "wrong": [
+     "8",
+     "18",
+     "144"
+    ],
+    "why": "5 and 13 are in the 5-12-13 triple. Check: 25 + b² = 169, so b² = 144 and b = 12. Subtracting 13 − 5 = 8 gives the wrong answer. 18 comes from adding the lengths. 144 is b², so you still need the square root."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Job two: the converse. The theorem starts with a right triangle and gives you an equation. The converse goes the other way."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Theorem: right triangle → a² + b² = c²\nConverse: a² + b² = c² → right triangle"
+   },
+   "cite": [
+    "s10",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does that help? Sometimes you only have three lengths and no angle. The converse lets you decide if there is a 90° angle. Euclid proved it as the last theorem of Book I of his Elements."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "converse"
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three steps. Find the longest side and call it c. Work out a² + b² and c². Are they equal? Then it is a right triangle."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Longest side is c\n2. Work out a² + b² and c²\n3. Equal → right triangle\nNot equal → not a right triangle"
+   },
+   "cite": [
+    "s3",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try 7, 24, 25. The longest is 25. 7² + 24² is 49 + 576, which is 625. And 25² is 625. They match, so it is a right triangle."
+   },
+   "show": {
+    "kind": "list",
+    "text": "49 + 576 = 625\n25² = 625\nEqual → right triangle"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Is a triangle with sides 6, 8 and 11 a right triangle?",
+    "right": "No. 6² + 8² = 100, but 11² = 121",
+    "wrong": [
+     "Yes. 6, 8, 10 is a triple, so this works too",
+     "Yes. Any three whole-number sides make a right triangle",
+     "Yes. 6 + 8 is bigger than 11"
+    ],
+    "why": "The longest side is 11, so c = 11. 36 + 64 = 100, but 11² = 121. They are not equal, so it is not a right triangle. 6-8-10 is a triple, but 11 is not 10. Having whole numbers does not matter: the squares must match. 6 + 8 > 11 only tells you the three sides can make a triangle, not a right angle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Careful: the numbers may not come in order. Always hunt for the longest side first. That one is c, wherever it sits in the list."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sides given: 12, 20, 16\nLongest: 20, so c = 20\nTest: 12² + 16² = 20² ?"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A triangle has sides 12, 20 and 16. Which equation do you check?",
+    "right": "12² + 16² = 20²",
+    "wrong": [
+     "12² + 20² = 16²",
+     "16² + 20² = 12²",
+     "12 + 16 = 20"
+    ],
+    "why": "The longest side, 20, must be c. So check 12² + 16² = 20². That is 144 + 256 = 400, and 20² = 400. It matches, so it is a right triangle (3-4-5 times 4). Adding the plain lengths is not the test: you must square them first."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A bonus. If the squares don't match, the sign says more. If a² + b² is bigger than c², the triangle is acute. If it is smaller, the triangle is obtuse. For 6, 8, 11: 100 is smaller than 121, so it is obtuse."
+   },
+   "show": {
+    "kind": "list",
+    "text": "a² + b² = c² → right (90°)\na² + b² > c² → acute\na² + b² < c² → obtuse (one angle over 90°)"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the last topic: choosing the right form. Two questions every time. Which side is c? Then: is c the missing one, or is it a leg?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Choosing the right form"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If c is missing, you add the squares, and the answer is longer than both legs. If a leg is missing, you subtract, and the answer is shorter than c."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "c missing: a² + b² = c² → add, answer is the longest side\nLeg missing: c² − a² = b² → subtract, answer is shorter than c"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The hypotenuse is 17 and one leg is 8. Which equation finds the other leg, b?",
+    "right": "8² + b² = 17²",
+    "wrong": [
+     "8² + 17² = b²",
+     "b² = 17 − 8",
+     "8² = b² + 17²"
+    ],
+    "why": "The hypotenuse 17 is c, so it goes alone on one side: 8² + b² = 17². Then b² = 289 − 64 = 225, and b = 15 (an 8-15-17 triple). Putting 17² with the legs treats it as a leg, which it is not. Subtracting plain lengths skips the squares. The last option puts c² on the wrong side."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's a built-in alarm. A leg can never be longer than the hypotenuse. If your answer is, you probably added when you should have subtracted."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hypotenuse 17, leg 8\nWrong: 64 + 289 = 353, √353 ≈ 18.8\n18.8 is longer than 17. Alarm!"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A student finds the missing leg when c = 17 and the other leg is 8. They get about 18.8. What went wrong?",
+    "right": "They added the squares instead of subtracting",
+    "wrong": [
+     "Nothing. A leg can be longer than the hypotenuse",
+     "They forgot to take the square root",
+     "They used 8 as c"
+    ],
+    "why": "The hypotenuse is the longest side, so a leg can't be 18.8 when c is 17. 64 + 289 = 353 and √353 ≈ 18.8, so they added. The correct work is 289 − 64 = 225, so b = 15. If they had forgotten the square root, they would have got 353, not 18.8."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more mixed check, using both jobs. Remember: longest side first, then compare the squares."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sides: 20, 21, 29\nIs it a right triangle?"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Is a triangle with sides 20, 21 and 29 a right triangle?",
+    "right": "Yes. 20² + 21² = 400 + 441 = 841, and 29² = 841",
+    "wrong": [
+     "No. 20 + 21 is not 29",
+     "No. It is not one of 3-4-5, 5-12-13 or 8-15-17",
+     "Yes. 29 is the longest side, and that alone makes it right"
+    ],
+    "why": "The longest side is 29, so c = 29. 400 + 441 = 841 and 29² = 841, so the squares match and it is a right triangle. 20-21-29 is a less famous triple. Adding the plain lengths is not the test. And a triangle can be longest on one side without being right, like 6, 8, 11."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Let's gather it up. Name c, then decide: add for a missing hypotenuse, subtract for a missing leg. Test three sides by comparing a² + b² with c²."
+   },
+   "show": {
+    "kind": "list",
+    "text": "c is the longest side, across from the right angle\nMissing hypotenuse: add squares\nMissing leg: subtract squares\nTriples (3-4-5, 5-12-13, 8-15-17) and their multiples are shortcuts\nConverse: if a² + b² = c², the triangle is right"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s8",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Pythagorean theorem and its converse",
+   "links": [
+    "[[The Pythagorean Theorem: Why It Works]]",
+    "[[Distance and Real-World Right Triangles]]",
+    "[[Solving with Squares and Cubes]]",
+    "[[Irrational Numbers and Roots]]",
+    "[[Estimating and Ordering Irrational Numbers]]",
+    "[[Solving Linear Equations in One Variable]]"
+   ]
+  },
+  {
+   "topic": "Pythagorean triples",
+   "links": [
+    "[[Exponent Rules for Whole Numbers]]",
+    "[[Congruent Figures]]"
+   ]
+  },
+  {
+   "topic": "Acute, right and obtuse triangles",
+   "links": [
+    "[[Angles in Triangles and with Parallel Lines]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 500 BCE, the time of Pythagoras (6th century BC)",
+   "elsewhere": "Pythagoras was a Greek teacher and philosopher. Euclid wrote his Elements about 250 years later, and Book I ends with the theorem and then its converse.",
+   "cite": [
+    "s1",
+    "s6"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The theorem is named for Pythagoras, so he must have discovered it.",
+   "other_view": "The name credits Pythagoras, who lived around 500 BCE. But one source says Pythagorean triples have been known since ancient times. So the name does not settle who first knew the relationship, and the sources I read do not settle it either.",
+   "cite": [
+    "s1",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Ancient builders used a rope with 3-4-5 knots to make right angles.",
+   "other_view": "This is a popular story. One source I read calls it plausible that people used the 3-4-5 case to make right angles. The same source says it is hardly plausible that the theorem was discovered that way. Treat it as a reasonable guess, not proven history.",
+   "cite": [
+    "s11"
+   ]
+  }
+ ]
+}

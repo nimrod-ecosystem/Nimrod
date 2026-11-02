@@ -195,7 +195,7 @@ try {
       const p = r.problems.filter((x) => !x.startsWith('Read as'));
       if (!r.lesson || p.length) bad.push(`${c.id}/${k.file}: ${p[0] || 'no lesson'}`);
     }
-    check('*** all 61 classes of the seven courses play, with nothing wrong in them ***', n === 61 && COURSES.length === 7 && !bad.length, J({ n, bad: bad.slice(0, 5) }));
+    check('*** all 128 classes of the seven courses play, with nothing wrong in them ***', n === 128 && COURSES.length === 7 && !bad.length, J({ n, bad: bad.slice(0, 5) }));
   }
 
   console.log('GUESSES',J(Object.fromEntries(Object.entries(got).map(([k, r]) => [k, guessed(r)]))));

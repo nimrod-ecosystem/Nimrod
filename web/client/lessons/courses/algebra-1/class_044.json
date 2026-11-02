@@ -1,0 +1,785 @@
+{
+ "about": {
+  "title": "The Quadratic Formula and the Discriminant",
+  "course": "algebra-1",
+  "class_n": 44,
+  "audience": [
+   "age 14 to 16",
+   "teenagers",
+   "anyone who wants to go slowly and check each step"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. The class has two big ideas, the formula and the discriminant, and each gets its own worked examples. A good place to take a break is after the beat called 'Answers with square roots'. The discriminant starts right after it."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "10.3 Solve Quadratic Equations Using the Quadratic Formula (Elementary Algebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/10-3-solve-quadratic-equations-using-the-quadratic-formula",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Chapter 10 Key Concepts (Elementary Algebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/10-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Using the Discriminant (Algebra 1)",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Algebra1/Quadratics/QDdiscriminant.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "13.5: The Discriminant",
+   "publisher": "Mathematics LibreTexts (Cosumnes River College)",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Courses/Cosumnes_River_College/Corequisite_Codex/13:_Quadratic_Functions/13.05:_The_Discriminant",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Number of solutions",
+   "publisher": "Photomath",
+   "date": "n.d.",
+   "link": "https://photomath.com/articles/number-of-solutions/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Quadratic, cubic and quartic equations",
+   "publisher": "MacTutor History of Mathematics, University of St Andrews",
+   "date": "n.d.",
+   "link": "https://mathshistory.st-andrews.ac.uk/HistTopics/Quadratic_etc_equations/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "A Simple Proof of the Quadratic Formula",
+   "publisher": "arXiv",
+   "date": "2019 (arXiv:1910.06709)",
+   "link": "https://arxiv.org/pdf/1910.06709",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "10.3: Solve Quadratic Equations Using the Quadratic Formula (OpenStax Elementary Algebra 1e)",
+   "publisher": "Mathematics LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/10:_Quadratic_Equations/10.03:_Solve_Quadratic_Equations_Using_the_Quadratic_Formula",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "The Discriminant (Intermediate Algebra)",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/intermediatealgebra/chapter/read-the-discriminant/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "2.5 Quadratic Equations (College Algebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/2-5-quadratic-equations",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 44. Last time you solved quadratics by completing the square. Today you get one tool that handles every quadratic."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Quadratic Formula and the Discriminant"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We have two goals. First, solve any quadratic with the formula. Second, tell how many real solutions it has before you solve it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Goal 1: solve any quadratic with the formula\nGoal 2: use the discriminant to count real solutions\nBonus: pick the best method for each problem"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the starting point. The formula works on a quadratic in standard form, and a can't be zero."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Standard form: ax² + bx + c = 0, with a ≠ 0"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The letters a, b and c are the numbers in front. Look at 2x² + 9x − 5 = 0. The sign stays with its number, so c is negative five."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "2x² + 9x − 5 = 0   →   a = 2, b = 9, c = −5"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In 2x² + 9x − 5 = 0, what are a, b and c?",
+    "right": "a = 2, b = 9, c = −5",
+    "wrong": [
+     "a = 2, b = 9, c = 5",
+     "a = 9, b = 2, c = −5",
+     "a = −2, b = 9, c = −5"
+    ],
+    "why": "a is the number with x², b is the number with x, and c is the number on its own. The minus sign belongs to the five, so c = −5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the formula itself. Read it as: negative b, plus or minus the square root of b squared minus 4ac, all over 2a."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x = ( −b ± √(b² − 4ac) ) ÷ 2a"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The plus-or-minus sign means two answers. One uses plus and one uses minus. The fraction bar covers the whole top part."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plus: x = ( −b + √(b² − 4ac) ) ÷ 2a\nMinus: x = ( −b − √(b² − 4ac) ) ÷ 2a"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where does it come from? You already know the tool. It is completing the square, done once with letters instead of numbers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Start with ax² + bx + c = 0\nMove c to the other side\nDivide everything by a\nAdd (b ÷ 2a)² to both sides\nThe left side is now a perfect square\nTake square roots (± on the right)\nSubtract b ÷ 2a: the formula appears"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the formula is not magic. It is the same steps you used last class, done once for every quadratic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The formula = completing the square, done once for all quadratics"
+   },
+   "cite": [
+    "s1",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which method is the quadratic formula built from?",
+    "right": "Completing the square",
+    "wrong": [
+     "Factoring",
+     "Graphing on a grid",
+     "Guess and check"
+    ],
+    "why": "Solving ax² + bx + c = 0 by completing the square, with letters in place of numbers, gives the formula."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's use it, one step at a time. Step one: standard form. Step two: write down a, b and c. Step three: write the formula."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Put the equation in standard form\n2. Identify a, b and c\n3. Write the formula\n4. Substitute, using brackets\n5. Simplify"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: 2x² + 9x − 5 = 0, so a = 2, b = 9, c = −5. Put brackets around every number you substitute. That protects the minus signs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x = ( −(9) ± √( (9)² − 4(2)(−5) ) ) ÷ ( 2·2 )"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Do the part under the root first. Nine squared is 81. Then 4 times 2 times negative 5 is negative 40. Subtracting a negative is adding."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "81 − (−40) = 81 + 40 = 121"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 9² − 4(2)(−5)?",
+    "right": "121",
+    "wrong": [
+     "41",
+     "−121",
+     "81"
+    ],
+    "why": "4(2)(−5) is −40. Taking away −40 is the same as adding 40, so 81 + 40 = 121."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The square root of 121 is 11. So x equals negative 9 plus or minus 11, over 4. Now we split it into the plus answer and the minus answer."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plus: (−9 + 11) ÷ 4 = 2 ÷ 4 = 1/2\nMinus: (−9 − 11) ÷ 4 = −20 ÷ 4 = −5"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Always check. Try x = −5 in the original: 2 times 25 is 50, plus 9 times −5 is −45, minus 5. That is 50 − 45 − 5 = 0. It works."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check x = −5:  50 − 45 − 5 = 0 ✓"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, the most common slip is a negative b. Take x² − 6x + 8 = 0. Here a = 1, b = −6, c = 8. So −b is positive 6, and b squared is (−6)², which is positive 36."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "b = −6   →   −b = 6   and   b² = (−6)² = 36"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In x² − 6x + 8 = 0, what is −b?",
+    "right": "6",
+    "wrong": [
+     "−6",
+     "8",
+     "−8"
+    ],
+    "why": "b is −6, so −b means the opposite of −6, which is 6."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Finish it. Under the root: 36 − 32 = 4, and its root is 2. So x = (6 ± 2) ÷ 2. That gives 4 and 2."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plus: (6 + 2) ÷ 2 = 4\nMinus: (6 − 2) ÷ 2 = 2"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sometimes the equation isn't in standard form yet. Take 3x² = 5x − 2. Do some algebra first to get everything on one side."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3x² = 5x − 2   →   3x² − 5x + 2 = 0"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "After moving everything to one side, what are a, b and c for 3x² − 5x + 2 = 0?",
+    "right": "a = 3, b = −5, c = 2",
+    "wrong": [
+     "a = 3, b = 5, c = −2",
+     "a = 3, b = −5, c = −2",
+     "a = 3, b = 2, c = −5"
+    ],
+    "why": "Read each number with the sign in front of it: +3, −5, +2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Finish it: 25 − 24 = 1, and the root of 1 is 1. So x = (5 ± 1) ÷ 6. That gives 1 and 2/3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plus: 6 ÷ 6 = 1\nMinus: 4 ÷ 6 = 2/3"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Answers with square roots. Sometimes the root isn't a whole number. That is fine, and it can happen with this formula."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² − 4x − 1 = 0:  a = 1, b = −4, c = −1"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Under the root: 16 + 4 = 20. The root of 20 is 2 times root 5. So x = (4 ± 2√5) ÷ 2, and dividing everything by 2 gives 2 ± √5. That is about 4.24 and −0.24."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Exact: x = 2 + √5 and x = 2 − √5\nApproximately: 4.24 and −0.24"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nice work. This is a good place for a short break if you want one. Next we look at the part under the square root, because it tells us a lot."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 2: The discriminant"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The discriminant is the expression under the square root: b² − 4ac. We give it its own name because it carries a lot of information."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Discriminant = b² − 4ac"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its sign tells you how many real solutions there are. Positive gives two. Zero gives one. Negative gives none."
+   },
+   "show": {
+    "kind": "list",
+    "text": "b² − 4ac > 0  →  2 real solutions\nb² − 4ac = 0  →  1 real solution\nb² − 4ac < 0  →  0 real solutions"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why? Because it sits under a square root. A positive number has two roots, a plus one and a minus one. Zero has only one. And a negative number has no real square root."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Positive: ±√ gives 2 answers. Zero: ±0 gives 1 answer. Negative: no real root."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A note: the discriminant tells you how many solutions. It doesn't tell you what they are. You still need the formula for that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "It counts the solutions. It does not find them."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It also links to the graph. The solutions are where the parabola meets the x-axis, so the count is the number of x-intercepts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three parabolas drawn over one x-axis. Left: a U-shape that crosses the axis in two places, labelled 2 solutions. Middle: a U-shape whose bottom point just touches the axis, labelled 1 solution. Right: a U-shape that floats completely above the axis, labelled 0 solutions."
+   },
+   "cite": [
+    "s5",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's test it on two equations from before. For x² − 4x − 1, the discriminant is 20. That is positive, which matches the two answers we found."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² − 4x − 1 = 0:  b² − 4ac = 16 + 4 = 20 > 0  →  2 solutions"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now x² − 6x + 9 = 0. We get 36 − 36 = 0, so just one solution. The formula gives x = 6 ÷ 2 = 3."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² − 6x + 9 = 0:  b² − 4ac = 36 − 36 = 0  →  1 solution, x = 3"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Take x² + 2x + 5 = 0. Find a, b and c, then work out the discriminant."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² + 2x + 5 = 0:  a = 1, b = 2, c = 5"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many real solutions does x² + 2x + 5 = 0 have?",
+    "right": "None. The discriminant is 4 − 20 = −16, which is negative.",
+    "wrong": [
+     "Two, because b is positive",
+     "One, because a is 1",
+     "Two, because the discriminant is 16"
+    ],
+    "why": "b² − 4ac = 2² − 4(1)(5) = 4 − 20 = −16. A negative discriminant means no real solutions. The parabola never touches the x-axis."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more use. If the discriminant is positive and a perfect square, like 121 earlier, the answers are tidy fractions. That also means the equation could have been factored."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Positive and a perfect square → neat answers, and it factors"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That leads to our last topic, choosing a method. The formula always works, but it is not always the quickest."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 3: Which method should I use?"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try factoring first. If the quadratic factors easily, it is very quick. Next try the square root property, if the equation looks like ax² = k. Use the formula for everything else."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Try factoring first\n2. Square root property if it looks like ax² = k or a(x − h)² = k\n3. Quadratic formula for anything else"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three quick cases. x² = 49 has only an x² term, so square roots. x² − 5x + 6 = 0 factors into (x − 2)(x − 3). And x² + 3x + 1 = 0 has no pair of whole numbers that multiply to 1 and add to 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² = 49 → square root property\nx² − 5x + 6 = 0 → factoring\nx² + 3x + 1 = 0 → ?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the best method for x² + 3x + 1 = 0?",
+    "right": "The quadratic formula",
+    "wrong": [
+     "Factoring, because it is quick",
+     "The square root property",
+     "Guess and check until it works"
+    ],
+    "why": "No whole numbers multiply to 1 and add to 3, so it doesn't factor easily. It also has an x term, so the square root property doesn't fit. The formula always works."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a sports problem. A ball is kicked and its height in feet after t seconds is h = −16t² + 20t + 6. This model is made up for practice. When does it land? Set h to 0."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "−16t² + 20t + 6 = 0:  a = −16, b = 20, c = 6"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Under the root: 20² is 400, and 4 times −16 times 6 is −384. So 400 + 384 = 784, and the root of 784 is 28. Then t = (−20 ± 28) ÷ (−32)."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plus: 8 ÷ (−32) = −0.25\nMinus: −48 ÷ (−32) = 1.5"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two answers, but time can't go backwards here. The clock starts when the ball is kicked, so −0.25 seconds is before the kick. The ball lands at 1.5 seconds."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1.5 seconds"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Why do we throw out t = −0.25 in the ball problem?",
+    "right": "Time can't be negative here, because the clock starts at the kick",
+    "wrong": [
+     "It fails the check when we substitute it",
+     "Negative answers are always wrong in algebra",
+     "The formula made a mistake"
+    ],
+    "why": "Both numbers solve the equation. We only keep the one that makes sense in the story. In other problems a negative answer can be fine."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the slips to watch for. People make mistakes with this formula, so slow down and use brackets."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Get standard form first\nKeep the sign with a, b and c\nUse (−6)² = 36, not −36\nThe fraction bar covers the whole top\nDon't forget the ± (two answers)"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's recap. The formula solves any quadratic. The discriminant, b² − 4ac, counts the real solutions before you start: two, one or none."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0, 1 or 2"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check. Suppose you work out b² − 4ac and get 25."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "b² − 4ac = 25"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "If b² − 4ac = 25, how many real solutions are there?",
+    "right": "Two",
+    "wrong": [
+     "One",
+     "None",
+     "It depends on a"
+    ],
+    "why": "25 is positive, so there are two real solutions. Since 25 is a perfect square, the answers are neat numbers too."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done today. Next class we use quadratics as models, for things like the path of a ball. Rest up, and come back when you're ready."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Class 45, Quadratic Models"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "quadratic formula",
+   "links": [
+    "[[completing the square]]",
+    "[[standard form of a quadratic]]",
+    "[[square root property]]"
+   ]
+  },
+  {
+   "topic": "discriminant",
+   "links": [
+    "[[parabolas and x-intercepts]]",
+    "[[number of real solutions]]",
+    "[[perfect squares]]"
+   ]
+  },
+  {
+   "topic": "choosing a method",
+   "links": [
+    "[[factoring x² + bx + c]]",
+    "[[solving quadratics by factoring]]",
+    "[[quadratic models]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 2000–1600 BC (Old Babylonian period)",
+   "elsewhere": "Babylonian clay tablets already held formulas for problems that lead to quadratics, though not a way to solve the standard one-variable quadratic.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "About 628 CE",
+   "elsewhere": "One root of the quadratic formula, with no derivation, appears in Brahmagupta's writings in India. About 200 years later, around 825, the Persian mathematician al-Khwarizmi solved the general quadratic in an influential work.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "1145 CE",
+   "elsewhere": "Abraham bar Hiyya published Liber embadorum, the first book published in Europe to give the complete solution of the quadratic equation.",
+   "cite": [
+    "s6"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Babylonians were the first to solve quadratic equations.",
+   "other_view": "This is often said, but historians disagree on how far to take it. MacTutor calls it an over-simplification, because the Babylonians had no notion of an equation. Another paper says their tablets show formulas for quadratic-type problems but no way to solve the standard quadratic.",
+   "cite": [
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Brahmagupta gave us the quadratic formula.",
+   "other_view": "MacTutor describes his method as almost modern and as allowing negative quantities. A mathematical paper says one root of the formula appears in his writing around 628 without a derivation, and that he did not discover it himself. Credit is shared across many cultures.",
+   "cite": [
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "A negative discriminant means the equation has no solutions.",
+   "other_view": "In Algebra 1 it means no real solutions. Later courses show that such equations do have solutions in a larger number system called complex numbers.",
+   "cite": [
+    "s3",
+    "s4"
+   ]
+  }
+ ]
+}

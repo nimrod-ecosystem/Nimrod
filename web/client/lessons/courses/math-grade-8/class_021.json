@@ -1,0 +1,594 @@
+{
+ "about": {
+  "title": "Systems by Elimination",
+  "course": "math-grade-8",
+  "class_n": 21,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. There are four topics, and each gets one worked example and one check question. That is enough time to go slowly. If you feel rushed, stop after the multiplying section and do the last two topics next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.3 Solve Systems of Equations by Elimination (Elementary Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/5-3-solve-systems-of-equations-by-elimination",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "4.1 Solve Systems of Linear Equations with Two Variables (Intermediate Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/4-1-solve-systems-of-linear-equations-with-two-variables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8 » Expressions & Equations (standard 8.EE.C.8)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "undated on page",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Ch. 4 Key Concepts (Intermediate Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/4-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "7.1 Systems of Linear Equations: Two Variables (College Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "undated on page",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/7-1-systems-of-linear-equations-two-variables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Grade 8: Simultaneous Equations (8.EE.C.8 task)",
+   "publisher": "Achieve the Core",
+   "date": "undated on page",
+   "link": "https://achievethecore.org/content/upload/Gr%208.P.4%20Simultaneous%20Equations_Final.pdf",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we solved systems by substitution. Today we learn a third way, called elimination."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Systems by Elimination"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick reminder. A system is two equations at the same time. A solution is an (x, y) pair that makes both of them true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution = true in BOTH equations"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Elimination has one big idea. Add the two equations together so that one variable disappears."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eliminate = make one variable vanish"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why can we add equations? You can add the same amount to both sides of an equation. Each equation says its two sides are equal. So adding the left sides and adding the right sides keeps things equal."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left sides added together | Right sides added together | Still equal"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, line things up. Write both equations in standard form: the x term, then the y term, then equals a number."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + y = 9 | x − y = 3"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now look at the y terms in this pair. We have +y and −y. They are opposites, so they add up to zero."
+   },
+   "show": {
+    "kind": "list",
+    "text": "+y and −y are opposites | +y + (−y) = 0"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You add 3x + 2y = 12 and 5x − 2y = 4. Which variable disappears?",
+    "right": "y",
+    "wrong": [
+     "x",
+     "both x and y",
+     "neither one"
+    ],
+    "why": "The y terms are +2y and −2y. They are opposites, so they add to 0. The x terms, 3x and 5x, add to 8x, so x stays. You get 8x = 16."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's finish x + y = 9 and x − y = 3. Add the left sides: x + x is 2x, and y − y is 0. Add the right sides: 9 + 3 is 12. So 2x = 12, and x = 6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + y = 9 | x − y = 3 | 2x = 12 | x = 6"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We have x, but a solution needs y too. Put x = 6 into one original equation. 6 + y = 9, so y = 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6 + y = 9 | y = 3"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now check in both equations, because a solution has to work in both. 6 + 3 = 9, yes. 6 − 3 = 3, yes. The answer is (6, 3)."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(6, 3) works in both"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Take 4x + y = 10 and 2x − y = 2. Add them and you get 6x = 12, so x = 2. Now find y."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x + y = 10 | 2x − y = 2 | 6x = 12 | x = 2 | y = ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "With x = 2, what is y in 4x + y = 10?",
+    "right": "y = 2",
+    "wrong": [
+     "y = 6",
+     "y = 0",
+     "y = 10"
+    ],
+    "why": "Put x = 2 into 4x + y = 10. That gives 8 + y = 10, so y = 2. Check the other equation: 2(2) − 2 = 2, which is true."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes the terms match instead of being opposites. Here both equations have 5x. Adding would give 10x, which does not cancel. So we subtract."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5x + 3y = 19 | 5x + y = 13"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Subtract every part of the second equation from the first. 5x − 5x is 0. 3y − y is 2y. 19 − 13 is 6. So 2y = 6 and y = 3. Then 5x + 9 = 19 gives x = 2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2y = 6 | y = 3 | x = 2"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful with signs here. Subtract the right-hand numbers too, not just the letters. Most mistakes happen at that step."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Subtract EVERY term, including the right side"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Subtract the second equation from the first: 7x + 4y = 26 and 7x + y = 17. What do you get?",
+    "right": "3y = 9",
+    "wrong": [
+     "3y = 43",
+     "5y = 9",
+     "14x + 5y = 43"
+    ],
+    "why": "7x − 7x is 0. 4y − y is 3y. 26 − 17 is 9. So 3y = 9. The answer 3y = 43 adds the right sides. The answer 14x + 5y = 43 adds everything."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Often nothing cancels yet. Look at 2x + y = 7 and x + 3y = 11. The x coefficients are 2 and 1. The y coefficients are 1 and 3. No opposites, no matches."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + y = 7 | x + 3y = 11"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So we make opposites by multiplying. Multiply every term on both sides by the same number that is not zero. The equation stays true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Multiply EVERY term, both sides, by a nonzero number"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's get rid of y. Multiply the first equation by −3. We get −6x − 3y = −21. Now the y terms are −3y and +3y, which are opposites."
+   },
+   "show": {
+    "kind": "list",
+    "text": "−3(2x + y) = −3(7) | −6x − 3y = −21 | x + 3y = 11"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Add them. −6x + x is −5x. The y terms cancel. −21 + 11 is −10. So −5x = −10 and x = 2. Then 2(2) + y = 7 gives y = 3. Check the second equation: 2 + 9 = 11, yes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "−5x = −10 | x = 2 | y = 3"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We could have removed x instead. Take 2x + y = 7 and x + 3y = 11. This time we multiply the second equation so its x term becomes −2x."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + y = 7 | x + 3y = 11 | Goal: x terms become opposites"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which number do you multiply the second equation, x + 3y = 11, by to get an x term opposite to 2x?",
+    "right": "−2",
+    "wrong": [
+     "2",
+     "−1",
+     "1/2"
+    ],
+    "why": "−2 times x is −2x, which is the opposite of 2x. Using 2 gives +2x, which matches, so adding would not cancel. −1 gives −x, which is not the opposite of 2x. Remember to multiply the 3y and the 11 by −2 as well."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes both equations need multiplying. Take 2x + 3y = 12 and 3x + 2y = 13. Pick y. Its coefficients are 3 and 2. A number both can reach is 6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 3y = 12 | 3x + 2y = 13 | 3 and 2 → 6"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Multiply the first by 2 to get 4x + 6y = 24. Multiply the second by −3 to get −9x − 6y = −39. The y terms are now 6y and −6y. Add: −5x = −15, so x = 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x + 6y = 24 | −9x − 6y = −39 | −5x = −15 | x = 3"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Now use x = 3 in 2x + 3y = 12. What is y?",
+    "right": "y = 2",
+    "wrong": [
+     "y = 6",
+     "y = 3",
+     "y = −2"
+    ],
+    "why": "2(3) + 3y = 12 gives 6 + 3y = 12. Then 3y = 6, so y = 2. The answer y = 6 forgets to divide by 3. Check the other equation: 3(3) + 2(2) = 13, which is true."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the odd cases. What if both variables vanish? Take 3x + 2y = 5 and 3x + 2y = 6. Subtract the second from the first. You get 0 = −1, a statement that is false."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3x + 2y = 5 | 3x + 2y = 6 | 0 = −1 (false)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same expression, 3x + 2y, cannot equal 5 and 6 at once. So no pair works. The system has no solution. On a graph, these are parallel lines that never meet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "False statement (like 0 = 5) → no solution"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You eliminate and end up with 0 = 5. What does that tell you?",
+    "right": "The system has no solution.",
+    "wrong": [
+     "x = 0",
+     "The system has infinitely many solutions.",
+     "y = 5"
+    ],
+    "why": "0 = 5 is never true, whatever x and y are. So no pair can work in both equations. That means the lines are parallel."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The opposite can happen. Take x + y = 4 and 2x + 2y = 8. Multiply the first by −2 to get −2x − 2y = −8. Add them and everything cancels. You get 0 = 0."
+   },
+   "show": {
+    "kind": "list",
+    "text": "−2x − 2y = −8 | 2x + 2y = 8 | 0 = 0 (always true)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "0 = 0 is always true. The two equations are really the same line. Every point on it works. So there are infinitely many solutions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "True statement (0 = 0) → infinitely many solutions"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You eliminate and end up with 0 = 0. What does that tell you?",
+    "right": "The system has infinitely many solutions.",
+    "wrong": [
+     "The system has no solution.",
+     "The only solution is (0, 0).",
+     "x = 0 and y = 0"
+    ],
+    "why": "0 = 0 is always true. When both variables vanish and the leftover is true, the equations describe the same line. Every point on that line works in both."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So there are three possible outcomes. A variable is left, and you get one solution. A false statement is left, and you get none. A true statement like 0 = 0 is left, and you get infinitely many."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Variable left → one solution | False statement → none | 0 = 0 → infinitely many"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: which method do you pick? You now know three. Graphing is for when you need a picture. Substitution is for when one equation is already solved for a variable. Elimination is for when both are in standard form."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Graphing: need a picture | Substitution: one equation already solved for a variable | Elimination: both in standard form"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Graphing works well when the coefficients are small and the answer is whole numbers. If the answer has fractions or decimals, a graph is not very precise."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Graphing: great for small, whole-number answers"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which method is the easiest start for y = 2x − 1 and 3x + 4y = 18?",
+    "right": "Substitution, because y is already solved in the first equation.",
+    "wrong": [
+     "Elimination, because both are already in standard form.",
+     "Graphing, because a graph always gives exact answers.",
+     "None of the methods can be used."
+    ],
+    "why": "The first equation is already solved for y, so replace y with 2x − 1. Then 3x + 4(2x − 1) = 18 gives 11x = 22, so x = 2 and y = 3. Elimination would need extra rearranging first. A graph is not always exact."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more choice. Look at 4x + 5y = 26 and 2x − 5y = −2. Both are in standard form, and the y terms are already opposites."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x + 5y = 26 | 2x − 5y = −2"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which method fits 4x + 5y = 26 and 2x − 5y = −2 best?",
+    "right": "Elimination, because adding cancels y right away.",
+    "wrong": [
+     "Substitution, because both equations are already solved for x.",
+     "Graphing, because it is the only method that gives the exact answer.",
+     "Neither, because the system has no solution."
+    ],
+    "why": "Both equations are in standard form and 5y and −5y are opposites. Adding gives 6x = 24, so x = 4. Then 4(4) + 5y = 26 gives y = 2. Neither equation is solved for a variable, and the system has one solution."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the steps. Put both equations in standard form. Multiply if you need opposite coefficients. Add to eliminate one variable. Solve. Substitute back for the other variable. Check in both equations."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Standard form | 2. Multiply if needed | 3. Add (or subtract) | 4. Solve | 5. Substitute back | 6. Check in both"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nice work today. Elimination takes patience, and slips with signs happen to everyone. Go one step at a time, check at the end, and you will catch them. Next class we use systems on real-world problems."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Systems in the Real World"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Elimination method",
+   "links": [
+    "[[Systems by Substitution]]",
+    "[[Systems of Equations by Graphing]]",
+    "[[Systems in the Real World]]"
+   ]
+  },
+  {
+   "topic": "Standard form of a linear equation",
+   "links": [
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[Solving Linear Equations in One Variable]]"
+   ]
+  },
+  {
+   "topic": "No solution and infinitely many solutions",
+   "links": [
+    "[[Variables on Both Sides: One, None or Infinitely Many Solutions]]",
+    "[[Slope]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Elimination is a good choice when both equations are in standard form.",
+   "other_view": "The OpenStax textbooks present this as a convenience, not a rule. Substitution is easier when one equation is already solved for a variable. Graphing is useful when you want a picture of the situation. Graphing is less precise when the answer has fractions or decimals.",
+   "cite": [
+    "s2",
+    "s4",
+    "s5"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,480 @@
+{
+ "about": {
+  "title": "What Is a Function?",
+  "course": "math-grade-8",
+  "class_n": 14,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has four small ideas: inputs and outputs, one output for each input, checking tables, mappings and graphs, and the vertical line test. Each idea gets a worked example and a check, so a half-hour fits. You can pause after any beat and pick up there later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Functions » Define, evaluate, and compare functions » 1 (CCSS.Math.Content.8.F.A.1)",
+   "publisher": "Common Core State Standards Initiative (NGA Center and CCSSO)",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/F/A/1/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "1.1 Functions and Function Notation, Precalculus 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/precalculus-2e/pages/1-1-functions-and-function-notation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "4.5.2 Using the Vertical Line Test, Algebra 1",
+   "publisher": "OpenStax, Rice University",
+   "date": "2026",
+   "link": "https://openstax.org/books/algebra-1/pages/4-5-2-using-the-vertical-line-test",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Using the Vertical Line Test to Identify Functions",
+   "publisher": "Algebra-class.com",
+   "date": "n.d.",
+   "link": "https://www.algebra-class.com/vertical-line-test.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Identify Functions Using Graphs, College Algebra",
+   "publisher": "Lumen Learning (Waymaker)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/waymakercollegealgebra/chapter/identify-functions-using-graphs/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "How to identify functions, plus how to use the Vertical Line Test",
+   "publisher": "Krista King Math",
+   "date": "n.d.",
+   "link": "https://www.kristakingmath.com/blog/testing-for-functions-and-vertical-line-test",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 14. Today we answer one question: what is a function, and how can you tell if something is one?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What Is a Function?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, two small words. An input is what you put in. An output is what comes out. Think of a vending machine: you press B4, and a bag of chips drops."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "INPUT: what you put in (press B4) | OUTPUT: what comes out (bag of chips)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the vending machine, you press B4 and chips drop. Which one is the input?",
+    "right": "Pressing B4",
+    "wrong": [
+     "The bag of chips",
+     "The machine's lock",
+     "The price on the sticker"
+    ],
+    "why": "The input is what you put in or choose. Pressing B4 is what you do. The chips are what comes out, so they are the output."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A rule connects each input to its output. Here is a rule: add 3. Put in 5, and out comes 8."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 8,
+    "layout": "five-frame",
+    "text": "Rule: add 3. Input 5 → output 8"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "The rule is: add 3. What is the output when the input is 5?",
+    "right": "8",
+    "wrong": [
+     "2",
+     "15",
+     "53"
+    ],
+    "why": "Add 3 to the input: 5 + 3 = 8. Subtracting gives 2, multiplying gives 15, and writing the digits side by side gives 53. None of those is the rule."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the big idea. A function is a rule that gives each input exactly one output. That is the standard's wording for 8th grade."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Function: each input has exactly ONE output"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to the vending machine. Press B4 and chips come out every time? That is a function. Press B4 and sometimes get chips and sometimes cookies? Not a function."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "B4 → chips, always: function | B4 → chips OR cookies: not a function"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A machine gives chips for B4 on Monday, but cookies for B4 on Tuesday. Is 'press a button, get a snack' a function here?",
+    "right": "No, because the same input (B4) gave two different outputs.",
+    "wrong": [
+     "Yes, because every press gives a snack.",
+     "Yes, because chips and cookies are both snacks.",
+     "We can't tell without the prices."
+    ],
+    "why": "A function needs exactly one output for each input. B4 gave two different outputs, so it breaks that rule. Getting a snack every time isn't enough."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Math writes an input and its output as a pair in brackets, input first. So (2, 5) means: input 2, output 5. The graph of a function is just all of those pairs, drawn as points."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(input, output) → (2, 5)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's check a table. Read down the input column. Do any inputs repeat? Here inputs 1, 2, 3, 4 give outputs 5, 7, 9, 11. Each input shows up once. So it is a function."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Input 1 → Output 5 | Input 2 → Output 7 | Input 3 → Output 9 | Input 4 → Output 11"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A table has inputs 1, 2, 3, 4 and outputs 5, 7, 9, 11. Is it a function?",
+    "right": "Yes, because each input appears once, so each has exactly one output.",
+    "wrong": [
+     "No, because every output is different.",
+     "No, because the outputs keep going up.",
+     "Yes, but only because the outputs are odd numbers."
+    ],
+    "why": "Only the inputs decide this. Each input has one output. Different outputs, rising outputs and odd outputs have nothing to do with it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a table that fails. Inputs are 1, 2, 2, 3 and outputs are 4, 6, 8, 10. The input 2 shows up twice, once with 6 and once with 8. Same input, different outputs. Not a function."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 → 4 | 2 → 6 | 2 → 8 | 3 → 10 (input 2 has two outputs)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Inputs are 1, 2, 2, 3 with outputs 4, 6, 8, 10. Which input stops this from being a function?",
+    "right": "2",
+    "wrong": [
+     "1",
+     "3",
+     "10"
+    ],
+    "why": "The input 2 is paired with both 6 and 8. 1 and 3 each have one output. 10 is an output, not an input."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a trap. Two different inputs can share the same output, and that is fine. Take (-3, 2), (-1, 6) and (1, 2). The output 2 shows up twice, but with different inputs."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(-3, 2) | (-1, 6) | (1, 2): output 2 repeats, inputs do not"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Is {(-3, 2), (-1, 6), (1, 2)} a function?",
+    "right": "Yes, because each input has only one output. Repeated outputs are allowed.",
+    "wrong": [
+     "No, because the output 2 appears twice.",
+     "No, because there is a negative number.",
+     "We need a graph to decide."
+    ],
+    "why": "Check the inputs: -3, -1 and 1 are all different, and each has one output. Two inputs may share an output. A single input may not have two."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A mapping is a picture with arrows from inputs to outputs. Each input must have exactly one arrow leaving it. Example: 1 → A, 2 → A, 3 → B. Two arrows land on A, but each input has one arrow. Function."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two ovals. Left oval holds 1, 2, 3. Right oval holds A, B. Arrows: 1 to A, 2 to A, 3 to B. One arrow leaves each input."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A mapping has arrows 5 → red, 5 → blue, and 6 → red. Is it a function?",
+    "right": "No, because input 5 has two arrows going out.",
+    "wrong": [
+     "Yes, because every input has an arrow.",
+     "No, because red gets two arrows pointing at it.",
+     "Yes, because there are only two inputs."
+    ],
+    "why": "Look at arrows leaving each input. Input 5 sends one to red and one to blue, which is two outputs. Arrows arriving at the same output (red) are fine."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now graphs. Every point on a graph is a pair (x, y). The x is the input and the y is the output. A vertical line holds all the points with one x value, which means one input."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with a dashed vertical line at x = 3 crossing a few points of a graph."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So here is the vertical line test. Imagine sliding a vertical line across the graph. If it ever touches the graph twice, one input has two outputs. Not a function. If it never touches twice, it is a function."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vertical line test: touches twice anywhere → NOT a function"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A vertical line at x = 3 crosses a graph at two points. What does that tell you?",
+    "right": "The graph is not a function, because the input 3 has two outputs.",
+    "wrong": [
+     "The graph is a function, because it crosses the line.",
+     "The graph is a function, because x = 3 is allowed.",
+     "It tells us nothing about functions."
+    ],
+    "why": "Two crossing points on one vertical line means two different y values for the same x. That is one input with two outputs, so it fails."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try it on a straight vertical line, like x = 2. Slide a vertical line over it and it lies right on top, touching every point. The input 2 has endless outputs. Not a function."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with one straight vertical line drawn at x = 2, going up and down through every height."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The graph is a straight vertical line at x = 2. Is it a function?",
+    "right": "No, because the input 2 has many outputs.",
+    "wrong": [
+     "Yes, because it's a straight line.",
+     "Yes, because it only uses one x value.",
+     "Yes, because it passes through the x-axis."
+    ],
+    "why": "A straight line is not automatically a function. This line holds many points with x = 2 and different y values, so the one input 2 has many outputs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more detail. A function only needs 'at most once'. If you slide a vertical line to an x where the graph has no point, it touches nothing, and that is fine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "At most once: zero touches is OK, two or more is not"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A graph stops at x = 8. A vertical line at x = 10 touches it zero times. Does that make the graph not a function?",
+    "right": "No. Zero touches is fine. The test only fails if a line touches more than once.",
+    "wrong": [
+     "Yes, because every vertical line must touch it.",
+     "Yes, because x = 10 has no output.",
+     "No, but only if the graph is a straight line."
+    ],
+    "why": "A function gives exactly one output to each input it uses. An x that isn't used has no output, and that doesn't break anything. Two or more touches would."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Direction matters. Person → birthday is a function, since each person has one birthday. Birthday → person is not, because many people share a birthday and one input would have many outputs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Person → birthday: function | Birthday → person: not a function"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is a function? (A) a person → their birthday, or (B) a birthday → the person born then?",
+    "right": "(A), because each person has exactly one birthday.",
+    "wrong": [
+     "(B), because every birthday belongs to someone.",
+     "Both, because both are pairings.",
+     "Neither, because birthdays repeat."
+    ],
+    "why": "Check each input for one output. A person has one birthday. A birthday date can belong to many people, so in (B) one input has many outputs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it together. Table: look for repeated inputs. Mapping: look for two arrows from one input. Graph: use the vertical line test. All three ask the same question."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Table: does any input repeat with different outputs? | Mapping: does any input have two arrows? | Graph: does a vertical line touch twice?"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last check. Look at four sets of pairs and find the one that is not a function."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A: (1,2) (2,3) (3,4) | B: (1,5) (2,5) (3,5) | C: (1,2) (1,3) (2,4) | D: (0,0) (1,1) (2,2)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which set is NOT a function? A: (1,2) (2,3) (3,4). B: (1,5) (2,5) (3,5). C: (1,2) (1,3) (2,4). D: (0,0) (1,1) (2,2).",
+    "right": "C",
+    "wrong": [
+     "A",
+     "B",
+     "D"
+    ],
+    "why": "In C the input 1 goes to both 2 and 3. In B every output is 5, but each input is different, so it is still a function. A and D have all-different inputs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. A function gives each input exactly one output. Next class we meet four ways to show a function."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Function = one output for each input"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Function (one output per input)",
+   "links": [
+    "[[Four Ways to Show a Function]]",
+    "[[Linear and Nonlinear Functions]]"
+   ]
+  },
+  {
+   "topic": "Ordered pairs and graphs",
+   "links": [
+    "[[Slope]]",
+    "[[Transformations on the Coordinate Plane]]"
+   ]
+  },
+  {
+   "topic": "Vertical line test",
+   "links": [
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[Systems of Equations by Graphing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A function is a rule that gives each input exactly one output (the 8th-grade wording).",
+   "other_view": "Higher-level textbooks usually say a function is a relation, meaning a set of pairs, where each input has exactly one output. The two ideas fit together. The 'rule' version is easier to picture, and the 'relation' version covers cases with no neat rule.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "The vertical line test tells you whether a graph is a function.",
+   "other_view": "The test depends on the usual convention that inputs go on the horizontal axis and outputs on the vertical axis. If a graph used the opposite layout, you would have to check differently. The test is a quick check of the definition and does not replace it.",
+   "cite": [
+    "s2",
+    "s3"
+   ]
+  }
+ ]
+}

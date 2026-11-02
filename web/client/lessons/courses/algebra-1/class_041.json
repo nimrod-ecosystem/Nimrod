@@ -1,0 +1,329 @@
+{
+ "about": {
+  "title": "Vertex Form and Transformations of Parabolas",
+  "course": "algebra-1",
+  "class_n": 41,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes fits. The class has 14 short beats, each with one idea and one check question. Pause after any beat if you need more time. The last two conversion beats can be a second sitting."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class you met parabolas: the U-shaped curve with a turning point called the vertex. Today we learn a form of the equation that shows you the vertex straight away."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Vertex Form and Transformations of Parabolas"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here it is: y = a(x − h)² + k. It has three numbers, a, h and k. The vertex is the point (h, k)."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = a(x − h)² + k   →   vertex (h, k)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We start from the plainest parabola, y = x². Its vertex is (0, 0). Points: (1, 1), (2, 4), (−1, 1), (−2, 4). Everything today is this shape moved, stretched or flipped."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A U-shaped parabola on a grid, vertex at the origin (0, 0), passing through (−2, 4), (−1, 1), (1, 1) and (2, 4). Its two sides are mirror images across the y-axis."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, k. It moves the whole parabola up or down. y = x² + 3 is the same shape lifted 3 units, so its vertex is (0, 3). A negative k moves it down."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = x² + 3: vertex (0, 3), up 3 | y = x² − 2: vertex (0, −2), down 2"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the vertex of y = x² − 5?",
+    "right": "(0, −5)",
+    "wrong": [
+     "(0, 5)",
+     "(5, 0)",
+     "(−5, 0)"
+    ],
+    "why": "k = −5 moves the parabola down 5 units. The vertex goes from (0, 0) to (0, −5)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, h. It moves the parabola left or right. In y = (x − 2)², the vertex is at x = 2, so the parabola slides 2 to the right. Watch the sign. It looks backwards."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = (x − 2)²: vertex (2, 0), right 2 | y = (x + 3)²: vertex (−3, 0), left 3"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why the flip? The formula has x − h. So x + 3 is really x − (−3), and h is −3. Ask: which x makes the bracket zero? That x is the vertex's x."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x + 4 = x − (−4), so h = −4"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the vertex of y = (x + 4)²?",
+    "right": "(−4, 0)",
+    "wrong": [
+     "(4, 0)",
+     "(0, 4)",
+     "(0, −4)"
+    ],
+    "why": "x + 4 is zero when x = −4. So h = −4 and the vertex is (−4, 0)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now h and k together. In y = (x − 3)² + 2, h is 3 and k is 2. Move the parent parabola right 3 and up 2, and the vertex is (3, 2)."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A parabola with the same shape as y = x², with its vertex at (3, 2). A dotted arrow runs from the origin 3 right, then 2 up, to the vertex."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the vertex of y = (x + 1)² − 6?",
+    "right": "(−1, −6)",
+    "wrong": [
+     "(1, −6)",
+     "(−1, 6)",
+     "(1, 6)"
+    ],
+    "why": "x + 1 means h = −1. The − 6 means k = −6. So the vertex is (−1, −6)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a. It stretches or squeezes the parabola up and down. In y = 2x², every height doubles: (1, 2) and (2, 8). The parabola is narrower. In y = ½x², heights halve: (2, 2) and (4, 8). It is wider."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "|a| greater than 1: narrower (y = 2x²) | |a| between 0 and 1: wider (y = ½x²)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Compared with y = x², how does y = ¼x² look?",
+    "right": "Wider",
+    "wrong": [
+     "Narrower",
+     "The same width, but moved up",
+     "Flipped upside down"
+    ],
+    "why": "A number between 0 and 1 shrinks every height, so the parabola spreads out and looks wider."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If a is negative, the parabola flips upside down. That is a reflection over its horizontal line through the vertex. Then it opens down, and the vertex is the highest point instead of the lowest."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "a > 0: opens up, vertex is the lowest point | a < 0: opens down, vertex is the highest point"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which describes y = −3(x − 1)² + 2?",
+    "right": "It opens down, and the vertex (1, 2) is its highest point.",
+    "wrong": [
+     "It opens up, and the vertex (1, 2) is its lowest point.",
+     "It opens down, and the vertex (−1, 2) is its highest point.",
+     "It opens up, and the vertex (1, −2) is its lowest point."
+    ],
+    "why": "a = −3 is negative, so it opens down and is narrow. h = 1 and k = 2, so the vertex is (1, 2), the top."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's graph one start to finish: y = −2(x + 1)² + 5. Step 1: read a = −2, h = −1, k = 5. Step 2: vertex (−1, 5). Step 3: opens down and narrow."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. a = −2, h = −1, k = 5 | 2. Vertex (−1, 5) | 3. Opens down, narrow | 4. Pick x values next to the vertex"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step 4: find points. At x = 0: −2(1)² + 5 = 3. At x = 1: −2(2)² + 5 = −3. A parabola is symmetric, so x = −2 gives 3 and x = −3 gives −3. Plot, then draw the curve."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A downward-opening narrow parabola with its top at (−1, 5). It passes through (−2, 3) and (0, 3), and through (−3, −3) and (1, −3). A dotted vertical line at x = −1 marks the mirror line."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "For y = −2(x + 1)² + 5, what is y when x = 0?",
+    "right": "3",
+    "wrong": [
+     "7",
+     "−3",
+     "5"
+    ],
+    "why": "Put in x = 0: (0 + 1)² = 1, times −2 is −2, plus 5 is 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We can go backwards too. Say a parabola has vertex (1, 3) and passes through (2, 5). Put h = 1 and k = 3 into the form, then use the point to find a."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = a(x − 1)² + 3 | Use (2, 5): 5 = a(2 − 1)² + 3 | 5 = a + 3, so a = 2 | y = 2(x − 1)² + 3"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Vertex (1, 3), through the point (2, 5). Which equation is right?",
+    "right": "y = 2(x − 1)² + 3",
+    "wrong": [
+     "y = 2(x + 1)² + 3",
+     "y = 5(x − 1)² + 3",
+     "y = 2(x − 1)² − 3"
+    ],
+    "why": "The vertex gives h = 1 and k = 3, which makes (x − 1) and + 3. The point (2, 5) gives 5 = a + 3, so a = 2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Vertex form to standard form is just expanding. Take y = (x − 3)² + 2. Square the bracket: x² − 6x + 9. Add 2: y = x² − 6x + 11."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = (x − 3)² + 2 | = x² − 6x + 9 + 2 | = x² − 6x + 11"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Write y = (x − 1)² − 4 in standard form.",
+    "right": "y = x² − 2x − 3",
+    "wrong": [
+     "y = x² − 2x − 5",
+     "y = x² + 2x − 3",
+     "y = x² − 1"
+    ],
+    "why": "(x − 1)² = x² − 2x + 1. Then 1 − 4 = −3. That gives y = x² − 2x − 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Standard form to vertex form: for y = x² − 4x + 1, the vertex's x is −b ÷ 2a. Here that is 4 ÷ 2 = 2. Put x = 2 in: 4 − 8 + 1 = −3. Vertex (2, −3), a = 1, so y = (x − 2)² − 3. Class 43 shows another way, completing the square."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = x² − 4x + 1 | x = −b ÷ 2a = 2 | y = 4 − 8 + 1 = −3 | y = (x − 2)² − 3"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Use x = −b ÷ 2a to write y = x² + 6x + 5 in vertex form.",
+    "right": "y = (x + 3)² − 4",
+    "wrong": [
+     "y = (x − 3)² − 4",
+     "y = (x + 3)² + 5",
+     "y = (x + 6)² − 4"
+    ],
+    "why": "x = −6 ÷ 2 = −3. At x = −3: 9 − 18 + 5 = −4. The vertex is (−3, −4) and a = 1, so y = (x + 3)² − 4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real life: a ball's height in feet after t seconds is h = −16(t − 2)² + 70. The vertex is (2, 70), so the ball peaks at 70 feet after 2 seconds. At t = 0 it is −64 + 70 = 6 feet, where it was released. Quick recap: k moves up or down, h moves sideways with the opposite sign, and a stretches, squeezes or flips."
+   },
+   "show": {
+    "kind": "list",
+    "text": "k: up or down | h: left or right (sign flips) | a: narrow, wide, or flipped if negative | Vertex = (h, k)"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "For h = −16(t − 2)² + 70, when is the ball highest, and how high is it?",
+    "right": "At 2 seconds, 70 feet",
+    "wrong": [
+     "At 70 seconds, 2 feet",
+     "At 16 seconds, 70 feet",
+     "At 0 seconds, 6 feet"
+    ],
+    "why": "The vertex (2, 70) is the top because a = −16 is negative. So t = 2 seconds and the height is 70 feet. 6 feet is the starting height, not the highest point."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Sources: no web sources were read for this lesson, so none are listed. The maths is standard Algebra 1 content and was checked by hand. Please check the lesson against a textbook such as OpenStax before publishing.",
+   "links": []
+  },
+  {
+   "topic": "Quadratic functions and their graphs",
+   "links": [
+    "[[Quadratic Functions and Their Graphs]]"
+   ]
+  },
+  {
+   "topic": "Completing the square",
+   "links": [
+    "[[Square Roots and Completing the Square]]"
+   ]
+  },
+  {
+   "topic": "Quadratic models, such as the ball height example",
+   "links": [
+    "[[Quadratic Models]]"
+   ]
+  },
+  {
+   "topic": "Transformations of other functions",
+   "links": [
+    "[[Piecewise and Absolute Value Functions, and Transformations]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

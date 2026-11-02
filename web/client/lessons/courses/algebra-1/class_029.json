@@ -1,0 +1,553 @@
+{
+ "about": {
+  "title": "Roots and Rational Exponents",
+  "course": "algebra-1",
+  "class_n": 29,
+  "audience": [
+   "teenagers aged 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are two ideas: simplifying roots, then fractional exponents. Each gets about 15 minutes, with a check question after every step. Pause at any question and take as long as you need."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "8.1 Simplify Expressions with Roots, Intermediate Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2020-05-06",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/8-1-simplify-expressions-with-roots",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "9.2: Simplify Square Roots (OpenStax Elementary Algebra)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/09:_Roots_and_Radicals/9.02:_Simplify_Square_Roots",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "9.7: Higher Roots (OpenStax Elementary Algebra)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/09:_Roots_and_Radicals/9.07:_Higher_Roots",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "8.3 Simplify Rational Exponents, Intermediate Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2020-05-06",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/8-3-simplify-rational-exponents",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "8.4: Simplify Rational Exponents (OpenStax Intermediate Algebra)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Intermediate_Algebra_1e_(OpenStax)/08:_Roots_and_Radicals/8.04:_Simplify_Rational_Exponents",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "High School: Number and Quantity (Common Core State Standards for Mathematics)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSN/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Grade 8 Common Core Standards (standards text: 8.NS.A.1, 8.NS.A.2, 8.EE.A.2)",
+   "publisher": "Math Is Fun",
+   "date": "n.d.",
+   "link": "https://www.mathsisfun.com/links/core-grade-8.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "1.3 Radicals and Rational Exponents, College Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/1-3-radicals-and-rational-exponents",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "8.NS.A.1: Rational and Irrational Numbers and Repeating Decimals",
+   "publisher": "SVHS",
+   "date": "n.d.",
+   "link": "https://svhs.co/lesson/8-ns-a-1/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "HSN.RN.A.1: Why Rational Exponents Mean Roots",
+   "publisher": "SVHS",
+   "date": "n.d.",
+   "link": "https://svhs.co/lesson/hsn-rn-a-1/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class you met zero and negative exponents. Today we meet roots, and then a surprise: a root is secretly an exponent."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Roots and Rational Exponents"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the square root. Picture 9 blocks packed into a square. It is 3 blocks across and 3 blocks down."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 9,
+    "layout": "group",
+    "text": "9 blocks make a 3 by 3 square, so the square root of 9 is 3"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A square root answers one question: what number times itself gives this? Both 13 and −13 work for 169. The radical sign √ means only the positive one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "√169 = 13 (the positive root; the radical sign means positive)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is √49?",
+    "right": "7",
+    "wrong": [
+     "−7",
+     "±7",
+     "24.5"
+    ],
+    "why": "7 × 7 = 49. The radical sign √ asks for the positive root only, so the answer is just 7. (−7 also squares to 49, but √ does not mean that one.)"
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some squares are worth knowing by heart. In 8th grade you evaluated roots of small perfect squares. Here are the ones to keep handy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cube roots work the same way, with three copies. Cubed means 3 × 3 × 3. A cube root asks which number, used three times, makes this."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "∛27 = 3, because 3 × 3 × 3 = 27"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A cube root can handle negatives, because a negative times a negative times a negative is negative. So ∛(−27) = −3. A square root of a negative number is not a real number."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "∛(−27) = −3 (real) | √(−27) (not a real number)"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is ∛(−8)?",
+    "right": "−2",
+    "wrong": [
+     "2",
+     "−4",
+     "It is not a real number"
+    ],
+    "why": "(−2) × (−2) × (−2) = −8. Cube roots of negative numbers are real. Only square roots of negatives are not real."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now two kinds of numbers. √36 = 6 is a whole number, so it is rational. √2 is different. Its decimal never ends and never repeats."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rational: decimal ends or repeats (√36 = 6) | Irrational: never ends, never repeats (√2 = 1.41421356…)"
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rule of thumb: the square root of a whole number that is not a perfect square is irrational. √5 and √50 are examples."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not a perfect square → irrational"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is irrational?",
+    "right": "√20",
+    "wrong": [
+     "√16",
+     "√25",
+     "√100"
+    ],
+    "why": "16, 25 and 100 are perfect squares (4, 5 and 10), so those roots are whole numbers. 20 is not a perfect square, so √20 is irrational."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You can place an irrational root on the number line by squeezing it between two perfect squares. √30 sits between √25 and √36."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "25 < 30 < 36, so 5 < √30 < 6"
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Between which two whole numbers is √30?",
+    "right": "5 and 6",
+    "wrong": [
+     "4 and 5",
+     "6 and 7",
+     "15 and 16"
+    ],
+    "why": "5² = 25 and 6² = 36, and 30 is between them. So √30 is between 5 and 6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now simplifying. There is a rule for roots of products: √(ab) = √a · √b, when a and b are not negative."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "√(ab) = √a · √b"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A square root is simplified when nothing inside it is a perfect-square factor. We use the rule to pull those factors out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Find the largest perfect-square factor. 2. Rewrite the number as a product. 3. Take the root of the perfect square."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try √50. 25 is a perfect square and 25 × 2 = 50. So √50 = √25 · √2 = 5√2. The whole number goes in front."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "√50 = √25 · √2 = 5√2"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Look for the largest perfect square that divides 72."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Simplify √72"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is √72 fully simplified?",
+    "right": "6√2",
+    "wrong": [
+     "2√18",
+     "3√8",
+     "36√2"
+    ],
+    "why": "72 = 36 × 2, and 36 is the largest perfect-square factor. √36 = 6, so √72 = 6√2. 2√18 and 3√8 are equal in value but still have a perfect square inside (9 and 4). 36√2 forgets to take the root of 36."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why bother? Say a game sprite is a square with an area of 48 square pixels. Its side is √48 = √(16 · 3) = 4√3, about 6.9 pixels."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A square game sprite with area 48 square pixels; one side labelled 4√3, about 6.9 pixels"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cube roots simplify the same way, but you look for perfect cubes: 8, 27, 64, 125. Try ∛54. Since 27 × 2 = 54, we get ∛54 = 3∛2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "∛54 = ∛27 · ∛2 = 3∛2"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is ∛16 fully simplified?",
+    "right": "2∛2",
+    "wrong": [
+     "4∛2",
+     "8∛2",
+     "It cannot be simplified"
+    ],
+    "why": "16 = 8 × 2 and 8 is a perfect cube (2 × 2 × 2). So ∛16 = ∛8 · ∛2 = 2∛2."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second idea: fractional exponents. Remember that a power to a power multiplies the exponents. Let's use that rule with a fraction."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(5^(1/3))³ = 5^((1/3)·3) = 5¹ = 5"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So 5^(1/3) is a number that, cubed, gives 5. That is the cube root of 5! We define it that way so exponent rules keep working. Same for 9^(1/2) = 3."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "5^(1/3) = ∛5, and 9^(1/2) = √9 = 3"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rule: an exponent of 1/n means the nth root. The bottom number of the fraction tells you which root."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "a^(1/n) = ⁿ√a | 64^(1/3) = ∛64 = 4"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is 125^(1/3)?",
+    "right": "5",
+    "wrong": [
+     "41.67",
+     "62.5",
+     "25"
+    ],
+    "why": "The exponent 1/3 means the cube root, and 5 × 5 × 5 = 125. 41.67 comes from dividing 125 by 3, which is not what the exponent means."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What if the top number isn't 1? Then the top is a power and the bottom is a root. So 8^(2/3) means take the cube root of 8, then square it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a^(m/n) = (ⁿ√a)^m, so 8^(2/3) = (∛8)² = 2² = 4"
+   },
+   "cite": [
+    "s5",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tip: take the root first. It keeps the numbers small. 4^(3/2) is (√4)³, which is 2³."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "4^(3/2) = (√4)³ = 2³ = 8"
+   },
+   "cite": [
+    "s5",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is 4^(3/2)?",
+    "right": "8",
+    "wrong": [
+     "6",
+     "64",
+     "2"
+    ],
+    "why": "The bottom number 2 means square root, and √4 = 2. The top number 3 means cube it: 2³ = 8. 6 comes from multiplying 4 × 3 ÷ 2, which is not what an exponent means."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One caution. An even root, like a square root, of a negative number is not a real number. An odd root, like a cube root, can be negative."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Not real: √(−9) | Real: ∛(−8) = −2"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is NOT a real number?",
+    "right": "√(−9)",
+    "wrong": [
+     "∛(−8)",
+     "√9",
+     "∛8"
+    ],
+    "why": "No real number times itself gives −9, because a square is never negative. The other three are real: ∛(−8) = −2, √9 = 3 and ∛8 = 2."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's wrap up. A root asks what number gives this when multiplied by itself. Simplify by pulling out perfect squares or cubes. And a fraction in an exponent is a root in disguise."
+   },
+   "show": {
+    "kind": "list",
+    "text": "√ and ∛ undo squaring and cubing. | √(ab) = √a·√b lets us simplify. | a^(1/n) = ⁿ√a. | a^(m/n) = (ⁿ√a)^m."
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "count-in"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Square roots and cube roots",
+   "links": [
+    "[[Exponent Rules]]",
+    "[[Zero and Negative Exponents, and Scientific Notation]]"
+   ]
+  },
+  {
+   "topic": "Simplifying radicals (product property)",
+   "links": [
+    "[[Properties and Simplifying Expressions]]",
+    "[[Square Roots and Completing the Square]]"
+   ]
+  },
+  {
+   "topic": "Rational exponents",
+   "links": [
+    "[[Exponent Rules]]",
+    "[[Exponential Functions: Growth and Decay]]"
+   ]
+  },
+  {
+   "topic": "Rational and irrational numbers",
+   "links": [
+    "[[Relations and Functions]]",
+    "[[The Quadratic Formula and the Discriminant]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The symbol √49 means 7 only, not both 7 and −7.",
+   "other_view": "The radical sign names only the positive (principal) root. But when you solve an equation such as x² = 49, both 7 and −7 are solutions, and the 8th-grade standard asks students to write such solutions with the root symbol. So the sign decides whether you get one answer or two.",
+   "cite": [
+    "s1",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Rational exponents can be defined for any base whose root is a real number, such as (−8)^(1/3) = −2.",
+   "other_view": "Some courses state the exponent properties for positive bases only, because the properties can give odd results with negative bases. That is a safer rule, though it leaves out cases like (−8)^(1/3). Your teacher or test may use either convention.",
+   "cite": [
+    "s5",
+    "s10"
+   ]
+  }
+ ]
+}

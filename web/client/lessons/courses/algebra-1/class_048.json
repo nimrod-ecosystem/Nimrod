@@ -1,0 +1,817 @@
+{
+ "about": {
+  "title": "Box Plots, Standard Deviation and Outliers",
+  "course": "algebra-1",
+  "class_n": 48,
+  "audience": [
+   "Teenagers aged 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are four short parts: build a box plot, find outliers, measure spread with standard deviation, and compare two players. Each part ends with a check question. You can pause between parts, and that won't change the lesson."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.4 Box Plots, Introductory Statistics",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2022",
+   "link": "https://openstax.org/books/introductory-statistics/pages/2-4-box-plots",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Chapter 2 Review, Statistics",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/statistics/pages/2-chapter-review",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "2.7 Measures of the Spread of the Data, Statistics",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/statistics/pages/2-7-measures-of-the-spread-of-the-data",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "HSS-ID.A.2 (Common Core standard: compare center and spread of two or more data sets)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/HSS/ID/A/2",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Quartiles and Box Plots, Data Science Discovery",
+   "publisher": "University of Illinois Urbana-Champaign",
+   "date": "n.d.",
+   "link": "https://discovery.cs.illinois.edu/learn/Exploratory-Data-Analysis/Quartiles-and-Box-Plots/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Describing Data Numerically: The Mean and Standard Deviation (Introductory Statistics Study Guide)",
+   "publisher": "Pearson",
+   "date": "n.d.",
+   "link": "https://www.pearson.com/channels/statistics/study-guides/describing-data-numerically-the-mean-and-standard",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Chapter 8 Key Concepts, Contemporary Mathematics",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/8-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Common Core Standards: High School Statistics (HSS.ID.A.1 to A.3)",
+   "publisher": "Math Is Fun",
+   "date": "n.d.",
+   "link": "https://www.mathsisfun.com/links/core-high-school-statistics.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Box Plot: Five-Number Summary, IQR & Outliers",
+   "publisher": "Mathwords",
+   "date": "n.d.",
+   "link": "https://www.mathwords.com/b/boxplot.htm",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 48. Today we turn a pile of numbers into one picture, then use it to compare two players fairly. It takes about 40 minutes, in four short parts."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Box Plots, Standard Deviation and Outliers"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The four parts are: build a box plot, spot outliers, measure spread with standard deviation, and compare two players. Comparing center and spread across data sets is a standard high-school skill."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Build a box plot\n2. Spot outliers\n3. Standard deviation\n4. Compare two players"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part 1 starts the same way every time: put the numbers in order, smallest to largest. Here are Kai's points in nine games. These numbers are made up for practice."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Kai's points in nine games, sorted",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quartiles cut a sorted list into four equal parts. Q1 is the 25th percentile, Q2 is the median, and Q3 is the 75th percentile."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quartiles: Q1, Q2 (median), Q3"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which quartile is the same thing as the median?",
+    "right": "Q2",
+    "wrong": [
+     "Q1",
+     "Q3",
+     "None of them"
+    ],
+    "why": "Q2 is the 50th percentile, the middle of the sorted list. That is the median."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kai has nine games, so the median is the 5th number: 12. Four numbers sit below it and four above. With an odd count, leave the median out of both halves."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "ball",
+    "count": 9,
+    "layout": "row",
+    "text": "Nine games"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "A sorted list has 9 numbers. Which one is the median?",
+    "right": "The 5th number",
+    "wrong": [
+     "The 4th number",
+     "The 9th number",
+     "The 3rd number"
+    ],
+    "why": "The 5th number has 4 numbers on each side, so it is exactly in the middle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Q1 is the median of the lower half: 6, 8, 9, 10. The middle two are 8 and 9, so Q1 is 8.5. Q3 is the median of the upper half: 13, 14, 15, 30, so Q3 is 14.5. A calculator may use a slightly different rule, so check what your class uses."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lower half: 6, 8, 9, 10 gives Q1 = 8.5\nMedian = 12\nUpper half: 13, 14, 15, 30 gives Q3 = 14.5"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A lower half is 2, 4, 6, 10. What is Q1?",
+    "right": "5",
+    "wrong": [
+     "4",
+     "6",
+     "3"
+    ],
+    "why": "With four numbers, the middle two are 4 and 6. Their average is 5."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we have five numbers: the smallest, Q1, the median, Q3, and the largest. Together they are called the five-number summary."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Kai's five-number summary",
+    "chart": "c2"
+   },
+   "cite": [],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these is NOT part of the five-number summary?",
+    "right": "The mean",
+    "wrong": [
+     "The median",
+     "The smallest value",
+     "Q3"
+    ],
+    "why": "The five numbers are the smallest, Q1, the median, Q3 and the largest. The mean is not one of them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time to draw. Make a number line. Draw a box from Q1 to Q3, with a line inside at the median. For now, draw whiskers out to the smallest and largest values. We'll improve the whiskers soon."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A number line from 0 to 32. A box runs from 8.5 to 14.5 with a line inside at 12. A thin whisker reaches left to 6 and right to 30."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where is the median drawn on a box plot?",
+    "right": "As a line inside the box",
+    "wrong": [
+     "At the left end of the left whisker",
+     "At the right edge of the box",
+     "At the far right of the plot"
+    ],
+    "why": "The box runs from Q1 to Q3, and the median is the line inside it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The width of the box has a name. The interquartile range, or IQR, is Q3 minus Q1. It is the range of the middle 50 percent of the data. For Kai, 14.5 minus 8.5 is 6."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "IQR = Q3 − Q1 = 14.5 − 8.5 = 6"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Q1 is 8.5 and Q3 is 14.5. What is the IQR?",
+    "right": "6",
+    "wrong": [
+     "24",
+     "23",
+     "3"
+    ],
+    "why": "IQR is Q3 minus Q1, so 14.5 − 8.5 = 6. The number 24 is the largest minus the smallest, which is the range, not the IQR."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part 2: outliers. An outlier is a value that sits far from the rest of the data. Kai's 30 looks far away, but 'looks far' is not a rule. So we use one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Outlier: a value far from the rest"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The rule uses the IQR. Multiply the IQR by 1.5. Subtract that from Q1 to get the lower fence. Add it to Q3 to get the upper fence. Values outside the fences are outliers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1.5 × IQR = 1.5 × 6 = 9\nLower fence = 8.5 − 9 = −0.5\nUpper fence = 14.5 + 9 = 23.5"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check Kai's games against the fences. The 30 is above 23.5, so it is an outlier. Every other game is between −0.5 and 23.5, so none of them is."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Outlier: 30 (above 23.5) | Not outliers: 6, 8, 9, 10, 12, 13, 14, 15"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Kai's smallest score is 6 and the lower fence is −0.5. Is 6 an outlier?",
+    "right": "No, because 6 is not below −0.5",
+    "wrong": [
+     "Yes, because it is the smallest score",
+     "Yes, because it is below Q1",
+     "No, because it is the median"
+    ],
+    "why": "Only values below the lower fence or above the upper fence are outliers. Being the smallest is not enough."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we can fix the whiskers. Each whisker goes to the most extreme value that is not an outlier. The outlier gets its own dot. Kai's right whisker ends at 15, and the 30 is a dot."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same number line. The box runs from 8.5 to 14.5 with a median line at 12. The left whisker reaches to 6 and the right whisker only to 15. A separate dot sits at 30."
+   },
+   "cite": [
+    "s9",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where does Kai's right whisker end?",
+    "right": "At 15",
+    "wrong": [
+     "At 30",
+     "At 23.5",
+     "At 14.5"
+    ],
+    "why": "The whisker stops at the largest value that is not an outlier, and that is 15. The fence at 23.5 is only a cutoff, not a real game score."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does it matter? One big game pulls the mean up. With the 30, Kai's mean is 13. Without it, the mean is about 10.9. The median only moves from 12 to 11."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Mean 13 with the 30, about 10.9 without"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So should we delete outliers? Not automatically. An outlier can be a typo, a mistake, or real data. It should only be left out for a good reason."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Outliers can be typos, lies, or real data."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Kai's 30 was a real game that he really scored. What should we do with it?",
+    "right": "Keep it, and say it was an unusually big game",
+    "wrong": [
+     "Delete it, because outliers are always wrong",
+     "Delete it, because it makes the mean bigger",
+     "Change it to 15 so the plot looks neat"
+    ],
+    "why": "The 30 is real data, so there is no good reason to remove it. We keep it and note that it is unusual."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part 3: standard deviation. It is a number that tells the typical distance of the data from the mean. A small value means the numbers bunch close to the mean. A big value means they are spread out."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Standard deviation: the typical distance from the mean"
+   },
+   "cite": [
+    "s6",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's see it. Mia scored 10, 12, 14, 16 and 18, so her mean is 14. The distance of each score from 14 is 4, 2, 0, 2 and 4. Distance ignores direction, so it is never negative."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How far each of Mia's scores is from her mean of 14",
+    "chart": "c3"
+   },
+   "cite": [],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Mia's mean is 14. How far is her score of 18 from the mean?",
+    "right": "4",
+    "wrong": [
+     "18",
+     "14",
+     "32"
+    ],
+    "why": "Distance from the mean is 18 − 14 = 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The average of those distances is 2.4. The standard deviation is about 3.2. They are not identical, but they are close. Standard deviation is roughly the typical distance from the mean."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Mia: average distance 2.4, standard deviation about 3.2"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Jo. Jo scored 4, 9, 14, 19 and 24. The mean is also 14, but the distances are 10, 5, 0, 5 and 10. Jo's standard deviation is about 7.9. Same mean, very different spread."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mia: scores 10 to 18, standard deviation about 3.2 | Jo: scores 4 to 24, standard deviation about 7.9"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Mia's standard deviation is 3.2 and Jo's is 7.9. Whose scores stay closer to the mean?",
+    "right": "Mia's",
+    "wrong": [
+     "Jo's",
+     "They are the same",
+     "You can't tell"
+    ],
+    "why": "A smaller standard deviation means the data sit closer to the mean. Mia's is smaller."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You don't need to work this out by hand. A calculator or spreadsheet does it. You may see two versions, sx and σx. In this class we use the sample version, sx. Standard deviation is always zero or more."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Standard deviation is never negative"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Can a standard deviation be negative?",
+    "right": "No, it is always zero or more",
+    "wrong": [
+     "Yes, if the data are below the mean",
+     "Yes, if the mean is negative",
+     "Only for small data sets"
+    ],
+    "why": "Standard deviation measures distance, and distance is never negative. It is zero only when every value is the same."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more fact about standard deviation. It reacts to outliers. Kai's standard deviation is about 7.0 with the 30, and about 3.1 without it. The IQR only goes from 6 to 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "With the 30: standard deviation about 7.0, IQR 6\nWithout the 30: standard deviation about 3.1, IQR 5"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "When Kai's 30 is removed, which spread number changes MORE?",
+    "right": "The standard deviation (7.0 down to 3.1)",
+    "wrong": [
+     "The IQR (6 down to 5)",
+     "They change by the same amount",
+     "Neither one changes"
+    ],
+    "why": "One extreme game moves the standard deviation a lot, but it barely moves the IQR."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So choose the spread number to match the data. For fairly even, symmetric data, the mean and standard deviation work well. For lopsided data or data with outliers, the median and IQR are usually the safer pair."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Even, symmetric data: mean and standard deviation | Lopsided data or outliers: median and IQR"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part 4: compare two players. Put both box plots on one number line. Mia's box runs from 11 to 17. Jo's runs from 6.5 to 21.5. Both medians are 14."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One number line from 0 to 26 with two box plots stacked. Mia's box runs from 11 to 17 with a line at 14, and whiskers from 10 to 18. Jo's box runs from 6.5 to 21.5 with a line at 14, and whiskers from 4 to 24."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Jo's box is much wider than Mia's. What does that tell us?",
+    "right": "Jo's middle 50% of games is more spread out",
+    "wrong": [
+     "Jo scores more points than Mia",
+     "Jo has more outliers",
+     "Jo played more games"
+    ],
+    "why": "The width of the box is the IQR. A wider box means the middle half of the data is more spread out. Their medians are the same."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the numbers behind the picture. Mia's IQR is 6 and Jo's is 15. Mia's standard deviation is about 3.2 and Jo's is about 7.9. Both spread measures tell the same story."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Spread of Mia and Jo: standard deviation and IQR",
+    "chart": "c4"
+   },
+   "cite": [],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When you compare two data sets, use four steps. Compare the centers. Compare the spreads. Look for outliers or lopsided shapes. Then say what it means in plain words about the game."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Compare the centers\n2. Compare the spreads\n3. Check outliers and shape\n4. Say it in words"
+   },
+   "cite": [
+    "s4",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A coach wants a player who scores close to 14 almost every game. Mia and Jo both have a median of 14. Who should the coach pick?",
+    "right": "Mia, because her spread is smaller",
+    "wrong": [
+     "Jo, because her spread is bigger",
+     "Either one, because the medians are equal",
+     "Jo, because her highest score is 24"
+    ],
+    "why": "The centers are equal, so the spread decides. Mia's scores stay close to 14, so she is steadier."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check on your own. Team Red and Team Blue both have a median of 70 points. Red's standard deviation is 4 and Blue's is 12."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Team Red: median 70, standard deviation 4 | Team Blue: median 70, standard deviation 12"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which team's scores are harder to predict from game to game?",
+    "right": "Team Blue",
+    "wrong": [
+     "Team Red",
+     "Neither, because the medians match",
+     "You can't tell without the mean"
+    ],
+    "why": "Blue's standard deviation is bigger, so its scores are more spread out and less predictable."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Today you built a box plot from a five-number summary and found outliers with the 1.5 times IQR rule. You also read standard deviation as typical spread and compared two players. Next class: two-way tables."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Five-number summary and box plot\nIQR and the 1.5 × IQR rule\nStandard deviation: typical distance from the mean\nComparing center and spread"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Kai's points in nine games (made-up practice data), sorted",
+   "rows": [
+    {
+     "label": "Sorted game 1",
+     "value": 6,
+     "source": null
+    },
+    {
+     "label": "Sorted game 2",
+     "value": 8,
+     "source": null
+    },
+    {
+     "label": "Sorted game 3",
+     "value": 9,
+     "source": null
+    },
+    {
+     "label": "Sorted game 4",
+     "value": 10,
+     "source": null
+    },
+    {
+     "label": "Sorted game 5",
+     "value": 12,
+     "source": null
+    },
+    {
+     "label": "Sorted game 6",
+     "value": 13,
+     "source": null
+    },
+    {
+     "label": "Sorted game 7",
+     "value": 14,
+     "source": null
+    },
+    {
+     "label": "Sorted game 8",
+     "value": 15,
+     "source": null
+    },
+    {
+     "label": "Sorted game 9",
+     "value": 30,
+     "source": null
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Kai's five-number summary (made-up practice data)",
+   "rows": [
+    {
+     "label": "Smallest",
+     "value": 6,
+     "source": null
+    },
+    {
+     "label": "Q1",
+     "value": 8.5,
+     "source": null
+    },
+    {
+     "label": "Median",
+     "value": 12,
+     "source": null
+    },
+    {
+     "label": "Q3",
+     "value": 14.5,
+     "source": null
+    },
+    {
+     "label": "Largest",
+     "value": 30,
+     "source": null
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Distance of each of Mia's scores from her mean of 14 (made-up practice data)",
+   "rows": [
+    {
+     "label": "Score 10",
+     "value": 4,
+     "source": null
+    },
+    {
+     "label": "Score 12",
+     "value": 2,
+     "source": null
+    },
+    {
+     "label": "Score 14",
+     "value": 0,
+     "source": null
+    },
+    {
+     "label": "Score 16",
+     "value": 2,
+     "source": null
+    },
+    {
+     "label": "Score 18",
+     "value": 4,
+     "source": null
+    }
+   ]
+  },
+  {
+   "id": "c4",
+   "kind": "bar",
+   "title": "Spread of Mia's and Jo's scores (made-up practice data)",
+   "rows": [
+    {
+     "label": "Mia: standard deviation",
+     "value": 3.2,
+     "source": null
+    },
+    {
+     "label": "Jo: standard deviation",
+     "value": 7.9,
+     "source": null
+    },
+    {
+     "label": "Mia: IQR",
+     "value": 6,
+     "source": null
+    },
+    {
+     "label": "Jo: IQR",
+     "value": 15,
+     "source": null
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Quartiles and the five-number summary",
+   "links": [
+    "[[Describing Data: Displays, Center and Spread]]",
+    "[[Median and mean]]"
+   ]
+  },
+  {
+   "topic": "Interquartile range and the 1.5 × IQR outlier rule",
+   "links": [
+    "[[Outliers]]",
+    "[[Box plots]]"
+   ]
+  },
+  {
+   "topic": "Standard deviation as typical spread",
+   "links": [
+    "[[Mean]]",
+    "[[Comparing data sets]]"
+   ]
+  },
+  {
+   "topic": "Comparing two data sets with center and spread",
+   "links": [
+    "[[Two-Way Tables and Categorical Data]]",
+    "[[Correlation, Residuals and Causation]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A box plot's whiskers stop at the last non-outlier, and outliers show as dots.",
+   "other_view": "Not every box plot works this way. A basic box-and-whisker plot always extends its whiskers to the minimum and maximum, with no outlier dots. The version with the 1.5 × IQR rule is sometimes called a modified box plot. Check which version your book or teacher uses.",
+   "cite": [
+    "s9",
+    "s1"
+   ]
+  },
+  {
+   "claim": "Outliers should be kept unless there is a good reason to remove them.",
+   "other_view": "Some people remove outliers when they are clearly mistakes, such as a typo. Others keep every real value. The shared advice is to decide on purpose and explain the choice, not delete a point just because it is inconvenient.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "claim": "Standard deviation is the best way to describe spread.",
+   "other_view": "It depends on the shape of the data. The standard says to use statistics appropriate to the shape of the data. Standard deviation suits symmetric data. With outliers or lopsided data, the IQR is often the better choice, because one extreme value moves the standard deviation a lot.",
+   "cite": [
+    "s4",
+    "s6"
+   ]
+  }
+ ]
+}

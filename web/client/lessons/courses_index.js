@@ -301,6 +301,136 @@ export const COURSES = [
     "n": 10,
     "title": "Slope: How Steep Is a Line?",
     "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "Lines: y = mx and y = mx + b",
+    "file": "class_011.json"
+   },
+   {
+    "n": 12,
+    "title": "Solving Linear Equations in One Variable",
+    "file": "class_012.json"
+   },
+   {
+    "n": 13,
+    "title": "Variables on Both Sides: One, None or Infinitely Many Solutions",
+    "file": "class_013.json"
+   },
+   {
+    "n": 14,
+    "title": "What Is a Function?",
+    "file": "class_014.json"
+   },
+   {
+    "n": 15,
+    "title": "Four Ways to Show a Function",
+    "file": "class_015.json"
+   },
+   {
+    "n": 16,
+    "title": "Linear and Nonlinear Functions",
+    "file": "class_016.json"
+   },
+   {
+    "n": 17,
+    "title": "Modeling with Linear Functions",
+    "file": "class_017.json"
+   },
+   {
+    "n": 18,
+    "title": "Comparing Two Functions",
+    "file": "class_018.json"
+   },
+   {
+    "n": 19,
+    "title": "Systems of Equations by Graphing",
+    "file": "class_019.json"
+   },
+   {
+    "n": 20,
+    "title": "Systems by Substitution",
+    "file": "class_020.json"
+   },
+   {
+    "n": 21,
+    "title": "Systems by Elimination",
+    "file": "class_021.json"
+   },
+   {
+    "n": 22,
+    "title": "Systems in the Real World",
+    "file": "class_022.json"
+   },
+   {
+    "n": 23,
+    "title": "Rigid Motions: Translations, Reflections and Rotations",
+    "file": "class_023.json"
+   },
+   {
+    "n": 24,
+    "title": "Transformations on the Coordinate Plane",
+    "file": "class_024.json"
+   },
+   {
+    "n": 25,
+    "title": "Congruent Figures",
+    "file": "class_025.json"
+   },
+   {
+    "n": 26,
+    "title": "Dilations and Similar Figures",
+    "file": "class_026.json"
+   },
+   {
+    "n": 27,
+    "title": "Angles in Triangles and with Parallel Lines",
+    "file": "class_027.json"
+   },
+   {
+    "n": 28,
+    "title": "The Pythagorean Theorem: Why It Works",
+    "file": "class_028.json"
+   },
+   {
+    "n": 29,
+    "title": "Using the Pythagorean Theorem and Its Converse",
+    "file": "class_029.json"
+   },
+   {
+    "n": 30,
+    "title": "Distance and Real-World Right Triangles",
+    "file": "class_030.json"
+   },
+   {
+    "n": 31,
+    "title": "Volume of Cylinders",
+    "file": "class_031.json"
+   },
+   {
+    "n": 32,
+    "title": "Volume of Cones and Spheres",
+    "file": "class_032.json"
+   },
+   {
+    "n": 33,
+    "title": "Scatter Plots and Patterns",
+    "file": "class_033.json"
+   },
+   {
+    "n": 34,
+    "title": "Lines of Best Fit",
+    "file": "class_034.json"
+   },
+   {
+    "n": 35,
+    "title": "Two-Way Tables",
+    "file": "class_035.json"
+   },
+   {
+    "n": 36,
+    "title": "Course Review and Mixed Practice: Choosing the Right Tool",
+    "file": "class_036.json"
    }
   ]
  },
@@ -362,6 +492,211 @@ export const COURSES = [
     "n": 10,
     "title": "Relations and Functions",
     "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "Function Notation: Reading and Using f(x)",
+    "file": "class_011.json"
+   },
+   {
+    "n": 12,
+    "title": "Graphs of Functions: Domain, Range and Behavior",
+    "file": "class_012.json"
+   },
+   {
+    "n": 13,
+    "title": "Slope and Rate of Change",
+    "file": "class_013.json"
+   },
+   {
+    "n": 14,
+    "title": "Slope-Intercept Form and Graphing Lines",
+    "file": "class_014.json"
+   },
+   {
+    "n": 15,
+    "title": "Point-Slope and Standard Form",
+    "file": "class_015.json"
+   },
+   {
+    "n": 16,
+    "title": "Writing Linear Equations from Information",
+    "file": "class_016.json"
+   },
+   {
+    "n": 17,
+    "title": "Parallel and Perpendicular Lines",
+    "file": "class_017.json"
+   },
+   {
+    "n": 18,
+    "title": "Linear Inequalities in Two Variables",
+    "file": "class_018.json"
+   },
+   {
+    "n": 19,
+    "title": "Arithmetic Sequences as Linear Functions",
+    "file": "class_019.json"
+   },
+   {
+    "n": 20,
+    "title": "Piecewise and Absolute Value Functions, and Transformations",
+    "file": "class_020.json"
+   },
+   {
+    "n": 21,
+    "title": "Building Linear Models from Data",
+    "file": "class_021.json"
+   },
+   {
+    "n": 22,
+    "title": "Systems of Equations by Graphing",
+    "file": "class_022.json"
+   },
+   {
+    "n": 23,
+    "title": "Systems by Substitution",
+    "file": "class_023.json"
+   },
+   {
+    "n": 24,
+    "title": "Systems by Elimination",
+    "file": "class_024.json"
+   },
+   {
+    "n": 25,
+    "title": "Choosing a Method and Solving Systems Word Problems",
+    "file": "class_025.json"
+   },
+   {
+    "n": 26,
+    "title": "Systems of Linear Inequalities: Finding the Points That Obey Every Rule",
+    "file": "class_026.json"
+   },
+   {
+    "n": 27,
+    "title": "Exponent Rules",
+    "file": "class_027.json"
+   },
+   {
+    "n": 28,
+    "title": "Zero and Negative Exponents, and Scientific Notation",
+    "file": "class_028.json"
+   },
+   {
+    "n": 29,
+    "title": "Roots and Rational Exponents",
+    "file": "class_029.json"
+   },
+   {
+    "n": 30,
+    "title": "Exponential Functions: Growth and Decay",
+    "file": "class_030.json"
+   },
+   {
+    "n": 31,
+    "title": "Exponential Models and Compound Interest",
+    "file": "class_031.json"
+   },
+   {
+    "n": 32,
+    "title": "Geometric Sequences and Linear vs Exponential",
+    "file": "class_032.json"
+   },
+   {
+    "n": 33,
+    "title": "Adding and Subtracting Polynomials",
+    "file": "class_033.json"
+   },
+   {
+    "n": 34,
+    "title": "Multiplying Polynomials",
+    "file": "class_034.json"
+   },
+   {
+    "n": 35,
+    "title": "Special Products: Three Shortcuts for Multiplying",
+    "file": "class_035.json"
+   },
+   {
+    "n": 36,
+    "title": "Factoring Out the Greatest Common Factor and Grouping",
+    "file": "class_036.json"
+   },
+   {
+    "n": 37,
+    "title": "Factoring x² + bx + c",
+    "file": "class_037.json"
+   },
+   {
+    "n": 38,
+    "title": "Factoring ax² + bx + c",
+    "file": "class_038.json"
+   },
+   {
+    "n": 39,
+    "title": "Special Factoring and a Factoring Strategy",
+    "file": "class_039.json"
+   },
+   {
+    "n": 40,
+    "title": "Quadratic Functions and Their Graphs",
+    "file": "class_040.json"
+   },
+   {
+    "n": 41,
+    "title": "Vertex Form and Transformations of Parabolas",
+    "file": "class_041.json"
+   },
+   {
+    "n": 42,
+    "title": "Solving Quadratics by Factoring",
+    "file": "class_042.json"
+   },
+   {
+    "n": 43,
+    "title": "Square Roots and Completing the Square",
+    "file": "class_043.json"
+   },
+   {
+    "n": 44,
+    "title": "The Quadratic Formula and the Discriminant",
+    "file": "class_044.json"
+   },
+   {
+    "n": 45,
+    "title": "Quadratic Models: Balls, Pens and Profit",
+    "file": "class_045.json"
+   },
+   {
+    "n": 46,
+    "title": "Comparing Linear, Exponential and Quadratic Functions",
+    "file": "class_046.json"
+   },
+   {
+    "n": 47,
+    "title": "Describing Data: Displays, Center and Spread",
+    "file": "class_047.json"
+   },
+   {
+    "n": 48,
+    "title": "Box Plots, Standard Deviation and Outliers",
+    "file": "class_048.json"
+   },
+   {
+    "n": 49,
+    "title": "Two-Way Tables and Categorical Data",
+    "file": "class_049.json"
+   },
+   {
+    "n": 50,
+    "title": "Is the Line Any Good? Correlation, Residuals and Causation",
+    "file": "class_050.json"
+   },
+   {
+    "n": 51,
+    "title": "Capstone: Solve a Real Problem with Algebra",
+    "file": "class_051.json"
    }
   ]
  },

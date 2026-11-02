@@ -1,0 +1,716 @@
+{
+ "about": {
+  "title": "Is the Line Any Good? Correlation, Residuals and Causation",
+  "course": "algebra-1",
+  "class_n": 50,
+  "audience": [
+   "age 14 to 16",
+   "teenagers",
+   "students who finished 8th-grade math and the earlier Algebra 1 classes on lines, exponentials and describing data"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. This class has two big ideas: how well a line fits, and why correlation is not causation. Each idea needs time for an example and a check. There is a natural stopping point after the beat 'Predict only inside the data', so you can do it as two sittings of about 20 minutes."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "12.3 The Regression Equation (Introductory Statistics 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "undated web page",
+   "link": "https://openstax.org/books/introductory-statistics-2e/pages/12-3-the-regression-equation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Summary: The Regression Equation (Introductory Statistics, adapted from OpenStax)",
+   "publisher": "Lumen Learning",
+   "date": "undated web page",
+   "link": "https://courses.lumenlearning.com/introstatscorequisite/chapter/summary-the-regression-equation/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "High School: Statistics & Probability: Interpreting Categorical & Quantitative Data (standards HSS.ID.C.7, C.8, C.9)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "undated web page",
+   "link": "https://www.thecorestandards.org/Math/Content/HSS/ID/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "HSS-ID.B.6 (represent data on two quantitative variables; assess fit by plotting residuals)",
+   "publisher": "Illustrative Mathematics",
+   "date": "undated web page",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/HSS/ID/B/6",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Common Core Standards: S-ID.6b",
+   "publisher": "Shmoop",
+   "date": "undated web page",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-hs-s-id-6b.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "S.ID.B.6b: Residuals (lesson plan and practice)",
+   "publisher": "JMAP",
+   "date": "undated PDF",
+   "link": "https://jmap.org/LessonPlans/S.ID.B.6b.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Biostatistics Series Module 6: Correlation and Linear Regression",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "undated web page",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5122272/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "1.4 Experimental Design and Ethics (Statistics)",
+   "publisher": "OpenStax, Rice University",
+   "date": "undated web page",
+   "link": "https://openstax.org/books/statistics/pages/1-4-experimental-design-and-ethics",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "A Measure-Theoretic Axiomatisation of Causality (Example 4.1, ice cream sales and shark attacks)",
+   "publisher": "arXiv (preprint)",
+   "date": "2023",
+   "link": "https://arxiv.org/pdf/2305.17139",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "S-ID.C.9 Distinguish between correlation and causation (lesson plan)",
+   "publisher": "JMAP",
+   "date": "undated PDF",
+   "link": "https://www.jmap.org/LessonPlans/S.ID.C.9.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Observational Studies, Confounders, and Stratification",
+   "publisher": "Data Science Discovery, University of Illinois",
+   "date": "undated web page",
+   "link": "https://discovery.cs.illinois.edu/learn/Basics-of-Data-Science-with-Python/Observational-Studies-Confounders-and-Stratification/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 50. Lately we have drawn lines through data. Today we ask two questions: is the line any good, and does it prove anything?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Is the line any good? And does it prove anything?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end you can do three things: read a correlation number, check a line with residuals, and explain why 'goes together' is not 'causes'."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Correlation coefficient (r)\n2. Residuals and residual plots\n3. Correlation is not causation"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a made-up example. Sam practises free throws. Each week Sam shoots 20 and counts how many go in. The table shows five weeks."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Hours practised that week: 1 | 2 | 3 | 4 | 5\nShots made out of 20: 9 | 13 | 13 | 17 | 19"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A line fitted to this data is: predicted shots = 7 + 2.4 × hours. Technology finds it by making the squared misses as small as possible."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Line of best fit: predicted shots = 7 + 2.4 × hours"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The slope, 2.4, says how y changes for each one extra hour of x, on average. It is a typical change, not an exact one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slope 2.4: about 2.4 more shots made for each extra hour, on average"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the slope 2.4 mean for Sam?",
+    "right": "On average, each extra hour of practice goes with about 2.4 more shots made.",
+    "wrong": [
+     "Sam makes exactly 2.4 shots every hour.",
+     "Sam practises 2.4 hours each week.",
+     "Sam always makes 2.4 more shots than the week before."
+    ],
+    "why": "The slope is how much the predicted y changes for one more unit of x, on average. Here that is about 2.4 more shots per extra hour."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To get a prediction, put the hours into the line. For 4 hours: 7 + 2.4 × 4 = 16.6 shots. The line predicts; it does not promise."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "4 hours: 7 + 2.4 × 4 = 16.6 predicted shots"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Using predicted shots = 7 + 2.4 × hours, how many shots does the line predict for 3 hours?",
+    "right": "14.2",
+    "wrong": [
+     "7.2",
+     "12.4",
+     "16.6"
+    ],
+    "why": "7 + 2.4 × 3 = 7 + 7.2 = 14.2. Answering 7.2 forgets the 7. 16.6 is the prediction for 4 hours."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real weeks don't land exactly on the line. The gap is a residual: what really happened minus what the line predicted. In week 2 Sam made 13 and the line said 11.8, so the residual is +1.2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Residual = actual y − predicted y\nWeek 2: 13 − 11.8 = +1.2"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In week 3 Sam made 13 shots and the line predicted 14.2. What is the residual (actual minus predicted)?",
+    "right": "−1.2",
+    "wrong": [
+     "+1.2",
+     "27.2",
+     "0"
+    ],
+    "why": "13 − 14.2 = −1.2. A negative residual means the line guessed too high. A positive one means it guessed too low."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are all five residuals for Sam's line. I worked them out myself from the made-up data. They are small, and they land above and below zero."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Residuals for Sam's line (invented practice data)",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A residual plot puts the x values along the bottom and the residuals up the side. A good fit looks like random scatter around zero, with about the same spread all along."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Residual plot: x along the bottom, residuals up the side. Good fit = random scatter around zero."
+   },
+   "cite": [
+    "s1",
+    "s4",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the residual plot look like when a line fits the data well?",
+    "right": "Dots scattered randomly above and below zero, with no pattern.",
+    "wrong": [
+     "Dots forming a clear U-shaped curve.",
+     "Every dot above the zero line.",
+     "Dots climbing steadily in a straight slope."
+    ],
+    "why": "A good fit leaves only random misses, some above and some below zero. A curve, a slope, or all dots on one side means the line is missing something."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a game where your coins double each day: 1, 2, 4, 8, 16. A straight line is a bad idea here. For the best straight line, the residuals are +2, −0.6, −2.2, −1.8, +2.6. I worked those out myself."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Residuals for a line fitted to doubling coins (invented data)",
+    "chart": "c2"
+   },
+   "cite": [],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "See the shape? Up, down, down, down, up: a U. Any pattern in a residual plot means the line is not a good fit. Doubling is exponential, like in classes 30 to 32."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Any pattern in the residuals = the line is a poor fit"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The residual plot for a line shows a clear U-shaped pattern. What does that tell you?",
+    "right": "A straight line is not a good model for this data.",
+    "wrong": [
+     "The line is perfect, because the residuals are small.",
+     "There is no relationship in the data at all.",
+     "Someone must have made an arithmetic mistake."
+    ],
+    "why": "A pattern in the residuals means the line is missing something, here a curve. It does not mean there is no relationship."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second tool: the correlation coefficient, r. It is one number for how strong a straight-line pattern is, and which way it goes."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "r goes from −1 to +1"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If r is +1, the points are on an upward line. If r is −1, they are on a downward line. If r is 0, there is no straight-line pattern. The sign of r matches the sign of the slope."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Near +1 or −1: strong straight-line pattern | Near 0: weak or none\n+ sign: goes up together | − sign: one goes up, the other goes down"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which r shows the strongest straight-line relationship: −0.9, 0.5, 0.1 or −0.2?",
+    "right": "−0.9",
+    "wrong": [
+     "0.5, because positive numbers are stronger.",
+     "0.1",
+     "−0.2"
+    ],
+    "why": "Strength depends on how far r is from 0, whatever the sign. −0.9 is closest to −1, so it is a strong downward pattern."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You find r with a calculator or spreadsheet, not by hand. For Sam's data, r is about 0.97. I got that from my own calculation. That is a strong upward pattern, and the tidy residuals agree."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Sam: r ≈ 0.97"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a warning. The doubling-coin data has r of about 0.93, which sounds great. But its residuals make a U. So a high r does not make a line a good model."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Doubling coins: r ≈ 0.93 (high) | Residual plot: U-shape (pattern)"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The doubling-coin data has r ≈ 0.93, but its residual plot has a clear U-shape. Is a straight line a good model?",
+    "right": "No. Check the residual plot as well as r, and the U-shape says a line is a poor fit.",
+    "wrong": [
+     "Yes, because 0.93 is close to 1.",
+     "No, because 0.93 is too low to count as strong.",
+     "Yes, because some residuals are positive and some negative."
+    ],
+    "why": "Use the scatter plot, the residual plot and r together. Here r is high, but the pattern in the residuals shows the data is curved."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The reverse can also happen. A curve can give an r near 0 even though the two things are clearly linked. Zero only means no straight-line pattern."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "r ≈ 0 means no straight-line pattern. A curve can still be there."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One odd point can also mislead. In one example, a single outlier made r look strong. In another, one outlier dragged down an almost perfect pattern."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One outlier can make r look too strong or too weak"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why should you look at the scatter plot before trusting r?",
+    "right": "A curve or a single outlier can make r misleading.",
+    "wrong": [
+     "r cannot be calculated without a plot.",
+     "The plot decides what the value of r is.",
+     "Outliers never change r."
+    ],
+    "why": "r is one number summarising a straight-line pattern. A plot shows curves and outliers that the number hides."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last rule for lines. Predict only inside the data. Sam's data covers 1 to 5 hours. The line at 10 hours says 31 shots, but there are only 20 shots."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Predict only inside the data. 10 hours → 31 shots? Impossible out of 20."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Sam's line came from 1 to 5 hours of practice. Should we trust it for 10 hours?",
+    "right": "No. 10 hours is outside the data, and the line gives an impossible 31 out of 20.",
+    "wrong": [
+     "Yes, because r is about 0.97.",
+     "Yes, because lines go on forever.",
+     "No, because the slope is positive."
+    ],
+    "why": "A line fitted to data should not be used far outside the range of that data. Here it even gives more shots than were taken."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Great work so far. Take a breath. That was half the class, and everything so far was about how well a line fits. Now for a different question."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 2: Does it prove one thing causes the other?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two words to keep apart. Correlation means two things are related and move together. Causation means one of them actually makes the other happen."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Correlation: A is related to B, but may not cause it | Causation: A causes B"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A strong r can hint at a cause, but it is not proof. It is a clue to follow up, not a verdict."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Strong correlation: a pointer, not a proof"
+   },
+   "cite": [
+    "s7",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Classic example: ice cream sales and shark attacks rise and fall together. Temperature is the hidden third thing. Hot weather makes people buy ice cream, and it also sends them to the beach."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three boxes. 'Hot weather' on top, with one arrow down to 'Ice cream sales' and another arrow to 'Shark attacks'. No arrow between the bottom two."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Ice cream sales and shark attacks go up together. What is the best explanation?",
+    "right": "Hot weather makes more people buy ice cream and also go swimming.",
+    "wrong": [
+     "Eating ice cream makes people more attractive to sharks.",
+     "Shark attacks make people crave ice cream.",
+     "Since they go up together, there can be no explanation."
+    ],
+    "why": "A third variable, temperature, affects both. The two are correlated without one causing the other."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That hidden third thing has a name: a lurking or confounding variable. It is something else that clouds the study, because you can't tell which factor did the work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lurking (confounding) variable: a hidden third factor"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In a made-up town, the more fire trucks sent to a fire, the more damage there is. What is the likely lurking variable?",
+    "right": "The size of the fire. Bigger fires bring more trucks and cause more damage.",
+    "wrong": [
+     "The trucks themselves cause the damage, because r is high.",
+     "There is no lurking variable, because r is high.",
+     "Nothing can be said about fires from this data."
+    ],
+    "why": "Big fires drive both numbers. Sending more trucks to a small fire would not make it cause more damage."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So how do we find out about causes? One best way is a randomized experiment. The researcher decides who gets which treatment by chance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Randomized experiment: assign treatments by chance"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Random assignment spreads the lurking variables evenly across the groups. Then the only real difference is the treatment, so an experiment can show cause and effect."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Random assignment → lurking variables spread equally → only the treatment differs → cause and effect can be shown"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which can best show that something causes a change?",
+    "right": "A randomized experiment, where researchers assign who gets the treatment by chance.",
+    "wrong": [
+     "A scatter plot with r = 0.99.",
+     "A line of best fit with tiny residuals.",
+     "Collecting data from as many people as possible without changing anything."
+    ],
+    "why": "Only random assignment controls the lurking variables. A strong r, a tidy line or a big sample can still hide a third factor."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's use everything. Across 30 schools, the number of trophies in the display case has r = 0.8 with the average test score. What can we say?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Trophies and test scores: r = 0.8"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Across 30 schools, r = 0.8 between trophies and average test score. Which statement is justified?",
+    "right": "They go up together, but this alone does not show trophies cause higher scores. A third factor like school funding could affect both.",
+    "wrong": [
+     "Trophies cause higher test scores.",
+     "Buying schools more trophies will raise their scores.",
+     "Since the correlation is not proof, there is no relationship at all."
+    ],
+    "why": "r = 0.8 shows a real, fairly strong pattern. But it cannot say why. A lurking variable could drive both."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Recap: r tells strength and direction of a straight-line pattern. Residuals show whether a line really fits. And correlation alone never proves cause. Nice work today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "r: strength and direction, straight lines only\nResidual = actual − predicted; look for a pattern\nCorrelation is not causation: look for lurking variables, or run an experiment"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s6",
+    "s8",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Residuals (actual − predicted shots) for Sam's line, by hours practised",
+   "rows": [
+    {
+     "label": "1 hour",
+     "value": -0.4
+    },
+    {
+     "label": "2 hours",
+     "value": 1.2
+    },
+    {
+     "label": "3 hours",
+     "value": -1.2
+    },
+    {
+     "label": "4 hours",
+     "value": 0.4
+    },
+    {
+     "label": "5 hours",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "line",
+   "title": "Residuals for a straight line fitted to doubling coins, by day",
+   "rows": [
+    {
+     "label": "Day 0",
+     "value": 2
+    },
+    {
+     "label": "Day 1",
+     "value": -0.6
+    },
+    {
+     "label": "Day 2",
+     "value": -2.2
+    },
+    {
+     "label": "Day 3",
+     "value": -1.8
+    },
+    {
+     "label": "Day 4",
+     "value": 2.6
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "correlation coefficient",
+   "links": [
+    "[[scatter plots]]",
+    "[[slope and rate of change]]",
+    "[[building linear models from data]]"
+   ]
+  },
+  {
+   "topic": "residuals and residual plots",
+   "links": [
+    "[[function notation]]",
+    "[[exponential functions: growth and decay]]",
+    "[[describing data: displays, center and spread]]"
+   ]
+  },
+  {
+   "topic": "correlation vs causation",
+   "links": [
+    "[[two-way tables and categorical data]]",
+    "[[capstone: solve a real problem with algebra]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A residual is the actual value minus the predicted value.",
+   "other_view": "Not every source uses this order. The OpenStax-based glossary used here says actual minus predicted. Shmoop's standards page says predicted minus actual. Both orders show the same pattern, but the signs flip, so follow the convention your class or calculator uses.",
+   "cite": [
+    "s2",
+    "s5"
+   ]
+  },
+  {
+   "claim": "A correlation alone cannot show cause.",
+   "other_view": "Experts agree it cannot prove cause, but many treat a strong correlation as a useful clue. Where experiments are not possible, statisticians still study observational data and try to adjust for confounders, for example by comparing smaller, more similar groups. That gives evidence, not proof.",
+   "cite": [
+    "s7",
+    "s11"
+   ]
+  }
+ ]
+}

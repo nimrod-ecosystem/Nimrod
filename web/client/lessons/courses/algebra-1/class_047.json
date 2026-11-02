@@ -1,0 +1,753 @@
+{
+ "about": {
+  "title": "Describing Data: Displays, Center and Spread",
+  "course": "algebra-1",
+  "class_n": 47,
+  "audience": [
+   "teenagers, ages 14 to 16",
+   "Anyone relearning math who wants small steps and plenty of checks"
+  ],
+  "minutes": 35,
+  "length_note": "This runs about 35 minutes, a little over a half hour. It teaches six small ideas one at a time: dot plot, histogram, mean, median, range and shape. Each idea gets an example and a check question. You can stop after any beat and pick up again."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.6 Skewness and the Mean, Median, and Mode - Introductory Statistics 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introductory-statistics-2e/pages/2-6-skewness-and-the-mean-median-and-mode",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "2.5 Measures of the Center of the Data - Introductory Statistics 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introductory-statistics-2e/pages/2-5-measures-of-the-center-of-the-data",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "2.3 Measures of the Center of the Data - Introductory Business Statistics 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introductory-business-statistics-2e/pages/2-3-measures-of-the-center-of-the-data",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "2.2 Histograms, Frequency Polygons, and Time Series Graphs - Introductory Statistics 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introductory-statistics-2e/pages/2-2-histograms-frequency-polygons-and-time-series-graphs",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "3.2 Measures of Variation - Principles of Data Science",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-data-science/pages/3-2-measures-of-variation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "HSS-ID.A.1: Represent data with plots on the real number line",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/HSS/ID/A/1",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "HSS.ID.A.1 Lesson: Dot Plots, Histograms, Box Plots",
+   "publisher": "SVHS lesson site",
+   "date": "n.d.",
+   "link": "https://svhs.co/lesson/hss-id-a-1/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Ch. 2 Introduction - Introductory Statistics",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introductory-statistics/pages/2-introduction",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Skewness and the Mean, Median, and Mode (OpenStax text, Penn State copy)",
+   "publisher": "Penn State University, Barbara Illowsky and OpenStax",
+   "date": "2018",
+   "link": "https://psu.pb.unizin.org/introductorystatyoungsu18/chapter/skewness-and-the-mean-median-and-mode/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "2.6 Skewness and the Mean, Median, and Mode (OpenStax text, study-guide copy)",
+   "publisher": "Course Sidekick, reproducing OpenStax Introductory Statistics",
+   "date": "n.d.",
+   "link": "https://www.coursesidekick.com/statistics/study-guides/atd-odessa-statistics/skewness-and-the-mean-median-and-mode",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Ch. 2 Chapter Review - Introductory Statistics 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introductory-statistics-2e/pages/2-chapter-review",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "Measures of Spread",
+   "publisher": "Laerd Statistics",
+   "date": "n.d.",
+   "link": "https://statistics.laerd.com/statistical-guides/measures-of-spread-range-quartiles.php",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hi, {name}, and welcome. Today we turn a pile of numbers into a picture, and then into a few simple summaries."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Describing Data: Displays, Center and Spread"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will go one step at a time. Pause whenever you like. Nothing here is a race."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Two graphs: dot plot and histogram\n2. Center: mean and median\n3. Spread: range\n4. Shape: symmetric and skewed"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the kind of data. One-variable data is one list of numbers that all measure the same thing, like points in each game."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One-variable data"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why graph it? Statisticians often graph data first, to get a picture of it before they calculate anything."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Graph first"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The simplest graph is a dot plot. Draw an evenly spaced number line. Put one dot for each value, and stack the repeats."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A number line from 0 to 10 with equal spacing. Above the 3 sit two stacked dots. Above the 7 sit four stacked dots."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are 16 practice numbers. Imagine they are the points scored in 16 games."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4, 5, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 9, 10"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now build the dot plot. One dot over 4. Three over 6. Six over 7. Three over 8. One each over 5, 9 and 10."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dot plot of the 16 numbers. Stacks of dots: 4 has one, 5 has one, 6 has three, 7 has six, 8 has three, 9 has one, 10 has one. The tallest stack is over 7."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many dots stack above the number 7?",
+    "right": "6",
+    "wrong": [
+     "7",
+     "3",
+     "16"
+    ],
+    "why": "The list has six 7s, and each value gets one dot. So the stack has six dots. The 16 is the total number of dots."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A dot plot keeps every value, so it suits small sets. For large sets, people usually switch to a histogram. A common rule of thumb is about 100 values or more."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Large sets: histogram"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A histogram is bars that touch. The bottom shows what you measured. The side shows frequency, which means how many values land there."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Histogram: bars that touch"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are our 16 numbers as a histogram. Each bar is one value, and its height is how many times that value shows up."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Histogram of the 16 practice numbers",
+    "chart": "c1"
+   },
+   "cite": [
+    "s9",
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What does the height of a bar tell you?",
+    "right": "How many values fall in that bar",
+    "wrong": [
+     "The biggest value in the data",
+     "The average of the data",
+     "The range of the data"
+    ],
+    "why": "The side of a histogram shows frequency, which is how many values land in that bar. Our bar at 7 is tallest because 7 appears most often."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Graphs show the whole story. Sometimes you want one number for the middle. That is the center. The two most common are the mean and the median."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Center"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The mean is the average. Add up all the values, then divide by how many values there are."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Scores: 12, 7, 9, 15, 7\nSum: 12 + 7 + 9 + 15 + 7 = 50\nMean: 50 ÷ 5 = 10"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Use the same steps: add them up, then divide by how many there are."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Find the mean of 2, 4 and 9"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the mean of 2, 4 and 9?",
+    "right": "5",
+    "wrong": [
+     "4",
+     "6",
+     "15"
+    ],
+    "why": "2 + 4 + 9 = 15. There are 3 values, and 15 ÷ 3 = 5. The 15 is only the sum, so you still need to divide."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The median is the middle value. Put the numbers in order first, smallest to largest. Then pick the middle one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Scores: 12, 7, 9, 15, 7\nIn order: 7, 7, 9, 12, 15\nMedian: 9"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With an even number of values, two sit in the middle. Add those two and divide by 2. For 4, 6, 8, 10, the middle two are 6 and 8, so the median is 7."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4, 6, 8, 10\nMiddle two: 6 and 8\n(6 + 8) ÷ 2 = 7"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try it. The numbers are already in order. There are four of them, so find the middle two."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Find the median of 3, 5, 8, 12"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the median of 3, 5, 8, 12?",
+    "right": "6.5",
+    "wrong": [
+     "5",
+     "8",
+     "7"
+    ],
+    "why": "The middle two are 5 and 8. Their average is (5 + 8) ÷ 2 = 6.5. The 7 is the mean of all four numbers, which is a different thing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to our 16 practice numbers. The middle two are the 8th and 9th, and both are 7. So the median is 7. The sum is 112, so the mean is 112 ÷ 16 = 7 too."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Mean 7 · Median 7"
+   },
+   "cite": [
+    "s9",
+    "s3",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now spread, which means how far apart the values are. The range is the biggest value minus the smallest."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Range = maximum − minimum\nScores 12, 7, 9, 15, 7: 15 − 7 = 8\nOur 16 numbers: 10 − 4 = 6"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check it. Subtract the smallest from the largest."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Smallest value: 12\nLargest value: 47"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the range?",
+    "right": "35",
+    "wrong": [
+     "59",
+     "47",
+     "30"
+    ],
+    "why": "Range is the maximum minus the minimum, so 47 − 12 = 35. The 59 comes from adding them, which is the wrong operation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One warning. The range uses only two values, the biggest and the smallest. So one extreme value can change it a lot."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Range: quick but rough"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now shape, which is how the whole graph looks. A graph is symmetrical if a vertical line splits it into two mirror images."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Symmetrical: mirror image"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at our histogram. Draw a line at 7. On the left are 6, 5 and 4, with counts 3, 1 and 1. On the right are 8, 9 and 10, with counts 3, 1 and 1. It is a mirror, so the shape is symmetrical."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "The same histogram, with a mirror line at 7",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In symmetrical data, we expect the mean and median to be about equal. That matches what we found: 7 and 7."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Symmetric: mean ≈ median"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Skewed data is lopsided. Most values bunch up on one side, and a long tail stretches out on the other. We name the shape by the tail. Tail to the right means skewed right."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A histogram with tall bars on the left that shrink toward the right, ending in a long thin tail on the right. Label: skewed right."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a made-up example. These are the minutes ten friends played a game last night. Nine played an hour or less, and one played 240 minutes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "20, 25, 30, 30, 35, 40, 45, 50, 60, 240"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The middle two are 35 and 40, so the median is 37.5. The sum is 575, so the mean is 57.5. The long tail pulled the mean up."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Median: 37.5 | Mean: 57.5"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the pattern. When data is skewed right, the mean is often greater than the median. The mean gets pulled out toward the tail."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Skewed right: mean > median"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A data set is skewed right. How do its mean and median usually compare?",
+    "right": "The mean is larger",
+    "wrong": [
+     "The median is larger",
+     "They are always exactly equal",
+     "The mean is always exactly double"
+    ],
+    "why": "Extreme values in the right tail pull the mean up, but they do not move the median much. So with a right skew, the mean is often greater than the median."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Skewed left is the mirror image. The tail points left, and the mean is often less than the median."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Skewed left: mean < median"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So which center should you use? Picture 50 pay amounts. Forty-nine are $30,000 and one is $5,000,000. The median is $30,000. The mean works out to $129,400."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Median: $30,000 | Mean: $129,400"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which number gives a better sense of the middle of these 50 amounts?",
+    "right": "The median, $30,000",
+    "wrong": [
+     "The mean, $129,400",
+     "The range, $4,970,000",
+     "Both are equally good"
+    ],
+    "why": "The one huge value is an outlier. It drags the mean far above what almost everyone has. The median stays at $30,000, which is what 49 of the 50 values are."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To describe any one-variable data set, answer three things: its shape, its center and its spread. A histogram can show you all three."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shape: symmetric, skewed left or skewed right?\nCenter: mean or median?\nSpread: range"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here it is for our 16 numbers. The shape is symmetrical. The center is 7. The values run from 4 to 10, so the range is 6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shape: symmetrical\nCenter: mean 7, median 7\nSpread: range 6 (from 4 to 10)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check that pulls it together."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A data set has mean 12 and median 9."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which shape is most likely?",
+    "right": "Skewed right",
+    "wrong": [
+     "Skewed left",
+     "Symmetrical",
+     "You cannot tell anything about it"
+    ],
+    "why": "The mean is greater than the median, and that often happens when data is skewed right. A symmetrical set would have a mean and median about equal. A left skew would have the mean smaller."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Great work. You can now show data as a dot plot or a histogram, and describe it with mean, median, range and shape. This is the first part of what the standard asks for on plots of one list of numbers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dot plot: one dot per value\nHistogram: touching bars of frequency\nMean: add, then divide\nMedian: order, then take the middle\nRange: max − min\nShape: symmetric or skewed"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class we add box plots, standard deviation and outliers, which give better ways to describe spread."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Box Plots, Standard Deviation and Outliers"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Histogram of the 16 practice numbers: how many times each value appears",
+   "rows": [
+    {
+     "label": "4",
+     "value": 1,
+     "source": "s9"
+    },
+    {
+     "label": "5",
+     "value": 1,
+     "source": "s9"
+    },
+    {
+     "label": "6",
+     "value": 3,
+     "source": "s9"
+    },
+    {
+     "label": "7",
+     "value": 6,
+     "source": "s9"
+    },
+    {
+     "label": "8",
+     "value": 3,
+     "source": "s9"
+    },
+    {
+     "label": "9",
+     "value": 1,
+     "source": "s9"
+    },
+    {
+     "label": "10",
+     "value": 1,
+     "source": "s9"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Teacher notes: which examples are made up. The 16 practice numbers (4 to 10) come from the OpenStax text. The five scores (12, 7, 9, 15, 7), the 4-6-8-10 and 3-5-8-12 checks, and the game-minutes set are made up for teaching. The 49 values of $30,000 plus one of $5,000,000 follow an OpenStax example, but I framed them as 'pay amounts' myself and worked out the $129,400 mean myself.",
+   "links": []
+  },
+  {
+   "topic": "Naming skew: the name comes from the tail, not from where the bars bunch up. Some books describe this confusingly, so say it aloud with the picture.",
+   "links": [
+    "[[Box Plots, Standard Deviation and Outliers]]"
+   ]
+  },
+  {
+   "topic": "Mean uses adding then dividing, so it connects to earlier work",
+   "links": [
+    "[[Order of Operations and Evaluating Expressions]]"
+   ]
+  },
+  {
+   "topic": "Looking ahead: standard deviation and box plots",
+   "links": [
+    "[[Box Plots, Standard Deviation and Outliers]]",
+    "[[Correlation, Residuals and Causation]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The median is the better center when data has extreme values.",
+   "other_view": "OpenStax says the mean is the best estimate for the actual data set, but the median is best when there are several outliers or extreme values. So the choice depends on the question. The mean counts every value, and the median ignores how extreme the extremes are.",
+   "cite": [
+    "s11",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The range is too rough to be useful.",
+   "other_view": "The range does use only two values and can be thrown off by an outlier. But it still sets the boundaries of the data, which helps when a measurement has a limit that must not be crossed.",
+   "cite": [
+    "s5",
+    "s12"
+   ]
+  }
+ ]
+}

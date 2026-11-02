@@ -1,0 +1,489 @@
+{
+ "about": {
+  "title": "Solving Linear Equations in One Variable",
+  "course": "math-grade-8",
+  "class_n": 12,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has 16 short beats and no step is skipped. You can pause after any beat and come back, and nothing here is timed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Expressions & Equations (standard 8.EE.C.7)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Chapter 8 Key Concepts, Prealgebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "2026-01-27",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/8-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "8.4 Solve Equations with Fraction or Decimal Coefficients, Prealgebra",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra/pages/8-4-solve-equations-with-fraction-or-decimal-coefficients",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "2.4: Use a General Strategy to Solve Linear Equations (adapted from OpenStax Elementary Algebra)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/02:_Solving_Linear_Equations_and_Inequalities/2.04:_Use_a_General_Strategy_to_Solve_Linear_Equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "2.1 Use a General Strategy to Solve Linear Equations, Intermediate Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/2-1-use-a-general-strategy-to-solve-linear-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "4.7 Solve Equations with Fractions, Prealgebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/4-7-solve-equations-with-fractions",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we solve equations that take a few steps, including ones with parentheses and fractions. Go at your own pace, and pause whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Solving Linear Equations in One Variable"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a key word. A solution is a number that makes the equation true when you put it in place of the letter. Putting it in place is called substituting."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution = a number that makes the equation true"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which number is the solution of x + 3 = 10?",
+    "right": "7",
+    "wrong": [
+     "3",
+     "10",
+     "13"
+    ],
+    "why": "Put 7 in for x and you get 7 + 3 = 10, which is true. Put in 3 and you get 6. Put in 10 and you get 13. Neither matches 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To find a solution we undo things. An inverse operation undoes another one. Adding and subtracting undo each other. Multiplying and dividing do too."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Add ↔ Subtract | Multiply ↔ Divide"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which operation undoes \"+ 9\"?",
+    "right": "Subtract 9",
+    "wrong": [
+     "Add 9",
+     "Multiply by 9",
+     "Divide by 9"
+    ],
+    "why": "Adding 9 and then subtracting 9 puts you back where you began. Adding 9 again would go further away. Multiplying and dividing undo each other, not adding."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An equation is like a balance scale. Whatever you do to one side, you must do to the other. Then it stays balanced. The textbooks call these the properties of equality."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Add the same number to both sides | Subtract the same number from both sides | Multiply both sides by the same number | Divide both sides by the same number"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: x − 5 = 9. The 5 is being subtracted, so we add 5 to both sides. That gives x = 14."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x − 5 = 9 | x − 5 + 5 = 9 + 5 | x = 14"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve 4y = 20.",
+    "right": "y = 5",
+    "wrong": [
+     "y = 16",
+     "y = 24",
+     "y = 80"
+    ],
+    "why": "The y is multiplied by 4, so divide both sides by 4. 20 ÷ 4 = 5. Subtracting 4 would give 16, adding 4 would give 24, and multiplying by 4 would give 80. None of those undo the multiplying."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now two steps. In 3x − 4 = 14, x was multiplied by 3, then 4 was subtracted. We undo in the opposite order. Add 4 first, then divide by 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3x − 4 = 14 | 3x = 18 (add 4 to both sides) | x = 6 (divide both sides by 3)"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve 2x + 7 = 19.",
+    "right": "x = 6",
+    "wrong": [
+     "x = 12",
+     "x = 13",
+     "x = 26"
+    ],
+    "why": "Subtract 7 from both sides to get 2x = 12. Then divide by 2 to get x = 6. Stopping at 12 skips the dividing. 13 comes from subtracting 6 instead of 7, and 26 comes from adding 7 instead of subtracting it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the safety net. Always check your answer in the original equation, not in your later steps. If the result is true, you are right."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Original: 3x − 4 = 14 | Put in x = 6: 3(6) − 4 | 18 − 4 = 14 ✓"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Is x = 5 a solution of 3x − 4 = 14?",
+    "right": "No. 3(5) − 4 = 11, and 11 is not 14.",
+    "wrong": [
+     "Yes. 3(5) = 15, which is close to 14.",
+     "Yes. Any number near 6 works.",
+     "No. 3(5) − 4 = 19."
+    ],
+    "why": "A solution must make the equation exactly true. 15 − 4 is 11, not 14, so 5 fails. Being close does not count. We found x = 6 earlier, and only that number works."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next idea: the distributive property. When a number sits outside parentheses, it multiplies every term inside. So 3(x + 4) means three groups of x + 4, which is 3x + 12."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3(x + 4) = 3x + 12"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is 2(x + 5) after distributing?",
+    "right": "2x + 10",
+    "wrong": [
+     "2x + 5",
+     "x + 10",
+     "2x + 7"
+    ],
+    "why": "The 2 multiplies both terms inside. 2 times x is 2x, and 2 times 5 is 10. Forgetting to multiply the 5 gives 2x + 5, and that is the most common slip."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's use it. In 2(x + 3) = 14, distribute first to get 2x + 6 = 14. Then it is a two-step equation like the last one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2(x + 3) = 14 | 2x + 6 = 14 | 2x = 8 | x = 4 | Check: 2(4 + 3) = 14 ✓"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve 4(x − 2) = 20.",
+    "right": "x = 7",
+    "wrong": [
+     "x = 3",
+     "x = 5.5",
+     "x = 18"
+    ],
+    "why": "Distribute: 4x − 8 = 20. Add 8 to get 4x = 28. Divide by 4 to get x = 7. Check: 4(7 − 2) = 20 ✓. x = 3 comes from subtracting 8 where you should add. x = 5.5 comes from not multiplying the 2 by 4. x = 18 is a wrong first move."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more tool. Like terms have the same letter part, so they can be added together. 2x and 3x make 5x. Plain numbers like 6 and 8 are like terms too, and they make 14."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Like terms: 2x + 3x = 5x    6 + 8 = 14"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pair are like terms?",
+    "right": "3x and 7x",
+    "wrong": [
+     "3x and 7",
+     "3x and 7y",
+     "x and 7"
+    ],
+    "why": "Like terms have exactly the same variable part. 3x and 7x both have x. 3x and 7y have different letters. A plain number like 7 does not go with an x term."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Put it together. Simplify each side first: distribute, then combine like terms. After that, undo adding and multiplying as before."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2(x + 4) + 3x = 28 | 2x + 8 + 3x = 28 | 5x + 8 = 28 | 5x = 20 | x = 4 | Check: 2(8) + 3(4) = 28 ✓"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve 3(x + 1) + 2x = 18.",
+    "right": "x = 3",
+    "wrong": [
+     "x = 15",
+     "x = 3.4",
+     "x = 2"
+    ],
+    "why": "Distribute: 3x + 3 + 2x = 18. Combine: 5x + 3 = 18. Subtract 3 to get 5x = 15. Divide by 5 to get x = 3. Check: 3(4) + 6 = 18 ✓. Stopping at 5x = 15 gives 15. Forgetting to distribute the 3 onto the 1 gives 3x + 1 + 2x = 18, so 3.4, and 2 comes from a slip in subtracting."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now fractions. They can slow us down, so we clear them. Find the least common denominator, the smallest number every denominator divides into. Then multiply every term on both sides by it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Clear the fractions: multiply every term by the LCD"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: x/4 + 2 = 5. The only denominator is 4. Multiply every term by 4, including the plain numbers. The fraction disappears."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x/4 + 2 = 5 | x + 8 = 20 (multiplied each term by 4) | x = 12 | Check: 12/4 + 2 = 3 + 2 = 5 ✓"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve x/3 + 1 = 4.",
+    "right": "x = 9",
+    "wrong": [
+     "x = 15",
+     "x = 3",
+     "x = 1"
+    ],
+    "why": "Multiply every term by 3: x + 3 = 12. Subtract 3 to get x = 9. Check: 9/3 + 1 = 4 ✓. Multiplying only the fraction gives x + 1 = 4, so 3. Adding 3 instead of subtracting it gives 15. Dividing by 3 instead of multiplying gives 1."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "With two different denominators, use the least common denominator. For x/2 + x/3 = 10, that is 6, because both 2 and 3 go into 6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x/2 + x/3 = 10 | 3x + 2x = 60 (multiplied each term by 6) | 5x = 60 | x = 12 | Check: 6 + 4 = 10 ✓"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the least common denominator of 1/4 and 1/6?",
+    "right": "12",
+    "wrong": [
+     "24",
+     "10",
+     "2"
+    ],
+    "why": "12 is the smallest number that both 4 and 6 divide into. 24 also works, but it is not the least. 10 is not divisible by 4. 2 is too small for either denominator to divide into."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Decimals work the same way. A decimal is another way to write a fraction, so multiply every term by 10 or 100 to clear them. Use 10 for one decimal place and 100 for two."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0.5x + 1.2 = 3.7 | 5x + 12 = 37 (multiplied each term by 10) | 5x = 25 | x = 5 | Check: 2.5 + 1.2 = 3.7 ✓"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the smallest power of 10 you can multiply by to clear all the decimals in 0.25x − 0.5 = 1.75?",
+    "right": "100",
+    "wrong": [
+     "10",
+     "25",
+     "1000"
+    ],
+    "why": "0.25 and 1.75 each have two decimal places, so you need 100. Multiplying by 10 would leave 2.5x, which still has a decimal. 1000 would work but is more than you need. 25 is not a power of 10."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is why checking matters. A student solved 2x − 6 = 10 and got x = 2. The check shows 2(2) − 6 = −2, not 10. So the answer is wrong, and now we hunt for the slip."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x − 6 = 10 | Student: 2x = 4, x = 2 | Check: 2(2) − 6 = −2 ✗ | Correct: 2x = 16, x = 8 | Check: 16 − 6 = 10 ✓"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What went wrong in the student's first step?",
+    "right": "They subtracted 6 instead of adding 6 to both sides.",
+    "wrong": [
+     "They divided by the wrong number.",
+     "They should have multiplied both sides by 6.",
+     "Nothing. x = 2 is correct."
+    ],
+    "why": "The 6 is being subtracted, so the inverse is to add 6. That gives 2x = 16 and x = 8. Checking x = 2 gave −2, not 10, so it cannot be correct."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A recap. Clear fractions or decimals first. Distribute, then combine like terms. Undo plus and minus, then undo times and divide. Always check at the end. You can try one more to finish."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Clear fractions or decimals | 2. Distribute and combine like terms | 3. Undo + and − | 4. Undo × and ÷ | 5. Check in the original equation"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve 2(x − 3) + x = 9.",
+    "right": "x = 5",
+    "wrong": [
+     "x = 1",
+     "x = 4",
+     "x = 3"
+    ],
+    "why": "Distribute: 2x − 6 + x = 9. Combine: 3x − 6 = 9. Add 6 to get 3x = 15. Divide by 3 to get x = 5. Check: 2(2) + 5 = 9 ✓. x = 1 comes from subtracting 6 instead of adding. x = 4 comes from not multiplying the 3 by 2. x = 3 comes from dividing 9 by 3 too early."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Inverse operations and the balance idea",
+   "links": [
+    "[[Variables on Both Sides: One, None or Infinitely Many Solutions]]",
+    "[[Proportional Relationships and Unit Rate]]"
+   ]
+  },
+  {
+   "topic": "Distributing and combining like terms",
+   "links": [
+    "[[Variables on Both Sides: One, None or Infinitely Many Solutions]]"
+   ]
+  },
+  {
+   "topic": "Equations with fractions and decimals",
+   "links": [
+    "[[Rational Numbers and Their Decimals]]"
+   ]
+  },
+  {
+   "topic": "Checking by substitution",
+   "links": [
+    "[[Systems by Substitution]]",
+    "[[Systems in the Real World]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The best way to handle fractions in an equation is to clear them by multiplying by the least common denominator.",
+   "other_view": "Clearing is one method, not the only one. OpenStax first solves fraction equations by applying the usual properties of equality to the fractions themselves. It then presents clearing as an alternative. Some learners find that easier, and others find it clearer to keep the fractions.",
+   "cite": [
+    "s3",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Always distribute first when there are parentheses.",
+   "other_view": "Textbooks list distributing as part of simplifying first. They also note that not every equation needs every step. For 2(x + 3) = 14 you could divide both sides by 2 first and get x + 3 = 7. Both routes give the same answer.",
+   "cite": [
+    "s4"
+   ]
+  }
+ ]
+}

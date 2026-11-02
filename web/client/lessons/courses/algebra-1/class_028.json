@@ -1,0 +1,768 @@
+{
+ "about": {
+  "title": "Zero and Negative Exponents, and Scientific Notation",
+  "course": "algebra-1",
+  "class_n": 28,
+  "audience": [
+   "age 14 to 16",
+   "teenagers",
+   "anyone relearning algebra at a gentle pace"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are two ideas (zero and negative exponents, then scientific notation). Each is taught in small steps of about a minute, with a check after each step. Pause or replay any step you like."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.1.3 Using Zero Exponent Property and Negative Exponents (Algebra 1)",
+   "publisher": "OpenStax",
+   "date": "2026",
+   "link": "https://openstax.org/books/algebra-1/pages/5-1-3-using-zero-exponent-property-and-negative-exponents",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "10.5 Integer Exponents and Scientific Notation (Prealgebra 2e)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/10-5-integer-exponents-and-scientific-notation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "6.7 Integer Exponents and Scientific Notation (Elementary Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/6-7-integer-exponents-and-scientific-notation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Ch. 5 Key Concepts (Intermediate Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/5-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Appendix C: Scientific Notation (Astronomy)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/astronomy/pages/c-scientific-notation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Scientific Notation (OpenStax Astronomy Appendix C, pages 1149-1152, copy)",
+   "publisher": "OpenStax Astronomy, hosted by theexpertta.com",
+   "date": "n.d.",
+   "link": "https://www.theexpertta.com/book-files/OpenStaxAstronomy/Openstax%20Astronomy%20Appendix%20C_pg1149%20-%201152.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Facts About Earth",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/earth/facts/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Planet Sizes and Locations in Our Solar System",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/solar-system/planets/planet-sizes-and-locations-in-our-solar-system/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Micrometre",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Micrometre",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Robust fabrication of ultra-soft tunable PDMS microcapsules as a biomimetic model for red blood cells",
+   "publisher": "arXiv",
+   "date": "2023",
+   "link": "https://arxiv.org/pdf/2302.09705",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Grade 8 » Expressions & Equations",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "Zero to the power of zero",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Zero_to_the_power_of_zero",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s13",
+   "title": "Applet: Zero to the power of zero is undefined",
+   "publisher": "Math Insight, University of Minnesota",
+   "date": "n.d.",
+   "link": "https://cse-docker-mathinsight-prd-01.cse.umn.edu/applet/zero_to_power_of_zero_undefined",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s14",
+   "title": "3.9 Scientific Notation (Contemporary Mathematics)",
+   "publisher": "OpenStax, via LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Applied_Mathematics/Contemporary_Mathematics_(OpenStax)/03:_Real_Number_Systems_and_Number_Theory/3.09:__Scientific_Notation",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we meet two ideas: exponents that are zero or negative, and a short way to write huge and tiny numbers."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Zero and Negative Exponents, and Scientific Notation"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Go at your own pace. Each step is one small idea, and most end with a quick check. Pause or replay whenever you like."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One idea at a time"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a reminder. An exponent says how many times to multiply a number by itself. So 2^3 means 2 × 2 × 2, which is 8."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "2^3 = 2 × 2 × 2 = 8"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is 3^2?",
+    "right": "9",
+    "wrong": [
+     "6",
+     "5",
+     "32"
+    ],
+    "why": "3^2 means 3 × 3, which is 9. The 2 tells you how many 3s to multiply. It is not something you multiply by."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more reminder. When you divide powers with the same base, you subtract the exponents. For example, 2^5 ÷ 2^3 = 2^2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2^5 ÷ 2^3 = (2·2·2·2·2) ÷ (2·2·2)\nThree 2s cancel, leaving 2·2 = 2^2 = 4\nSo: a^m ÷ a^n = a^(m − n)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is 5^6 ÷ 5^4, written as a power of 5?",
+    "right": "5^2",
+    "wrong": [
+     "5^10",
+     "5^24",
+     "5^1"
+    ],
+    "why": "Subtract the exponents: 6 − 4 = 2. So the answer is 5^2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a question. What if the exponents match? Look at 3^4 ÷ 3^4. Any number divided by itself is 1, so the answer is 1."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3^4 ÷ 3^4 = 81 ÷ 81 = 1\nSubtract the exponents: 3^(4 − 4) = 3^0\nBoth are right, so 3^0 must equal 1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That gives us the zero exponent rule. Any number except zero, raised to the power zero, equals 1. So 9^0 = 1, 100^0 = 1, and (−7)^0 = 1."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a^0 = 1 (when a is not 0)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 25^0?",
+    "right": "1",
+    "wrong": [
+     "0",
+     "25",
+     "Not possible to work out"
+    ],
+    "why": "Any nonzero number to the power zero is 1. The zero does not make the answer zero."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful: the zero exponent belongs only to the thing right in front of it. In 4 × 7^0, only the 7 gets the zero. So 7^0 = 1, and 4 × 1 = 4."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "4 × 7^0 = 4 × 1 = 4"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is 4 × 7^0?",
+    "right": "4",
+    "wrong": [
+     "0",
+     "28",
+     "1"
+    ],
+    "why": "Work out 7^0 first. It is 1. Then 4 × 1 = 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the rule says 'except zero'. What 0^0 equals is a special case that mathematicians treat with care. There is a note about it at the end of the lesson."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The rule is for nonzero numbers"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the other direction. What if the bigger exponent is on the bottom? Try 2^3 ÷ 2^5. Write it out and cancel."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2^3 ÷ 2^5 = (2·2·2) ÷ (2·2·2·2·2)\nCancel three 2s: 1 ÷ (2·2) = 1/2^2 = 1/4\nSubtract the exponents: 2^(3 − 5) = 2^(−2)\nSo 2^(−2) = 1/4"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is the negative exponent rule. A negative exponent means: take the reciprocal. a^(−n) is the same as 1 divided by a^n."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a^(−n) = 1 / a^n"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the big surprise. A negative exponent does not make the answer negative. It makes the number small. 5^(−2) = 1/25, and 2^(−3) = 1/8."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5^(−2) = 1/5^2 = 1/25\n2^(−3) = 1/2^3 = 1/8\nThe answers are positive fractions"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is 2^(−3)?",
+    "right": "1/8",
+    "wrong": [
+     "−8",
+     "−6",
+     "1/6"
+    ],
+    "why": "2^(−3) = 1 ÷ 2^3 = 1/8. The minus sign flips the power to the bottom of a fraction. It does not make the answer negative."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a pattern with powers of 10. Each step down divides by 10. Following it past 10^0 gives you the tenths and hundredths."
+   },
+   "show": {
+    "kind": "list",
+    "text": "10^3 = 1000\n10^2 = 100\n10^1 = 10\n10^0 = 1\n10^(−1) = 1/10 = 0.1\n10^(−2) = 1/100 = 0.01"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Money makes this real. A dime is a tenth of a dollar, so it is 10^(−1) dollars. A penny is a hundredth of a dollar, so it is 10^(−2) dollars."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dime",
+    "count": 10,
+    "layout": "ten-frame",
+    "text": "10 dimes make 1 dollar, so each dime is 10^(−1) of a dollar"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 10^(−2) as a fraction?",
+    "right": "1/100",
+    "wrong": [
+     "−100",
+     "1/20",
+     "−1/100"
+    ],
+    "why": "10^(−2) = 1 ÷ 10^2 = 1/100. That is one penny out of a dollar. It is not negative."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now for the second idea. Let's see why we need it. Look at how far each planet is from the Sun. Mercury's bar is tiny next to Neptune's."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Average distance from the Sun, in millions of km"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Writing these with every zero is slow and easy to get wrong. Earth is about 150 million kilometers from the Sun. That is 150,000,000 km."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "150,000,000 km"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists use scientific notation to save the zeros. A number is written as a × 10^n. The front number a is at least 1 and less than 10. The power n is a whole number."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a × 10^n, where 1 ≤ a < 10 and n is a whole number"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Big numbers get a positive power of 10. Small numbers, between 0 and 1, get a negative power. For example, 4,000 = 4 × 10^3, and 0.004 = 4 × 10^(−3)."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Bigger than 1: 4,000 = 4 × 10^3 (positive power)\nBetween 0 and 1: 0.004 = 4 × 10^(−3) (negative power)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To write a big number this way, put the decimal point after the first digit. Count how many places it moved. That count is the power of 10. So 150,000,000 becomes 1.5 × 10^8."
+   },
+   "show": {
+    "kind": "list",
+    "text": "150,000,000\nPoint after the first digit: 1.50000000\nIt moved 8 places\n= 1.5 × 10^8 km"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Write 45,000 in scientific notation.",
+    "right": "4.5 × 10^4",
+    "wrong": [
+     "45 × 10^3",
+     "4.5 × 10^3",
+     "0.45 × 10^5"
+    ],
+    "why": "Put the point after the 4 to get 4.5. It moved 4 places, so the power is 4. The other choices have the right value in some cases, but their front numbers are not between 1 and 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Small numbers work the other way. Take 0.00347. Put the point after the first nonzero digit to get 3.47. It moved 3 places to the right, so the power is negative: 3.47 × 10^(−3)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0.00347\nPoint after the first nonzero digit: 3.47\nIt moved 3 places to the right\n= 3.47 × 10^(−3)"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Write 0.00052 in scientific notation.",
+    "right": "5.2 × 10^(−4)",
+    "wrong": [
+     "5.2 × 10^4",
+     "5.2 × 10^(−3)",
+     "52 × 10^(−5)"
+    ],
+    "why": "The point moves 4 places to reach 5.2. It moved right, so the power is negative: −4. The choice 52 × 10^(−5) has a front number that is too big."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a tiny real thing. A micrometre is 10^(−6) of a metre. A red blood cell is about 7 to 8 micrometres wide. At 7 micrometres, that is 7 × 10^(−6) metres."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "7 × 10^(−6) m = 0.000007 m"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we go the other way, from scientific notation back to ordinary digits. A positive power: move the point right. A negative power: move it left. Add zeros if you need them."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "9.12 × 10^4 = 91,200 (right 4)\n9.12 × 10^(−4) = 0.000912 (left 4)"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Write 3.6 × 10^(−2) in ordinary digits.",
+    "right": "0.036",
+    "wrong": [
+     "360",
+     "0.36",
+     "0.0036"
+    ],
+    "why": "A negative power means move the point left. Two places left from 3.6 gives 0.036."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we compute. To multiply, multiply the front numbers and add the powers of 10. For example, (3 × 10^5)(2 × 10^9) = 6 × 10^14."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(3 × 10^5)(2 × 10^9)\nFront numbers: 3 × 2 = 6\nPowers: 10^5 · 10^9 = 10^(5 + 9) = 10^14\nAnswer: 6 × 10^14"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is (2 × 10^4)(3 × 10^6)?",
+    "right": "6 × 10^10",
+    "wrong": [
+     "6 × 10^24",
+     "5 × 10^10",
+     "6 × 10^2"
+    ],
+    "why": "Multiply the front numbers: 2 × 3 = 6. Add the powers: 4 + 6 = 10. You add the powers. You do not multiply them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes the front number comes out too big. Look at (4 × 10^5)(5 × 10^3). That gives 20 × 10^8. But 20 is not between 1 and 10, so we fix it. 20 is 2 × 10^1, so the answer is 2 × 10^9."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(4 × 10^5)(5 × 10^3) = 20 × 10^8\n20 is too big for the front number\n20 × 10^8 = 2 × 10^1 × 10^8 = 2 × 10^9"
+   },
+   "cite": [
+    "s14",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is (5 × 10^3)(4 × 10^4) in scientific notation?",
+    "right": "2 × 10^8",
+    "wrong": [
+     "20 × 10^7",
+     "2 × 10^7",
+     "9 × 10^7"
+    ],
+    "why": "5 × 4 = 20, and 3 + 4 = 7, so you get 20 × 10^7. The 20 is too big, so move one factor of 10 over. That gives 2 × 10^8."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To divide, divide the front numbers and subtract the powers of 10. Let's use space. Neptune is about 4.5 billion km from the Sun. Earth is about 150 million km. How many times farther is Neptune?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Neptune: 4.5 × 10^9 km\nEarth: 1.5 × 10^8 km\nFront numbers: 4.5 ÷ 1.5 = 3\nPowers: 10^(9 − 8) = 10^1\nAnswer: 3 × 10^1 = 30 times farther"
+   },
+   "cite": [
+    "s5",
+    "s8",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn to divide. Divide the front numbers, then subtract the powers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(8 × 10^9) ÷ (2 × 10^3)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is (8 × 10^9) ÷ (2 × 10^3)?",
+    "right": "4 × 10^6",
+    "wrong": [
+     "4 × 10^12",
+     "4 × 10^3",
+     "6 × 10^6"
+    ],
+    "why": "8 ÷ 2 = 4. Subtract the powers: 9 − 3 = 6. So the answer is 4 × 10^6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same rules work with negative powers. Just add or subtract carefully. For example, (3 × 10^(−4))(2 × 10^(−2)): 3 × 2 = 6, and −4 + (−2) = −6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(3 × 10^(−4))(2 × 10^(−2))\n3 × 2 = 6\n−4 + (−2) = −6\nAnswer: 6 × 10^(−6)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is (2 × 10^(−3))(3 × 10^5)?",
+    "right": "6 × 10^2",
+    "wrong": [
+     "6 × 10^8",
+     "6 × 10^(−2)",
+     "5 × 10^2"
+    ],
+    "why": "2 × 3 = 6. Add the powers: −3 + 5 = 2. So the answer is 6 × 10^2, which is 600."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Calculators and apps often show scientific notation in a squashed way. A display of 1.5E8 means 1.5 × 10^8. The E stands for 'times ten to the power'. Reading these displays is a Grade 8 skill, so you have met it before."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "1.5E8 means 1.5 × 10^8 = 150,000,000\n2.5E-3 means 2.5 × 10^(−3)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A calculator shows 2.5E-3. What number is that in ordinary digits?",
+    "right": "0.0025",
+    "wrong": [
+     "2500",
+     "0.025",
+     "0.00025"
+    ],
+    "why": "2.5E-3 means 2.5 × 10^(−3). The negative power moves the point 3 places left, giving 0.0025."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Zero exponent: 1. Negative exponent: a reciprocal, not a negative number. Scientific notation: a front number from 1 up to 10, times a power of 10. Multiply: add powers. Divide: subtract powers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "a^0 = 1 (a is not 0)\na^(−n) = 1 / a^n\nScientific notation: a × 10^n, 1 ≤ a < 10\nMultiply: multiply fronts, add powers\nDivide: divide fronts, subtract powers"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check to finish. Take your time. Whatever you got right or wrong today, you can come back and replay any step. You did good work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Final check"
+   },
+   "cite": [
+    "s3",
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement is true?",
+    "right": "2^(−3) = 1/8",
+    "wrong": [
+     "2^(−3) = −8",
+     "2^0 = 0",
+     "12 × 10^3 is in scientific notation"
+    ],
+    "why": "A negative exponent gives a reciprocal, so 2^(−3) = 1/8. Also 2^0 = 1, not 0. And 12 × 10^3 has a front number that is not between 1 and 10, so it needs fixing to 1.2 × 10^4."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Average distance from the Sun (millions of km)",
+   "rows": [
+    {
+     "label": "Mercury",
+     "value": 58,
+     "source": "s8"
+    },
+    {
+     "label": "Earth",
+     "value": 149.7,
+     "source": "s8"
+    },
+    {
+     "label": "Jupiter",
+     "value": 778,
+     "source": "s8"
+    },
+    {
+     "label": "Saturn",
+     "value": 1400,
+     "source": "s8"
+    },
+    {
+     "label": "Uranus",
+     "value": 2900,
+     "source": "s8"
+    },
+    {
+     "label": "Neptune",
+     "value": 4500,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Zero and negative exponents",
+   "links": [
+    "[[Exponent rules]]",
+    "[[Roots and rational exponents]]"
+   ]
+  },
+  {
+   "topic": "Scientific notation",
+   "links": [
+    "[[Exponent rules]]",
+    "[[Exponential functions: growth and decay]]"
+   ]
+  },
+  {
+   "topic": "Very large and very small quantities",
+   "links": [
+    "[[Ratios, rates, proportions and percent]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Any nonzero number to the power zero is 1. We left out 0^0 on purpose.",
+   "other_view": "Mathematicians do not all agree about 0^0. In algebra and combinatorics it is usually defined as 1, because that keeps many formulas simple. In calculus and analysis it is often left undefined or called indeterminate. A visual argument says that the values near 0^0 pull toward both 1 and 0, so no single answer is forced. For this course, use the zero exponent rule only for nonzero bases.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  }
+ ]
+}

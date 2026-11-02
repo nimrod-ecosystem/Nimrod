@@ -1,0 +1,603 @@
+{
+ "about": {
+  "title": "Transformations on the Coordinate Plane",
+  "course": "math-grade-8",
+  "class_n": 24,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are four ideas here: translations, reflections, rotations, and writing a rule. Rotations need the most time, so they get five short steps. You can pause after any step and come back to it."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Geometry (CCSS.Math.Content.8.G.A.3 and the cluster heading)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/G/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Rotation - MathBitsNotebook (JR)",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/JuniorMath/Transformations/TFrotations.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Coordinate Transformations - Rotation, Reflection, Translation, Dilations",
+   "publisher": "OnlineMathLearning.com",
+   "date": "n.d.",
+   "link": "https://www.onlinemathlearning.com/transformation-coordinates-8g3.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Common Core Standards: CCSS.Math.Content.8.G.A.3",
+   "publisher": "Shmoop",
+   "date": "n.d.",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-8-g-3.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "8.G.A.3 Lesson: Transformations With Coordinates",
+   "publisher": "svhs.co",
+   "date": "n.d.",
+   "link": "https://svhs.co/lesson/8-g-a-3/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Transformations - 90 Degree Rotations",
+   "publisher": "Maison et Math",
+   "date": "n.d.",
+   "link": "https://maisonetmath.com/videos/transformations/262-transformations-90-degree-rotations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Coordinate Rules for Reflections and Rotations Flashcards",
+   "publisher": "Quizlet",
+   "date": "n.d.",
+   "link": "https://quizlet.com/4686045/coordinate-rules-for-reflections-and-rotations-flash-cards/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we met slides, flips and turns. Today we do them on a grid, using numbers."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Transformations on the Coordinate Plane"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our goal: find the new coordinates of a point or a shape after a slide, a flip or a turn. That is exactly what the grade 8 standard asks for."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Goal: new coordinates after a translation, reflection or rotation"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, two words. The pre-image is the shape before it moves. The image is the shape after. We mark image points with a little prime mark, like A'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Pre-image: A (before) | Image: A' (after)"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These three moves are called rigid motions. The shape moves, but its size and shape stay exactly the same."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rigid motion: same size, same shape"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Move one: translation. It slides every point the same distance in the same direction. No turning, no flipping."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Translation = slide"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rule: add or subtract on x for left and right, and on y for up and down. We write it (x, y) → (x + a, y + b)."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(x, y) → (x + a, y + b)"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. Point A is at (4, 6). Slide it 4 units right. Right means x goes up by 4, so A' is (8, 6). The y stays at 6."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with A at (4, 6) and an arrow pointing right to A' at (8, 6)."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Point P is at (2, 5). You slide it 3 units left. Where is P'?",
+    "right": "(-1, 5)",
+    "wrong": [
+     "(5, 5)",
+     "(2, 8)",
+     "(2, 2)"
+    ],
+    "why": "Left and right change x. Left means x gets smaller, so 2 - 3 = -1. The y stays 5. (5, 5) slid right instead. (2, 8) and (2, 2) changed y, which is up and down."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A shape is just its corner points. So we apply the same rule to every corner. Triangle A(1, 2), B(4, 2), C(1, 5) slides 3 left and 2 down. The rule is (x - 3, y - 2)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A(1, 2) → A'(-2, 0)\nB(4, 2) → B'(1, 0)\nC(1, 5) → C'(-2, 3)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Using the same rule (x - 3, y - 2), where does the corner (6, 4) go?",
+    "right": "(3, 2)",
+    "wrong": [
+     "(9, 6)",
+     "(3, 6)",
+     "(4, 1)"
+    ],
+    "why": "Subtract 3 from x: 6 - 3 = 3. Subtract 2 from y: 4 - 2 = 2. That gives (3, 2). (9, 6) adds instead of subtracts. (3, 6) forgets to change y."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Move two: reflection. It flips a shape over a line, like a mirror. Today the mirror is either the x-axis or the y-axis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reflection = flip over a line"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Over the x-axis, x stays the same and y turns into its opposite. The rule is (x, y) → (x, -y). A point above the axis lands the same distance below it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "x-axis: (x, y) → (x, -y)"
+   },
+   "cite": [
+    "s3",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. (3, 2) is 2 above the x-axis. Its mirror image is 2 below: (3, -2). Only the sign of y changed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with a point at (3, 2) and its mirror point at (3, -2), with the x-axis between them."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Reflect (-5, 2) over the x-axis. Where does it land?",
+    "right": "(-5, -2)",
+    "wrong": [
+     "(5, 2)",
+     "(5, -2)",
+     "(2, -5)"
+    ],
+    "why": "A reflection over the x-axis only flips the sign of y. x stays -5 and y goes from 2 to -2. (5, 2) is what you get over the y-axis. (5, -2) flips both signs, and (2, -5) swaps the numbers. Neither of those is a reflection over the x-axis."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Over the y-axis it is the other way round. y stays the same and x turns into its opposite: (x, y) → (-x, y). Left and right swap."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "y-axis: (x, y) → (-x, y)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. (3, 2) reflected over the y-axis becomes (-3, 2). Same height, opposite side."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with a point at (3, 2) and its mirror point at (-3, 2), with the y-axis between them."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Reflect (6, -1) over the y-axis. Where does it land?",
+    "right": "(-6, -1)",
+    "wrong": [
+     "(6, 1)",
+     "(-6, 1)",
+     "(-1, 6)"
+    ],
+    "why": "Over the y-axis only the sign of x changes. 6 becomes -6 and y stays -1. (6, 1) is the x-axis answer. (-6, 1) flips both signs. (-1, 6) swaps the numbers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Move three: rotation. It turns a shape around a fixed point. Today that point is always the origin, (0, 0)."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rotation = turn about the origin"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One rule about direction. On the coordinate plane, turns go counterclockwise unless the problem says otherwise. Counterclockwise is the way that is opposite to a clock's hands."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Default direction: counterclockwise\nCenter: the origin (0, 0)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 90° turn is a quarter turn. The rule: (x, y) → (-y, x). Swap the two numbers, then make the new first number its opposite."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "90°: (x, y) → (-y, x)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. (3, 4) turns a quarter turn counterclockwise. Swap to get (4, 3). Then flip the sign of the first number: (-4, 3)."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with (3, 4) in the top-right corner and (-4, 3) in the top-left corner, with a curved arrow between them."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Rotate (6, 1) by 90° counterclockwise about the origin. Where does it land?",
+    "right": "(-1, 6)",
+    "wrong": [
+     "(1, -6)",
+     "(1, 6)",
+     "(-6, -1)"
+    ],
+    "why": "The rule is (x, y) → (-y, x). Here y is 1 and x is 6, so the new point is (-1, 6). (1, -6) comes from a clockwise turn. (1, 6) only swaps and forgets the sign. (-6, -1) is a half turn."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a quick way to check yourself. Look at which quadrant, or corner of the grid, the point ends up in. A point in Quadrant II turned 90° counterclockwise lands in Quadrant III."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with four quadrants. An arrow goes from Quadrant II (top left) to Quadrant III (bottom left)."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The point (-3, 2) is in Quadrant II. You rotate it 90° counterclockwise. Which quadrant does it land in, and why?",
+    "right": "Quadrant III, because (-3, 2) becomes (-2, -3) and both numbers are negative",
+    "wrong": [
+     "Quadrant I, because both numbers become positive",
+     "Quadrant II, because it stays where it is",
+     "Quadrant IV, because x is positive and y is negative"
+    ],
+    "why": "Use (x, y) → (-y, x). Here x is -3 and y is 2, so the new point is (-2, -3). Both numbers are negative, and that is Quadrant III. A quarter turn always moves a point to the next quadrant."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, 180°, a half turn. Both numbers become their opposites: (x, y) → (-x, -y). The point lands straight across the origin."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "180°: (x, y) → (-x, -y)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Rotate (-4, 7) by 180° about the origin. Where does it land?",
+    "right": "(4, -7)",
+    "wrong": [
+     "(4, 7)",
+     "(-4, -7)",
+     "(7, 4)"
+    ],
+    "why": "For a half turn, flip both signs. -4 becomes 4 and 7 becomes -7. (4, 7) and (-4, -7) each flip only one sign, which is a reflection. (7, 4) only swaps."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last turn: 270° counterclockwise, three quarter turns. The rule is (x, y) → (y, -x). It is the same as turning 90° clockwise."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "270°: (x, y) → (y, -x)"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. (3, 4) turns 270° counterclockwise. The new first number is y, which is 4. The new second number is -x, which is -3. So we get (4, -3)."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with (3, 4) in the top-right and (4, -3) in the bottom-right, with an arrow going the long way round counterclockwise."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Rotate (5, 2) by 270° counterclockwise about the origin. Where does it land?",
+    "right": "(2, -5)",
+    "wrong": [
+     "(-2, 5)",
+     "(-5, -2)",
+     "(2, 5)"
+    ],
+    "why": "The rule is (x, y) → (y, -x). y is 2 and -x is -5, so the answer is (2, -5). (-2, 5) is the 90° answer. (-5, -2) is the 180° answer. (2, 5) swaps the numbers and changes no signs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a whole shape. Triangle (1, 1), (4, 1), (1, 3) turns 90° counterclockwise. We use (x, y) → (-y, x) on each corner."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(1, 1) → (-1, 1)\n(4, 1) → (-1, 4)\n(1, 3) → (-3, 1)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which corner of the new triangle comes from (4, 1)?",
+    "right": "(-1, 4)",
+    "wrong": [
+     "(1, -4)",
+     "(-4, -1)",
+     "(1, 4)"
+    ],
+    "why": "Use (-y, x) with x = 4 and y = 1. That gives (-1, 4). (1, -4) is a clockwise turn. (-4, -1) is a half turn. (1, 4) only swaps."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last idea: working backwards. You are given a point before and after, and you work out what happened. Compare the numbers."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Writing a rule for what happened"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three clues. If the numbers swap places, think rotation. If one or both signs flip, think reflection or a half turn. If both numbers shift by amounts that stay the same, think translation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Numbers swap places → rotation (90° or 270°)\nSigns flip, numbers stay in place → reflection, or 180° turn if both flip\nSame amount added to every x (and every y) → translation"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try these. (2, 5) → (2, -5): only y flipped, so it is a reflection over the x-axis. (2, 5) → (-5, 2): swap with a sign flip, so it is a 90° counterclockwise turn. (2, 5) → (6, 2): add 4 to x and subtract 3 from y, so it is a translation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(2, 5) → (2, -5): reflection over x-axis\n(2, 5) → (-5, 2): rotation 90° counterclockwise\n(2, 5) → (6, 2): translation (x + 4, y - 3)"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A point moves from (3, -2) to (2, 3). Which transformation is it?",
+    "right": "A rotation of 90° counterclockwise about the origin",
+    "wrong": [
+     "A reflection over the x-axis",
+     "A translation 1 left and 4 up",
+     "A rotation of 180° about the origin"
+    ],
+    "why": "The numbers have swapped places, so it is a turn. Apply (x, y) → (-y, x) to (3, -2): -y is 2 and x is 3, giving (2, 3). A reflection over the x-axis would give (3, 2). A translation 1 left and 4 up would give (2, 2). A half turn would give (-3, 2)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more check on the rule. Test it on one point, and if it works, it works for the whole shape. And since these three are rigid motions, the image is always the same size as the original."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Image is congruent to pre-image"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Recap. Translation adds or subtracts. A reflection flips a sign. A turn swaps the numbers and flips signs. Take your time. You will get quicker with practice."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Translation: (x + a, y + b)\nReflect x-axis: (x, -y)\nReflect y-axis: (-x, y)\nRotate 90°: (-y, x)\nRotate 180°: (-x, -y)\nRotate 270°: (y, -x)"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Point D(-3, -1) is translated 5 right and 4 up. What is D'?",
+    "right": "(2, 3)",
+    "wrong": [
+     "(-8, -5)",
+     "(2, -5)",
+     "(-3, 3)"
+    ],
+    "why": "Right 5 adds 5 to x: -3 + 5 = 2. Up 4 adds 4 to y: -1 + 4 = 3. So D' is (2, 3). (-8, -5) goes left and down. (2, -5) gets y wrong. (-3, 3) forgets to change x."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Transformations on the coordinate plane",
+   "links": [
+    "[[Rigid Motions: Translations, Reflections and Rotations]]",
+    "[[Congruent Figures]]",
+    "[[Dilations and Similar Figures]]"
+   ]
+  },
+  {
+   "topic": "Coordinates and quadrants",
+   "links": [
+    "[[Slope]]",
+    "[[Systems of Equations by Graphing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The quickest way to do these is to memorize the coordinate rules.",
+   "other_view": "The rules are shortcuts. The grade 8 standards put these ideas under understanding congruence with physical models, transparencies or geometry software. Many teachers like students to turn tracing paper or move a shape on screen first, then check the rule against what they see. Both ways help, and checking a rule against a drawing catches mistakes.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "claim": "A rotation rule always means counterclockwise.",
+   "other_view": "Counterclockwise is the usual default on the coordinate plane, but problems can say clockwise. A 90° clockwise turn is the same as a 270° counterclockwise turn, so the rule changes. Always read the direction in the question first.",
+   "cite": [
+    "s2",
+    "s6"
+   ]
+  }
+ ]
+}

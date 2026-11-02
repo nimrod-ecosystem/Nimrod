@@ -1,0 +1,531 @@
+{
+ "about": {
+  "title": "Comparing Two Functions",
+  "course": "math-grade-8",
+  "class_n": 18,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are four topics, and each gets one worked example and one check question. That is enough time to go slowly, with no new vocabulary beyond rate of change and initial value. You can pause after any beat and pick up there later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Functions (standards 8.F.A.1 and 8.F.A.2)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/F/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "8.F.B.4 – Illustrative Mathematics Tasks",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/F/B/4",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "CCSS.Math.Content.8.F.A.2 (8th Grade): Standard Explained",
+   "publisher": "LessonMakerPro",
+   "date": "n.d.",
+   "link": "https://lessonmakerpro.com/standards/ccss-math/8-f-a-2",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Finding Rate of Change and Initial Value from Graphs and Tables",
+   "publisher": "Pengi",
+   "date": "n.d.",
+   "link": "https://pengi.ai/skills/finding-rate-of-change-and-initial-value-from-graphs-and-tables-2aa0ca56-b1cc-4f0f-94a7-3ae96d7d0f06",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Comparing Rates of Change (Grade 8 worksheet)",
+   "publisher": "Wayground",
+   "date": "n.d.",
+   "link": "https://wayground.com/en-us/worksheet/comparing-rates/comparing-rates-of-change/6ab62bb4da85d4aa22ffa526",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 18. Today we compare two functions, even when they look completely different."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Comparing Two Functions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is a real 8th-grade goal. The 'properties' we compare will turn out to be just two numbers."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Compare properties of two functions each represented in a different way"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a quick reminder. A function is a rule that gives exactly one output for each input."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Function: one input, one output"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our first number is the rate of change. It tells how much the output changes for each step up in the input. On a graph, it is the slope."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rate of change = slope = rise over run"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our second number is the initial value. It is the output when the input is 0. On a graph, that is where the line crosses the y-axis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Initial value = y when x = 0"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In y = mx + b, m is the rate of change and b is the initial value. So y = 4x + 10 has rate 4 and initial value 10."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = 4x + 10 | m = 4 (rate of change) | b = 10 (initial value)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In y = 7x + 2, what is the rate of change?",
+    "right": "7",
+    "wrong": [
+     "2",
+     "9",
+     "x"
+    ],
+    "why": "The rate of change is m, the number multiplying x. Here that is 7. The 2 is the initial value, and 9 comes from adding two numbers that do different jobs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the other number. The initial value is the number standing alone, because that is y when x is 0."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "y = 7x + 2 → initial value 2"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In y = 5x + 12, what is the initial value?",
+    "right": "12",
+    "wrong": [
+     "5",
+     "17",
+     "0"
+    ],
+    "why": "If x is 0, then 5x is 0, so y = 12. The starting value is the number that stands alone."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's compare. Plan A costs y = 3x + 20 and Plan B costs y = 5x + 8, where x is months. We ask two separate questions: which rate is greater, and which start is greater?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plan A: y = 3x + 20 | Plan B: y = 5x + 8 || Greater rate: B (5 > 3) | Greater start: A (20 > 8)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Plan C is y = 2x + 15 and Plan D is y = 6x + 5. Which has the greater rate of change?",
+    "right": "Plan D, because 6 is greater than 2",
+    "wrong": [
+     "Plan C, because 15 is greater than 5",
+     "They are equal",
+     "You can't tell from equations"
+    ],
+    "why": "The rate of change is the number multiplying x: 2 for C and 6 for D. The 15 and 5 are starting values, which is a different question."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A very common slip is mixing up these two numbers. Keep them apart: the number with x is the rate, and the number alone is the start."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "With x → rate of change | Alone → initial value"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next topic: a table and an equation. You can read both numbers from a table. To find the rate, take two rows and divide the change in y by the change in x."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rate from a table = change in y ÷ change in x"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a table. When x is 0, y is 5, so the initial value is 5. From x = 0 to x = 2, y goes from 5 to 11. That is up 6 over 2, so the rate is 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x: 0, 2, 4, 6 | y: 5, 11, 17, 23 | Rate = 6 ÷ 2 = 3 | Initial value = 5"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now compare that table with the equation y = 2x + 9. The table has rate 3 and the equation has rate 2, so the table is greater. The table starts at 5 and the equation starts at 9, so the equation starts higher."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Table: rate 3, start 5 | Equation: rate 2, start 9"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A table has x: 1, 3, 5 and y: 6, 14, 22. What is the rate of change?",
+    "right": "4",
+    "wrong": [
+     "8",
+     "6",
+     "2"
+    ],
+    "why": "From x = 1 to x = 3, y goes up 8, but x went up 2. So the rate is 8 ÷ 2 = 4. The 8 alone is not the rate, because it ignores how far x moved."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful: inputs in a table don't always go up by 1. Always divide by the change in x, and make sure you compare the matching inputs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check the x-steps before you compare"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A table has x = 2 with y = 10, and x = 5 with y = 19. What is the rate of change?",
+    "right": "3",
+    "wrong": [
+     "9",
+     "10",
+     "5"
+    ],
+    "why": "y goes up 19 − 10 = 9, and x goes up 5 − 2 = 3. So 9 ÷ 3 = 3 for each step in x. The 9 is only the total change in y."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if the table has no x = 0 row? Use the rate to step back. If x = 1 gives y = 6 and the rate is 4, then x = 0 gives 6 − 4 = 2."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Start = 6 − 4 = 2"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "A table has x: 1, 2, 3 and y: 9, 12, 15. What is the initial value?",
+    "right": "6",
+    "wrong": [
+     "9",
+     "3",
+     "12"
+    ],
+    "why": "The rate is 3, since y goes up 3 for each step in x. Stepping back from x = 1 (y = 9) to x = 0 gives 9 − 3 = 6."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third topic: a graph and a description. On a graph, read where the line crosses the y-axis for the start. Then pick two clear points and find rise over run."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A straight line going up to the right. It crosses the y-axis at 6 and passes through the point (2, 10)."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For that graph, the start is 6. From (0, 6) to (2, 10), the rise is 4 and the run is 2, so the rate is 2. Compare y = 3x + 1: its rate is greater, 3 against 2. But the graph's start is greater, 6 against 1."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Graph: rate 2, start 6 | y = 3x + 1: rate 3, start 1"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A graph's line passes through (0, 1) and (4, 9). The equation is y = 3x + 5. Which has the greater rate of change?",
+    "right": "The equation, 3 against 2",
+    "wrong": [
+     "The graph, because it reaches 9",
+     "The graph, because it starts at 1",
+     "They are equal"
+    ],
+    "why": "The graph's rise is 9 − 1 = 8 and its run is 4, so its rate is 2. The equation's rate is 3. Where the line ends up doesn't decide the rate."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more graph tip: check the scale on each axis. A gridline is not always worth 1, and a misread scale gives a wrong slope."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Read the axis scale first"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Descriptions are the last form. Look for words like 'per' and 'each' for the rate, and 'sign-up fee' or 'starts with' for the initial value."
+   },
+   "show": {
+    "kind": "list",
+    "text": "'per', 'each' → rate of change | 'starts with', 'sign-up fee' → initial value"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "A pool charges $4 to enter, plus $2 for each hour. What is the initial value?",
+    "right": "$4",
+    "wrong": [
+     "$2",
+     "$6",
+     "$0"
+    ],
+    "why": "The initial value is the cost when the hours are 0. You still pay the $4 entry fee, and the $2 per hour adds nothing yet."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's mix forms. Gym A charges a $30 sign-up fee plus $12 per month. Gym B is a table: 0 months costs $0, 1 month costs $15, 2 months costs $30."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Gym A (words): rate 12, start 30 | Gym B (table): rate 15, start 0"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which gym has the greater rate of change?",
+    "right": "Gym B, $15 per month against $12",
+    "wrong": [
+     "Gym A, because of the $30 fee",
+     "They are the same",
+     "You can't compare a table with words"
+    ],
+    "why": "Gym B's cost goes up $15 every month, and Gym A's goes up $12 every month. The $30 fee is Gym A's start, not its rate. Different forms can be compared once you pull out the same two numbers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: deciding with reasons. 'Greater' is not always 'better'. For a cost, lower is better. For savings, higher is better."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Greater ≠ better. Ask: better for what?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to Plan A (y = 3x + 20) and Plan B (y = 5x + 8), which are costs. Plan B starts cheaper but grows faster, so the plans meet and then switch."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Month 4: A = 32, B = 28 | Month 6: A = 38, B = 38 | Month 8: A = 44, B = 48"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "At month 10, which plan costs less?",
+    "right": "Plan A, which costs 50 against 58",
+    "wrong": [
+     "Plan B, which costs 50 against 58",
+     "Plan B, because it started cheaper",
+     "They cost the same"
+    ],
+    "why": "A at month 10 is 3(10) + 20 = 50. B is 5(10) + 8 = 58. B started cheaper, but its greater rate caught up at month 6 and then passed A."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A good answer uses both numbers and the situation. Try this sentence: 'It starts ___ but grows ___, so after ___ it is ___.'"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Starts … but grows … so …"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Maya has $50 and saves $10 a week. Sam has $20 and saves $15 a week. After a long time, who has more?",
+    "right": "Sam, because $15 a week beats $10 a week and closes the $30 gap",
+    "wrong": [
+     "Maya, because she started with more",
+     "They will always be equal",
+     "You can't tell without a graph"
+    ],
+    "why": "Sam gains $5 more each week, so the $30 gap closes in 30 ÷ 5 = 6 weeks. At week 6 they are equal at $110. After that, Sam's greater rate puts him ahead."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's pull it together. Whatever form you get, find the rate and the start, then compare each one separately."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Find the rate of change in each | 2. Find the initial value in each | 3. Compare rates, then compare starts | 4. Explain in the situation's words"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nice work today. Two functions in two different forms are no problem once you pull out the same two numbers. Next time, in class 19, we'll find the exact spot where two lines meet."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 18 done. Next: Systems by Graphing"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Rate of change and slope",
+   "links": [
+    "[[Slope]]",
+    "[[Proportional Relationships and Unit Rate]]"
+   ]
+  },
+  {
+   "topic": "Initial value and y-intercept",
+   "links": [
+    "[[Lines: y = mx and y = mx + b]]"
+   ]
+  },
+  {
+   "topic": "Reading functions in four forms",
+   "links": [
+    "[[Four Ways to Show a Function]]",
+    "[[Modeling with Linear Functions]]"
+   ]
+  },
+  {
+   "topic": "Where two functions meet",
+   "links": [
+    "[[Systems of Equations by Graphing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The function with the greater rate of change is the one that changes faster.",
+   "other_view": "With positive rates, 'greater' and 'faster' mean the same thing. With negative rates, they can split: -1 is a greater number than -4, but -4 changes faster and is steeper. Some teachers and worksheets say to look at both direction and steepness. This class uses only positive rates to keep things clear. If your teacher uses a different meaning, ask which one they want.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "claim": "The greater rate of change or the greater starting value decides which function is better.",
+   "other_view": "Neither decides it alone. It depends on the situation (cost or savings) and on how long you look. Standards-based guidance says to support a comparison with a calculation or a graph feature as evidence, not just a rule of thumb.",
+   "cite": [
+    "s3"
+   ]
+  }
+ ]
+}

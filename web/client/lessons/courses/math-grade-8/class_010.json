@@ -404,9 +404,9 @@
     "wrong": [
      "12/5",
      "5/36",
-     "21"
+     "51"
     ],
-    "why": "Slope is rise over run, so it is 15/36. Divide top and bottom by 3 to get 5/12. The answer 12/5 is flipped. The answer 5/36 only divided the top. The answer 21 adds the two numbers, which is not a slope."
+    "why": "Slope is rise over run, so it is 15/36. Divide top and bottom by 3 to get 5/12. The answer 12/5 is flipped. The answer 5/36 only divided the top. The answer 51 adds the two numbers, which is not a slope."
    }
   },
   {

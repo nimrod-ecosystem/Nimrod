@@ -1,0 +1,692 @@
+{
+ "about": {
+  "title": "Quadratic Models: Balls, Pens and Profit",
+  "course": "algebra-1",
+  "class_n": 45,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are three settings (a thrown ball, an area problem, a profit problem), and each needs about 10 minutes to explain, try and check. It splits easily: do the ball in one sitting, then the pen and the profit in another."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "3.2 Quadratic Functions, Precalculus 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/precalculus-2e/pages/3-2-quadratic-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "5.1 Quadratic Functions, College Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/5-1-quadratic-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "5.2: Quadratic Functions, Algebra and Trigonometry 2e (OpenStax)",
+   "publisher": "Mathematics LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Workbench/Algebra_and_Trigonometry_2e_(OpenStax)/05:_Polynomial_and_Rational_Functions/5.02:_Quadratic_Functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "9.5 Solve Applications of Quadratic Equations, Intermediate Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/9-5-solve-applications-of-quadratic-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "7.6.3 Using Quadratic Functions to Describe Height, Algebra 1",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2026-01-20",
+   "link": "https://openstax.org/books/algebra-1/pages/7-6-3-using-quadratic-functions-to-describe-height",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Quadratic Functions (chapter 29), Algebra and Trigonometry OpenStax, Pressbooks edition",
+   "publisher": "Atlantic OER / OpenStax",
+   "date": "2015",
+   "link": "https://pressbooks.atlanticoer-relatlantique.ca/algebratrigonometryopenstax/chapter/quadratic-functions/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Projectile Motion & Quadratic Equations",
+   "publisher": "Purplemath",
+   "date": "n.d.",
+   "link": "https://www.purplemath.com/modules/quadprob.htm",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Projectile Motion Formulas",
+   "publisher": "Mathwords",
+   "date": "n.d.",
+   "link": "https://www.mathwords.com/p/projectile_motion.htm",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Height of a Projectile (college algebra modeling exercise)",
+   "publisher": "Pearson",
+   "date": "n.d.",
+   "link": "https://www.pearson.com/channels/college-algebra/asset/6c89b3bb/modeling-solve-each-problem-see-example-3-height-of-a-projectilea-projectile-is--1",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Algebra Quadratics Applications HW#54 (solutions)",
+   "publisher": "Forest Hills High School",
+   "date": "2018",
+   "link": "https://www.foresthillshs.org/ourpages/auto/2018/2/12/26838921/Algebra%20-%20Quadratics%20Applications%20-%20HW%20-%20Solutions.pdf",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hi, {name}. Today we use quadratics to describe real things: a thrown ball, a fenced pen and a game night's profit."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Quadratic Models"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We'll do three jobs again and again. Find the highest or lowest point. Find where the answer is zero. Check that the answers make sense."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Find the top or bottom (the vertex). 2. Find the zeros. 3. Check the answers fit the story."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A model is an equation that matches a real situation. Ours will all be quadratics."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Model: an equation that describes a real situation"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a reminder. The vertex is the turning point of a parabola. If the parabola opens down, the vertex is the highest point, the maximum. If it opens up, the vertex is the lowest point, the minimum."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vertex: the turning point. Opens down = maximum. Opens up = minimum."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A parabola opens downward. What is its vertex?",
+    "right": "The highest point, the maximum",
+    "wrong": [
+     "The lowest point, the minimum",
+     "The spot where it crosses the x-axis",
+     "Always the point (0, 0)"
+    ],
+    "why": "Opening down is like a hill. The top of the hill is the vertex, so it is the maximum."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To find where the vertex is, use x = −b ÷ 2a. That gives the left-to-right spot. Then put that number back into the equation to get the height."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vertex spot: x = −b ÷ 2a. Then find y by plugging x back in."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a ball. For something thrown straight up, its height in feet is −16t² plus the starting speed times t, plus the starting height."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "h = −16t² + v₀t + h₀ | t = seconds, v₀ = starting upward speed (ft/s), h₀ = starting height (ft)"
+   },
+   "cite": [
+    "s4",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The plain number at the end is the starting height. At t = 0 every t-term disappears. If you work in meters, the −16 becomes −4.9."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Feet: −16t². Meters: −4.9t²."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A ball has height H(t) = −16t² + 80t + 40. How high is it at t = 0?",
+    "right": "40 feet",
+    "wrong": [
+     "80 feet",
+     "16 feet",
+     "0 feet"
+    ],
+    "why": "At t = 0 the −16t² and 80t parts are both zero. Only the 40 is left, and that is the starting height."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is Sam's ball: H(t) = −16t² + 80t + 40, thrown up from a balcony 40 feet high. See the arch? It is a mirror image. At 2 seconds and 3 seconds the height is the same, 136 feet."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Height of the ball over time"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When is the ball highest? At the vertex. t = −80 ÷ (2 × −16) = 2.5 seconds."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.5 seconds"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Another ball has height h(t) = −16t² + 64t + 80. At what time is it highest?",
+    "right": "2 seconds",
+    "wrong": [
+     "4 seconds",
+     "−2 seconds",
+     "80 seconds"
+    ],
+    "why": "t = −64 ÷ (2 × −16) = −64 ÷ −32 = 2. The two negatives cancel, so the answer is positive."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How high is it then? Put 2.5 back in: −16(6.25) + 200 + 40 = 140. The ball peaks at 140 feet."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "140 feet"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "The vertex is (2.5, 140). What does the 140 tell us?",
+    "right": "The highest height the ball reaches, in feet",
+    "wrong": [
+     "How many seconds the ball stays in the air",
+     "The height the ball starts at",
+     "The speed of the ball"
+    ],
+    "why": "The first number of the vertex is the time. The second number is the height at that time, so 140 is the maximum height."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When does the ball land? When its height is zero. So we solve −16t² + 80t + 40 = 0."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "On the ground means height = 0"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The quadratic formula gives two answers: t ≈ 5.46 and t ≈ −0.46. A quadratic often gives two answers, but only one may fit the story."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "t ≈ 5.46 | t ≈ −0.46"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which answer is the time the ball lands?",
+    "right": "About 5.46 seconds",
+    "wrong": [
+     "About −0.46 seconds",
+     "Both of them",
+     "2.5 seconds"
+    ],
+    "why": "The clock starts at the throw, t = 0, so a negative time is before the throw. 2.5 seconds is the peak, not the landing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Intercepts have meanings too. The height when t = 0 is the starting height. The positive t-intercept is the landing time."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y-intercept (t = 0): starting height, 40 ft | positive t-intercept: landing time, about 5.46 s"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So always check: does this answer fit the story? Time can't be negative. A length can't be zero or negative. A price can't be negative."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Time ≥ 0. Length > 0. Price ≥ 0. Reject answers that break the story."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try one. A rocket model starts 384 feet up: h(t) = −16t² + 80t + 384. Setting h = 0 gives t = −3 or t = 8."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "t = −3 | t = 8"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When does the rocket land?",
+    "right": "8 seconds",
+    "wrong": [
+     "−3 seconds",
+     "3 seconds",
+     "5 seconds"
+    ],
+    "why": "−3 is before the launch, so we reject it. 8 seconds is the only time that fits."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now no ball at all. You have 40 feet of fence for a rectangular pen. Which size gives the most room? The fence goes all the way around, so length plus width is 20."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rectangular pen on grass with fence on all four sides. The short side is labeled w. The long side is labeled 20 − w."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The width is 6 feet. What is the length?",
+    "right": "14 feet",
+    "wrong": [
+     "34 feet",
+     "6 feet",
+     "12 feet"
+    ],
+    "why": "Length + width = 20, so the length is 20 − 6 = 14."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Area is width times length: A = w(20 − w) = −w² + 20w. The leading number is negative, so the parabola opens down. The vertex is the maximum area."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A = −w² + 20w. Opens down, so the vertex is the maximum."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The vertex is at w = −20 ÷ (2 × −1) = 10. Then A = 10 × 10 = 100 square feet. The best pen is a square."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10 ft by 10 ft = 100 sq ft"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which pen has the most area with 40 feet of fence?",
+    "right": "10 by 10, area 100",
+    "wrong": [
+     "5 by 15, area 75",
+     "8 by 12, area 96",
+     "2 by 18, area 36"
+    ],
+    "why": "All of them use 40 feet of fence, but the vertex gives the biggest area. Each of the others is smaller than 100."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The zeros of A = −w² + 20w are w = 0 and w = 20. At those widths the area is zero. So a sensible width is between 0 and 20."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reasonable widths: 0 < w < 20"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Is a width of 25 feet reasonable for this pen?",
+    "right": "No, because the length would be −5 feet",
+    "wrong": [
+     "Yes, because 25 is a positive number",
+     "Yes, because it is bigger than 20",
+     "No, because 25 is not a whole number"
+    ],
+    "why": "The length is 20 − 25 = −5, and a length can't be negative. The width has to stay between 0 and 20."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last setting: profit. Set a ticket price too low and you earn little. Set it too high and nobody comes. So profit rises, then falls, like a hill."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Profit = money in − money out"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are made-up numbers. Sam's club sells tickets to a game night. P(x) = −5x² + 100x − 180, where x is the ticket price in dollars. The vertex is at x = 10, and P(10) = 320."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Profit at different ticket prices (made-up example)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What ticket price gives the most profit?",
+    "right": "$10",
+    "wrong": [
+     "$320",
+     "$18",
+     "$2"
+    ],
+    "why": "The x-value of the vertex is the price, $10. The $320 is the profit at that price."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the zeros. Factor: −5(x − 2)(x − 18) = 0, so x = 2 or x = 18. These are the break-even prices. At those prices you earn exactly nothing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Break-even at $2 | Break-even at $18"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which ticket prices make a profit?",
+    "right": "Prices between $2 and $18",
+    "wrong": [
+     "Prices under $2",
+     "Prices over $18",
+     "Only exactly $10"
+    ],
+    "why": "The parabola is above zero between the two zeros. Outside them the club loses money."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some models have a minimum. Say a server's cost per hour is C(x) = 2x² − 24x + 100, where x is hundreds of players. The vertex is at x = 6 and C(6) = 28, so the lowest cost is $28."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Opens up: the vertex is the minimum. C(6) = 28"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why is the vertex of C(x) = 2x² − 24x + 100 a minimum?",
+    "right": "The leading number 2 is positive, so the parabola opens up",
+    "wrong": [
+     "The leading number 2 is even",
+     "The number 100 is large",
+     "Every vertex is a minimum"
+    ],
+    "why": "A positive leading number opens the parabola up. The vertex is then the lowest point."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the whole routine. Read what the letters mean. Find the vertex with −b ÷ 2a. Plug in for the max or min. Set the output to zero for intercepts. Then throw out answers that don't fit the story."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Read the story. 2. x = −b ÷ 2a. 3. Plug in for the max or min. 4. Set to 0 for zeros. 5. Check each answer fits."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check, all on your own. A ball has h(t) = −16t² + 32t + 48. Setting h = 0 gives t² − 2t − 3 = 0, which factors as (t − 3)(t + 1) = 0."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "h(t) = −16t² + 32t + 48. Find the landing time."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When does the ball land?",
+    "right": "3 seconds",
+    "wrong": [
+     "−1 second",
+     "1 second",
+     "48 seconds"
+    ],
+    "why": "The zeros are t = 3 and t = −1. A time of −1 is before the throw, so we reject it. 1 second is the vertex time, not the landing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done, {name}. Quadratic models are just three questions: how high or low, where is it zero, and does that answer make sense? Next class we compare linear, exponential and quadratic functions side by side."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Top or bottom. Zeros. Does it fit?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Height of the ball (feet) at different times (seconds), H(t) = −16t² + 80t + 40",
+   "rows": [
+    {
+     "label": "0 s",
+     "value": 40,
+     "source": "s3"
+    },
+    {
+     "label": "1 s",
+     "value": 104,
+     "source": "s3"
+    },
+    {
+     "label": "2 s",
+     "value": 136,
+     "source": "s3"
+    },
+    {
+     "label": "2.5 s",
+     "value": 140,
+     "source": "s3"
+    },
+    {
+     "label": "3 s",
+     "value": 136,
+     "source": "s3"
+    },
+    {
+     "label": "4 s",
+     "value": 104,
+     "source": "s3"
+    },
+    {
+     "label": "5 s",
+     "value": 40,
+     "source": "s3"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Made-up example: profit in dollars at each ticket price, P(x) = −5x² + 100x − 180 (method from OpenStax revenue examples)",
+   "rows": [
+    {
+     "label": "$2",
+     "value": 0,
+     "source": "s1"
+    },
+    {
+     "label": "$5",
+     "value": 195,
+     "source": "s1"
+    },
+    {
+     "label": "$10",
+     "value": 320,
+     "source": "s1"
+    },
+    {
+     "label": "$15",
+     "value": 195,
+     "source": "s1"
+    },
+    {
+     "label": "$18",
+     "value": 0,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Vertex and axis of symmetry",
+   "links": [
+    "[[Quadratic Functions and Their Graphs]]",
+    "[[Vertex Form and Transformations of Parabolas]]"
+   ]
+  },
+  {
+   "topic": "Finding zeros",
+   "links": [
+    "[[Solving Quadratics by Factoring]]",
+    "[[The Quadratic Formula and the Discriminant]]"
+   ]
+  },
+  {
+   "topic": "Reasonable answers in context",
+   "links": [
+    "[[Graphs of Functions: Domain, Range and Behavior]]"
+   ]
+  },
+  {
+   "topic": "What comes next",
+   "links": [
+    "[[Comparing Linear, Exponential and Quadratic Functions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The formula h = −16t² + v₀t + h₀ tells exactly how high a thrown ball goes.",
+   "other_view": "It is a simplified model. Textbook versions of it ignore air resistance, so a real ball, especially a light or fast one, will not follow the curve exactly.",
+   "cite": [
+    "s9"
+   ]
+  }
+ ]
+}

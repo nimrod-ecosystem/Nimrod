@@ -1,0 +1,528 @@
+{
+ "about": {
+  "title": "Building Linear Models from Data",
+  "course": "algebra-1",
+  "class_n": 21,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. This class has five ideas: scatter plots, drawing the line, using the line, interpolation vs extrapolation, and what slope and intercept mean. Each one needs an example and a check question, so it fits a normal class. You can stop after any beat and pick it up again later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "4.3 Fitting Linear Models to Data - College Algebra",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra/pages/4-3-fitting-linear-models-to-data",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "3.2.2 Determining the Best Line That Fits the Data - Algebra 1",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/3-2-2-determining-the-best-line-that-fits-the-data",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "2.4 Fitting Linear Models to Data - Precalculus",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/precalculus/pages/2-4-fitting-linear-models-to-data",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "HSS-ID.C.7 (Interpret slope and intercept of a linear model)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/HSS/ID/C/7",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Interpolation vs. Extrapolation: What's the Difference?",
+   "publisher": "Statology",
+   "date": "n.d.",
+   "link": "https://www.statology.org/interpolation-vs-extrapolation/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Common Core Standards: CCSS.Math.Content.HSS-ID.C.7",
+   "publisher": "Shmoop",
+   "date": "n.d.",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-hs-s-id-7.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "2.4: Fitting Linear Models to Data - Mathematics LibreTexts (OpenStax Precalculus)",
+   "publisher": "LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Precalculus/Precalculus_1e_(OpenStax)/02:_Linear_Functions/2.04:_Fitting_Linear_Models_to_Data",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "4.3 Fitting Linear Models to Data - College Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/4-3-fitting-linear-models-to-data",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we turn a messy bunch of dots into a straight line, then use that line to make predictions."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Building Linear Models from Data"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You already know y = mx + b from earlier classes. Today the line comes from real, messy data, and we also learn when to trust it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Today: 1. Scatter plots 2. Drawing a line of best fit 3. Predicting with it 4. Interpolation vs extrapolation 5. What slope and intercept mean"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A scatter plot is a graph made only of dots. Each dot is one pair of numbers, like one person's hours and one person's score."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scatter plot: one dot for each (x, y) pair"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our example is made up, so we can practise. Sam tries 20 free throws each week. He tracks hours practised per week (x) and shots made (y)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hours x → shots made y: (1, 7) (2, 8) (3, 10) (4, 12) (5, 14) (6, 16) (7, 18)"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Look at the dot (4, 12). What does it tell us about Sam?",
+    "right": "In a week with 4 hours of practice, he made 12 shots.",
+    "wrong": [
+     "He practised 12 hours and made 4 shots.",
+     "He practised for 4 weeks and made 12 shots in total.",
+     "He made 16 shots, because 4 + 12 = 16."
+    ],
+    "why": "The first number is x (hours practised). The second number is y (shots made)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture the graph. The dots climb from the lower left to the upper right. More practice goes with more shots made. The dots are close to a line, but not exactly on one."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scatter plot. Horizontal axis: hours practised, 0 to 8. Vertical axis: shots made, 0 to 20. Seven dots rise steadily from (1, 7) to (7, 18), with small wobbles."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before we draw a line, check that a line makes sense. If the dots curve into a U, a straight line will fit badly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Step 0: Do the dots look roughly straight?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A scatter plot's dots go down, then turn and go back up, like a U. Is a straight line a good model?",
+    "right": "No. The dots follow a curve, so a line would fit poorly.",
+    "wrong": [
+     "Yes. A line works for every scatter plot.",
+     "Yes, as long as the line touches at least one dot.",
+     "No, because the dots must go up from left to right."
+    ],
+    "why": "We only use a line when the dots roughly follow a straight path. A line fits worse the farther the dots are from it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The line of best fit is a straight line that runs through the middle of the dots. It does not have to touch them. It has a similar number of dots above and below."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Line of best fit: runs through the middle of the dots, with about as many above as below"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To draw one by eye, lay a ruler or pencil across the graph. Slide it until it passes through the middle of the dots, then draw along it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Check the dots look roughly straight. 2. Lay a ruler through the middle of the dots. 3. Balance dots above and below. 4. Draw the line."
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Line A touches the first and last dots, but all five dots between them are below it. Line B passes through the middle, with about as many dots above as below. Which is the better line of best fit?",
+    "right": "Line B, because it runs through the middle of the dots.",
+    "wrong": [
+     "Line A, because it touches the most important dots.",
+     "Line A, because it is steeper.",
+     "They are equally good."
+    ],
+    "why": "A best-fit line balances the dots above and below it. Touching the end dots does not make it better."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we find its equation. Suppose our ruler line passes through (0, 5) and (5, 14). Those are points on the line, not necessarily dots. We can find the slope from two points: rise over run."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rise = 14 − 5 = 9 | Run = 5 − 0 = 5 | Slope = 9/5 = 1.8"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "The line passes through (0, 5) and (5, 14). What is its slope?",
+    "right": "9/5, which is 1.8",
+    "wrong": [
+     "5/9",
+     "14/5",
+     "9"
+    ],
+    "why": "Slope is rise over run. The rise is 14 − 5 = 9 and the run is 5 − 0 = 5, so the slope is 9/5 = 1.8."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The line crosses the y-axis at (0, 5), so the y-intercept is 5. With slope 1.8 and intercept 5, our model is y = 1.8x + 5."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "y = 1.8x + 5"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we use the model to predict. Put the hours in for x and work out y. Try 4.5 hours: 1.8 × 4.5 + 5 = 13.1. So about 13 shots."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x = 4.5 | y = 1.8(4.5) + 5 = 8.1 + 5 = 13.1 ≈ 13 shots"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Use y = 1.8x + 5 to predict the shots made after 3.5 hours.",
+    "right": "About 11.3 shots",
+    "wrong": [
+     "6.3 shots",
+     "8.5 shots",
+     "5.3 shots"
+    ],
+    "why": "1.8 × 3.5 = 6.3, then add 5 to get 11.3. If you stop at 6.3 you forgot the + 5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice that 4.5 hours is between the hours we actually measured, 1 and 7. A prediction inside the range of our data is called interpolation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Interpolation: predicting inside the range of the data (here, 1 to 7 hours)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Predicting outside that range is extrapolation. Try 10 hours: 1.8 × 10 + 5 = 23. But Sam only takes 20 shots, so 23 is impossible."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Extrapolation: predicting outside the range of the data. 10 hours → 23 of 20 shots?!"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Sam's data cover 1 to 7 hours. Which prediction is extrapolation?",
+    "right": "Predicting for 12 hours",
+    "wrong": [
+     "Predicting for 1.5 hours",
+     "Predicting for 4 hours",
+     "Predicting for 6.5 hours"
+    ],
+    "why": "12 hours is outside 1 to 7. The other three are inside the data range, so they are interpolation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When a model stops working like that, it is called model breakdown. Extrapolating assumes the same pattern carries on outside the data. That is a risky assumption."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Model breakdown: the model no longer applies"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Slightly outside the data is often fine, but the farther out you go, the bigger the likely error. One textbook warns that a cost model can't account for factors fifty years ahead."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Just outside the data: usually okay, with care. Far outside: big errors likely."
+   },
+   "cite": [
+    "s5",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why can extrapolation go wrong?",
+    "right": "The pattern outside the data might be different from the pattern inside it.",
+    "wrong": [
+     "Because you can't put numbers outside the data into an equation.",
+     "Because the slope changes sign every time you extrapolate.",
+     "Because extrapolation always gives a negative answer."
+    ],
+    "why": "The data only show the pattern inside their range. Outside it we are assuming the pattern continues, and it may not."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A real example: a textbook fits a line to cricket chirps and air temperature. The temperatures in the data run from 52 to 80.5, so predicting at 40 degrees is extrapolation."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Data range: 52 to 80.5 degrees F | 40 degrees is outside it, so extrapolation"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the meaning of the numbers. In a model like this, the slope is a rate of change. Ours is 1.8 more shots made for each extra hour of practice."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slope 1.8 = about 1.8 more shots per extra hour"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In y = 1.8x + 5, what does the slope 1.8 tell us?",
+    "right": "Each extra hour of practice goes with about 1.8 more shots made.",
+    "wrong": [
+     "Sam makes 1.8 shots every game.",
+     "Sam practises 1.8 hours.",
+     "Sam makes 1.8 shots with no practice."
+    ],
+    "why": "Slope is the change in y for each 1-unit change in x. Here y is shots made and x is hours."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The y-intercept is the starting value, what the model gives when x is 0. Ours is 5: about 5 shots with no practice. But 0 hours is outside our data, so treat it as a rough guess."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y-intercept 5 = predicted shots at 0 hours (a rough guess: it is outside the data)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Always ask whether the slope and intercept make sense in real life. One example: a tree's yearly growth should not have a negative slope, because the tree would be shrinking."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sense check: do the slope and intercept fit the real situation?"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A model of a healthy young tree's height against its age has a slope of −3 inches per year. Does that make sense?",
+    "right": "No. A growing tree's height should go up as it gets older, so the slope should be positive.",
+    "wrong": [
+     "Yes. All slopes in real life are negative.",
+     "Yes. Slope tells us the tree's age.",
+     "No. Trees' heights can't be graphed."
+    ],
+    "why": "A negative slope means the line goes down, so the model says the tree shrinks. The context tells us that is wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Eyeballing is fine in class. Calculators and software can also find a best-fit line. There is only one such line for a given set of data. It is closest to all the dots overall."
+   },
+   "show": {
+    "kind": "list",
+    "text": "By eye: quick, and good for understanding. By calculator: the single exact best line. The cricket data give T = 30.281 + 1.143c."
+   },
+   "cite": [
+    "s1",
+    "s8",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it all together. Sam's model is y = 1.8x + 5, and his data run from 1 to 7 hours."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Model: y = 1.8x + 5. Data range: 1 to 7 hours."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Predict Sam's shots made for 2.5 hours. Is this interpolation or extrapolation?",
+    "right": "About 9.5 shots. It is interpolation, because 2.5 is inside 1 to 7.",
+    "wrong": [
+     "About 9.5 shots. It is extrapolation, because 2.5 is a decimal.",
+     "About 7.5 shots. It is interpolation.",
+     "About 4.5 shots. It is extrapolation."
+    ],
+    "why": "1.8 × 2.5 = 4.5, and 4.5 + 5 = 9.5. Since 2.5 is within the data range of 1 to 7, this is interpolation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To finish: check the dots look straight, draw the line through the middle, find its equation, and predict. Be careful outside your data, and ask what the slope and intercept mean. Later, in class 50, we measure how well a line fits."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Check straight-ish. 2. Draw the line through the middle. 3. Find y = mx + b. 4. Predict. 5. Interpolate with confidence, extrapolate with care. 6. Explain slope and intercept in context."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Scatter plot",
+   "links": [
+    "[[Slope and Rate of Change]]",
+    "[[Slope-Intercept Form and Graphing Lines]]"
+   ]
+  },
+  {
+   "topic": "Line of best fit",
+   "links": [
+    "[[Writing Linear Equations from Information]]",
+    "[[Correlation, Residuals and Causation]]"
+   ]
+  },
+  {
+   "topic": "Interpolation vs extrapolation",
+   "links": [
+    "[[Linear vs Exponential models]]",
+    "[[Comparing Linear, Exponential and Quadratic Functions]]"
+   ]
+  },
+  {
+   "topic": "Meaning of slope and intercept",
+   "links": [
+    "[[Slope and Rate of Change]]",
+    "[[Function Notation]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "You should never extrapolate.",
+   "other_view": "Textbooks warn that extrapolation is risky, because it assumes the pattern continues. Some statistics writers say that predicting just slightly beyond the data is often fine in practice. They add that the error tends to grow the farther out you go, and that some fields suit extrapolation better than others.",
+   "cite": [
+    "s5",
+    "s3"
+   ]
+  },
+  {
+   "claim": "A line of best fit drawn by eye is good enough.",
+   "other_view": "Sketching a line is a recognised way to approximate the model, and it builds understanding. But there is only one least-squares regression line for a data set, and calculators or software can find it. Two careful people drawing by eye can get slightly different lines.",
+   "cite": [
+    "s1",
+    "s8"
+   ]
+  }
+ ]
+}

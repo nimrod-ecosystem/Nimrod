@@ -1,0 +1,549 @@
+{
+ "about": {
+  "title": "Systems by Elimination",
+  "course": "algebra-1",
+  "class_n": 24,
+  "audience": [
+   "Ages 14 to 16",
+   "teenagers",
+   "Anyone who has finished Systems by Substitution (class 23)"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, the usual half-hour class. There are four small ideas (opposites, subtracting, multiplying one or both equations, special cases). Each gets one worked example and one check question. You can pause after any beat and come back later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.3 Solve Systems of Equations by Elimination, Elementary Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/5-3-solve-systems-of-equations-by-elimination",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "5.3: Solve Systems of Equations by Elimination (OpenStax Elementary Algebra 1e, LibreTexts copy)",
+   "publisher": "Mathematics LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/05:_Systems_of_Linear_Equations/5.03:_Solve_Systems_of_Equations_by_Elimination",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "High School: Algebra, Reasoning with Equations and Inequalities (HSA.REI.C.5)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "4.2: Solve Systems of Linear Equations with Two Variables (OpenStax Intermediate Algebra 1e, LibreTexts copy)",
+   "publisher": "Mathematics LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Intermediate_Algebra_1e_(OpenStax)/04:_Systems_of_Linear_Equations/4.02:_Solve_Systems_of_Linear_Equations_with_Two_Variables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "2.4.6 Lesson Summary, Algebra 1",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/2-4-6-lesson-summary",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back! Last class you solved systems by substitution. Today you learn a third way, called elimination."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Systems by Elimination"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick reminder. A system is two or more equations together. A solution has to make every equation in the system true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "System: a solution must work in every equation"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Elimination means adding two equations so that one variable cancels out. That leaves one equation with one variable, which you already know how to solve."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Elimination: add the equations so one variable disappears"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To cancel, we need opposites. Opposites are numbers like 3 and −3. They add up to zero, so 3y plus −3y is gone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Opposites: 3y and −3y add to 0"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why are we allowed to add whole equations? You can add the same amount to both sides of an equation and it stays true. That rule is the Addition Property of Equality."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Add the same quantity to both sides, and you still have equality."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Each equation says its left side equals its right side. So adding the two equations adds equals to equals. The new system has the same solution as the old one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Adding equations keeps the same solution"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try one. Sam is in a game shop. A sword (s) and a shield (h) cost 12 coins together. The sword costs 2 coins more than the shield."
+   },
+   "show": {
+    "kind": "list",
+    "text": "s + h = 12\ns − h = 2"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at the h terms. We have +h and −h, which are opposites. Add left sides together and right sides together. The h cancels and we get 2s = 14."
+   },
+   "show": {
+    "kind": "list",
+    "text": "s + h = 12\ns − h = 2\n-----------\n2s = 14"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Your turn. Add x + y = 9 and x − y = 1. What equation do you get?",
+    "right": "2x = 10",
+    "wrong": [
+     "2y = 10",
+     "x = 10",
+     "0 = 10"
+    ],
+    "why": "The y and −y cancel. The x terms make 2x. The right sides make 9 + 1 = 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to the shop. 2s = 14, so s = 7. Put that into s + h = 12 and you get h = 5."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "coin",
+    "count": 12,
+    "layout": "group",
+    "text": "12 coins: 7 for the sword, 5 for the shield"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last step is to check in both equations. 7 + 5 = 12 works. 7 − 5 = 2 works. Sword 7, shield 5."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Always check in BOTH equations"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Before adding, always look for a variable whose coefficients are opposites. That variable will cancel when you add."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Step one: find the opposites"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In 4x + 5y = 7 and 3x − 5y = 8, which variable cancels when you add?",
+    "right": "y, because 5y and −5y are opposites",
+    "wrong": [
+     "x, because 4x and 3x are close",
+     "Both x and y",
+     "Neither one"
+    ],
+    "why": "5y + (−5y) = 0, so y cancels. 4x and 3x add to 7x, which does not cancel."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if both equations have the same term, like 3x in both? Adding gives 6x, which does not cancel. So subtract one equation from the other instead."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3x + 2y = 16\n3x + y = 11\nSubtract: y = 5"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now put y = 5 into 3x + y = 11. That gives 3x = 6, so x = 2. Check: 3(2) + 2(5) = 16 works. 3(2) + 5 = 11 works."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(2, 5)"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Subtract the second equation from the first: (3x + 2y = 16) minus (3x + y = 11). What do you get?",
+    "right": "y = 5",
+    "wrong": [
+     "6x + 3y = 27",
+     "y = 27",
+     "x = 5"
+    ],
+    "why": "3x − 3x = 0, and 2y − y = y. On the right, 16 − 11 = 5. The answer 6x + 3y = 27 is what you get by adding."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Subtracting can trip you up with negative signs. A safer way is to multiply one whole equation by −1, then add. The result is the same."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Multiply 3x + y = 11 by −1:\n−3x − y = −11\nAdd to 3x + 2y = 16:\ny = 5"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the harder case. Nothing is opposite yet. Snack stand: 3 combos (c) and 2 drinks (d) cost $19. A combo costs $3 more than a drink."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3c + 2d = 19\nc − d = 3"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fix is to multiply an equation by a number so the terms match. If you multiply every term on both sides, the solution stays the same."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Multiply EVERY term, both sides"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You multiply c − d = 3 by 2. What do you get?",
+    "right": "2c − 2d = 6",
+    "wrong": [
+     "2c − d = 3",
+     "2c − 2d = 3",
+     "c − 2d = 6"
+    ],
+    "why": "Every term is doubled, including the 3 on the right. So 2c − 2d = 6."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we have +2d and −2d. Add the equations. 3c + 2c is 5c, and 19 + 6 is 25. So 5c = 25 and c = 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3c + 2d = 19\n2c − 2d = 6\n-----------\n5c = 25"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put c = 5 into c − d = 3. That gives d = 2. Check: 3(5) + 2(2) = 19 works. 5 − 2 = 3 works. A combo is $5 and a drink is $2."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Combo $5, drink $2"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes you must multiply both equations. Try 2x + 3y = 13 and 5x − 2y = 4. Let's cancel y. The y coefficients are 3 and −2, and both can become 6 and −6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 3y = 13\n5x − 2y = 4\nTarget: 6y and −6y"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "To make the y terms 6y and −6y, what do you multiply by?",
+    "right": "The first equation by 2, the second equation by 3",
+    "wrong": [
+     "Both equations by 2",
+     "Both equations by 3",
+     "The first equation by 3, the second equation by 2"
+    ],
+    "why": "2 × 3y = 6y and 3 × (−2y) = −6y. The other choices do not give opposites."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After multiplying, add. 4x + 15x is 19x, and 26 + 12 is 38. So 19x = 38 and x = 2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x + 6y = 26\n15x − 6y = 12\n-----------\n19x = 38"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Put x = 2 into 2x + 3y = 13. That gives 3y = 9, so y = 3. Check in the other equation: 5(2) − 2(3) = 4 works. The solution is (2, 3)."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(2, 3)"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the whole recipe in one place. Standard form, make opposites, add, solve, substitute back, check."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Write both equations in standard form\n2. Multiply one or both so one variable has opposite coefficients\n3. Add to eliminate that variable\n4. Solve for the remaining variable\n5. Substitute into an original equation to find the other\n6. Check in both original equations"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the special cases. Not every system gives one ordered pair. Two equations can describe the same line, or two parallel lines."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same line: infinitely many solutions | Parallel lines: no solution"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try 2x + y = 3 and 4x + 2y = 10. Multiply the first by −2 to get −4x − 2y = −6. Add it to the second and both variables vanish. You are left with 0 = 4."
+   },
+   "show": {
+    "kind": "list",
+    "text": "−4x − 2y = −6\n4x + 2y = 10\n-----------\n0 = 4  (false)"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "0 = 4 is never true. So no pair (x, y) can work. If both variables vanish and the statement is false, the system has no solution. The lines are parallel."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "False statement → no solution"
+   },
+   "cite": [
+    "s4",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You add two equations and get 0 = 7. What does that tell you?",
+    "right": "The system has no solution",
+    "wrong": [
+     "The solution is x = 0",
+     "The system has infinitely many solutions",
+     "The answer is (7, 0)"
+    ],
+    "why": "0 = 7 is false for every x and y. So nothing can satisfy both equations."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now try x − 2y = 4 and 3x − 6y = 12. Multiply the first by −3 to get −3x + 6y = −12. Add it to the second. Everything cancels and you get 0 = 0."
+   },
+   "show": {
+    "kind": "list",
+    "text": "−3x + 6y = −12\n3x − 6y = 12\n-----------\n0 = 0  (true)"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "0 = 0 is always true. So the second equation was just the first one in disguise. It is the same line, and there are infinitely many solutions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "True statement → infinitely many solutions"
+   },
+   "cite": [
+    "s4",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "After eliminating, you get 0 = 0. What does that mean?",
+    "right": "The system has infinitely many solutions (the same line)",
+    "wrong": [
+     "The system has no solution",
+     "The solution is (0, 0)",
+     "You made a mistake and must start again"
+    ],
+    "why": "A true statement with both variables gone means the equations describe the same line. Every point on it is a solution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last practice. Solve x + y = 10 and x − y = 4. Remember the steps: add, solve, substitute back, check."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + y = 10\nx − y = 4"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the solution (x, y)?",
+    "right": "(7, 3)",
+    "wrong": [
+     "(3, 7)",
+     "(6, 4)",
+     "(14, −4)"
+    ],
+    "why": "Adding gives 2x = 14, so x = 7. Then 7 + y = 10, so y = 3. Check: 7 + 3 = 10 and 7 − 3 = 4. (14, −4) comes from forgetting to divide by 2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nice work. You can now solve a system by adding or subtracting, and by multiplying first when you need to. Next class, you will choose the best method for each problem."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Add, or multiply then add. Check both."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Elimination method",
+   "links": [
+    "[[Systems by Substitution]]",
+    "[[Systems by Graphing]]",
+    "[[Point-Slope and Standard Form]]",
+    "[[Choosing a Method and Solving Systems Word Problems]]"
+   ]
+  },
+  {
+   "topic": "Special cases: no solution and infinitely many solutions",
+   "links": [
+    "[[Parallel and Perpendicular Lines]]",
+    "[[Systems of Equations by Graphing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Elimination is the best way to solve a system.",
+   "other_view": "Not always. OpenStax says graphing works well when the coefficients are small and the answer is a whole number. It says substitution works well when one equation is easy to solve for a variable. Elimination is the method that helps most when neither of those is true. Class 25 practices choosing.",
+   "cite": [
+    "s1"
+   ]
+  }
+ ]
+}

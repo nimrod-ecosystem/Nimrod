@@ -1,0 +1,688 @@
+{
+ "about": {
+  "title": "Two-Way Tables",
+  "course": "math-grade-8",
+  "class_n": 35,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are five small ideas: categories, reading a table, totals, relative frequency and deciding if two things are linked. Each gets a quick check, then two practice questions at the end. If it feels rushed, stop after the 'Association' idea and do the practice in a second sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "8.SP.A.4 (Grade 8 standard text and curfew-and-chores example)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/SP/A/4",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Music and Sports (8.SP.A.4 task and solution)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/SP/A/4/tasks/1098",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8 Mathematics, Unit 6.9: Looking for Associations",
+   "publisher": "Open Up Resources",
+   "date": "n.d.",
+   "link": "https://access.openupresources.org/curricula/our6-8math/en/grade-8/unit-6/lesson-9/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Lesson 9 (Grade 8 Unit 6), glossary and meditation two-way table",
+   "publisher": "Illustrative Mathematics, Kendall Hunt",
+   "date": "n.d.",
+   "link": "https://im.kendallhunt.com/MS/students/3/6/9/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Algebra 1 Unit 3, Lesson 1 Preparation: Two-way Tables",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://curriculum.illustrativemathematics.org/HS/teachers/1/3/1/preparation.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Algebra 1 Unit 3, Lesson 3: Associations in Categorical Data",
+   "publisher": "Illustrative Mathematics, Kendall Hunt",
+   "date": "n.d.",
+   "link": "https://im.kendallhunt.com/HS/students/1/3/3/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Grade 8 Unit 6.10 Preparation: Using Data Displays to Find Associations",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://curriculum.illustrativemathematics.org/MS/teachers/3/6/10/preparation.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Two-Way Frequency Tables",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/statistics/lessons/summarizing-categorical-data-two-way-tables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "8.02 Relative frequency tables",
+   "publisher": "Mathspace",
+   "date": "n.d.",
+   "link": "https://mathspace.co/textbooks/syllabuses/Syllabus-1139/topics/Topic-21695/subtopics/Subtopic-279704/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Unit 3 Family Materials: Two-variable Statistics",
+   "publisher": "Illustrative Mathematics, Kendall Hunt",
+   "date": "n.d.",
+   "link": "https://im-beta.kendallhunt.com/HS/families/1/3/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Two-Way Frequency Tables",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Algebra1/StatisticsReg/ST2TwoWayTable.html",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 35. Today we link two questions about the same group of people, using one table."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Two-Way Tables"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you can read one, build one, and say whether two things seem connected. We'll go one small step at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Read a table | Find totals | Use percentages fairly | Decide if two things seem linked"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a word. A categorical variable sorts people into groups, like favorite color: red, blue, green."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Categorical variable: answers that fall into groups"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is a categorical variable?",
+    "right": "Favorite pizza topping",
+    "wrong": [
+     "Height in centimeters",
+     "Minutes of sleep last night",
+     "Age in years"
+    ],
+    "why": "Toppings sort people into groups, like cheese or pepperoni. The other three are numbers that we measure or count."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A two-way table compares two categorical variables. One goes across the top and the other goes down the side."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Two-way table: one variable across the top, one down the side"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our example: 24 students answered two yes-or-no questions. Do you play a sport? Do you play a musical instrument?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An empty table. Across the top: 'Sports?' with columns Yes, No, Total. Down the left side: 'Musical instrument?' with rows Yes, No, Total."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rows run left to right. Columns run up and down. Sports answers are our columns. Instrument answers are our rows."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same empty table. The Sports Yes column is shaded. The Instrument Yes row is shaded a different color."
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In our table, what do the two answer columns (not counting Total) stand for?",
+    "right": "Plays a sport: Yes, and plays a sport: No",
+    "wrong": [
+     "Plays an instrument: Yes, and plays an instrument: No",
+     "Students who are 13, and students who are 14",
+     "Only the totals"
+    ],
+    "why": "We put the sports question across the top, so its answers are the columns. The instrument answers run down the side as the rows."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now fill it in. Each number inside the table is a joint frequency. It counts people who fit one pair of answers."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Filled table. Instrument Yes: Sports Yes 6, Sports No 7, Total 13. Instrument No: Sports Yes 8, Sports No 3, Total 11. Total row: 14, 10, 24."
+   },
+   "cite": [
+    "s2",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For example, 6 students play a sport and an instrument. 7 play an instrument but no sport."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Joint frequency: the count for one pair of answers"
+   },
+   "cite": [
+    "s2",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How many students play a sport but do not play an instrument?",
+    "right": "8",
+    "wrong": [
+     "7",
+     "14",
+     "11"
+    ],
+    "why": "Find the column 'Sports: Yes' and the row 'Instrument: No'. They meet at 8. The 7 is the opposite pair: instrument, no sport."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The numbers on the edge are totals. We call them marginal frequencies. Each one adds up the joint frequencies in its row or column."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Marginal frequency: a row or column total"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Instrument Yes row: 6 + 7 = 13. The corner number, 24, is everybody. Both the row totals and the column totals should add to it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6 + 7 = 13    13 + 11 = 24    14 + 10 = 24"
+   },
+   "cite": [
+    "s2",
+    "s8",
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many students play a sport, whether or not they play an instrument?",
+    "right": "14",
+    "wrong": [
+     "6",
+     "8",
+     "24"
+    ],
+    "why": "That is the total of the 'Sports: Yes' column: 6 + 8 = 14. The 24 is all students. The 6 and 8 are only parts of the sport players."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's build one. This class of 20 is made up. 12 walk to school and 8 ride. Of the 12 walkers, 5 have practice after school. Of the 8 riders, 6 do."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A table being built. Rows: Walk, Ride, Total. Columns: Practice Yes, Practice No, Total. Walk: 5, 7, 12. Ride: 6, 2, 8. Total: 11, 9, 20."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Steps: put the known counts in their cells. Find each missing cell by subtracting from its row total. Then add the columns and check they reach 20."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Put known counts in cells | 2. Subtract from the row total to find missing cells | 3. Add the columns | 4. Check the grand total"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many students ride to school and have no practice?",
+    "right": "2",
+    "wrong": [
+     "6",
+     "9",
+     "14"
+    ],
+    "why": "Riders total 8, and 6 of them have practice. So 8 - 6 = 2 do not. The 9 is everyone without practice, walkers and riders together."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to the 24 students. 14 play a sport and 10 don't. Those groups are different sizes, so raw counts are hard to compare."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "14 sport players vs 10 non-players"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Relative frequency fixes this. It is a count shown as a fraction or percent of a total. First, a total of everyone: 6 out of 24 do both. That is 6 ÷ 24 = 0.25, or 25%."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Relative frequency: a count as a fraction or percent of a total"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What fraction of the whole group of 24 plays a sport?",
+    "right": "14 out of 24, about 58%",
+    "wrong": [
+     "6 out of 14, about 43%",
+     "10 out of 24, about 42%",
+     "14 out of 10, or 140%"
+    ],
+    "why": "The sport total is 14 and the whole group is 24. So 14 ÷ 24 is about 0.58. The 10 out of 24 is the non-players. A part can't be 140% of the group."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Often the better question is 'among those who...'. Then we divide by that group's own total, not by 24."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6 ÷ 14 ≈ 0.43, about 43%"
+   },
+   "cite": [
+    "s2",
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Among the 14 sport players, 6 play an instrument. That is 6 ÷ 14, about 43%. This is a column relative frequency, because we used a column total."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Among a group: divide by that row's or column's total"
+   },
+   "cite": [
+    "s2",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Of the 10 students who do NOT play a sport, 7 play an instrument. What percent is that?",
+    "right": "70%",
+    "wrong": [
+     "29%, from 7 ÷ 24",
+     "54%, from 7 ÷ 13",
+     "30%, from 3 ÷ 10"
+    ],
+    "why": "The question says 'of those who do not play a sport', so divide by that group's total, 10. 7 ÷ 10 = 0.70, which is 70%. The 29% divides by everyone, which answers a different question."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are both answers side by side. It's a fair comparison now, because each is a percent of its own group."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Percent who play an instrument, by sport"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Among sport players, about 43% play an instrument. Among non-players, 70% do. That's a big gap."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plays a sport: 6 of 14, about 43% | Does not play a sport: 7 of 10, 70%"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When percentages differ like this, we say there seems to be an association. Knowing one answer helps you estimate the other."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Association: two variables are statistically related"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In this class, sport players were less likely to play an instrument. That's called a negative association. Notice we say 'seems'. It's only a pattern in this data."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Positive association | Negative association | No association"
+   },
+   "cite": [
+    "s7",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement does the 43% versus 70% result support best?",
+    "right": "In this class, sport players were less likely to play an instrument, so the two seem linked.",
+    "wrong": [
+     "Playing a sport makes students quit their instruments.",
+     "There is no link, because both percentages are below 100%.",
+     "There is a link, because more students play sports than don't."
+    ],
+    "why": "We compare the rates inside each group, and they differ. A pattern like this doesn't show one thing causes the other. Comparing raw counts of sport and non-sport players says nothing about a link."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Links aren't guaranteed, though. Sometimes the percentages match. Another made-up class of 30: 20 have pets and 10 don't."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Table. Pet Yes: Glasses Yes 6, Glasses No 14, Total 20. Pet No: Glasses Yes 3, Glasses No 7, Total 10. Total row: 9, 21, 30."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Among pet owners, 6 of 20 wear glasses: 30%. Among non-owners, 3 of 10: also 30%. The rates match, so no association."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30% and 30%"
+   },
+   "cite": [
+    "s10",
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which fact in the pet-and-glasses table shows there is no association?",
+    "right": "The glasses rate is 30% for pet owners and 30% for non-owners.",
+    "wrong": [
+     "There are 20 pet owners but only 10 non-owners.",
+     "6 is bigger than 3.",
+     "30% is less than 50%."
+    ],
+    "why": "Different group sizes and different counts don't matter. What matters is the rate inside each group, and both rates are 30%. So knowing about pets doesn't help you guess about glasses."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn, with real data. A study asked 97 athletes whether they meditated before a track meet. It also asked whether they felt calm or agitated."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Table. Calm: Meditated 45, Did not meditate 8, Total 53. Agitated: Meditated 23, Did not meditate 21, Total 44. Total row: 68, 29, 97."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, check the totals. 45 + 8 = 53 and 23 + 21 = 44. 53 + 44 = 97. Good. Now a question."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "53 + 44 = 97"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Of the athletes who did NOT meditate, what percent felt calm?",
+    "right": "About 28% (8 ÷ 29)",
+    "wrong": [
+     "About 15% (8 ÷ 53)",
+     "About 8% (8 ÷ 97)",
+     "About 72% (21 ÷ 29)"
+    ],
+    "why": "'Of those who did not meditate' means the 'did not meditate' column, total 29. Calm in that column is 8, and 8 ÷ 29 is about 0.28. The 72% is the agitated share of that group."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Same trick for the meditators: 45 of 68 felt calm. That's about 66%. Here are both rates."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Percent who felt calm, by whether they meditated"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last question. Look at the 66% and the 28%, then pick the best conclusion."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Meditated: 45 of 68 calm, about 66% | Did not meditate: 8 of 29 calm, about 28%"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which conclusion fits the meditation data best?",
+    "right": "Calm was more common among athletes who meditated (about 66% vs 28%), so the two seem linked.",
+    "wrong": [
+     "This proves meditating makes athletes calm.",
+     "There is no link, because only 8 non-meditators were calm.",
+     "We can't compare, because the groups are different sizes (68 and 29)."
+    ],
+    "why": "Relative frequencies cancel out the group sizes, so the comparison is fair. A big gap points to a link. A table alone can't prove one thing causes the other."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. A two-way table puts two categorical variables together. The inside numbers are joint frequencies. The edge numbers are marginal frequencies."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rows and columns, with totals | Joint frequency: inside cell | Marginal frequency: row or column total | Relative frequency: count ÷ a total"
+   },
+   "cite": [
+    "s8",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To check for a link, find the percent inside each group and compare. Quite different means a possible association. About equal means none. Next class is our course review. Well done today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Compare the rates, not the counts"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Percent who play an instrument, by whether they play a sport",
+   "rows": [
+    {
+     "label": "Plays a sport (6 of 14)",
+     "value": 43,
+     "source": "s2"
+    },
+    {
+     "label": "Does not play a sport (7 of 10)",
+     "value": 70,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Percent who felt calm, by whether they meditated",
+   "rows": [
+    {
+     "label": "Meditated (45 of 68)",
+     "value": 66,
+     "source": "s4"
+    },
+    {
+     "label": "Did not meditate (8 of 29)",
+     "value": 28,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Two-way tables",
+   "links": [
+    "[[Scatter plots and patterns]]",
+    "[[Lines of best fit]]",
+    "[[Proportional relationships and unit rate]]",
+    "[[Course review and mixed practice]]"
+   ]
+  },
+  {
+   "topic": "Relative frequency is a fraction or percent of a total, so it connects to unit rate and proportional thinking",
+   "links": [
+    "[[Proportional relationships and unit rate]]"
+   ]
+  },
+  {
+   "topic": "The walking-to-school and pets-and-glasses tables are made up for practice. The music-and-sports and meditation tables come from the cited curriculum sources, and the percentages were worked out in this lesson from their counts.",
+   "links": []
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "If the percentages differ a lot, the two categories seem linked.",
+   "other_view": "A link in a table does not mean that one thing causes the other. The standard asks only for a 'possible association', and statistics texts stress that two-way tables show association, not causation. So the cautious wording is 'seems linked'.",
+   "cite": [
+    "s1",
+    "s8"
+   ]
+  }
+ ]
+}

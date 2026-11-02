@@ -1,0 +1,614 @@
+{
+ "about": {
+  "title": "Geometric Sequences and Linear vs Exponential",
+  "course": "algebra-1",
+  "class_n": 32,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "This class has two linked ideas: writing a geometric rule, then telling linear from exponential. I split it into 22 short steps with a check after each idea. That makes it about 35 minutes, a little over 30. You can pause after step 12 and finish the rest another day."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Ch. 9 Key Concepts (9.3 Geometric Sequences), College Algebra",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra/pages/9-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "9.3 Geometric Sequences, College Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/9-3-geometric-sequences",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Explicit Formulas for Geometric Sequences",
+   "publisher": "Lumen Learning (Waymaker College Algebra, built on OpenStax)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/waymakercollegealgebra/chapter/explicit-formulas-for-geometric-sequences/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "High School: Functions » Linear, Quadratic, & Exponential Models (HSF.LE)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSF/LE/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Compare Linear and Exponential Growth",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/ap-physics-1/lessons/compare-linear-and-exponential-growth",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Linear & Exponential Growth",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/sat/lessons/linear-and-exponential-growth",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Comparing Linear and Exponential Functions (Math 1, Lesson 6.4)",
+   "publisher": "Big Ideas Learning",
+   "date": "n.d.",
+   "link": "https://www.bigideasmath.com/external/state-resources/pdfs/NC_math1_06_04.pdf",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hi, {name}. Today we sort growth into two kinds: the kind that adds, and the kind that multiplies."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Geometric Sequences: Adding or Multiplying?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture a game that pays coins each level. Deal A: 10 coins per level. Deal B: 1 coin, then it doubles every level. Hold that thought."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "coin",
+    "count": 8,
+    "layout": "group",
+    "text": "Deal B at level 4: 8 coins"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a quick reminder. Deal A adds the same amount each step: 10, 20, 30, 40. That is the adding kind."
+   },
+   "show": {
+    "kind": "list",
+    "text": "10, 20, 30, 40 (add 10 each time)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The multiplying kind is a geometric sequence. Each term is the one before it times the same number."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Geometric sequence: 3, 6, 12, 24 (times 2 each time)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That repeated number is the common ratio. To find it, divide any term by the term before it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Common ratio r: 6 ÷ 3 = 2 and 12 ÷ 6 = 2, so r = 2"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Divide each term by the one before it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5, 15, 45, 135"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is the common ratio of 5, 15, 45, 135?",
+    "right": "3",
+    "wrong": [
+     "10",
+     "5",
+     "20"
+    ],
+    "why": "15 ÷ 5 = 3, 45 ÷ 15 = 3, and 135 ÷ 45 = 3. Every step is times 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The ratio can be smaller than 1. Then the terms shrink. 80, 40, 20, 10 has ratio 1/2, since 40 ÷ 80 = 0.5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "80, 40, 20, 10 (r = 1/2, shrinking)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the common ratio of 100, 50, 25?",
+    "right": "1/2 (or 0.5)",
+    "wrong": [
+     "2",
+     "50",
+     "-50"
+    ],
+    "why": "50 ÷ 100 = 0.5, and 25 ÷ 50 = 0.5. The terms get cut in half each step."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Once you know the ratio, you can build the sequence. Start with the first term and multiply by r again and again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Start 4, r = 3: 4, 12, 36, 108"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A geometric sequence starts 2, 6, 18. What is the next term?",
+    "right": "54",
+    "wrong": [
+     "24",
+     "36",
+     "21"
+    ],
+    "why": "The ratio is 3, so 18 × 3 = 54. The answer 24 would come from adding 6, which is the adding kind."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Counting up one term at a time is slow if you want term 50. So we use an explicit rule. It jumps straight to any term."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Explicit rule: aₙ = a₁ · r^(n−1)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why n minus 1? Term 1 has no multiplying. Term 2 is multiplied once. Term 3 is multiplied twice. Term n is multiplied n minus 1 times."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Term 1: a₁\nTerm 2: a₁ · r\nTerm 3: a₁ · r · r\nTerm n: a₁ · r^(n−1)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: 2, 10, 50, 250. The ratio is 10 ÷ 2 = 5, and the first term is 2. So the rule is aₙ = 2 · 5^(n−1)."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "First term a₁ = 2 | Ratio r = 5 | Rule: aₙ = 2 · 5^(n−1) | 5th term: 2 · 5⁴ = 2 · 625 = 1250"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now use a rule. Put the term number in for n. Do the power first, then multiply."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "aₙ = 5 · 2^(n−1)"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "For aₙ = 5 · 2^(n−1), what is the 6th term?",
+    "right": "160",
+    "wrong": [
+     "320",
+     "50",
+     "80"
+    ],
+    "why": "For n = 6 the power is 2⁵ = 32, and 5 × 32 = 160. 320 comes from using 2⁶, which forgets the minus 1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now go the other way: write the rule yourself. Find the first term, then the ratio."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3, 6, 12, 24"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which rule matches 3, 6, 12, 24?",
+    "right": "aₙ = 3 · 2^(n−1)",
+    "wrong": [
+     "aₙ = 2 · 3^(n−1)",
+     "aₙ = 3 · 2^n",
+     "aₙ = 3 + 2(n−1)"
+    ],
+    "why": "The first term is 3 and the ratio is 2. With 3 · 2^n, term 1 would be 6, not 3. The last choice adds instead of multiplying."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Big idea time. Linear growth adds the same amount over equal steps. Exponential growth multiplies by the same factor over equal steps."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Linear: equal differences (add) | Exponential: equal factors (multiply)"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So with a table, run two tests. Subtract neighbors to get differences. Divide neighbors to get ratios. The x-values must be evenly spaced."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same differences → linear | Same ratios → exponential | Example y: 3, 7, 11, 15 (+4 each) is linear | Example y: 3, 6, 12, 24 (×2 each) is exponential"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try it. The x-values go 0, 1, 2, 3 and the y-values are 2, 6, 18, 54."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y: 2, 6, 18, 54"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Is the table for y = 2, 6, 18, 54 linear or exponential?",
+    "right": "Exponential, because the ratios are all 3",
+    "wrong": [
+     "Linear, because the numbers go up",
+     "Linear, because the differences are all 4",
+     "Exponential, because the differences are all 3"
+    ],
+    "why": "The differences are 4, 12 and 36, which are not equal. The ratios are 3, 3 and 3, which are equal."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more table. Run both tests again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y: 7, 11, 15, 19"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Is the table for y = 7, 11, 15, 19 linear or exponential?",
+    "right": "Linear, because the differences are all 4",
+    "wrong": [
+     "Exponential, because the numbers keep growing",
+     "Exponential, because the ratios are all 4",
+     "Linear, because the ratios are all 2"
+    ],
+    "why": "Each step adds 4, so the differences are equal. The ratios (11÷7, 15÷11, 19÷15) are not equal."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stories give hints too. A fixed amount each step means linear. Doubling, tripling, or a percent each step means exponential."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Adds $5 each week → linear\nDoubles every day → exponential\nGrows 10% each year → exponential"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check yourself with a story."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Which story is exponential?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which story is exponential?",
+    "right": "A rumor spreads so the number of people who know it doubles every hour",
+    "wrong": [
+     "A gym charges $15 a month",
+     "You save $20 every week",
+     "A bus ticket costs $3 per ride"
+    ],
+    "why": "Doubling means multiplying by the same factor each hour. The other three add or repeat a fixed amount."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back to our two deals. Deal A is 10 coins per level. On a graph it is a straight line, because it adds the same amount each time."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Deal A: coins earned at each level (adds 10)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Deal B starts at 1 and doubles. On a graph it is a curve. It starts low, then bends sharply upward."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Deal B: coins earned at each level (doubles)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A graph starts low and then curves steeply upward. Which kind of growth is it most likely?",
+    "right": "Exponential",
+    "wrong": [
+     "Linear",
+     "Neither, because graphs cannot curve",
+     "Linear, because it goes up"
+    ],
+    "why": "Linear growth makes a straight line. A curve that bends steeply upward is the shape of exponential growth."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At first Deal A looks better: 10 coins beats 1. But exponential growth eventually passes linear growth. Compare the two charts level by level."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Level 7: A = 70, B = 64 | Level 8: A = 80, B = 128"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "At which level does Deal B first earn more coins than Deal A?",
+    "right": "Level 8",
+    "wrong": [
+     "Level 4",
+     "Level 6",
+     "Level 7"
+    ],
+    "why": "At level 7, B has 64 and A has 70, so A is still ahead. At level 8, B has 128 and A has 80, so B takes the lead."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nice work, {name}. Recap: a geometric sequence multiplies by a common ratio. Its rule is aₙ = a₁ · r^(n−1). Equal differences mean linear. Equal ratios mean exponential."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Common ratio = term ÷ previous term\nRule: aₙ = a₁ · r^(n−1)\nEqual differences → linear\nEqual ratios → exponential\nExponential eventually passes linear"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Deal A (made-up game example): coins earned at each level, adding 10",
+   "rows": [
+    {
+     "label": "Level 1",
+     "value": 10,
+     "source": "s4"
+    },
+    {
+     "label": "Level 2",
+     "value": 20,
+     "source": "s4"
+    },
+    {
+     "label": "Level 3",
+     "value": 30,
+     "source": "s4"
+    },
+    {
+     "label": "Level 4",
+     "value": 40,
+     "source": "s4"
+    },
+    {
+     "label": "Level 5",
+     "value": 50,
+     "source": "s4"
+    },
+    {
+     "label": "Level 6",
+     "value": 60,
+     "source": "s4"
+    },
+    {
+     "label": "Level 7",
+     "value": 70,
+     "source": "s4"
+    },
+    {
+     "label": "Level 8",
+     "value": 80,
+     "source": "s4"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "line",
+   "title": "Deal B (made-up game example): coins earned at each level, doubling from 1 (aₙ = 1 · 2^(n−1))",
+   "rows": [
+    {
+     "label": "Level 1",
+     "value": 1,
+     "source": "s1"
+    },
+    {
+     "label": "Level 2",
+     "value": 2,
+     "source": "s1"
+    },
+    {
+     "label": "Level 3",
+     "value": 4,
+     "source": "s1"
+    },
+    {
+     "label": "Level 4",
+     "value": 8,
+     "source": "s1"
+    },
+    {
+     "label": "Level 5",
+     "value": 16,
+     "source": "s1"
+    },
+    {
+     "label": "Level 6",
+     "value": 32,
+     "source": "s1"
+    },
+    {
+     "label": "Level 7",
+     "value": 64,
+     "source": "s1"
+    },
+    {
+     "label": "Level 8",
+     "value": 128,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Geometric sequences: multiply by a common ratio",
+   "links": [
+    "[[Arithmetic Sequences as Linear Functions]]",
+    "[[Exponent Rules]]"
+   ]
+  },
+  {
+   "topic": "Telling linear from exponential using differences and ratios",
+   "links": [
+    "[[Slope and Rate of Change]]",
+    "[[Exponential Functions: Growth and Decay]]"
+   ]
+  },
+  {
+   "topic": "Exponential eventually beats linear",
+   "links": [
+    "[[Exponential Models and Compound Interest]]",
+    "[[Comparing Linear, Exponential and Quadratic Functions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The explicit rule for a geometric sequence is aₙ = a₁ · r^(n−1).",
+   "other_view": "This is not the only form. Textbooks often count from zero in real-life problems and write aₙ = a₀ · rⁿ, where the first value is at n = 0. Both describe the same pattern. Check whether your problem starts counting at 0 or at 1.",
+   "cite": [
+    "s1"
+   ]
+  }
+ ]
+}

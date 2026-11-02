@@ -1,0 +1,586 @@
+{
+ "about": {
+  "title": "Lines: y = mx and y = mx + b",
+  "course": "math-grade-8",
+  "class_n": 11,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "35 minutes fits. There are four topics: y = mx, the starting value b, graphing, and writing from a graph. Each gets one example and one check question. Nothing was cut or stretched."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Expressions & Equations (standard 8.EE.B.6)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "4.5 Use the Slope-Intercept Form of an Equation of a Line, Elementary Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/4-5-use-the-slope-intercept-form-of-an-equation-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "2.1 Linear Functions, Precalculus 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/precalculus-2e/pages/2-1-linear-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Deriving the Equation y = mx+b",
+   "publisher": "CK-12 Foundation (Interactive Middle School Math 8 for CCSS)",
+   "date": "n.d.",
+   "link": "https://flexbooks.ck12.org/cbook/ck-12-interactive-middle-school-math-8-for-ccss/section/4.8/primary/lesson/deriving-the-equation-y-mxb-msm8-ccss/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Graph Equations using Slope and Intercept",
+   "publisher": "Online Math Learning",
+   "date": "n.d.",
+   "link": "https://www.onlinemathlearning.com/slope-intercept-line.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Key Equations, Precalculus",
+   "publisher": "OpenStax, Rice University",
+   "date": "2021-12-08",
+   "link": "https://openstax.org/books/precalculus/pages/2-key-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Writing Linear Equations (y=mx+b)",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/prealgebra/lessons/writing-linear-equations-y-equals-mx-plus-b",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 11. Today a whole line becomes one short equation you can read like a label."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Lines: y = mx and y = mx + b"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Four steps today, one at a time, with a check after each. Take your time. You can pause anywhere."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Lines through the origin: y = mx\n2. The y-intercept: a starting value\n3. Graphing from slope and intercept\n4. Writing an equation from a graph"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a reminder from last class. Slope is rise over run: how far up for each step to the right."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "slope = rise ÷ run"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step one. If a line passes through the origin, the point (0, 0), its equation is y = mx. The letter m is the slope."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = mx"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try y = 2x. When x is 0, y is 0, so the line starts at the origin. Each step right adds 2 up."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "The line y = 2x",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. In y = 3x, what is y when x is 4?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = 3x, x = 4"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "For the line y = 3x, what is y when x = 4?",
+    "right": "12",
+    "wrong": [
+     "7",
+     "34",
+     "1.33"
+    ],
+    "why": "y = mx means y is m times x. Here that is 3 × 4 = 12. Adding gives 7. Writing the digits side by side gives 34. Dividing gives 1.33."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The slope can be a fraction too. A slope of one half means up 1 for every 2 steps right."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "slope 1/2 through the origin"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A line goes through the origin and has slope 1/2. Which equation is it?",
+    "right": "y = (1/2)x",
+    "wrong": [
+     "y = 2x",
+     "y = x + 1/2",
+     "y = 1/2"
+    ],
+    "why": "A line through the origin is y = mx, and m is the slope, so m = 1/2. y = 2x is steeper, with slope 2. y = x + 1/2 has slope 1 and does not go through the origin. y = 1/2 is a flat line."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why can we pick any two points to find the slope? On a straight line, the slope is the same between any two points."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One line, one slope"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The reason comes from similar triangles. You will meet those properly in class 26. For now, trust that the slope is the same everywhere on a line."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "same slope everywhere"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two. Not every line goes through the origin. The y-intercept is where the line crosses the y-axis, at the point (0, b)."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y-intercept = (0, b)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Think of b as a starting value. You begin with 1 dollar. Then you add 2 dollars each week. After x weeks, y = 2x + 1."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dollar-bill",
+    "count": 1,
+    "layout": "row",
+    "text": "The starting amount: 1 dollar"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is that line. At x = 0 it starts at 1, not 0. After that it still climbs 2 for every 1 step right."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "The line y = 2x + 1",
+    "chart": "c2"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Compare the two lines. They have the same slope. Every y on the second line is 1 more, so it is the first line slid up by 1."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 2x: 0, 2, 4, 6, 8 | y = 2x + 1: 1, 3, 5, 7, 9"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How does the line y = 2x + 1 compare with the line y = 2x?",
+    "right": "It is the same line moved up 1.",
+    "wrong": [
+     "It is the same line moved right 1.",
+     "It is the same line moved down 1.",
+     "It is steeper by 1."
+    ],
+    "why": "Every y-value on y = 2x + 1 is exactly 1 more than on y = 2x. That means the line is slid up by 1. The slope stays 2, so it is not steeper."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now reading an equation. In y = mx + b, m is the number multiplying x, and b is the number added. Watch the signs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "m = the number with x (slope) | b = the number added on its own (y-intercept)"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In y = -3x + 8, what are m and b?",
+    "right": "m = -3 and b = 8",
+    "wrong": [
+     "m = 8 and b = -3",
+     "m = 3 and b = 8",
+     "m = -3 and b = -8"
+    ],
+    "why": "The number with x is -3, so m = -3. The number added on its own is +8, so b = 8. Mixing up m and b is a common mistake. Keep the signs too, because the -3 is negative and the 8 is positive."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three, graphing. Plot the y-intercept first. Then use the slope to find a second point. Then draw the line."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Plot (0, b)\n2. From there, go up the rise and right the run\n3. Draw a line through the points"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: y = (2/3)x + 1. Start at (0, 1). The slope 2/3 means up 2, right 3. That lands on (3, 3). Do it again for (6, 5). Then draw the line."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. Points at (0, 1), (3, 3) and (6, 5), with a straight line through them going up to the right."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You want to graph y = 3x - 2. Which point do you plot first?",
+    "right": "(0, -2)",
+    "wrong": [
+     "(3, -2)",
+     "(0, 3)",
+     "(-2, 0)"
+    ],
+    "why": "The first point is always the y-intercept (0, b). Here b = -2, so it is (0, -2). The slope 3 is used afterwards, to move up 3 and right 1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A negative slope means the line goes down as you move right. Take y = -(1/2)x + 3. Start at (0, 3). Go down 1 and right 2."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. A point at (0, 3) and another at (2, 2), with a line sloping gently downward to the right."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "For y = -(1/2)x + 3, starting at (0, 3), which point is next?",
+    "right": "(2, 2)",
+    "wrong": [
+     "(2, 4)",
+     "(1, 2)",
+     "(3, 2)"
+    ],
+    "why": "The slope -1/2 means down 1 for every 2 steps right. From (0, 3) that is right 2 and down 1, which lands on (2, 2). (2, 4) goes up, which would be a positive slope."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four, the reverse. Given a graph, find b where the line crosses the y-axis. Then find m from rise over run. Then put both into y = mx + b."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Read b at the y-axis\n2. Find m = rise ÷ run\n3. Write y = mx + b"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: a line crosses the y-axis at (0, -1) and also passes through (2, 2). From (0, -1) to (2, 2), the rise is 3 and the run is 2. So m = 3/2 and y = (3/2)x - 1."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. A line crosses the y-axis at -1 and passes through (2, 2)."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Always check with a point. Put x = 2 into y = (3/2)x - 1. You get 3 - 1 = 2. That matches the point (2, 2). Now you try one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check with a point"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A line crosses the y-axis at (0, 4) and passes through (2, 0). What is its equation?",
+    "right": "y = -2x + 4",
+    "wrong": [
+     "y = 2x + 4",
+     "y = 4x - 2",
+     "y = -2x - 4"
+    ],
+    "why": "b = 4 because the line crosses the y-axis at 4. From (0, 4) to (2, 0) the line goes down 4 over a run of 2, so m = -4/2 = -2. That gives y = -2x + 4. Check: x = 2 gives -4 + 4 = 0, which matches. A positive 2 would mean the line goes up."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last check. Equations tell stories. Here the number added is the starting value."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = 2x + 6"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A plant's height in cm after x weeks is y = 2x + 6. What does the 6 mean?",
+    "right": "The height at the start, when x = 0.",
+    "wrong": [
+     "How much it grows each week.",
+     "Its height after 6 weeks.",
+     "The number of weeks."
+    ],
+    "why": "b is the starting value, which is the output when x = 0. Here that is 6 cm. The 2 is the growth each week, because it is the slope."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One warning. This form works for lines that are not vertical. A vertical line has no slope, so it can't be written as y = mx + b."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not for vertical lines"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To finish, here is today in four lines. Next class we solve linear equations in one variable. Well done today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = mx: a line through the origin\ny = mx + b: b is where it crosses the y-axis, the starting value\nGraph it: plot (0, b), then use rise over run\nWrite it: read b, find m, check with a point"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "y = 2x: y-value at each x",
+   "rows": [
+    {
+     "label": "x = 0",
+     "value": 0,
+     "source": "s1"
+    },
+    {
+     "label": "x = 1",
+     "value": 2,
+     "source": "s1"
+    },
+    {
+     "label": "x = 2",
+     "value": 4,
+     "source": "s1"
+    },
+    {
+     "label": "x = 3",
+     "value": 6,
+     "source": "s1"
+    },
+    {
+     "label": "x = 4",
+     "value": 8,
+     "source": "s1"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "line",
+   "title": "y = 2x + 1: y-value at each x",
+   "rows": [
+    {
+     "label": "x = 0",
+     "value": 1,
+     "source": "s2"
+    },
+    {
+     "label": "x = 1",
+     "value": 3,
+     "source": "s2"
+    },
+    {
+     "label": "x = 2",
+     "value": 5,
+     "source": "s2"
+    },
+    {
+     "label": "x = 3",
+     "value": 7,
+     "source": "s2"
+    },
+    {
+     "label": "x = 4",
+     "value": 9,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Slope as rise over run",
+   "links": [
+    "[[Slope]]"
+   ]
+  },
+  {
+   "topic": "Unit rate is the slope of y = mx",
+   "links": [
+    "[[Proportional Relationships and Unit Rate]]"
+   ]
+  },
+  {
+   "topic": "Linear equations",
+   "links": [
+    "[[Solving Linear Equations in One Variable]]"
+   ]
+  },
+  {
+   "topic": "Linear functions with an initial value",
+   "links": [
+    "[[What Is a Function?]]",
+    "[[Modeling with Linear Functions]]"
+   ]
+  },
+  {
+   "topic": "Where two lines cross",
+   "links": [
+    "[[Systems of Equations by Graphing]]"
+   ]
+  },
+  {
+   "topic": "Why slope is the same everywhere (similar triangles)",
+   "links": [
+    "[[Dilations and Similar Figures]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Slope-intercept form, y = mx + b, is the easiest way to graph a line.",
+   "other_view": "It is easiest when y is already by itself. OpenStax suggests a different method when the equation looks like Ax + By = C: find the two intercepts and join them. So the best form depends on how the equation is given.",
+   "cite": [
+    "s2"
+   ]
+  }
+ ]
+}

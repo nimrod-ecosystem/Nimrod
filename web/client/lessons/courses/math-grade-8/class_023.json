@@ -1,0 +1,531 @@
+{
+ "about": {
+  "title": "Rigid Motions: Translations, Reflections and Rotations",
+  "course": "math-grade-8",
+  "class_n": 23,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. There are three moves to learn (slide, flip, turn), and each gets an explanation, one worked example and one check. Then comes one idea about what stays the same. The tracing-paper beat is a good place to pause and try it on paper. Pause or repeat any beat you need."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Common Core State Standards for Mathematics, Grade 8",
+   "publisher": "Washington OSPI (copy of the Common Core standards)",
+   "date": "n.d.",
+   "link": "https://ospi.k12.wa.us/sites/default/files/2022-12/mathstandards_grade8.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "8.1 Rigid Transformations and Congruence (unit overview)",
+   "publisher": "Illustrative Mathematics, Kendall Hunt",
+   "date": "n.d.",
+   "link": "https://im.kendallhunt.com/MS/teachers/3/1/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Illustrative Mathematics Grade 8, Unit 1, Lesson 6 (teacher guide)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://curriculum.illustrativemathematics.org/MS/teachers/3/1/6/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Reflections, Rotations, and Translations (task)",
+   "publisher": "Illustrative Mathematics Tasks",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/tasks/1673",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Rigid Motion Transformations Summary (Grade 8, Topic 1)",
+   "publisher": "Carnegie Learning",
+   "date": "n.d.",
+   "link": "https://www.carnegielearning.com/shared/TX-SC/G8/G8_M01_T01_Topic_Summary.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Rigid Transformations (CK-12 Interactive Middle School Math 8)",
+   "publisher": "CK-12 Foundation",
+   "date": "n.d.",
+   "link": "https://flexbooks.ck12.org/cbook/ck-12-interactive-middle-school-math-8-for-ccss/section/1.1/related/lesson/rigid-transformations-msm6/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Grade 8 Mathematics, Unit 1: Family Materials",
+   "publisher": "Open Up Resources",
+   "date": "n.d.",
+   "link": "https://access.openupresources.org/curricula/our6-8math/en/grade-8/unit-1/family.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Rigid Transformations (Isometries)",
+   "publisher": "MathBitsNotebook (Geometry)",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Geometry/Transformations/TRRigidTransformations.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Secondary I Core Guide: Congruence",
+   "publisher": "Utah State Board of Education",
+   "date": "n.d.",
+   "link": "https://www.schools.utah.gov/curr/mathematics/_mathematics_/_core/_math_core_guides_tab_/CoreGuidesSecondaryICongruence.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Rigid transformation",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Rigid_transformation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Understanding Transformations (Common Core 8.G.1)",
+   "publisher": "Online Math Learning",
+   "date": "n.d.",
+   "link": "https://www.onlinemathlearning.com/transformation-8g1.html",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we move shapes around: slide them, flip them and turn them. Then we find out what never changes."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Moving shapes without changing them"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture a triangle cut out of card. You can move it around the table, but you can't bend it or stretch it. That is a rigid motion."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rigid motion: a move that keeps lengths and angles"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are three of these moves. Slide is translation. Flip is reflection. Turn is rotation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slide = translation | Flip = reflection | Turn = rotation"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's take them one at a time, starting with the slide. In a translation, every point of the shape moves the same distance in the same direction."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small triangle on a grid, with an arrow pointing to the same triangle sitting further right and higher up. Every corner has moved along parallel arrows of equal length."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To describe a slide, you say how far across and how far up or down. Take triangle ABC with A at (1, 1), B at (4, 1) and C at (1, 3). Slide it 5 right and 2 up."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: A(1,1)  B(4,1)  C(1,3) | After: A'(6,3)  B'(9,3)  C'(6,5)"
+   },
+   "cite": [
+    "s3",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the rule. Moving right adds to the first number. Moving up adds to the second. Left and down subtract. Side AB is 3 long, and A'B' is 3 long too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slide a right and b up: (x, y) becomes (x + a, y + b)"
+   },
+   "cite": [
+    "s11",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. This uses the add-and-subtract rule we just saw."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "P(2, 3), slide 4 left and 1 up"
+   },
+   "cite": [
+    "s11",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Point P is at (2, 3). You slide it 4 units left and 1 unit up. Where does P' land?",
+    "right": "(-2, 4)",
+    "wrong": [
+     "(6, 4)",
+     "(-2, 2)",
+     "(6, 2)"
+    ],
+    "why": "Left means subtract from the first number: 2 - 4 = -2. Up means add to the second number: 3 + 1 = 4. So P' is (-2, 4). (6, 4) moved right instead of left. (-2, 2) moved down instead of up. (6, 2) got both directions wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next is the flip. A reflection flips a shape over a line, like a mirror or your face in still water. That line is the line of reflection."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A shape on the left of a vertical dashed line and its mirror image on the right, like a face and its reflection in a lake."
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To describe a reflection you only need to name the line. Here we use the y-axis as the mirror. Reflecting over it turns (x, y) into (-x, y)."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reflect over the y-axis: (x, y) becomes (-x, y)"
+   },
+   "cite": [
+    "s3",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back to our triangle. A(1,1) lands at (-1,1). B(4,1) lands at (-4,1). C(1,3) lands at (-1,3). The left-right side swaps, but each height stays the same."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: A(1,1)  B(4,1)  C(1,3) | Reflected: A'(-1,1)  B'(-4,1)  C'(-1,3)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check yourself with the same y-axis mirror."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reflect (5, 2) over the y-axis"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You reflect the point (5, 2) over the y-axis. Where is the image?",
+    "right": "(-5, 2)",
+    "wrong": [
+     "(5, -2)",
+     "(-5, -2)",
+     "(2, 5)"
+    ],
+    "why": "The y-axis is the mirror, so the point jumps to the other side and only the first number changes sign: (x, y) becomes (-x, y). The height stays 2. (5, -2) flips the wrong coordinate. (-5, -2) flips both. (2, 5) swaps the numbers, which is a different move."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The third move is the turn. A rotation turns a shape around one fixed point, called the center of rotation, by a set angle."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A triangle and a copy of it turned a quarter turn around a dot marking the center. A curved arrow shows the turning."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A turn needs three facts: the center, the angle, and the direction. Direction is clockwise (the way clock hands go) or counterclockwise (the other way)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Center of rotation | 2. Angle of rotation | 3. Direction: clockwise or counterclockwise"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's turn our triangle 90 degrees counterclockwise around A(1,1). A stays put because it is the center. B is 3 to the right of A, so it swings to 3 above A, at (1,4). C is 2 above A, so it swings to 2 left of A, at (-1,1)."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: A(1,1)  B(4,1)  C(1,3) | Turned: A'(1,1)  B'(1,4)  C'(-1,1)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Notice B is still 3 away from the center, and C is still 2 away. A turn never changes a point's distance from its center."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A rotation keeps each point's distance from the center"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which set of facts fully describes a rotation?",
+    "right": "A center point, an angle, and a direction (clockwise or counterclockwise)",
+    "wrong": [
+     "Just a line to flip over",
+     "Just how far across and how far up",
+     "A center point and a line to flip over"
+    ],
+    "why": "A turn needs to know where to pivot (the center), how far to turn (the angle), and which way (the direction). A line is what a reflection needs. Distance across and up is what a translation needs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now you know all three moves. You can also check them by hand. Trace your shape on tracing paper, then slide, flip or turn the tracing and see how it fits."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand holding a sheet of tracing paper over a triangle drawn on grid paper, with the traced copy slid to a new spot."
+   },
+   "cite": [
+    "s7",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big question: what stays the same? Whichever move you use, matching sides keep their lengths and matching angles keep their sizes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Side lengths: same | Angle measures: same | Straight lines stay straight, parallel lines stay parallel"
+   },
+   "cite": [
+    "s4",
+    "s11",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try it on our triangle. AB was 3 and AC was 2. After the slide, the flip and the turn, those sides are still 3 and 2. The right angle at A is still a right angle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same lengths, same angles, same shape and size"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A triangle has a 40-degree angle at corner P. You reflect the triangle over a line. What is the angle at the matching corner P' of the new triangle?",
+    "right": "40 degrees",
+    "wrong": [
+     "140 degrees",
+     "50 degrees",
+     "It depends on where the mirror line is"
+    ],
+    "why": "A reflection is a rigid motion, so every angle keeps its measure. Moving the line of reflection does not change this. 140 and 50 are made up from 40, but nothing in the move changes the angle."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what does change? The position does. And with a flip the shape comes out as a mirror image."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slides and turns keep the orientation. Flips reverse it."
+   },
+   "cite": [
+    "s9",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That gives you a way to tell the moves apart. Same way round means slide. Mirror image means flip. Turned on its side means turn."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Same orientation: translation | Mirror image: reflection | Turned: rotation"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A shape and its image are the same size, but the image is a mirror image of the original. Which move was used?",
+    "right": "A reflection",
+    "wrong": [
+     "A translation",
+     "A rotation",
+     "None of them, because mirror images must be different sizes"
+    ],
+    "why": "A mirror image means the orientation has been reversed, and only a reflection does that. A translation keeps the shape facing the same way. A rotation turns it but does not mirror it. A mirror image is the same size as the original."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last idea. Stretching or shrinking is not a rigid motion, because it changes lengths. That move is called a dilation, and we meet it in class 26."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dilations are NOT rigid motions"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A shape is changed so every side becomes twice as long. Is this a rigid motion?",
+    "right": "No, because rigid motions keep lengths the same",
+    "wrong": [
+     "Yes, because the shape looks the same",
+     "Yes, because a translation can double lengths",
+     "No, because the angles must have changed"
+    ],
+    "why": "Rigid motions keep every length. Doubling the sides changes the lengths, so it is not rigid. It can still look like the same shape, but it is bigger. A translation never changes lengths. Angles in a stretched copy can stay the same, so angles are not the reason."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. A slide needs a distance and direction. A flip needs a line. A turn needs a center, an angle and a direction. Lengths and angles stay the same. Next class we do these on the coordinate plane."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Translation: how far and which way | Reflection: a line | Rotation: center, angle, direction | All keep lengths and angles"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Rigid motion (rigid transformation)",
+   "links": [
+    "[[Congruent Figures]]",
+    "[[Transformations on the Coordinate Plane]]"
+   ]
+  },
+  {
+   "topic": "Translation",
+   "links": [
+    "[[Transformations on the Coordinate Plane]]"
+   ]
+  },
+  {
+   "topic": "Reflection and line of reflection",
+   "links": [
+    "[[Transformations on the Coordinate Plane]]",
+    "[[Congruent Figures]]"
+   ]
+  },
+  {
+   "topic": "Rotation, center and angle",
+   "links": [
+    "[[Transformations on the Coordinate Plane]]",
+    "[[Angles in Triangles and with Parallel Lines]]"
+   ]
+  },
+  {
+   "topic": "Lengths and angles preserved",
+   "links": [
+    "[[Congruent Figures]]",
+    "[[Dilations and Similar Figures]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Reflections, rotations and translations are all called rigid motions.",
+   "other_view": "Middle-school courses like Illustrative Mathematics group all three together as rigid transformations. Some mathematical sources use the words more narrowly. They say a reflection flips handedness (a left hand becomes a right hand), so only moves that keep handedness are 'rigid motions'. They call the wider set 'rigid transformations'. The names differ, but all sources agree that all three keep lengths and angles.",
+   "cite": [
+    "s2",
+    "s10",
+    "s8"
+   ]
+  }
+ ]
+}

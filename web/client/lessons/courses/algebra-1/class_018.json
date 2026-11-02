@@ -1,0 +1,302 @@
+{
+ "about": {
+  "title": "Linear Inequalities in Two Variables",
+  "course": "algebra-1",
+  "class_n": 18,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes fits. The lesson teaches one idea per step: what a solution is, the boundary line, solid or dashed, the test point, shading, then a money limit. Each step has a short check question. Learners who want more time can pause after any question."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. In class 14 you graphed lines like y = x + 1. Today we graph a whole region instead of just a line."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Linear Inequalities in Two Variables"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the idea. A linear inequality in two variables looks like a line equation, but with <, >, ≤ or ≥ in place of the equals sign."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inequality in two variables: x + y ≤ 5"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A solution is a pair (x, y) that makes it true. Try (2, 3) in x + y ≤ 5. 2 + 3 is 5, and 5 ≤ 5 is true. So (2, 3) is a solution."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Test (2, 3): 2 + 3 = 5 | 5 ≤ 5 is TRUE | so (2, 3) is a solution"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which pair is a solution of x + y ≤ 5?",
+    "right": "(1, 3)",
+    "wrong": [
+     "(4, 3)",
+     "(5, 1)",
+     "(6, 0)"
+    ],
+    "why": "1 + 3 = 4, and 4 ≤ 5 is true. The other pairs add up to 7, 6 and 6, which are all more than 5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There are endless solutions, so we can't list them. We draw them. The graph shades every point that works."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate plane with a diagonal line running across it. One side of the line is shaded light blue. The other side is left white."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one is the boundary line. Change the inequality sign to an equals sign and graph that line. For y > x + 1, graph y = x + 1."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y > x + 1 | boundary: y = x + 1 | start at (0, 1), go up 1 and right 1 | points (0, 1), (1, 2), (2, 3)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two is solid or dashed. If the sign is ≤ or ≥, points on the line count, so draw it solid. If the sign is < or >, points on the line don't count, so draw it dashed."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "SOLID line: ≤ and ≥ (line is included) || DASHED line: < and > (line is not included)"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What kind of boundary line does y < 2x + 3 get?",
+    "right": "Dashed, because < does not include the line",
+    "wrong": [
+     "Solid, because it has a line in it",
+     "Solid, because 2x + 3 is positive",
+     "No line at all"
+    ],
+    "why": "Only ≤ and ≥ include the points on the line. A plain < or > leaves the line dashed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three is the test point. The line cuts the plane into two sides. Pick any point that is not on the line and put it into the original inequality."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Test point: a point off the line, plugged into the inequality"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If the test point makes it true, shade that side. If it makes it false, shade the other side. The point (0, 0) is easiest, so use it when you can."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "TRUE: shade the side with the test point || FALSE: shade the other side"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's do the whole thing for y > x + 1. We draw it dashed. Test (0, 0): is 0 > 0 + 1? That's 0 > 1, which is false."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y > x + 1 | dashed line y = x + 1 | test (0, 0): 0 > 1 is FALSE | shade the side WITHOUT (0, 0): above the line"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For y > x + 1, the test point (0, 0) gave a false statement. What do we do?",
+    "right": "Shade the side of the line that does not contain (0, 0)",
+    "wrong": [
+     "Shade the side with (0, 0)",
+     "Change the line to solid",
+     "Shade both sides"
+    ],
+    "why": "False means (0, 0) is not a solution, so its side is not part of the answer. We shade the other side."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Always double-check. Pick a point in the shaded area, like (0, 3). Is 3 > 0 + 1? Yes, 3 > 1, so the shading is right."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Check (0, 3): 3 > 0 + 1 | 3 > 1 is TRUE | shading confirmed"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now one with a solid line: 2x + 3y ≤ 12. The line crosses the axes at (6, 0) and (0, 4). Test (0, 0): 0 ≤ 12 is true, so shade the side with the origin."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x + 3y ≤ 12 | solid line through (6, 0) and (0, 4) | test (0, 0): 0 ≤ 12 is TRUE | shade the side WITH (0, 0)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One warning. Try y ≥ 2x. This line passes through (0, 0), so (0, 0) is on the line and is not a good test point. Pick another point, like (1, 0)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y ≥ 2x | solid line through (0, 0) | (0, 0) is ON the line, so don't use it | test (1, 0): 0 ≥ 2 is FALSE | shade the other side, above the line"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "For y ≥ 2x, which point is a bad choice for a test point?",
+    "right": "(0, 0), because it is on the line",
+    "wrong": [
+     "(1, 0)",
+     "(0, 1)",
+     "(3, 0)"
+    ],
+    "why": "The point (0, 0) sits on the boundary line, so it can't tell you which side to shade. The other points are off the line."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now real life. Sam has $20 for a game store. Skins cost $4 each and boosts cost $2 each. With x skins and y boosts, the money limit is 4x + 2y ≤ 20."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Money limit: 4x + 2y ≤ 20"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The boundary line goes through (5, 0) and (0, 10). It's solid, because spending exactly $20 is allowed. Test (0, 0): 0 ≤ 20 is true, so shade toward the origin."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x + 2y ≤ 20 | solid line through (5, 0) and (0, 10) | test (0, 0): 0 ≤ 20 TRUE | shade toward the origin"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Sam wants 3 skins and 4 boosts. Is that allowed by 4x + 2y ≤ 20?",
+    "right": "Yes. It costs 12 + 8 = 20, which is exactly $20, and the line is solid",
+    "wrong": [
+     "No, because it is on the line",
+     "No, because it costs more than $20",
+     "Yes, because 3 is less than 4"
+    ],
+    "why": "4(3) + 2(4) = 20, and 20 ≤ 20 is true. Points on a solid line count as solutions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Limits like time and money also have a catch. You can't buy a negative number of skins, so only the part where x ≥ 0 and y ≥ 0 makes sense. Skins also come in whole numbers, so the real answers are dots, not every point in the shaded area."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Real-world limits: x ≥ 0 and y ≥ 0 (no negatives) | whole items: only the dots count | time works the same way: x + y ≤ 60 minutes"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put the steps together. Boundary line, solid or dashed, test point, shade. Then check one point in the shading."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Graph the boundary line (change the sign to =) | 2. Solid for ≤ ≥, dashed for < > | 3. Test a point that is not on the line | 4. True: shade that side. False: shade the other side"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A graph has a dashed boundary line, and the region above the line is shaded. Which inequality could it be?",
+    "right": "y > x - 3",
+    "wrong": [
+     "y ≥ x - 3",
+     "y < x - 3",
+     "y ≤ x - 3"
+    ],
+    "why": "The line is dashed, so the sign is > or <, not ≥ or ≤. Shading above means y is bigger than the line, so it is >."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Review flag for editors",
+   "links": []
+  },
+  {
+   "topic": "Graphing lines (boundary line)",
+   "links": [
+    "[[Slope-Intercept Form and Graphing Lines]]",
+    "[[Point-Slope and Standard Form]]"
+   ]
+  },
+  {
+   "topic": "Solving inequalities in one variable (solid/open circle idea)",
+   "links": [
+    "[[Solving and Graphing Inequalities]]"
+   ]
+  },
+  {
+   "topic": "Next: more than one limit at once",
+   "links": [
+    "[[Systems of Linear Inequalities]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Use a test point to decide which side to shade.",
+   "other_view": "Many courses teach a shortcut. Solve for y, then shade above for y > or y ≥, and below for y < or y ≤. This is quick, but it goes wrong if you forget to flip the sign when dividing by a negative number. It also doesn't work for vertical lines like x > 3, which have no y to solve for. The test point works every time, so this lesson uses it, and the shortcut makes a good second check.",
+   "cite": []
+  }
+ ]
+}

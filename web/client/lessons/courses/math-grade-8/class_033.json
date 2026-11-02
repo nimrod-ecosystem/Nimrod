@@ -1,0 +1,560 @@
+{
+ "about": {
+  "title": "Scatter Plots and Patterns",
+  "course": "math-grade-8",
+  "class_n": 33,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are five short topics: plotting, direction, shape, outliers and clusters, and cause. Each topic is one or two small steps with a check question. You can pause after any step and pick up there later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Statistics & Probability (standard 8.SP.A.1)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "undated",
+   "link": "https://www.thecorestandards.org/Math/Content/8/SP/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Statistics and Probability Core Guide Grade 8",
+   "publisher": "Utah State Board of Education",
+   "date": "undated",
+   "link": "https://www.schools.utah.gov/curr/mathematics/_mathematics_/_core/_math_core_guides_tab_/CoreGuidesGrade8StatisticsProbability.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "12.2 Scatter Plots, Introductory Statistics",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/introductory-statistics/pages/12-2-scatter-plots",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "STAT22000 Autumn 2013, Lecture 4: Scatterplots",
+   "publisher": "University of Chicago, Department of Statistics (Yibi Huang)",
+   "date": "2013-10-07",
+   "link": "https://www.stat.uchicago.edu/~yibi/teaching/stat220/13aut/lectures/L04print.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Measuring Causality: The Science of Cause and Effect",
+   "publisher": "arXiv",
+   "date": "undated",
+   "link": "https://arxiv.org/pdf/1910.08750",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Correlational and Experimental Research: Correlation is Not Causation",
+   "publisher": "Lumen Learning, Introduction to Psychology",
+   "date": "undated",
+   "link": "https://content.one.lumenlearning.com/introductiontopsychology/chapter/2-3-2-learn-it-correlation-is-not-causation/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Common Core Standards: CCSS.Math.Content.8.SP.A.1",
+   "publisher": "Shmoop",
+   "date": "undated",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-8-sp-1.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "8.SP.A.1: Scatter Plots and Patterns of Association",
+   "publisher": "svhs.co",
+   "date": "undated",
+   "link": "https://svhs.co/lesson/8-sp-a-1/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Constructing Scatter Plots & Identifying Associations, Outliers, and Clusters",
+   "publisher": "Congruent Math",
+   "date": "undated",
+   "link": "https://congruentmath.com/lesson-plan/constructing-scatter-plots-and-identifying-associations-outliers-and/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Correlation vs. Causation",
+   "publisher": "Varsity Tutors",
+   "date": "undated",
+   "link": "https://www.varsitytutors.com/practice/subjects/statistics/lessons/distinguishing-correlation-and-causation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Correlation vs causation, with real examples",
+   "publisher": "StatsLearn",
+   "date": "undated",
+   "link": "https://www.statslearn.org/guides/correlation-vs-causation",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 33. Today you will learn to draw a scatter plot and describe the pattern in it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Scatter Plots and Patterns"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The goal is to name what you see: which way the dots go, what shape they make, and whether any dots stand out. We will go one step at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Today: 1. Plot the data. 2. Direction. 3. Shape. 4. Outliers and clusters. 5. Cause."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: two-variable data. Each person or thing gets two measurements, like hours studied and quiz score."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Two-variable data = two measurements for each person or thing"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which one is two-variable data?",
+    "right": "Six students, each with hours studied and a quiz score",
+    "wrong": [
+     "Six students' quiz scores only",
+     "The number 6",
+     "Six students' names"
+    ],
+    "why": "Two-variable data needs two measurements for each student. Quiz scores alone are only one measurement per student."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is made-up practice data for six students. Each row is a pair: hours studied first, quiz score second. We write a pair like (3, 70)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(1, 55)  (2, 60)  (3, 70)  (4, 75)  (5, 85)  (6, 90)    [hours studied, quiz score]"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A scatter plot shows pairs like these as dots. Each pair is one dot. The first number tells you how far across. The second tells you how far up."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph. The bottom axis is labeled 'Hours studied' (0 to 6). The side axis is labeled 'Quiz score' (0 to 100). One dot sits at 3 across and 70 up, with a label (3, 70)."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where does the dot for (5, 85) go?",
+    "right": "5 across, then 85 up",
+    "wrong": [
+     "85 across, then 5 up",
+     "5 across, then 5 up",
+     "Halfway between 5 and 85 on the bottom axis"
+    ],
+    "why": "A pair always goes (across, up). The first number is across the bottom axis. The second is up the side axis."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Plot all six pairs and you get six dots. Give both axes a label and an even scale. Without labels, nobody can tell what the dots mean."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 6,
+    "layout": "scattered",
+    "text": "Six students, six dots. The dots climb from the lower left to the upper right."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now direction. These dots climb as you read left to right. When one measurement goes up and the other tends to go up too, that is a positive association."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Positive association: both go up together. Dots slope up to the right."
+   },
+   "cite": [
+    "s9",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Minutes of basketball practice and free throws made both tend to rise together. What kind of association is that?",
+    "right": "Positive",
+    "wrong": [
+     "Negative",
+     "No association",
+     "Nonlinear"
+    ],
+    "why": "Both measurements go up together, so the dots slope upward. That is a positive association."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, the opposite. If one measurement goes up while the other tends to go down, the dots slope down to the right. That is a negative association."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Negative association: one goes up, the other goes down. Dots slope down to the right."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "As the outside temperature rises, a cafe sells fewer cups of hot chocolate. What kind of association is that?",
+    "right": "Negative",
+    "wrong": [
+     "Positive",
+     "No association",
+     "Cannot be plotted"
+    ],
+    "why": "The temperature goes up and the hot chocolate sales go down. Opposite directions mean the dots slope downward, which is a negative association."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The words positive and negative do not mean good and bad. They only say which way the dots slope."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Up together = positive. Opposite directions = negative. Neither one means good or bad."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Practice time goes up and the number of mistakes in a piano piece goes down. Which is right?",
+    "right": "Negative association, even though fewer mistakes is good news",
+    "wrong": [
+     "Positive association, because fewer mistakes is good",
+     "No association, because it is good news",
+     "Positive association, because practice is good"
+    ],
+    "why": "The practice time goes up and the mistakes go down, so the dots slope down. That is negative. The word describes the slope, not whether the result is good."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third direction: no association. The dots look scattered with no clear slope. Knowing one measurement does not help you guess the other."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph with dots spread all over, with no slope up or down. The axes are labeled 'Shoe size' and 'Quiz score'."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Shoe size and quiz score for twenty students make a cloud of dots with no slope. What do we say?",
+    "right": "No association",
+    "wrong": [
+     "Positive association",
+     "Negative association",
+     "Strong positive association"
+    ],
+    "why": "The dots show no clear slope. So shoe size tells you nothing about quiz score."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now shape. If the dots sit close to a straight line, the association is linear. The closer they hug the line, the stronger it is."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph where dots follow close to an upward straight line. A faint line is drawn through them."
+   },
+   "cite": [
+    "s8",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If the dots follow a curve instead, the association is nonlinear. A pattern can slope up and still be curved."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph titled 'Hours of typing practice vs. words per minute'. The dots are (1, 10), (2, 22), (3, 30), (4, 35), (5, 37), (6, 38). They rise quickly, then flatten out."
+   },
+   "cite": [
+    "s8",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The typing dots rise quickly and then level off. Which description fits best?",
+    "right": "Positive and nonlinear",
+    "wrong": [
+     "Positive and linear",
+     "Negative and linear",
+     "No association"
+    ],
+    "why": "The dots go up, so it is positive. But they bend and flatten instead of following a straight line, so it is nonlinear."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, outliers. An outlier is a dot that sits away from the overall pattern of the other dots."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Outlier: a point that sits away from the pattern"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Dots: (1, 55), (2, 60), (3, 70), (4, 20), (5, 85). Which one is the outlier?",
+    "right": "(4, 20)",
+    "wrong": [
+     "(1, 55)",
+     "(3, 70)",
+     "(5, 85)"
+    ],
+    "why": "The other four scores climb steadily. The score of 20 at 4 hours is far below the line they make. That one sits away from the pattern."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When you spot an outlier, ask why. Maybe the score was typed wrong. Maybe that student was sick. Do not erase it just because it spoils the picture."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Outlier? Ask: a typing mistake? something special that day? Look first. Then decide."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You find an outlier. What is the best first step?",
+    "right": "Look for a reason, such as a typing mistake or something unusual",
+    "wrong": [
+     "Erase it right away",
+     "Ignore the rest of the dots",
+     "Change its value to fit the pattern"
+    ],
+    "why": "A dot may be wrong, or it may be real and interesting. You cannot know until you look for a reason. Changing or erasing it without a reason hides information."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A cluster is a bunch of dots grouped close together in one region of the plot."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph of age (bottom) and height (side) at a family picnic. One bunch of dots sits at ages 3 to 10. Another bunch sits at ages 30 to 50. There are no dots between them."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does this picnic plot show?",
+    "right": "Two clusters, probably children and adults",
+    "wrong": [
+     "One outlier",
+     "A negative association",
+     "No dots at all"
+    ],
+    "why": "The dots gather in two bunches, which are clusters. A good reason to look for is that the picnic had two groups of people: children and adults."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last idea: association is not cause. A pattern in a scatter plot tells you two things move together. It does not tell you why."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Association is not the same as cause"
+   },
+   "cite": [
+    "s5",
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a classic one. Fan sales and ice cream sales rise together. A third thing, the temperature, pushes both up."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three boxes joined by arrows. A 'Hot weather' box has one arrow to 'Fan sales' and one arrow to 'Ice cream sales'. There is no arrow between fans and ice cream."
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Fan sales and ice cream sales both rise in summer. What is the best explanation?",
+    "right": "Hot weather pushes both up",
+    "wrong": [
+     "Buying fans makes people buy ice cream",
+     "Eating ice cream makes people buy fans",
+     "It has to be a coincidence"
+    ],
+    "why": "Hot weather affects both. A hidden third thing like this is called a confounding variable. It makes two things look connected when neither causes the other."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So when you see a pattern, there are four possible reasons. A causes B, B causes A, a third thing causes both, or luck."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. A causes B. 2. B causes A. 3. A third thing causes both. 4. Coincidence."
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the checklist for describing any scatter plot. Take it in order and you will not miss anything."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Direction: positive, negative or none. 2. Shape: linear or nonlinear. 3. Outliers. 4. Clusters. 5. No claims about cause."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The dots slope down in a nearly straight line, and one dot is far from the others. Which description is best?",
+    "right": "Negative, linear, with one outlier",
+    "wrong": [
+     "Positive, linear, with one outlier",
+     "Negative, nonlinear, with two clusters",
+     "No association, with one cluster"
+    ],
+    "why": "The dots slope down, so it is negative. They are near a line, so it is linear. One dot far away is an outlier."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Next class we draw a line through the dots, called a line of best fit, and use it to make predictions."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Lines of Best Fit"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Scatter plot",
+   "links": [
+    "[[Lines of Best Fit]]",
+    "[[Slope]]",
+    "[[Lines: y = mx and y = mx + b]]"
+   ]
+  },
+  {
+   "topic": "Positive, negative and no association",
+   "links": [
+    "[[Slope]]",
+    "[[Linear and Nonlinear Functions]]"
+   ]
+  },
+  {
+   "topic": "Outliers and clusters",
+   "links": [
+    "[[Lines of Best Fit]]"
+   ]
+  },
+  {
+   "topic": "Association is not cause",
+   "links": [
+    "[[Two-Way Tables]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Association is not the same as cause.",
+   "other_view": "This does not mean that two things that move together are never causally linked. Sometimes one really does cause the other. A scatter plot is a clue to look into, not proof. Experiments are what can show cause.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "claim": "An outlier is probably a mistake and can be removed.",
+   "other_view": "Not always. An outlier may be a real and important measurement. Not every outlier changes the overall pattern much, so it helps to check why it is there before removing it.",
+   "cite": [
+    "s4",
+    "s8"
+   ]
+  }
+ ]
+}

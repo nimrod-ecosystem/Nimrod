@@ -1,0 +1,423 @@
+{
+ "about": {
+  "title": "Factoring x² + bx + c",
+  "course": "algebra-1",
+  "class_n": 37,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class covers one idea in four small steps: the sum and product pattern, the signs, checking, and what to do when nothing fits. That fits a half-hour without rushing. Pause after any question you want to think about longer."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Ch. 7 Key Concepts, Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/7-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "7.2: Factor Quadratic Trinomials with Leading Coefficient 1 (Elementary Algebra, OpenStax adaptation)",
+   "publisher": "Mathematics LibreTexts, Monroe Community College",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Courses/Monroe_Community_College/MTH_098_Elementary_Algebra/7%3A_Factoring/7.2%3A_Factor_Quadratic_Trinomials_with_Leading_Coefficient_1",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "6.2: Factoring Trinomials of the Form x²+bx+c",
+   "publisher": "Mathematics LibreTexts (Elementary Algebra)",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_(LibreTexts)/06:_Factoring_and_Solving_by_Factoring/6.02:_Factoring_Trinomials_of_the_Form_x_bx_c",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Factoring quadratics as (x+a)(x+b) (example 2) (video)",
+   "publisher": "Khan Academy",
+   "date": "n.d.",
+   "link": "https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:quadratics-multiplying-factoring/x2f8bb11595b61c86:factor-quadratics-intro/v/factoring-polynomials-1",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Solving quadratics by factoring (video)",
+   "publisher": "Khan Academy",
+   "date": "n.d.",
+   "link": "https://www.khanacademy.org/v/example-1-solving-a-quadratic-equation-by-factoring",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Factor Trinomials (Intermediate Algebra, OpenStax adaptation)",
+   "publisher": "BCcampus Pressbooks",
+   "date": "n.d.",
+   "link": "https://pressbooks.bccampus.ca/algebraintermediate/chapter/factor-trinomials/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "7.2 Factor Quadratic Trinomials with Leading Coefficient 1, Elementary Algebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra/pages/7-2-factor-quadratic-trinomials-with-leading-coefficient-1",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today you'll learn to factor trinomials like x² + 7x + 12. We'll go one small step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Factoring x² + bx + c"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, what is factoring? It's multiplying run backwards. You start with the answer and find the pieces that were multiplied."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Multiply: (x + 2)(x + 3) → x² + 5x + 6\nFactor: x² + 5x + 6 → (x + 2)(x + 3)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's see where each part comes from. The x² must come from x times x, so each bracket starts with an x."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "(x   )(x   )"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "To get x² in the answer, what must each bracket start with?",
+    "right": "x",
+    "wrong": [
+     "2",
+     "x²",
+     "1"
+    ],
+    "why": "x times x makes x². So both brackets start with x, and we fill in the blanks next."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the last term. It comes from multiplying the two last numbers in the brackets. And the middle term comes from adding the outer and inner parts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(x + 2)(x + 5)\nLast numbers: 2 × 5 = 10\nMiddle: 5x + 2x = 7x\nAnswer: x² + 7x + 10"
+   },
+   "cite": [
+    "s7",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So here's the pattern. Call the two numbers m and n. They multiply to c, the last term. They add to b, the middle number."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "m × n = c     m + n = b"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In x² + 7x + 10, what are b and c?",
+    "right": "b is 7 and c is 10",
+    "wrong": [
+     "b is 10 and c is 7",
+     "b is 17 and c is 1",
+     "b is 1 and c is 7"
+    ],
+    "why": "b is the number with the x, which is 7. c is the number on its own, which is 10. We need two numbers that add to 7 and multiply to 10."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try one. Factor x² + 7x + 12. List the pairs that multiply to 12, then check each sum."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Pairs that multiply to 12, and their sums",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The pair 3 and 4 multiplies to 12 and adds to 7. So the factors are (x + 3)(x + 4)."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² + 7x + 12 = (x + 3)(x + 4)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Always check by multiplying. (x + 3)(x + 4) gives x² + 4x + 3x + 12, which is x² + 7x + 12. It matches, so we're right."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(x + 3)(x + 4)\n= x² + 4x + 3x + 12\n= x² + 7x + 12 ✓"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Factor x² + 8x + 12.",
+    "right": "(x + 2)(x + 6)",
+    "wrong": [
+     "(x + 3)(x + 4)",
+     "(x + 1)(x + 12)",
+     "(x + 2)(x + 4)"
+    ],
+    "why": "2 × 6 = 12 and 2 + 6 = 8. The pair 3 and 4 adds to 7. The pair 1 and 12 adds to 13. The pair 2 and 4 multiplies to 8, not 12."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So far every number was positive. What if b is negative but c is positive? Two numbers multiply to a positive only if they have the same sign. So both must be negative."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x² − 8x + 15\nPairs of 15 that add to −8: −3 and −5\n(x − 3)(x − 5)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check it: (x − 3)(x − 5) is x² − 5x − 3x + 15. That's x² − 8x + 15. It works."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(x − 3)(x − 5)\n= x² − 5x − 3x + 15\n= x² − 8x + 15 ✓"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Factor x² − 9x + 20.",
+    "right": "(x − 4)(x − 5)",
+    "wrong": [
+     "(x + 4)(x + 5)",
+     "(x − 2)(x − 10)",
+     "(x − 4)(x + 5)"
+    ],
+    "why": "The product is positive and the sum is negative, so both numbers are negative. −4 × −5 = 20 and −4 + −5 = −9."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now c negative. A negative product means the two numbers have different signs, one positive and one negative."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "c is negative → different signs"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take x² + 5x − 6. Pairs of 6 are 1 and 6. We need the sum to be +5, so the bigger number, 6, gets the plus sign. That gives −1 and +6."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² + 5x − 6 = (x − 1)(x + 6)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Factor x² − 5x − 6. Watch the sign of b.",
+    "right": "(x + 1)(x − 6)",
+    "wrong": [
+     "(x − 1)(x + 6)",
+     "(x + 2)(x − 3)",
+     "(x − 1)(x − 6)"
+    ],
+    "why": "Now b is negative, so the bigger number, 6, gets the minus sign. 1 × −6 = −6 and 1 + (−6) = −5. The pair 2 and −3 multiplies to −6 but adds to −1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's a summary of the signs. Look at c first, then at b."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "c positive: both numbers have the same sign, and it matches the sign of b.\nc negative: the numbers have different signs, and the bigger one takes the sign of b."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the steps in order. They are the same every time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Write (x   )(x   )\n2. Find m and n: multiply to c, add to b\n3. Write (x + m)(x + n)\n4. Check by multiplying"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes no pair works. Try x² + 3x + 5. The pairs of 5 are 1 and 5, or −1 and −5. Those add to 6 or −6, never 3."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² + 3x + 5: no pair fits"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does it tell you if no pair of whole numbers fits?",
+    "right": "The trinomial can't be factored this way. Textbooks call it prime.",
+    "wrong": [
+     "You made an arithmetic mistake, and one will always work.",
+     "You should change b so it fits.",
+     "The answer is 0."
+    ],
+    "why": "Not every trinomial factors with whole numbers. If you've listed every pair and none adds to b, it's fine to say it doesn't factor this way. Textbooks call that prime."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why bother? Say you're building a rectangular plot in a game. Its area is x² + 5x + 6. Factoring finds the side lengths."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rectangle on a game map. One side is labelled (x + 2). The other side is labelled with a question mark. The area inside reads x² + 5x + 6."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "One side is (x + 2) and the area is x² + 5x + 6. What is the other side?",
+    "right": "x + 3",
+    "wrong": [
+     "x + 2",
+     "x + 5",
+     "x + 6"
+    ],
+    "why": "2 × 3 = 6 and 2 + 3 = 5, so x² + 5x + 6 = (x + 2)(x + 3). The other side is x + 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. To recap: find two numbers that multiply to c and add to b. Use the signs to guide you, and always check by multiplying."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Multiply to c. Add to b. Check."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Pairs that multiply to 12: sum of each pair",
+   "rows": [
+    {
+     "label": "1 and 12",
+     "value": 13,
+     "source": "s2"
+    },
+    {
+     "label": "2 and 6",
+     "value": 8,
+     "source": "s2"
+    },
+    {
+     "label": "3 and 4",
+     "value": 7,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Factoring x² + bx + c",
+   "links": [
+    "[[Multiplying Polynomials]]",
+    "[[Special Products]]",
+    "[[Factoring Out the Greatest Common Factor and Grouping]]",
+    "[[Factoring ax² + bx + c]]",
+    "[[Solving Quadratics by Factoring]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "When the leading coefficient is 1, the quick sum and product pattern is the best method.",
+   "other_view": "OpenStax suggests simply undoing the multiplication when the leading coefficient is 1. It uses trial and error or the 'ac' method when the leading coefficient is larger. Some teachers instead teach the two-step grouping method for every trinomial. They treat the sum and product shortcut as a special case of it when the leading coefficient is 1. Both give the same answer, so use whichever you find clearer.",
+   "cite": [
+    "s1",
+    "s5"
+   ]
+  }
+ ]
+}

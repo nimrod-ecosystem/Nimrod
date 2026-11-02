@@ -1,0 +1,395 @@
+{
+ "about": {
+  "title": "Systems of Equations by Graphing",
+  "course": "math-grade-8",
+  "class_n": 19,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes fits. There are three outcomes to learn (one, none, infinitely many) plus checking. Each gets its own example and question, so the pace stays slow and steady."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.1 Solve Systems of Equations by Graphing - Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/5-1-solve-systems-of-equations-by-graphing",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "8.EE.C.8 - Illustrative Math Tasks",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/EE/C/8",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8: Simultaneous Equations (8.EE.C.8 item)",
+   "publisher": "Achieve the Core (item adapted from Learning Heroes)",
+   "date": "n.d.",
+   "link": "https://achievethecore.org/content/upload/Gr%208.P.4%20Simultaneous%20Equations_Final.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "2.1.2 Writing and Graphing Equations - Algebra 1",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/2-1-2-writing-and-graphing-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "11.1: Systems of Linear Equations - Two Variables (Algebra and Trigonometry, OpenStax)",
+   "publisher": "Mathematics LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Algebra_and_Trigonometry_1e_(OpenStax)/11:_Systems_of_Equations_and_Inequalities/11.01:_Systems_of_Linear_Equations_-_Two_Variables",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Chapter 5 Key Concepts - Elementary Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "2026-01-27",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/5-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "4.1 Solve Systems of Linear Equations with Two Variables - Intermediate Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/4-1-solve-systems-of-linear-equations-with-two-variables",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 19. Today we use graphs to answer one question: where do two lines meet?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Systems of Equations by Graphing"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a new word. A system is two equations about the same x and y, both true at the same time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "system = two equations, same x and y, true together"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Start with just one equation, y = x + 1. A point is a solution if its x and y make the equation true. Try (2, 3): 3 = 2 + 1. True."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = x + 1|(0, 1) works|(1, 2) works|(2, 3) works|(3, 4) works"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is the point (3, 4) a solution of y = x + 1?",
+    "right": "Yes, because 4 = 3 + 1 is true.",
+    "wrong": [
+     "No, because 3 and 4 are different numbers.",
+     "No, because y has to equal 1.",
+     "Only (0, 1) is a solution."
+    ],
+    "why": "A point is a solution when its x and y make the equation true. Put x = 3 in: 3 + 1 = 4, and y is 4. So it works. Each point on the line is a solution, so there are many."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now add a second equation, y = −x + 5. It is a line too, with its own list of points."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: y = x + 1 → (0,1) (1,2) (2,3) (3,4). Right: y = −x + 5 → (0,5) (1,4) (2,3) (3,2)."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A solution of the system must work in both equations. Look for a point in both lists. It's (2, 3)."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solution of a system = a point on both lines"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A point that is on both lines is where the lines cross. So the crossing point is the solution of the system."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. A rising line and a falling line cross at one point, (2, 3), marked with a dot."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On a graph, two lines cross at the point (4, 1). What is the solution of the system?",
+    "right": "x = 4 and y = 1, written (4, 1).",
+    "wrong": [
+     "x = 1 and y = 4, written (1, 4).",
+     "Only x = 4.",
+     "There is no solution."
+    ],
+    "why": "The crossing point is on both lines, so its x and y work in both equations. The point is written (x, y), so (4, 1) means x = 4 and y = 1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the method. Graph the first line. Graph the second line on the same grid. Then find where they cross."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Graph the first equation|2. Graph the second equation on the same grid|3. Find where the lines cross|4. Read the point"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A solution you read off a graph can be a little off. So we always check. Put the point into both equations."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Point (2, 3)|y = x + 1 → 3 = 2 + 1 ✓|y = −x + 5 → 3 = −2 + 5 ✓|Works in both, so it is the solution"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The system is y = 2x + 1 and y = −x + 5. The point (1, 3) works in the first equation. Is (1, 3) a solution of the system?",
+    "right": "No. In the second equation, −1 + 5 = 4, not 3.",
+    "wrong": [
+     "Yes, because it works in one equation.",
+     "Yes, because 3 is a small number.",
+     "No, because (1, 3) does not work in either equation."
+    ],
+    "why": "First equation: 2(1) + 1 = 3, so it works. Second equation: −1 + 5 = 4, and y is 3, so it fails. A solution of a system has to work in both equations."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more try at checking. Choose the point that works in both y = x + 2 and y = −x + 4."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = x + 2|y = −x + 4|Choices: (1, 3), (2, 4), (0, 2), (4, 0)"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which point is the solution of y = x + 2 and y = −x + 4?",
+    "right": "(1, 3), because 3 = 1 + 2 and 3 = −1 + 4.",
+    "wrong": [
+     "(2, 4), because it works in the first equation only.",
+     "(0, 2), because it works in the first equation only.",
+     "(4, 0), because 0 = −4 + 4 works, but 0 = 4 + 2 does not."
+    ],
+    "why": "Test each point in both equations. (2, 4): 4 = 2 + 2 works, but 4 = −2 + 4 gives 2, so it fails. (0, 2): works in the first, but −0 + 4 = 4, not 2. (4, 0): fails the first. Only (1, 3) works in both."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So far the lines crossed once. Two straight lines can do three different things. Let's see all three."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cross once → one solution|Never meet → no solution|Are the same line → infinitely many solutions"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Case two. Take y = 2x + 1 and y = 2x − 3. Both have slope 2, so they climb at the same rate. Their y-intercepts differ, so they never meet."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two straight lines slanting up at the same angle, side by side, never touching."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The system is y = 3x + 2 and y = 3x − 4. How many solutions does it have?",
+    "right": "None. The slopes are the same and the y-intercepts differ, so the lines are parallel.",
+    "wrong": [
+     "One, at (0, 2).",
+     "One, at (0, −4).",
+     "Infinitely many."
+    ],
+    "why": "Both lines have slope 3, so they are parallel. They start at different heights, 2 and −4, so they never cross. Parallel lines mean no solution. The algebra agrees: 3x + 2 can never equal 3x − 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Case three. Take y = 2x + 1 and 2y = 4x + 2. Divide the second one by 2 and you get y = 2x + 1. They are the very same line."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = 2x + 1|2y = 4x + 2 → divide by 2 → y = 2x + 1|Same line, so every point is on both"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The system is y = x + 3 and 2y = 2x + 6. How many solutions does it have?",
+    "right": "Infinitely many. Dividing the second by 2 gives y = x + 3, the same line.",
+    "wrong": [
+     "None, because the equations look different.",
+     "Exactly one, where the lines cross.",
+     "Exactly two."
+    ],
+    "why": "2y = 2x + 6 becomes y = x + 3 when divided by 2. It is the same line, so every point on it works in both equations. Two different lines can't cross exactly twice, so 'two' is never the answer for straight lines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A shortcut that ties it together: compare slopes. Different slopes, they cross once. Same slope, different intercepts, none. Same slope and same intercept, infinitely many."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Different slopes → 1 solution. Same slope, different y-intercept → 0 solutions. Same slope, same y-intercept → infinitely many."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many solutions do y = 4x and y = −4x have?",
+    "right": "One, at (0, 0), because the slopes 4 and −4 are different.",
+    "wrong": [
+     "None, because the lines are parallel.",
+     "Infinitely many, because they look alike.",
+     "Two, because there are two equations."
+    ],
+    "why": "The slopes differ, so the lines cross exactly once. Both pass through (0, 0): 0 = 4(0) and 0 = −4(0). So (0, 0) is the one solution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One honest limit. A graph gives an estimate, and it's hard to read when the crossing falls between grid lines. In the next classes you'll learn exact methods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Graphing = a picture, and often an estimate"
+   },
+   "cite": [
+    "s5",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Recap. A system is two equations at once. The solution is where the lines cross. Parallel lines give no solution, and the same line gives infinitely many. Always check in both."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Solution = crossing point|Parallel = none|Same line = infinitely many|Check in both equations"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You read a crossing point off your graph. What is the best last step?",
+    "right": "Put the point into both equations to check that it works.",
+    "wrong": [
+     "Put it into just one equation.",
+     "Stop, because a graph is always exact.",
+     "Swap x and y to be safe."
+    ],
+    "why": "A graph can be a little off, and a true solution works in both equations. Checking in both catches reading mistakes. Putting it in only one equation misses mistakes in the other."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Systems of equations by graphing",
+   "links": [
+    "[[Slope]]",
+    "[[Lines: y = mx and y = mx + b]]",
+    "[[Variables on Both Sides: One, None or Infinitely Many Solutions]]",
+    "[[Systems by Substitution]]",
+    "[[Systems by Elimination]]"
+   ]
+  },
+  {
+   "topic": "Checking a solution in both equations",
+   "links": [
+    "[[Systems by Substitution]]",
+    "[[Systems in the Real World]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Graphing is a good way to solve a system.",
+   "other_view": "Graphing gives a picture, and the course standard does ask students to estimate solutions by graphing. But it is not the most precise method. If the answer has fractions or decimals, reading it off a grid is unreliable, so algebra (substitution or elimination) is better. Textbooks suggest graphing when you need a picture of the situation.",
+   "cite": [
+    "s5",
+    "s7",
+    "s2"
+   ]
+  }
+ ]
+}

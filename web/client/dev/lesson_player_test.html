@@ -293,9 +293,10 @@ try {
   section('*** THE COURSES (chat\'s note CK 3): chosen like a lesson, a class at a time, the next one offered at the end ***');
   {
     const { COURSES } = await import('../lessons/courses_index.js');
-    // (61 of chat's 63: two letters classes spell a person's name as their content, and wait for chat's neutral re-make.)
-    check('seven courses, 61 classes, bundled with the site; the other side off by default for a beginner\'s course only',
-      COURSES.length === 7 && COURSES.reduce((n, c) => n + c.classes.length, 0) === 61
+    // (128 of chat's 130: two letters classes spell a person's name as their content, and wait for chat's neutral
+    // re-make. The 67 new Grade 8 maths and Algebra 1 classes joined 2026-11-02.)
+    check('seven courses, 128 classes, bundled with the site; the other side off by default for a beginner\'s course only',
+      COURSES.length === 7 && COURSES.reduce((n, c) => n + c.classes.length, 0) === 128
         && COURSES.find((c) => c.id === 'numbers-0-9').otherSide === false && COURSES.find((c) => c.id === 'history-of-everything').otherSide === true);
     const st = fakeRow({ form: 'slides', lessonId: 'course:numbers-0-9' });
     const c = mountLesson(st);

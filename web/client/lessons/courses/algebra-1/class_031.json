@@ -1,0 +1,827 @@
+{
+ "about": {
+  "title": "Exponential Models and Compound Interest",
+  "course": "algebra-1",
+  "class_n": 31,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are four small ideas: percent rate to factor, table to equation, the compound interest formula, and whether a prediction is reasonable. Each one gets a short check. There is a good place to pause after the car example (beat 12). If you need to split the class, start the second half at beat 13."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "6.4 Compound Interest - Contemporary Mathematics",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/contemporary-mathematics/pages/6-4-compound-interest",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "6.7 Exponential and Logarithmic Models - College Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/6-7-exponential-and-logarithmic-models",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "How does compound interest work?",
+   "publisher": "Consumer Financial Protection Bureau",
+   "date": "n.d.",
+   "link": "https://www.consumerfinance.gov/ask-cfpb/how-does-compound-interest-work-en-1683/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "What is compound interest?",
+   "publisher": "Investor.gov, U.S. Securities and Exchange Commission",
+   "date": "n.d.",
+   "link": "https://www.investor.gov/additional-resources/information/youth/teachers-classroom-resources/what-compound-interest",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "HSF-LE.A.2 - Construct linear and exponential functions (standard and tasks)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/HSF/LE/A/2",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Using Exponential Growth and Decay Models",
+   "publisher": "CK-12 Foundation",
+   "date": "n.d.",
+   "link": "https://flexbooks.ck12.org/cbook/ck-12-algebra-ii-with-trigonometry-concepts/section/8.3/primary/lesson/using-exponential-growth-and-decay-models-alg-ii/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Compound Interest and its Exponential Formula",
+   "publisher": "Purplemath",
+   "date": "n.d.",
+   "link": "https://www.purplemath.com/modules/expofcns3.htm",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "What Is Car Depreciation & How Does It Work?",
+   "publisher": "Policygenius (citing Kelley Blue Book)",
+   "date": "n.d.",
+   "link": "https://www.policygenius.com/auto-insurance/how-does-car-depreciation-work/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Car Depreciation Rate",
+   "publisher": "GoCarLife",
+   "date": "n.d.",
+   "link": "https://gocarlife.com/car-depreciation-rate/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "45.3 Environmental Limits to Population Growth - Biology 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/biology-2e/pages/45-3-environmental-limits-to-population-growth",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "How Compound Interest Works & How to Estimate It",
+   "publisher": "Federal Reserve Bank of St. Louis",
+   "date": "2018-09",
+   "link": "https://www.stlouisfed.org/open-vault/2018/september/how-compound-interest-works",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s12",
+   "title": "compound interest",
+   "publisher": "Legal Information Institute, Cornell Law School (Wex)",
+   "date": "n.d.",
+   "link": "https://www.law.cornell.edu/wex/compound_interest",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 31. Today we write an equation for things that grow or shrink by a percent, like savings, loans and viral posts. Then we use it to make a prediction."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Exponential Models and Compound Interest"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our plan. One: turn a percent into a factor. Two: write an equation from a table. Three: the compound interest formula. Four: ask whether a prediction makes sense."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Percent rate becomes a factor\n2. Table becomes an equation\n3. Compound interest formula\n4. Is the prediction reasonable?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea one. When something grows by a percent, you keep all of it and add that percent. Growing 5% means you multiply by 1.05. That number is called the growth factor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "growth factor = 1 + r (r is the rate as a decimal)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try it. Put $100 in an account that earns 5% a year. After year 1 you have $105. After year 2 you have $110.25."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Start: $100\nYear 1: $105\nYear 2: $110.25"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "To add 5% to an amount, what do you multiply by?",
+    "right": "1.05",
+    "wrong": [
+     "0.05",
+     "5",
+     "1.5"
+    ],
+    "why": "You keep 100% and add 5%. That is 105%, which is 1.05 as a decimal. Multiplying by 0.05 would give only the interest, not the new total."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why $110.25 and not $110? In year 2 the 5% is taken from $105, not from $100. That extra 25 cents is interest earned on interest."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "quarter",
+    "count": 1,
+    "layout": "group",
+    "text": "The extra 25 cents is interest on interest."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In year 2, the 5% is taken from which amount?",
+    "right": "$105, the amount at the end of year 1",
+    "wrong": [
+     "$100, the starting amount",
+     "$110.25",
+     "$5"
+    ],
+    "why": "Each year the interest is figured on everything you have so far, including the interest already added. That is what makes it compound."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now keep going with the same $100 and 5%. After 10 years it is about $162.89. After 25 years, about $338.64. The bars grow faster and faster."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "$100 at 5% a year, never adding any more",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Does the account go up by the same number of dollars every year?",
+    "right": "No. Each year it goes up by more dollars than the year before.",
+    "wrong": [
+     "Yes, always by $5",
+     "Yes, always by $5.25",
+     "No. It goes up by fewer dollars each year."
+    ],
+    "why": "Year 1 adds $5. Year 2 adds $5.25. Each year's 5% is taken from a bigger amount, so the dollar gain keeps growing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea two. Write an equation from a table. Divide each value by the one before it. If you get the same number every time, that number is the factor."
+   },
+   "show": {
+    "kind": "list",
+    "text": "t = 0: 100\nt = 1: 105\nt = 2: 110.25\n105 ÷ 100 = 1.05\n110.25 ÷ 105 = 1.05"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now build it. Start value, times the factor, to the power t. For our table that is A = 100 times 1.05 to the t. The 100 is where you start. The 1.05 is a 5% rise each step."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A = 100 · (1.05)^t"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A table shows 50, 60, 72 for t = 0, 1, 2. Which equation fits?",
+    "right": "A = 50(1.2)^t",
+    "wrong": [
+     "A = 50 + 10t",
+     "A = 50(1.2t)",
+     "A = 60(1.2)^t"
+    ],
+    "why": "60 ÷ 50 = 1.2 and 72 ÷ 60 = 1.2, so the factor is 1.2. The start value is 50, and t is the exponent. 50 + 10t adds the same amount each time, which is not exponential. 1.2t is not the same as 1.2 to the power t."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's use the equation to predict. Put t = 4 into A = 100(1.05)^t. First find 1.05 to the 4th power, about 1.2155. Then multiply by 100."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "$121.55"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Using A = 100(1.05)^t, about how much is there after 4 years?",
+    "right": "$121.55",
+    "wrong": [
+     "$120.00",
+     "$420.00",
+     "$1.22"
+    ],
+    "why": "$120 comes from adding $5 four times, but the interest compounds. $420 multiplies 105 by 4. $1.22 forgets to multiply by the 100 you started with."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Decay works the same way, except you take the percent away. Losing 20% means you keep 80%, so you multiply by 0.80. The decay factor is 1 minus r."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "decay factor = 1 − r"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A phone loses 15% of its value each year. What is the yearly factor?",
+    "right": "0.85",
+    "wrong": [
+     "0.15",
+     "1.15",
+     "0.015"
+    ],
+    "why": "You keep 100% − 15% = 85%, which is 0.85. A factor of 1.15 would be growth."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a made-up example. A $20,000 car loses 20% a year. The equation is V = 20,000 times 0.80 to the t. After 1 year it is $16,000. After 5 years, about $6,553.60."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "A made-up car losing 20% of its value each year",
+    "chart": "c2"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In V = 20,000(0.80)^t, what does the 0.80 mean?",
+    "right": "The car keeps 80% of its value each year.",
+    "wrong": [
+     "The car loses 80% of its value each year.",
+     "The car is worth $0.80 each year.",
+     "The car gains 20% each year."
+    ],
+    "why": "The factor 0.80 is what is kept. The loss is 1 − 0.80 = 0.20, which is 20%."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Good place for a short break. When you come back, we do idea three: banks that add interest more than once a year."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Pause here if you need to"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea three. Banks can add interest several times a year. Then we use the compound interest formula: A = P times (1 + r/n) to the power n times t."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A = P(1 + r/n)^(nt)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is what each letter means. Take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A = amount at the end\nP = principal, the amount you start with\nr = yearly rate as a decimal\nn = times interest is added per year\nt = number of years"
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful with n. It counts how many times per year, not the total over all the years. Yearly is 1. Every 3 months is 4. Monthly is 12. Daily is 365."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "yearly: n = 1 | every 3 months: n = 4 | monthly: n = 12 | daily: n = 365"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Interest is added every month. What is n?",
+    "right": "12",
+    "wrong": [
+     "1",
+     "4",
+     "365"
+    ],
+    "why": "There are 12 months in a year, and n counts the times per year. 1 is yearly, 4 is every 3 months, and 365 is daily."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First example. $1,000 at 5%, added once a year, for 2 years. P is 1000. r is 0.05, because 5% means 5 out of 100. n is 1. t is 2. So A = 1000(1.05)^2 = $1,102.50."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1000(1 + 0.05/1)^(1·2) = $1,102.50"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is 5% written as a decimal for r?",
+    "right": "0.05",
+    "wrong": [
+     "5",
+     "1.05",
+     "0.5"
+    ],
+    "why": "A percent means 'out of 100', so you divide by 100. 5 ÷ 100 = 0.05. The 1.05 is the growth factor, which is 1 + r."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second example, with monthly interest. $1,000 at 6% for 3 years. P is 1000, r is 0.06, n is 12, t is 3. Then r/n is 0.06 ÷ 12 = 0.005, and n times t is 36."
+   },
+   "show": {
+    "kind": "list",
+    "text": "P = 1000\nr = 0.06\nn = 12\nt = 3\nr/n = 0.005\nnt = 36"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In this example, what is n times t?",
+    "right": "36",
+    "wrong": [
+     "15",
+     "3",
+     "0.005"
+    ],
+    "why": "n is 12 payments of interest per year and t is 3 years, so 12 × 3 = 36 times in all. 0.005 is r/n, not nt."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put it together. A = 1000(1.005)^36, which is about $1,196.68. If the interest were added only once a year, it would be 1000(1.06)^3, about $1,191.02. Adding it more often gives a little more."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Monthly (n = 12): about $1,196.68 | Yearly (n = 1): about $1,191.02"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Same money, same rate, same time. Which gives more: interest added monthly or yearly?",
+    "right": "Monthly gives a little more.",
+    "wrong": [
+     "Yearly gives more.",
+     "They are always exactly equal.",
+     "Monthly gives a lot less."
+    ],
+    "why": "With monthly compounding, interest starts earning its own interest sooner. The difference is small here, but it is real."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Compound interest also works on debt. Say you borrow $1,000 at 10% per month and pay nothing for 10 months. You would owe about $2,593.74. Simple interest would only be $2,000."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Compound: $1,000(1.10)^10 ≈ $2,593.74 | Simple: $2,000"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is the compound amount bigger than the simple amount?",
+    "right": "Interest is charged on the interest that was already added.",
+    "wrong": [
+     "The rate is higher for compound interest.",
+     "Compound interest starts with more money.",
+     "Simple interest has no rate."
+    ],
+    "why": "The rate is the same in both. Compound interest keeps adding interest to a growing balance. Simple interest is figured only on the starting amount. This is the no-payments case, and it is kept simple on purpose."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea four, and it's a big one: spreading content. Say a post starts at 100 views and grows 30% a day. The equation is V = 100 times 1.3 to the t. Look at the chart."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "A made-up post growing 30% a day, in views",
+    "chart": "c3"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A model is a guess that works best for a short time. Exponential growth cannot continue forever. If you push the model far out, it tends to fall apart."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Models are best in the short term"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try it on our post. At t = 60 days the equation says about 690 million views. One post, from a start of 100 views."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "≈ 690,000,000 views at day 60?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is the best way to treat that day-60 prediction?",
+    "right": "Don't trust it that far out. Real growth slows as the audience runs out.",
+    "wrong": [
+     "Trust it, because the equation is exact.",
+     "Conclude the post will lose views.",
+     "Switch to simple interest."
+    ],
+    "why": "A model that fits the early days can fail far out, because something limits the growth. Here that is the number of people who can see the post. The equation is fine for a short time."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real growth often looks like an S. It starts out exponential, then levels off as it hits a limit. Biologists call that limit the carrying capacity."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An S-shaped curve: it rises slowly, then steeply, then flattens at the top"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back to money. $5,000 at 8% for 36 years comes to about $79,840. There is a quick check called the Rule of 72. Divide 72 by the rate to estimate how many years it takes to double."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "$79,840"
+   },
+   "cite": [
+    "s11",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check it. 72 ÷ 8 = 9 years per doubling. In 36 years that is 4 doublings: 5,000 to 10,000 to 20,000 to 40,000 to 80,000. That is close to $79,840. The rule is only an estimate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "72 ÷ 8 = 9 years to double\n36 years = 4 doublings\n$5,000 → $10,000 → $20,000 → $40,000 → $80,000"
+   },
+   "cite": [
+    "s4",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Using the Rule of 72, about how long does money take to double at 6%?",
+    "right": "About 12 years",
+    "wrong": [
+     "About 6 years",
+     "About 66 years",
+     "About 18 years"
+    ],
+    "why": "72 ÷ 6 = 12. The rule divides 72 by the rate as a whole number of percent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more caution about savings. A higher rate of return usually comes with more risk. Also, prices rise over time, so money far in the future buys less than the same money today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Higher rate: usually more risk\nInflation: future money buys less"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. A percent becomes a factor: 1 + r to grow, 1 − r to shrink. A table gives the factor by division. The compound formula adds n. And check any prediction before you trust it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Growth factor 1 + r, decay factor 1 − r\nDivide neighbors in a table to find the factor\nA = P(1 + r/n)^(nt)\nAsk: is the prediction reasonable?"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last check. You invest $2,000 at 4%, added every 3 months, for 5 years. Which setup is correct?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "P = 2000, r = 0.04, n = 4, t = 5"
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which equation matches $2,000 at 4%, added every 3 months, for 5 years?",
+    "right": "A = 2000(1 + 0.04/4)^(4·5)",
+    "wrong": [
+     "A = 2000(1 + 0.04)^(4·5)",
+     "A = 2000(1 + 0.04/5)^(4·5)",
+     "A = 2000(1 + 4/4)^(4·5)"
+    ],
+    "why": "Every 3 months means n = 4, so the rate per period is r/n = 0.04/4. The exponent is n × t = 4 × 5. The other choices divide by the wrong number or leave r as 4 instead of 0.04."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nice work. Next class we compare geometric sequences with linear patterns, so you can tell which kind of growth you are looking at."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Geometric Sequences and Linear vs Exponential"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "$100 at 5% a year (dollars)",
+   "rows": [
+    {
+     "label": "Start",
+     "value": 100,
+     "source": "s4"
+    },
+    {
+     "label": "Year 1",
+     "value": 105,
+     "source": "s4"
+    },
+    {
+     "label": "Year 2",
+     "value": 110.25,
+     "source": "s4"
+    },
+    {
+     "label": "Year 10",
+     "value": 162.89,
+     "source": "s4"
+    },
+    {
+     "label": "Year 25",
+     "value": 338.64,
+     "source": "s4"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Made-up car: $20,000 losing 20% a year (dollars)",
+   "rows": [
+    {
+     "label": "Start",
+     "value": 20000,
+     "source": "s8"
+    },
+    {
+     "label": "Year 1",
+     "value": 16000,
+     "source": "s8"
+    },
+    {
+     "label": "Year 2",
+     "value": 12800,
+     "source": "s8"
+    },
+    {
+     "label": "Year 3",
+     "value": 10240,
+     "source": "s8"
+    },
+    {
+     "label": "Year 4",
+     "value": 8192,
+     "source": "s8"
+    },
+    {
+     "label": "Year 5",
+     "value": 6553.6,
+     "source": "s8"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Made-up post: 100 views growing 30% a day",
+   "rows": [
+    {
+     "label": "Day 0",
+     "value": 100,
+     "source": "s6"
+    },
+    {
+     "label": "Day 5",
+     "value": 371,
+     "source": "s6"
+    },
+    {
+     "label": "Day 10",
+     "value": 1379,
+     "source": "s6"
+    },
+    {
+     "label": "Day 20",
+     "value": 19005,
+     "source": "s6"
+    },
+    {
+     "label": "Day 30",
+     "value": 262000,
+     "source": "s6"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Percent growth and decay factors",
+   "links": [
+    "[[Exponential Functions: Growth and Decay]]",
+    "[[Ratios, Rates, Proportions and Percent]]"
+   ]
+  },
+  {
+   "topic": "Compound interest formula",
+   "links": [
+    "[[Exponent Rules]]",
+    "[[Function Notation]]"
+   ]
+  },
+  {
+   "topic": "Writing an exponential equation from a table",
+   "links": [
+    "[[Geometric Sequences and Linear vs Exponential]]",
+    "[[Building Linear Models from Data]]"
+   ]
+  },
+  {
+   "topic": "Reasonable predictions and limits of models",
+   "links": [
+    "[[Comparing Linear, Exponential and Quadratic Functions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A car loses a steady percent of its value each year, like the 20% in our made-up model.",
+   "other_view": "Real depreciation is not a constant percent. One source says new cars lose about 20% in the first year and then another 10 to 15% a year for the next four years. Another source reports that first-year estimates differ by data provider, from about 12.5% to 23.5%. The constant-percent model is a simple approximation, not the whole story.",
+   "cite": [
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "An exponential model can predict growth far into the future, such as views or savings.",
+   "other_view": "Textbooks say exponential models are useful in the short term but tend to fall apart the longer they continue. They suggest models with an upper limit, such as logistic growth, for longer predictions. The Federal Reserve Bank of St. Louis also warns that higher returns generally carry more risk and that inflation reduces future buying power.",
+   "cite": [
+    "s2",
+    "s10",
+    "s11"
+   ]
+  }
+ ]
+}

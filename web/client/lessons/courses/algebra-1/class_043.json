@@ -1,0 +1,726 @@
+{
+ "about": {
+  "title": "Square Roots and Completing the Square",
+  "course": "algebra-1",
+  "class_n": 43,
+  "audience": [
+   "age 14 to 16",
+   "teenagers",
+   "follows 8th-grade math"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are four ideas to learn, and each gets a worked example and a check question. Completing the square takes the longest. The class splits cleanly after beat 13, so you can pause there."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Ch. 10 Key Concepts - Elementary Algebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://openstax.org/books/elementary-algebra/pages/10-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "10.1: Solve Quadratic Equations Using the Square Root Property",
+   "publisher": "LibreTexts Mathematics (OpenStax Elementary Algebra)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_1e_(OpenStax)/10:_Quadratic_Equations/10.01:_Solve_Quadratic_Equations_Using_the_Square_Root_Property",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Solve Quadratic Equations Using the Square Root Property",
+   "publisher": "BCcampus Open Education (OpenStax Elementary Algebra adaptation)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://opentextbc.ca/elementaryalgebraopenstax/chapter/solve-quadratic-equations-using-the-square-root-property/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "10.2 Solve Quadratic Equations by Completing the Square - Elementary Algebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://openstax.org/books/elementary-algebra/pages/10-2-solve-quadratic-equations-by-completing-the-square",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Ch. 9 Key Concepts - Intermediate Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/9-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "2.5 Quadratic Equations - College Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/2-5-quadratic-equations",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "10.3 Solve Quadratic Equations Using the Quadratic Formula - Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/10-3-solve-quadratic-equations-using-the-quadratic-formula",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "High School: Algebra » Reasoning with Equations & Inequalities (HSA.REI.B.4)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d. (not stated on page)",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/REI/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Solve Quadratic Equations Using the Quadratic Formula",
+   "publisher": "BCcampus Open Education (OpenStax Intermediate Algebra adaptation)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://pressbooks.bccampus.ca/algebraintermediate/chapter/solve-quadratic-equations-using-the-quadratic-formula/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "9.3: Solve Quadratic Equations by Completing the Square",
+   "publisher": "LibreTexts Mathematics (OpenStax Intermediate Algebra)",
+   "date": "n.d. (not stated on page)",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Intermediate_Algebra_1e_(OpenStax)/09:_Quadratic_Equations_and_Functions/903:_Solve_Quadratic_Equations_by_Completing_the_Square",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 43. Last time you solved quadratics by factoring. Today you get two new tools for the ones that won't factor."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Square Roots and Completing the Square"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Four small steps, each building on the one before. We'll check as we go, and you can pause any time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Square roots solve x² = k\n2. Perfect squares\n3. Completing the square\n4. Rewriting into vertex form"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, squaring a number means multiplying it by itself. 5 squared is 25. A square root goes backward: what number squared gives 25?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "square root"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which positive number, squared, gives 49?",
+    "right": "7",
+    "wrong": [
+     "14",
+     "24.5",
+     "49"
+    ],
+    "why": "7 × 7 = 49. Taking a square root undoes squaring."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a surprise. x² = 9 has two answers. 3 × 3 is 9, and so is (−3) × (−3). Both work."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "x² = 9  →  x = 3 or x = −3"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many solutions does x² = 25 have?",
+    "right": "Two: 5 and −5",
+    "wrong": [
+     "Just 5",
+     "Just −5",
+     "Zero"
+    ],
+    "why": "5² = 25 and (−5)² = 25, so both are solutions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That gives us a rule. If x² = k, and k is zero or more, then x is the square root of k, or its opposite. We write that as ±."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² = k  →  x = ±√k   (k ≥ 0)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve x² = 10.",
+    "right": "x = √10 or x = −√10",
+    "wrong": [
+     "x = 5 or x = −5",
+     "x = 100 or x = −100",
+     "Only x = √10"
+    ],
+    "why": "10 isn't a perfect square, so we leave the answer as ±√10. That is about ±3.16."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One catch. Get x² alone first. In 5m² = 80, divide both sides by 5. That gives m² = 16, so m = 4 or m = −4."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: 5m² = 80  →  m² = 16 (divide by 5)\nRight: m = ±√16  →  m = 4 or m = −4"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Solve 2x² = 98.",
+    "right": "x = 7 or x = −7",
+    "wrong": [
+     "x = 49 or x = −49",
+     "x = 14 or x = −14",
+     "x = 7 only"
+    ],
+    "why": "Divide by 2 to get x² = 49. Then x = ±7."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What if k is negative, like x² = −16? A number times itself is never negative. So no real number works."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x² = −16 has no real solution"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How many real solutions does x² = −9 have?",
+    "right": "None",
+    "wrong": [
+     "Two: 3 and −3",
+     "One: 3",
+     "One: −3"
+    ],
+    "why": "Squares are never negative, so no real number squared gives −9."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's a game example. A square arena covers 144 square meters. How long is a side? x² = 144, so x = 12 or −12."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A square game arena with every side labeled x, and the area 144 m² written in the middle."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A square tile has area 81 square cm. What is its side length?",
+    "right": "9 cm",
+    "wrong": [
+     "−9 cm",
+     "40.5 cm",
+     "81 cm"
+    ],
+    "why": "x² = 81 gives ±9, but a length can't be negative. So the side is 9 cm."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The same trick works when the squared part is a bracket. In (x − 3)² = 16, treat x − 3 as one chunk."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: (x − 3)² = 16\nx − 3 = ±4\nRight: x = 3 + 4 = 7\nx = 3 − 4 = −1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Solve (x + 2)² = 25.",
+    "right": "x = 3 or x = −7",
+    "wrong": [
+     "x = 5 or x = −5",
+     "x = 7 or x = −3",
+     "x = 27 or x = −23"
+    ],
+    "why": "x + 2 = ±5. So x = −2 + 5 = 3, or x = −2 − 5 = −7."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Always check by putting answers back in. x = 7: (7 − 3)² = 16. Yes. x = −1: (−1 − 3)² = 16. Yes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x = 7:  (7 − 3)² = 4² = 16 ✓\nx = −1:  (−1 − 3)² = (−4)² = 16 ✓"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now step two. Some equations hide the bracket. x² + 6x + 9 is really (x + 3)². Multiply it out and you'll see it: x·x, 3x, 3x and 9."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "perfect square trinomial:  x² + 6x + 9 = (x + 3)²"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which one is (x + 5)² multiplied out?",
+    "right": "x² + 10x + 25",
+    "wrong": [
+     "x² + 25",
+     "x² + 5x + 25",
+     "x² + 10x + 10"
+    ],
+    "why": "(x + 5)(x + 5) = x² + 5x + 5x + 25. The two middle terms add to 10x."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's the pattern. In (x + n)², the middle number is 2n and the last number is n². So x² − 10x + 25 is (x − 5)². Half of 10 is 5, and 5² is 25."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: (x + n)² = x² + 2n·x + n²\nRight: x² − 10x + 25 = (x − 5)²"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Write x² + 8x + 16 as a bracket squared.",
+    "right": "(x + 4)²",
+    "wrong": [
+     "(x + 8)²",
+     "(x + 16)²",
+     "It is not a perfect square"
+    ],
+    "why": "Half of 8 is 4, and 4² = 16. So it is (x + 4)²."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we can solve. Take x² − 8x + 16 = 9. The left side is (x − 4)². So x − 4 = ±3, and x is 7 or 1."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² − 8x + 16 = 9\n(x − 4)² = 9\nx − 4 = ±3\nx = 7 or x = 1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve x² + 6x + 9 = 4.",
+    "right": "x = −1 or x = −5",
+    "wrong": [
+     "x = −3 or x = 3",
+     "x = 1 or x = 5",
+     "x = −2 or x = 2"
+    ],
+    "why": "The left side is (x + 3)². So x + 3 = ±2, which gives x = −1 or x = −5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three. Most quadratics aren't perfect squares. Take x² + 6x = 7. Can we make it one? That's called completing the square."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "completing the square"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The trick: add a number to both sides so the left becomes a perfect square. The number is half of b, squared."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Add (½ · b)²\nx² + 6x: half of 6 is 3, and 3² = 9"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What number completes the square for x² + 8x?",
+    "right": "16",
+    "wrong": [
+     "8",
+     "64",
+     "4"
+    ],
+    "why": "Half of 8 is 4, and 4² = 16. So x² + 8x + 16 = (x + 4)²."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's why it works. Picture an x-by-x square. Add two strips of 3 by x. A 3-by-3 corner is missing, and that corner is 9."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big square with sides x + 3. It is made of an x-by-x square, two 3-by-x strips, and a small 3-by-3 square in the corner marked 9."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now solve x² + 6x = 7. Add 9 to both sides. The equation stays balanced, and the left becomes (x + 3)²."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² + 6x = 7\nx² + 6x + 9 = 7 + 9\n(x + 3)² = 16"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "After adding 9 to both sides of x² + 6x = 7, what is on the right side?",
+    "right": "16",
+    "wrong": [
+     "9",
+     "7",
+     "15"
+    ],
+    "why": "7 + 9 = 16. We add to both sides to keep the equation balanced."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Finish with the square root step. x + 3 = ±4, so x = 1 or x = −7. This one also factors as (x + 7)(x − 1), so you can check it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(x + 3)² = 16\nx + 3 = ±4\nx = 1 or x = −7\nCheck: 1² + 6(1) = 7 ✓   (−7)² + 6(−7) = 7 ✓"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the steps in order. Keep this list handy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. x² and x terms on the left, the plain number on the right (x² has coefficient 1)\n2. Find (½ · b)²\n3. Add it to both sides\n4. Write the left side as a bracket squared\n5. Take ± square roots\n6. Solve the two small equations"
+   },
+   "cite": [
+    "s5",
+    "s4",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try a negative b. Solve x² − 10x = 11. Half of −10 is −5, and (−5)² is 25. Add 25 to both sides."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² − 10x = 11\nx² − 10x + 25 = 36\n(x − 5)² = 36\nx − 5 = ±6\nx = 11 or x = −1"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Solve x² − 12x = −20.",
+    "right": "x = 10 or x = 2",
+    "wrong": [
+     "x = 6 or x = −6",
+     "x = −10 or x = −2",
+     "x = 16 or x = −4"
+    ],
+    "why": "Half of −12 is −6, and 36 is added to both sides. That gives (x − 6)² = 16, so x − 6 = ±4."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Answers don't have to be whole numbers. Solve x² + 4x = 1. Add 4 to both sides. That gives (x + 2)² = 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(x + 2)² = 5\nx + 2 = ±√5\nx = −2 + √5 ≈ 0.24\nx = −2 − √5 ≈ −4.24"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Solve x² + 2x = 2.",
+    "right": "x = −1 + √3 or x = −1 − √3",
+    "wrong": [
+     "x = 1 ± √3",
+     "x = −1 ± √2",
+     "x = −2 ± √3"
+    ],
+    "why": "Half of 2 is 1, and 1² = 1. So (x + 1)² = 3, and x = −1 ± √3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if x² has a number in front, like 2x² + 12x = 14? Completing the square works best when that number is 1. So divide every term by it first."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x² + 12x = 14\nDivide everything by 2:\nx² + 6x = 7\n(Same as before: x = 1 or x = −7)"
+   },
+   "cite": [
+    "s6",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Solve 3x² + 12x = 15.",
+    "right": "x = 1 or x = −5",
+    "wrong": [
+     "x = −1 or x = 5",
+     "x = 3 or x = −15",
+     "x = 4 or x = −8"
+    ],
+    "why": "Divide by 3 to get x² + 4x = 5. Add 4 to both sides: (x + 2)² = 9, so x = −2 ± 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four. In class 41 you met vertex form, y = a(x − h)² + k. The vertex is the point (h, k). Completing the square can turn any quadratic into that form."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "vertex form:  y = a(x − h)² + k   vertex (h, k)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take y = x² + 6x + 5. There's no other side to add to. So we add 9 and subtract 9, which changes nothing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = x² + 6x + 5\ny = (x² + 6x + 9) − 9 + 5\ny = (x + 3)² − 4\nVertex: (−3, −4)\nCheck x = 0: (0 + 3)² − 4 = 5 ✓"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Write y = x² + 4x + 1 in vertex form.",
+    "right": "y = (x + 2)² − 3",
+    "wrong": [
+     "y = (x + 2)² + 5",
+     "y = (x + 4)² − 15",
+     "y = (x − 2)² − 3"
+    ],
+    "why": "Add and subtract 4: (x² + 4x + 4) − 4 + 1 = (x + 2)² − 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why bother? The vertex form shows the turning point. A square is never below zero, so in y = (x − 4)² − 6 the lowest y is −6, at x = 4."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "y = (x − 4)² − 6   lowest point: (4, −6)"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What is the smallest value of y = (x − 4)² − 6?",
+    "right": "−6",
+    "wrong": [
+     "4",
+     "6",
+     "−4"
+    ],
+    "why": "(x − 4)² is never below 0, and it equals 0 when x = 4. So the smallest y is 0 − 6 = −6."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So which tool when? Try factoring first if it's easy. Use square roots if the equation is x² = k or has a squared bracket. Otherwise complete the square. Class 44 adds one more tool, the quadratic formula."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Factors easily? Factor.\n2. Form ax² = k or a(x − h)² = k? Square roots.\n3. Otherwise: complete the square (or the quadratic formula, class 44)."
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which method is quickest for (x − 2)² = 27?",
+    "right": "Taking square roots",
+    "wrong": [
+     "Completing the square",
+     "Factoring",
+     "Multiplying out the bracket first"
+    ],
+    "why": "The equation already has a squared bracket on one side and a number on the other. Take ± square roots."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last check, then you're done. Use all four steps on one problem."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Solve x² + 10x = 24\nHalf of 10 → 5, squared → 25\nAdd 25 to both sides"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Solve x² + 10x = 24.",
+    "right": "x = 2 or x = −12",
+    "wrong": [
+     "x = −2 or x = 12",
+     "x = 5 or x = −5",
+     "x = 2 or x = 12"
+    ],
+    "why": "Add 25 to both sides: (x + 5)² = 49. So x + 5 = ±7, and x = 2 or x = −12. Check: 2² + 20 = 24."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Recap. Square roots solve x² = k, with a plus and a minus answer. Completing the square makes any quadratic fit that pattern. The same move gives vertex form. Nicely done."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² = k  →  x = ±√k   (k ≥ 0)\nAdd (½ · b)² to both sides → (x + n)² = q\nAdd and subtract (½ · b)² → vertex form\nThe Common Core standard asks for the form (x − p)² = q."
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s8"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Solving quadratics by taking square roots",
+   "links": [
+    "[[Solving Quadratics by Factoring]]",
+    "[[Exponent Rules]]",
+    "[[Roots and Rational Exponents]]"
+   ]
+  },
+  {
+   "topic": "Completing the square and perfect square trinomials",
+   "links": [
+    "[[Special Products]]",
+    "[[Factoring x² + bx + c]]",
+    "[[Special Factoring and a Factoring Strategy]]"
+   ]
+  },
+  {
+   "topic": "Vertex form from standard form",
+   "links": [
+    "[[Vertex Form and Transformations of Parabolas]]",
+    "[[Quadratic Functions and Their Graphs]]",
+    "[[Quadratic Models]]"
+   ]
+  },
+  {
+   "topic": "Where the quadratic formula comes from",
+   "links": [
+    "[[The Quadratic Formula and the Discriminant]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Completing the square is worth learning.",
+   "other_view": "The quadratic formula solves any quadratic, so some students and teachers ask why bother. OpenStax agrees the formula always works but says it is not always the easiest method. Completing the square is also how the formula is derived and how you get vertex form, and the standards ask students to derive the formula.",
+   "cite": [
+    "s7",
+    "s5",
+    "s8"
+   ]
+  },
+  {
+   "claim": "x² = −16 has no solution.",
+   "other_view": "That is true for real numbers, which is all we use in this class. In a later course you meet complex numbers, which do give answers to equations like this. The Common Core standards ask students to recognize when solutions are complex and write them as a ± bi.",
+   "cite": [
+    "s4",
+    "s8"
+   ]
+  }
+ ]
+}

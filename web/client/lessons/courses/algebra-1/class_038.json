@@ -1,0 +1,625 @@
+{
+ "about": {
+  "title": "Factoring ax² + bx + c",
+  "course": "algebra-1",
+  "class_n": 38,
+  "audience": [
+   "teenagers, ages 14 to 16",
+   "Anyone relearning factoring who wants plain steps and small pieces"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. This class teaches two methods (trial and check, and the ac method) and also covers trinomials that won't factor. Each idea is its own small step with a question after it. You can pause after any beat, and the ac method can be split into two sittings."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "7.3 Factor Trinomials of the Form ax2+bx+c, Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/7-3-factor-trinomials-of-the-form-ax2-bx-c",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "6.2 Factor Trinomials, Intermediate Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/6-2-factor-trinomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Trinomials Not Factorable, MathBitsNotebook (Algebra 1)",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Algebra1/Factoring/FCTrinomialsNot.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Trinomial Factoring Using \"ac\" Method, MathBitsNotebook (Algebra 1)",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Algebra1/Factoring/FCGrouping.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Factor Trinomials (Intermediate Algebra, adapted from OpenStax)",
+   "publisher": "BCcampus Pressbooks",
+   "date": "n.d.",
+   "link": "https://pressbooks.bccampus.ca/algebraintermediate/chapter/factor-trinomials/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "HSA-SSE.A.2: Use the structure of an expression to identify ways to rewrite it",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/HSA/SSE/A/2/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Factoring Trinomials of the Form ax² + bx + c",
+   "publisher": "Pearson",
+   "date": "n.d.",
+   "link": "https://www.pearson.com/channels/intermediate-algebra/learn/patrick/7-factoring/factoring-trinomials-of-the-form-ax-bx-c",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "6.7.2 Reviewing General Strategies to Factor a Polynomial, Algebra 1",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2026-01-20",
+   "link": "https://openstax.org/books/algebra-1/pages/6-7-2-reviewing-general-strategies-to-factor-a-polynomial",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class you factored trinomials like x² + 7x + 12, where the number in front of x² is 1. Today that number is bigger than 1."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Factoring ax² + bx + c"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A trinomial has three terms. In ax² + bx + c, the letters a, b and c are just numbers. 'a' sits with x², 'b' sits with x, and 'c' stands alone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "6x² + 7x + 2   means   a = 6,  b = 7,  c = 2"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In 5x² − 8x + 3, what is a?",
+    "right": "5",
+    "wrong": [
+     "−8",
+     "3",
+     "1"
+    ],
+    "why": "'a' is the number with x². Here that is 5. The −8 is b and the 3 is c."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Factoring means undoing multiplication. So let's multiply first. (2x + 1)(3x + 2) gives 6x² + 4x + 3x + 2, which is 6x² + 7x + 2."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Multiply: (2x + 1)(3x + 2) | Result: 6x² + 4x + 3x + 2 = 6x² + 7x + 2"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is (x + 3)(2x + 1) when you multiply it out?",
+    "right": "2x² + 7x + 3",
+    "wrong": [
+     "2x² + 4x + 3",
+     "2x² + 5x + 3",
+     "3x² + 7x + 3"
+    ],
+    "why": "Multiply each pair: 2x², then x and 6x, then 3. The middle terms x + 6x make 7x, so the answer is 2x² + 7x + 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before any method, look for a greatest common factor and pull it out first. Then factor what is left."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "6x² + 14x + 8 | = 2(3x² + 7x + 4)"
+   },
+   "cite": [
+    "s2",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the greatest common factor of 4x² + 10x + 6?",
+    "right": "2",
+    "wrong": [
+     "4",
+     "6",
+     "1"
+    ],
+    "why": "4, 10 and 6 can all be divided by 2. They can't all be divided by 4 or by 6. 1 is a common factor, but it is not the greatest."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the first of two methods for when 'a' isn't 1. It is trial and check: smart guessing, then proving the guess by multiplying."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Method 1: Trial and check"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the steps. Pay attention to step 4. We keep testing until the middle term comes out right."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Write in descending order (x² first)\n2. List factor pairs of the first term\n3. List factor pairs of the last term\n4. Test combinations until the middle term is right\n5. Check by multiplying"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's factor 3x² + 5x + 2. The first term 3x² can only come from 3x times x. The last term 2 can only come from 1 times 2."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "First term 3x²: (3x)(x) | Last term 2: 1 and 2"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try (3x + 1)(x + 2). That gives 3x² + 6x + x + 2, so the middle is 7x. We need 5x, so no. Swap the numbers: (3x + 2)(x + 1) gives 3x² + 3x + 2x + 2. The middle is 5x. That's the one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(3x + 1)(x + 2) = 3x² + 7x + 2   ✗ | (3x + 2)(x + 1) = 3x² + 5x + 2   ✓"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Use trial and check on 2x² + 7x + 3. Which answer is right?",
+    "right": "(2x + 1)(x + 3)",
+    "wrong": [
+     "(2x + 3)(x + 1)",
+     "(2x + 1)(x + 1)",
+     "(2x + 3)(x + 3)"
+    ],
+    "why": "(2x + 1)(x + 3) = 2x² + 6x + x + 3 = 2x² + 7x + 3. The others give middle terms of 5x, 3x and 9x."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What if the middle term is negative? Take 2x² − 7x + 3. The last term is plus and the middle is minus, so try minus signs inside. (2x − 1)(x − 3) gives 2x² − 6x − x + 3. That is 2x² − 7x + 3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2x² − 7x + 3 | = (2x − 1)(x − 3)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why can't (2x + 1)(x + 3) be the answer for 2x² − 7x + 3?",
+    "right": "Adding positive terms gives a plus middle term, but we need a minus.",
+    "wrong": [
+     "Because 2 times 1 is not 3",
+     "Because the answer must have a minus sign in front",
+     "It can be the answer, any order works"
+    ],
+    "why": "(2x + 1)(x + 3) multiplies out to 2x² + 7x + 3. The middle is +7x, not −7x."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Trial and check works, but with big numbers there can be a lot of tries. The second method is more step by step. It is called the ac method, or splitting the middle term."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Method 2: The ac method"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The idea is to split the middle term into two pieces. That turns three terms into four. Then you factor by grouping, which you practiced in class 36."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "split the middle, then group"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the steps. After the GCF, we multiply a and c. Then we hunt for two numbers that multiply to ac and add to b."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Factor out any GCF\n2. Multiply a × c\n3. Find m and n: m·n = ac and m + n = b\n4. Split the middle: ax² + mx + nx + c\n5. Factor by grouping\n6. Check by multiplying"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take 6x² + 7x + 2. There is no GCF. a is 6 and c is 2, so ac is 12. Which two numbers multiply to 12 and add to 7? That's 3 and 4."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "ac = 6 × 2 = 12 | 3 × 4 = 12 and 3 + 4 = 7"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For 4x² + 8x + 3, ac is 12 and b is 8. Which two numbers multiply to 12 and add to 8?",
+    "right": "2 and 6",
+    "wrong": [
+     "3 and 4",
+     "1 and 12",
+     "4 and 4"
+    ],
+    "why": "2 × 6 = 12 and 2 + 6 = 8. The pair 3 and 4 adds to 7. The pair 1 and 12 adds to 13. The pair 4 and 4 multiplies to 16."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step 4 is the split. Replace 7x with 3x + 4x. The expression does not change, because 3x + 4x is still 7x. Now there are four terms."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "6x² + 7x + 2 | = 6x² + 3x + 4x + 2"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Using 2 and 6, how do you split the middle of 4y² + 8y + 3?",
+    "right": "4y² + 2y + 6y + 3",
+    "wrong": [
+     "4y² + 3y + 4y + 3",
+     "4y² + 12y + 3",
+     "4y² + 8y + 6y + 3"
+    ],
+    "why": "2y + 6y is 8y, so the expression stays the same. The other choices change the middle term."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now group. In the first pair, 3x is shared, giving 3x(2x + 1). In the second pair, 2 is shared, giving 2(2x + 1). Both groups now contain (2x + 1)."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(6x² + 3x) + (4x + 2) | 3x(2x + 1) + 2(2x + 1) = (2x + 1)(3x + 2)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In 2y(2y + 1) + 3(2y + 1), what is the shared binomial?",
+    "right": "(2y + 1)",
+    "wrong": [
+     "2y",
+     "3",
+     "(2y + 3)"
+    ],
+    "why": "(2y + 1) appears in both parts. The leftovers 2y and 3 make the other factor, so the answer is (2y + 1)(2y + 3)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Always finish by checking. Multiply (2y + 1)(2y + 3) and you get 4y² + 6y + 2y + 3, which is 4y² + 8y + 3. That matches what we started with."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(2y + 1)(2y + 3) | = 4y² + 6y + 2y + 3 = 4y² + 8y + 3  ✓"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Negatives next. For 6b² − 13b + 5, ac is 30 and b is −13. We need numbers that multiply to 30 and add to −13. Those are −10 and −3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "6b² − 10b − 3b + 5 | 2b(3b − 5) − 1(3b − 5) = (3b − 5)(2b − 1)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In 6b² − 10b − 3b + 5, the second pair is −3b + 5. What do you get by pulling out −1?",
+    "right": "−1(3b − 5)",
+    "wrong": [
+     "−1(3b + 5)",
+     "−3(b + 5)",
+     "+1(3b − 5)"
+    ],
+    "why": "−1 times 3b is −3b, and −1 times −5 is +5. Pulling out the −1 makes the bracket (3b − 5), which matches the first group."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if c is negative? Then ac is negative, so one of your two numbers is positive and one is negative. For 2x² + 5x − 3, ac is −6, and 6 and −1 work. Split: 2x² + 6x − x − 3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2x² + 6x − x − 3 | 2x(x + 3) − 1(x + 3) = (x + 3)(2x − 1)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "For 2x² + 5x − 3, ac = −6 and b = 5. Which pair multiplies to −6 and adds to 5?",
+    "right": "6 and −1",
+    "wrong": [
+     "−6 and 1",
+     "2 and 3",
+     "−2 and 3"
+    ],
+    "why": "6 × (−1) = −6 and 6 + (−1) = 5. The pair −6 and 1 adds to −5. The pair 2 and 3 multiplies to +6. The pair −2 and 3 adds to 1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Remember the GCF step. Take 16x² − 32x + 12. Pull out 4 to get 4(4x² − 8x + 3). Then use ac on the inside. ac is 12, and −2 and −6 work. The answer is 4(2x − 3)(2x − 1)."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "16x² − 32x + 12 = 4(4x² − 8x + 3) | = 4(2x − 3)(2x − 1)"
+   },
+   "cite": [
+    "s5",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the greatest common factor of 16x² − 32x + 12?",
+    "right": "4",
+    "wrong": [
+     "2",
+     "8",
+     "12"
+    ],
+    "why": "16, 32 and 12 can all be divided by 4. 8 does not divide 12, and 12 does not divide 16. 2 is common but not the greatest."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So which method should you use? Textbooks say either trial and check or the ac method is fine. Pick the one you can do reliably. Many people turn to ac when the numbers get big."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Trial and check: quick guessing, then multiply to prove it\nac method: same steps every time"
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a surprise: not every trinomial can be factored. Some are called prime, which means they cannot be factored."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "When a trinomial won't factor"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try 2x² + 3x + 4. ac is 8. The pairs that multiply to 8 are 1 and 8, 2 and 4, and the negative versions. Their sums are 9, 6, −9 and −6. None of them is 3, so the ac method can't start."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Pairs for 8: (1, 8) (2, 4) (−1, −8) (−2, −4) | Sums: 9, 6, −9, −6. We need 3. None match."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You listed every pair for ac, including negatives, and none add to b. What do you conclude?",
+    "right": "The trinomial is prime. It can't be factored with whole numbers.",
+    "wrong": [
+     "You made a mistake, so keep guessing forever",
+     "The answer is 0",
+     "It factors, but only if you change the sign of b"
+    ],
+    "why": "The only way to be sure a trinomial is prime is to list all the possibilities and show none work. Changing the problem isn't allowed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One caution. Prime here means it can't be factored over the whole numbers, called integers. Before you decide a trinomial is prime, check that you pulled out the GCF and tried every pair, negatives too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prime = not factorable over the integers"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these trinomials is prime?",
+    "right": "3x² + 4x + 5",
+    "wrong": [
+     "2x² + 5x + 3",
+     "6x² + 7x + 2",
+     "2x² + 7x + 3"
+    ],
+    "why": "For 3x² + 4x + 5, ac is 15. The pairs 1 and 15 or 3 and 5, and their negatives, add to 16, 8, −16 and −8, never 4. The others factor: (2x + 3)(x + 1), (2x + 1)(3x + 2), (2x + 1)(x + 3)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where does this show up? Picture a video-game map with a rectangular zone whose area is 6x² + 7x + 2 square tiles. Factoring tells you the sides are (2x + 1) tiles and (3x + 2) tiles."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rectangle on a game map. One side is labeled 2x + 1 tiles, the other 3x + 2 tiles, and the area inside is 6x² + 7x + 2."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A zone has area 2x² + 7x + 3 and one side is x + 3 tiles. What is the other side?",
+    "right": "2x + 1",
+    "wrong": [
+     "2x + 3",
+     "x + 1",
+     "2x + 7"
+    ],
+    "why": "We found earlier that 2x² + 7x + 3 = (2x + 1)(x + 3). The other side is 2x + 1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's pull it together. Factoring rewrites an expression as an equal one with a different shape. Next time you will use that to solve equations. Great work today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. GCF first\n2. Trial and check: test pairs, then multiply to check\n3. ac method: find ac, split the middle, group\n4. If no pair works, it's prime\n5. Always check by multiplying"
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "ac method (splitting the middle term)",
+   "links": [
+    "[[Factoring by grouping]]",
+    "[[Factoring x² + bx + c]]"
+   ]
+  },
+  {
+   "topic": "Trial and check",
+   "links": [
+    "[[Multiplying polynomials]]",
+    "[[Factor pairs]]"
+   ]
+  },
+  {
+   "topic": "Prime polynomials",
+   "links": [
+    "[[The discriminant]]",
+    "[[Factoring strategy]]"
+   ]
+  },
+  {
+   "topic": "Greatest common factor first",
+   "links": [
+    "[[Factoring out the GCF]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The ac method is the best way to factor when a is not 1.",
+   "other_view": "Textbooks don't agree on a single best method. OpenStax teaches trial and check and the ac method side by side and lets the student choose. Pearson calls the ac method a faster alternative to trial and error. MathBitsNotebook praises the ac method because every step is mathematically sensible. So the choice is about what you can do reliably.",
+   "cite": [
+    "s1",
+    "s7",
+    "s4"
+   ]
+  },
+  {
+   "claim": "A trinomial that won't factor is simply 'prime'.",
+   "other_view": "Whether it is prime depends on which numbers you allow. MathBitsNotebook says these trinomials are prime or 'irreducible' over the integers, which are whole numbers and their negatives. In this course, 'prime' always means over the integers.",
+   "cite": [
+    "s3"
+   ]
+  }
+ ]
+}

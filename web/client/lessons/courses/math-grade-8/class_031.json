@@ -1,0 +1,614 @@
+{
+ "about": {
+  "title": "Volume of Cylinders",
+  "course": "math-grade-8",
+  "class_n": 31,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class teaches four linked ideas (circle area, base times height, radius vs diameter, working backward). Each gets one worked example and one check question, so 30 minutes is enough without rushing. Pause after any question and repeat a step if you need to."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Finding the Volume and Surface Area of a Cylinder (OpenStax Prealgebra)",
+   "publisher": "Lumen Learning, reproducing OpenStax Prealgebra (CC BY)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/wm-prealgebra/chapter/finding-the-volume-and-surface-area-of-a-cylinder/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "8.G.C.9 (Common Core standard text)",
+   "publisher": "BetterLesson",
+   "date": "n.d.",
+   "link": "https://teaching.betterlesson.com/browse/common_core/standard/506",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Common Core Standards: CCSS.Math.Content.8.G.C.9",
+   "publisher": "Shmoop",
+   "date": "n.d.",
+   "link": "https://www.shmoop.com/common-core-standards/ccss-8-g-9.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Why a circle's area is pi r squared",
+   "publisher": "Future School",
+   "date": "n.d.",
+   "link": "https://www.futureschool.com/blog/why-a-circles-area-is-pi-r-squared/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Cylinder Volume Calculator",
+   "publisher": "CalcAmaze",
+   "date": "n.d.",
+   "link": "https://calcamaze.com/math/cylinder-volume-calculator/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Volume of a Cylinder: Formula, Examples and Practice",
+   "publisher": "RefreshKid",
+   "date": "n.d.",
+   "link": "https://refreshkid.com/blog/volume-of-cylinders/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Area of a disk (concept page, history of the circle area formula)",
+   "publisher": "EPFL GraphSearch",
+   "date": "n.d.",
+   "link": "https://graphsearch.epfl.ch/concept/1896782",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "8.G.C.9 Lesson: Volume of Cylinders, Cones, Spheres",
+   "publisher": "SVHS",
+   "date": "n.d.",
+   "link": "https://svhs.co/lesson/8-g-c-9/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "Volume of a cylinder: Math Steps, Examples & Questions",
+   "publisher": "Third Space Learning",
+   "date": "n.d.",
+   "link": "https://thirdspacelearning.com/us/math-resources/topic-guides/geometry/volume-of-a-cylinder/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 31. Today you will find the volume of a cylinder, and explain why the rule works."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Volume of Cylinders"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, what is volume? It is the amount of space inside a solid. We count it in cubic units, like cubic centimeters."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Volume = space inside (cubic units)"
+   },
+   "cite": [
+    "s9",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's start with a box. Its base is 4 blocks by 3 blocks, so one flat layer holds 12 blocks. Stack 5 layers and you have 12 × 5 = 60 blocks."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 12,
+    "layout": "group",
+    "text": "One layer: 4 × 3 = 12 blocks. Five layers: 12 × 5 = 60."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So for a box, volume is the area of the base times the height. We write it V = B × h, where B is the base area."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "V = B × h"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A box has a base 6 by 2 and a height of 4. What is its volume?",
+    "right": "48",
+    "wrong": [
+     "12",
+     "24",
+     "8"
+    ],
+    "why": "The base area is 6 × 2 = 12. Multiply by the height: 12 × 4 = 48. The answer 12 is only one layer, so it forgets the height. The answer 24 leaves out the 2. The answer 8 leaves out the 6."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A cylinder, like a can, works the same way. It has two matching bases and a height. The only change is that the base is a circle."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A soup can: a flat circle on top, the same circle on the bottom, and a straight side of height h."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So we need the area of a circle. Two words first. The radius goes from the center to the edge. The diameter goes edge to edge through the center, so it is twice the radius."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Radius r: center to edge | Diameter d: edge to edge through the center, d = 2r"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A circle has a diameter of 14 cm. What is its radius?",
+    "right": "7 cm",
+    "wrong": [
+     "28 cm",
+     "14 cm",
+     "21 cm"
+    ],
+    "why": "The radius is half the diameter, and 14 ÷ 2 = 7. The answer 28 doubles instead of halving. The answer 14 is the diameter itself."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the area of a circle: A = π × r². Square the radius first, which means r × r. Then multiply by π, about 3.14."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A = π × r × r"
+   },
+   "cite": [
+    "s4",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does that work? Cut a circle into thin slices and lay them side by side, point up then point down. They make almost a rectangle."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A circle cut into thin slices. The slices are laid alternately up and down to make a long, nearly rectangular shape."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That rectangle is about π × r long, because that is half the way around the circle. It is r tall. So its area is π × r × r, which is π r². The ancient Greek Archimedes proved this in a different way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "π r × r = π r²"
+   },
+   "cite": [
+    "s4",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try one. A circle has radius 3 cm. Square it: 3 × 3 = 9. Multiply by 3.14. The area is 28.26 square centimeters."
+   },
+   "show": {
+    "kind": "list",
+    "text": "r = 3 | r² = 9 | A = 3.14 × 9 = 28.26 cm²"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A circle has radius 5 cm. What is its area, using 3.14 for π?",
+    "right": "78.5 cm²",
+    "wrong": [
+     "31.4 cm²",
+     "15.7 cm²",
+     "314 cm²"
+    ],
+    "why": "Square the radius: 5 × 5 = 25. Then 3.14 × 25 = 78.5. The answer 31.4 is the distance around the circle, not the area. The answer 15.7 forgets to square. The answer 314 squares the diameter, 10, instead of the radius."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we can join the two ideas. The base of a cylinder is a circle with area π r². The volume is base area times height."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "V = π r² h"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of it as a stack of identical circles, like coins. Each circle has the base area, and the height says how tall the stack is."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "coin",
+    "count": 8,
+    "layout": "row",
+    "text": "A stack of identical circles makes a cylinder."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One thing about units. Area is in square units. Multiply by a height in the same unit and you get cubic units, like cm³."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "cm² × cm = cm³"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Worked example. A cylinder has radius 3 cm and height 5 cm. Base area is 3.14 × 9 = 28.26. Times height 5 gives 141.3 cm³."
+   },
+   "show": {
+    "kind": "list",
+    "text": "V = π r² h | = 3.14 × 3² × 5 | = 28.26 × 5 | = 141.3 cm³"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A cylinder has radius 2 cm and height 10 cm. What is its volume, using 3.14 for π?",
+    "right": "125.6 cm³",
+    "wrong": [
+     "62.8 cm³",
+     "502.4 cm³",
+     "12.56 cm³"
+    ],
+    "why": "Base area is 3.14 × 2 × 2 = 12.56. Times height: 12.56 × 10 = 125.6. The answer 62.8 forgets to square the radius. The answer 502.4 squares the diameter, 4, by mistake. The answer 12.56 is only the base, so it forgets the height."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at this chart. All four cylinders are 10 cm tall. Only the radius changes. Going from radius 1 to radius 2 makes the volume 4 times bigger, not 2 times."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Volume by radius, height fixed at 10 cm",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A cylinder's radius doubles and its height stays the same. What happens to the volume?",
+    "right": "It becomes 4 times as big",
+    "wrong": [
+     "It becomes 2 times as big",
+     "It becomes 8 times as big",
+     "It stays the same"
+    ],
+    "why": "The radius is squared in the formula, and (2r)² = 4r². So the base area is 4 times bigger. Doubling only the height would make the volume 2 times as big."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a very common trap: diameter. The formula needs the radius. If you are given the diameter, cut it in half first."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Given diameter? Halve it first."
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: a can is 8 cm across and 12 cm tall. Across means diameter 8, so the radius is 4. Volume is 3.14 × 16 × 12, about 603 cm³."
+   },
+   "show": {
+    "kind": "list",
+    "text": "d = 8, so r = 4 | B = 3.14 × 16 = 50.24 | V = 50.24 × 12 ≈ 603 cm³"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A cylinder has a diameter of 10 cm and a height of 4 cm. What is its volume, using 3.14 for π?",
+    "right": "314 cm³",
+    "wrong": [
+     "1,256 cm³",
+     "78.5 cm³",
+     "125.6 cm³"
+    ],
+    "why": "Halve the diameter to get r = 5. Base area is 3.14 × 25 = 78.5. Times height 4 gives 314. The answer 1,256 uses 10 as the radius. The answer 78.5 is only the base. The answer 125.6 uses the diameter 10 without squaring it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more watch-out. If a cylinder leans, like a tilted stack of coins, use the straight-up height, not the slanted side."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A leaning stack of coins. A straight vertical line marks the height, and the slanted side is marked as the wrong length to use."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's work backward. Sometimes you know the volume and need the height or the radius. The formula is still V = B × h, so we undo the steps."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Know V? Undo the steps."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Finding height: a can has radius 3 cm and holds 282.6 cm³. The base area is 28.26. Since V = B × h, divide: 282.6 ÷ 28.26 = 10. The height is 10 cm."
+   },
+   "show": {
+    "kind": "list",
+    "text": "B = 3.14 × 3² = 28.26 | h = V ÷ B | h = 282.6 ÷ 28.26 = 10 cm"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A cylinder with radius 10 cm holds 6,280 cm³. What is its height, using 3.14 for π?",
+    "right": "20 cm",
+    "wrong": [
+     "200 cm",
+     "62.8 cm",
+     "2,000 cm"
+    ],
+    "why": "Base area is 3.14 × 10 × 10 = 314. Divide the volume by the base area: 6,280 ÷ 314 = 20. The answer 200 forgets to square the radius. The answer 62.8 divides by 100 and forgets π. The answer 2,000 divides by π only."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Finding radius takes one extra step. A can holds 628 cm³ and is 8 cm tall. First the base area: 628 ÷ 8 = 78.5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "B = V ÷ h = 628 ÷ 8 = 78.5"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then B = 3.14 × r², so r² = 78.5 ÷ 3.14 = 25. What number times itself is 25? It is 5. This is the square root idea from class 6. The radius is 5 cm."
+   },
+   "show": {
+    "kind": "list",
+    "text": "r² = 78.5 ÷ 3.14 = 25 | r = √25 = 5 cm"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A cylinder has volume 226.08 cm³ and height 2 cm. Using 3.14 for π, what is its radius?",
+    "right": "6 cm",
+    "wrong": [
+     "36 cm",
+     "113.04 cm",
+     "12 cm"
+    ],
+    "why": "B = 226.08 ÷ 2 = 113.04. Then r² = 113.04 ÷ 3.14 = 36, and r = √36 = 6. The answer 36 is r², so it stops before the square root. The answer 113.04 is the base area. The answer 12 is the diameter."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last check, a real-world one. A round water tank is 4 m across and 3 m tall. How much water can it hold?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A round water tank. The label across the top reads 4 m, and the side label reads 3 m."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A tank has a diameter of 4 m and a height of 3 m. What is its volume, using 3.14 for π?",
+    "right": "37.68 m³",
+    "wrong": [
+     "150.72 m³",
+     "12.56 m³",
+     "18.84 m³"
+    ],
+    "why": "Halve the diameter: r = 2. Base area is 3.14 × 4 = 12.56. Times height 3 gives 37.68 m³. The answer 150.72 uses 4 as the radius. The answer 12.56 is only the base. The answer 18.84 forgets to square the radius."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Every cylinder problem is the same idea: base area times height."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Get the radius (halve the diameter) | 2. Base area B = π r² | 3. V = B × h, in cubic units | 4. Working backward: divide by B, then take a square root if you need r"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Next class we do cones and spheres. A cone holds exactly one third of the matching cylinder."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Volume of Cones and Spheres"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Volume of a cylinder 10 cm tall, by radius (cm³, π ≈ 3.14)",
+   "rows": [
+    {
+     "label": "radius 1 cm",
+     "value": 31.4,
+     "source": "s1"
+    },
+    {
+     "label": "radius 2 cm",
+     "value": 125.6,
+     "source": "s1"
+    },
+    {
+     "label": "radius 3 cm",
+     "value": 282.6,
+     "source": "s1"
+    },
+    {
+     "label": "radius 4 cm",
+     "value": 502.4,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Volume of a cylinder",
+   "links": [
+    "[[Volume of Cones and Spheres]]",
+    "[[Solving with Squares and Cubes]]",
+    "[[Exponent Rules for Whole Numbers]]"
+   ]
+  },
+  {
+   "topic": "Area of a circle and pi",
+   "links": [
+    "[[Irrational Numbers and Roots]]",
+    "[[Estimating and Ordering Irrational Numbers]]"
+   ]
+  },
+  {
+   "topic": "Working backward from volume",
+   "links": [
+    "[[Solving Linear Equations in One Variable]]",
+    "[[Solving with Squares and Cubes]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Use 3.14 for π in cylinder volume problems.",
+   "other_view": "The 8th-grade standard allows either approach. You can use π ≈ 3.14, or leave the answer in terms of π, for example 192π cm³. Leaving π in the answer is exact. Using 3.14 gives a decimal that is slightly off. A calculator's π gives about 603.19 cm³ for the 8 cm by 12 cm can, while 3.14 gives about 602.88. Both are acceptable answers if you say which one you used.",
+   "cite": [
+    "s8",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Learning V = π r² h as a formula is enough.",
+   "other_view": "One teaching guide says students should know the formula and also have a basic idea of where it comes from. It suggests comparing cylinders with prisms. Others stress that the formula is just base area times height, which is why we built it from boxes and stacked circles.",
+   "cite": [
+    "s3",
+    "s1"
+   ]
+  }
+ ]
+}

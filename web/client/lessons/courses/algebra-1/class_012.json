@@ -1,0 +1,537 @@
+{
+ "about": {
+  "title": "Graphs of Functions: Domain, Range and Behavior",
+  "course": "algebra-1",
+  "class_n": 12,
+  "audience": [
+   "Age 14 to 16",
+   "teenagers",
+   "Anyone relearning graph reading, at their own pace"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are four small ideas (domain and range, intercepts, up and down, highest and lowest points) and one story graph that ties them together. Each idea gets its own check question, so it should fit in a half-hour. Pause and replay any beat you need. The drone graph (c1) is a made-up teaching example, not real data."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "3.2 Domain and Range, College Algebra with Corequisite Support 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-corequisite-support-2e/pages/3-2-domain-and-range",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "3.3: Domain and Range, College Algebra 1e (OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/College_Algebra_1e_(OpenStax)/03:_Functions/3.03:_Domain_and_Range",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "4.13.2 Graphs of Functions, Algebra 1",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-1/pages/4-13-2-graphs-of-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Use a graph to determine where a function is increasing, decreasing, or constant (OpenStax content)",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/odessa-collegealgebra/chapter/use-a-graph-to-determine-where-a-function-is-increasing-decreasing-or-constant/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "College Algebra Study Guide: Functions, Graphs & Intervals (Features of a Graph)",
+   "publisher": "Pearson",
+   "date": "n.d.",
+   "link": "https://www.pearson.com/channels/college-algebra/study-guides/features-of-functions-and-their-graphs-domain",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "5.3 Graphs of Polynomial Functions, College Algebra 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/5-3-graphs-of-polynomial-functions",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we learn to read a graph the way you read a story."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Reading a Graph"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will look for four things: domain and range, intercepts, going up or down, and highest or lowest points. One at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Domain and range\n2. Intercepts\n3. Increasing and decreasing\n4. Highest and lowest points"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class we saw that a function gives exactly one output for each input. A graph is a picture of those input and output pairs."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. Inputs run left to right on the x-axis. Outputs run up and down on the y-axis. A smooth curve passes through the grid."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First word: domain. The domain is every input, every x-value, that the graph uses."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Domain = the x-values (inputs)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next word: range. The range is every output, every y-value, that the graph reaches."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Range = the y-values (outputs)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For the domain, look left to right. For the range, look bottom to top. Always go from smaller to larger."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Domain: scan LEFT to RIGHT (x)  |  Range: scan BOTTOM to TOP (y)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. A graph starts at x = -5 and runs right with no end. Its top is y = 5, and it goes down forever. So the domain is x ≥ -5 and the range is y ≤ 5."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A curve that starts at the point (-5, something) and runs to the right forever. Its highest y-value is 5, and it keeps falling below that."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One warning. If the graph has arrows, it keeps going past the edge of what you can see. Then the domain or range can be bigger than the picture shows."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Arrows = it keeps going"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A graph is a straight line segment from the point (-2, 1) to the point (4, 7). It has no arrows. What is its domain?",
+    "right": "x-values from -2 to 4",
+    "wrong": [
+     "x-values from 1 to 7",
+     "x-values from -2 to 7",
+     "x-values from 1 to 4"
+    ],
+    "why": "The domain is about the x-values, and we scan left to right. The segment starts at x = -2 and ends at x = 4. The numbers 1 and 7 are y-values, so they belong to the range."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stories change domain and range too. Take a swing: time goes from 0 to 30 seconds, but the number of pushes can only be whole numbers from 0 to 5."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph of a swing. Time in seconds runs from 0 to 30 along the bottom. The number of pushes, 0 to 5, climbs in steps up the side."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New idea: intercepts. These are the spots where the graph touches an axis. First, the y-intercept, where it crosses the y-axis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y-intercept = where the graph crosses the y-axis (x = 0)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then the x-intercept, where the graph crosses the x-axis. There the output is 0."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "x-intercept = where the graph crosses the x-axis (y = 0)"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: a phone battery. It starts at 100% and loses 20% every hour. The y-intercept is (0, 100): the starting charge. The x-intercept is (5, 0): empty after 5 hours."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A straight line sloping down. It starts at (0, 100) on the y-axis and reaches (5, 0) on the x-axis. The axes are labeled hours and percent charged."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On the battery graph, the x-intercept is (5, 0). What does that mean in the story?",
+    "right": "After 5 hours the battery is at 0%, so it is empty.",
+    "wrong": [
+     "The battery starts at 5%.",
+     "The battery has 5 hours of charge to begin with.",
+     "The battery is at 100% after 5 hours."
+    ],
+    "why": "An x-intercept is where the output is 0. The input is 5 hours and the output is 0% charge. The starting charge is the y-intercept, (0, 100)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third idea: going up or down. Always read a graph from left to right, like a sentence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Read left to right"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If the graph rises as you move right, it is increasing. If it falls, it is decreasing. If it stays flat, it is neither: we call it constant."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rises → increasing\nFalls → decreasing\nFlat → constant (neither)"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This links to rate of change. An increasing function has a positive rate of change, and a decreasing one has a negative rate of change. Slope is next class."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Increasing → rate of change positive  |  Decreasing → rate of change negative"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You trace a graph from left to right and your finger goes downhill. What is the function doing?",
+    "right": "Decreasing",
+    "wrong": [
+     "Increasing",
+     "Constant",
+     "Staying at its maximum"
+    ],
+    "why": "Going down as you move right means the outputs are getting smaller, which is decreasing. Going up is increasing, and flat is constant."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fourth idea: highest and lowest points. A graph may turn, going from rising to falling or the other way. That spot is a turning point."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Turning point: the graph switches direction"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A peak is a maximum, the highest point. A valley is a minimum, the lowest point."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Maximum = top of the hill (highest y)  |  Minimum = bottom of the valley (lowest y)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: the U-shaped graph of y = x². It falls for x less than 0, hits its minimum at x = 0, then rises for x greater than 0."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A U-shaped curve (parabola) with its lowest point at (0, 0). The left side goes down toward that point and the right side goes up from it."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "For the U-shaped graph of y = x², where is the graph increasing?",
+    "right": "For x greater than 0 (the right side of the U)",
+    "wrong": [
+     "For x less than 0 (the left side of the U)",
+     "For every x",
+     "Nowhere"
+    ],
+    "why": "Read left to right. The left side falls until x = 0, where the minimum is. After that the graph rises, so it is increasing for x greater than 0."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we use everything on one story graph. Sam flies a drone. This graph is made up for practice. It shows the drone's height in feet over 10 seconds."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Drone height over time (made-up example)",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Domain: the clock runs from 0 to 10 seconds. Range: the height runs from 0 to 60 feet. The domain is time and the range is height."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Domain: 0 to 10 seconds  |  Range: 0 to 60 feet",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Up and down: the drone climbs from 0 to 4 seconds. It hovers from 4 to 6 seconds. It descends from 6 to 10 seconds."
+   },
+   "show": {
+    "kind": "list",
+    "text": "0 to 4 s: increasing\n4 to 6 s: constant\n6 to 10 s: decreasing",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The highest point is 60 feet, the maximum. The graph starts at (0, 0) on the ground, and lands again at (10, 0)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Maximum height: 60 ft\ny-intercept: (0, 0)\nx-intercepts: (0, 0) and (10, 0)",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "On the drone graph, during which seconds is the drone going down?",
+    "right": "From 6 to 10 seconds",
+    "wrong": [
+     "From 0 to 4 seconds",
+     "From 4 to 6 seconds",
+     "From 0 to 10 seconds"
+    ],
+    "why": "The drone falls when the graph falls going left to right. That happens from 6 to 10 seconds. From 0 to 4 it rises, and from 4 to 6 it is flat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A common mix-up: a story graph is not a picture of the path. The drone moves straight up and down, but the graph shows height over time, so it looks like a hill."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A graph shows input vs. output, not the path"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Sam tosses a ball straight up and catches it. Which graph of height over time fits?",
+    "right": "It rises to a peak, then falls back down.",
+    "wrong": [
+     "A straight line going up forever",
+     "A flat line",
+     "A line that only goes down"
+    ],
+    "why": "The ball rises, stops at its highest point (the maximum), then falls. That makes a rise, a turning point, then a fall."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick recap. Domain is the x-values and range is the y-values. Intercepts are where the graph meets an axis. Read left to right to see increasing or decreasing. A turning point makes a maximum or a minimum."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Domain = x-values (left to right)\nRange = y-values (bottom to top)\nIntercepts = touch the axes\nIncreasing / decreasing = read left to right\nMax / min = turning points"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nice work. If one idea felt shaky, replay that beat. Next class: slope and rate of change."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Slope and Rate of Change"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Sam's drone: height in feet over 10 seconds (made-up example for this lesson)",
+   "rows": [
+    {
+     "label": "0 s",
+     "value": 0,
+     "source": null
+    },
+    {
+     "label": "2 s",
+     "value": 30,
+     "source": null
+    },
+    {
+     "label": "4 s",
+     "value": 60,
+     "source": null
+    },
+    {
+     "label": "6 s",
+     "value": 60,
+     "source": null
+    },
+    {
+     "label": "8 s",
+     "value": 30,
+     "source": null
+    },
+    {
+     "label": "10 s",
+     "value": 0,
+     "source": null
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Domain and range",
+   "links": [
+    "[[relations and functions]]",
+    "[[function notation]]"
+   ]
+  },
+  {
+   "topic": "Intercepts",
+   "links": [
+    "[[slope-intercept form and graphing lines]]",
+    "[[solving equations]]"
+   ]
+  },
+  {
+   "topic": "Increasing and decreasing",
+   "links": [
+    "[[slope and rate of change]]"
+   ]
+  },
+  {
+   "topic": "Maximum and minimum",
+   "links": [
+    "[[quadratic functions and their graphs]]"
+   ]
+  },
+  {
+   "topic": "Story graphs",
+   "links": [
+    "[[building linear models from data]]",
+    "[[quadratic models]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

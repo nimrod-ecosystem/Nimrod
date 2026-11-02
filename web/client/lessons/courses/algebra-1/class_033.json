@@ -1,0 +1,537 @@
+{
+ "about": {
+  "title": "Adding and Subtracting Polynomials",
+  "course": "algebra-1",
+  "class_n": 33,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has two jobs: naming polynomials, then adding and subtracting them. Each idea gets its own short step. You can pause after the standard form step and do the adding and subtracting later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "6.1 Add and Subtract Polynomials, Elementary Algebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra/pages/6-1-add-and-subtract-polynomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Chapter 6 Key Concepts, Elementary Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2026-01-27 (page footer)",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/6-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "6.01: Add and Subtract Polynomials (OpenStax Elementary Algebra)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Book:_Elementary_Algebra_(OpenStax)/06:_Polynomials/6.01:_Add_and_Subtract_Polynomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "10.1 Add and Subtract Polynomials, Prealgebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/prealgebra-2e/pages/10-1-add-and-subtract-polynomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "5.1 Add and Subtract Polynomials, Intermediate Algebra",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra/pages/5-1-add-and-subtract-polynomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "1.4 Polynomials, College Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/1-4-polynomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "HSA-APR.A.1 (Common Core standard: arithmetic with polynomials)",
+   "publisher": "Illustrative Mathematics",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/HSA/APR/A/1",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 33. Today we learn to name polynomials, then add and subtract them. Take your time, and pause whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Adding and Subtracting Polynomials"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the big word. A polynomial is one monomial, or several monomials joined by adding or subtracting."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "polynomial"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We name a polynomial by counting its terms. Terms are the pieces split apart by plus or minus signs. One term is a monomial, two is a binomial, three is a trinomial."
+   },
+   "show": {
+    "kind": "list",
+    "text": "monomial = 1 term (example: 6x²) | binomial = 2 terms (example: x + 4) | trinomial = 3 terms (example: x² + 3x + 4)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many terms does x² + 8x − 10 have, and what is it called?",
+    "right": "3 terms, a trinomial",
+    "wrong": [
+     "2 terms, a binomial",
+     "1 term, a monomial",
+     "It is not a polynomial"
+    ],
+    "why": "The plus and minus signs split it into x², 8x and 10. That makes three terms, and three terms is a trinomial."
+   },
+   "cite_note": ""
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What about four or more terms? Those are just called polynomials. And every monomial, binomial and trinomial is also a polynomial."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Special names: monomial, binomial, trinomial | Everything else: just 'polynomial' (and the special ones are polynomials too)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is a single term like 7x² also a polynomial?",
+    "right": "Yes, every monomial is a polynomial",
+    "wrong": [
+     "No, a polynomial needs two or more terms",
+     "Only if the exponent is 1",
+     "Only if it has a plus sign"
+    ],
+    "why": "A monomial is the smallest kind of polynomial. It has exactly one term."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next idea: degree. The degree of a term is the sum of the exponents on its variables. So 8y² has degree 2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "degree of a term = sum of the exponents"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the degree of the term 5x³?",
+    "right": "3",
+    "wrong": [
+     "5",
+     "8",
+     "1"
+    ],
+    "why": "The degree comes from the exponent, not the number in front. The exponent on x is 3, so the degree is 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two small cases. A plain number like 14 has degree 0. And a lone letter like −13a has degree 1, because a is a to the first power. With two variables, add the exponents: 3 + 5 makes 8."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Degree of each term",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What is the degree of the constant 14?",
+    "right": "0",
+    "wrong": [
+     "14",
+     "1",
+     "2"
+    ],
+    "why": "A constant has no variable, so there are no exponents to add. The degree of any constant is 0."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the degree of a whole polynomial. Find the degree of each term. The biggest one wins."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "degree of a polynomial = the highest degree of its terms"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the degree of 3x⁴ + 6x² − 9?",
+    "right": "4",
+    "wrong": [
+     "3",
+     "6",
+     "2"
+    ],
+    "why": "The terms have degrees 4, 2 and 0. The highest is 4, so the polynomial has degree 4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we can give a polynomial its full name. 5x³ − 2x has two terms and top degree 3. So it is a binomial of degree 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5x³ − 2x: binomial, degree 3 | 2x² + 7x − 1: trinomial, degree 2"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the full name of 2x² + 7x − 1?",
+    "right": "A trinomial of degree 2",
+    "wrong": [
+     "A binomial of degree 2",
+     "A trinomial of degree 3",
+     "A monomial of degree 2"
+    ],
+    "why": "It has three terms, so it is a trinomial. The highest exponent is 2, so the degree is 2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more habit. Standard form means writing the terms from the highest degree down to the lowest. It makes polynomials easier to work with."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Not standard: 7 − 5x + 2x³ | Standard form: 2x³ − 5x + 7"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which polynomial is written in standard form?",
+    "right": "4x³ − 2x² + x − 7",
+    "wrong": [
+     "x − 7 + 4x³ − 2x²",
+     "−7 + x − 2x² + 4x³",
+     "4x³ + x − 2x² − 7"
+    ],
+    "why": "The degrees go 3, 2, 1, 0, from highest to lowest. The other lists jump around or run from lowest to highest."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Naming is done. Now we add. Adding polynomials is just combining like terms. 3 blocks plus 2 blocks make 5 blocks, and 3x plus 2x makes 5x."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 5,
+    "layout": "group",
+    "text": "3x + 2x = 5x"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Like terms have the same variable with the same exponent. 5x² and −2x² are like terms and make 3x². But 3x and 3x² are different, so they can't be added."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Like terms: 5x² + (−2x²) = 3x² | Not like terms: 3x and 3x² stay separate"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which pair are like terms?",
+    "right": "6x² and −4x²",
+    "wrong": [
+     "6x² and 6x",
+     "5x and 5y",
+     "4x³ and 4x²"
+    ],
+    "why": "Only 6x² and −4x² have the same variable and the same exponent. In the other pairs, either the variable or the exponent is different."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the recipe for adding. Drop the parentheses. Put like terms together. Combine them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Drop the parentheses | 2. Rearrange so like terms sit together | 3. Combine like terms"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try it. (3x² + 5x + 2) + (x² − 2x + 4). Group the x² terms, the x terms and the plain numbers. That gives 4x² + 3x + 6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3x² + x² = 4x² | 5x + (−2x) = 3x | 2 + 4 = 6 | Answer: 4x² + 3x + 6"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Add: (2x² + x + 1) + (3x² + 4x + 5)",
+    "right": "5x² + 5x + 6",
+    "wrong": [
+     "5x⁴ + 5x² + 6",
+     "5x² + 4x + 6",
+     "6x² + 5x + 5"
+    ],
+    "why": "Add the numbers in front of matching terms: 2 + 3 = 5, 1 + 4 = 5 and 1 + 5 = 6. The exponents stay the same, so x² stays x²."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now subtraction, which needs more care with signs. First, a warm-up. Subtracting a negative acts like adding. So 9n − (−5n) becomes 9n + 5n, which is 14n."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "9n − (−5n) = 14n"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Subtract: 12q − (−6q)",
+    "right": "18q",
+    "wrong": [
+     "6q",
+     "−6q",
+     "−18q"
+    ],
+    "why": "Subtracting −6q is the same as adding 6q. So 12q + 6q = 18q."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big rule. When you subtract a polynomial, the minus sign hits every term inside the parentheses. Flip every sign. This is the step people most often miss."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(5x + 3) − (2x − 1) | = 5x + 3 − 2x + 1 = 3x + 4"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the correct first step for (5x + 3) − (2x − 1)?",
+    "right": "5x + 3 − 2x + 1",
+    "wrong": [
+     "5x + 3 − 2x − 1",
+     "5x + 3 + 2x − 1",
+     "5x − 3 − 2x + 1"
+    ],
+    "why": "The minus sign flips both terms in the second parentheses. 2x becomes −2x, and −1 becomes +1."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A bigger one: (9w² − 7w + 5) − (2w² − 4). Flip the signs, then combine. The second polynomial has no w term, so −7w just stays as it is."
+   },
+   "show": {
+    "kind": "list",
+    "text": "9w² − 7w + 5 − 2w² + 4 | 9w² − 2w² = 7w² | −7w stays | 5 + 4 = 9 | Answer: 7w² − 7w + 9"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Subtract: (6m² + 3m + 8) − (2m² − 5)",
+    "right": "4m² + 3m + 13",
+    "wrong": [
+     "4m² + 3m + 3",
+     "4m² − 2m + 13",
+     "8m² + 3m + 3"
+    ],
+    "why": "Flip the signs to get 6m² + 3m + 8 − 2m² + 5. Then 6m² − 2m² = 4m², 3m stays, and 8 + 5 = 13."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A game example. Say a game shop's revenue is 5x² + 20x dollars and its costs are 2x² + 8x + 30. Profit is revenue minus costs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "(5x² + 20x) − (2x² + 8x + 30) | = 5x² + 20x − 2x² − 8x − 30 = 3x² + 12x − 30"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In that example, what is the profit polynomial?",
+    "right": "3x² + 12x − 30",
+    "wrong": [
+     "3x² + 12x + 30",
+     "7x² + 28x + 30",
+     "3x² + 28x − 30"
+    ],
+    "why": "Flip every sign in the costs. Then 5x² − 2x² = 3x², 20x − 8x = 12x, and 0 − 30 = −30."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does this always work out neatly? Add or subtract two polynomials and you get another polynomial. The family stays closed, like whole numbers under adding and subtracting."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "closed: polynomial + or − polynomial = polynomial"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "If you subtract one polynomial from another, what do you get?",
+    "right": "Another polynomial",
+    "wrong": [
+     "Always a single number",
+     "A fraction",
+     "Something that is never a polynomial"
+    ],
+    "why": "Polynomials are closed under addition and subtraction. The result is always another polynomial."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it together. Name it, add or subtract with care, and finish in standard form. Mistakes here are normal, and checking each sign is a good habit."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Count terms: mono-, bi-, tri- | 2. Find the degree: the highest | 3. Subtracting? Flip every sign in the second polynomial | 4. Combine like terms | 5. Write in standard form"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Degree of each term",
+   "rows": [
+    {
+     "label": "14",
+     "value": 0,
+     "source": "s3"
+    },
+    {
+     "label": "−13a",
+     "value": 1,
+     "source": "s3"
+    },
+    {
+     "label": "8y²",
+     "value": 2,
+     "source": "s3"
+    },
+    {
+     "label": "−9x³y⁵",
+     "value": 8,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Adding and subtracting polynomials",
+   "links": [
+    "[[Properties and Simplifying Expressions]]",
+    "[[Exponent Rules]]",
+    "[[Multiplying Polynomials]]",
+    "[[Quadratic Functions and Their Graphs]]"
+   ]
+  },
+  {
+   "topic": "Degree and standard form",
+   "links": [
+    "[[Exponent Rules]]",
+    "[[Factoring Out the Greatest Common Factor and Grouping]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

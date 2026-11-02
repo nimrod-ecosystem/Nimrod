@@ -1,0 +1,520 @@
+{
+ "about": {
+  "title": "Dilations and Similar Figures",
+  "course": "math-grade-8",
+  "class_n": 26,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes, as planned. There are four small topics, each taught then checked, so no extra time was needed. A learner who wants a break can stop after the coordinate-plane section and pick up with similar figures later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Geometry (standards 8.G.A.3 and 8.G.A.4)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/G/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Unit 2 Family Materials: Dilations, Similarity, and Introducing Slope (Grade 8)",
+   "publisher": "Illustrative Mathematics, Kendall Hunt",
+   "date": "n.d.",
+   "link": "https://im.kendallhunt.com/MS/families/3/2/index.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8 Module 3, Lesson 6: Dilations on the Coordinate Plane (teacher materials)",
+   "publisher": "Eureka Math curriculum materials",
+   "date": "2014-10-30",
+   "link": "https://unbounded-uploads.s3.amazonaws.com/attachments/6585/math-g8-m3-topic-a-lesson-6-teacher.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Are They Similar? (task 8.G.A.4)",
+   "publisher": "Illustrative Mathematics Tasks",
+   "date": "n.d.",
+   "link": "https://tasks.illustrativemathematics.org/content-standards/8/G/A/4/tasks/1946",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Content Companion, 8th Grade, Module 3",
+   "publisher": "KIPP (Eureka Math content companion)",
+   "date": "n.d.",
+   "link": "https://www.kipp.org/wp-content/uploads/2017/12/Eureka-Math-Content-Companion_Grade-8-Module-3.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "9.01 Dilations",
+   "publisher": "Mathspace",
+   "date": "n.d.",
+   "link": "https://mathspace.co/textbooks/syllabuses/Syllabus-1168/topics/Topic-22110/subtopics/Subtopic-280908/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "8th Grade Math: Transformations and Angle Relationships",
+   "publisher": "Fishtank Learning",
+   "date": "n.d.",
+   "link": "https://www.fishtanklearning.org/curriculum/math/8th-grade/transformations-and-angle-relationships/",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back, {name}. Today we make shapes bigger and smaller on purpose, and then prove two shapes are the same shape."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Dilations and Similar Figures"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We'll go in four small steps, and check each one before we move on."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Dilation and its center\n2. Scale factor: bigger or smaller\n3. Dilations on the coordinate plane\n4. Similar figures"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one. A dilation makes a scaled copy of a figure. It is described by a center point and a number called the scale factor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dilation = a scaled copy, made from a center point and a scale factor"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The center is a fixed point. Everything gets stretched away from it, or squeezed toward it. Think of zooming a photo in or out."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dot labeled O (the center) with a small triangle to its right. A larger triangle sits farther along the same lines from O. Dotted lines run from O through each matching corner."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the rule that does the work. The distance from the center to a point gets multiplied by the scale factor. That gives the matching point."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "new distance = old distance × scale factor"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check. A point P is 4 cm from the center. We dilate with scale factor 2."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Center O, and a point P 4 cm away along a ray. A question mark sits on the same ray farther out."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How far from the center is the new point P'?",
+    "right": "8 cm",
+    "wrong": [
+     "2 cm",
+     "6 cm",
+     "4 cm"
+    ],
+    "why": "The distance from the center is multiplied by the scale factor. 4 × 2 = 8 cm. Adding 2 would give 6 cm, which is a common slip. Dividing would give 2 cm."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two. The scale factor decides what happens. Above 1 the copy is bigger. Below 1 it is smaller. Fractions and decimals are allowed."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Scale factor greater than 1 (like 3 or 1.5): bigger copy | Scale factor less than 1 (like 1/2 or 0.25): smaller copy"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try it with lengths. A side is 12 cm long. We dilate with scale factor 1/4. Multiplying by 1/4 is the same as dividing by 4."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12 × 1/4 = 3 cm"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A side is 20 cm long. A dilation has scale factor 1/4. How long is the new side?",
+    "right": "5 cm",
+    "wrong": [
+     "80 cm",
+     "16 cm",
+     "20 cm"
+    ],
+    "why": "Multiply the length by the scale factor: 20 × 1/4 = 5 cm. The scale factor is below 1, so the side must shrink, which rules out 80 cm and 20 cm. 16 cm comes from subtracting 4, but a dilation multiplies."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three. Now put it on a grid. When the center is the origin, (0, 0), each point (x, y) moves to (k times x, k times y). Here k is the scale factor."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(x, y) → (k·x, k·y)"
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You must multiply both numbers, the x and the y. If no center is named, we use the origin. Other centers exist, but in this class we stay with the origin."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Center = the origin (0, 0) today. Multiply BOTH coordinates."
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Worked example. A triangle has corners A(1, 2), B(4, 2) and C(4, 5). Dilate it from the origin with scale factor 2. Double every coordinate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A(1, 2) → A'(2, 4)\nB(4, 2) → B'(8, 4)\nC(4, 5) → C'(8, 10)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn with a negative number in it. Watch the signs. A negative times a positive stays negative."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with the point (3, -2) in the lower right section, and a question mark farther out along the same line from the origin."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Dilate the point (3, -2) from the origin with scale factor 3. Where does it go?",
+    "right": "(9, -6)",
+    "wrong": [
+     "(6, 1)",
+     "(9, -2)",
+     "(-9, 6)"
+    ],
+    "why": "Multiply both coordinates by 3. 3 × 3 = 9 and -2 × 3 = -6, so the point is (9, -6). (6, 1) comes from adding 3. (9, -2) multiplies only x. (-9, 6) flips the signs, which a positive scale factor does not do."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Shrinking works the same way. Multiply by the fraction. The point (6, 8) with scale factor 1/2 lands at (3, 4)."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "(6, 8) → (6 × 1/2, 8 × 1/2) = (3, 4)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Dilate (12, 8) from the origin with scale factor 1/4. Where does it go?",
+    "right": "(3, 2)",
+    "wrong": [
+     "(48, 32)",
+     "(8, 4)",
+     "(6, 4)"
+    ],
+    "why": "1/4 of 12 is 3 and 1/4 of 8 is 2, so the point is (3, 2). (48, 32) multiplies by 4 instead of 1/4. (8, 4) subtracts 4. (6, 4) uses 1/2 instead of 1/4."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We can also run it backwards. Point A(2, 3) became A'(10, 15). What number multiplied each coordinate? Divide new by old."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10 ÷ 2 = 5 and 15 ÷ 3 = 5"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "The point (4, 6) dilates from the origin to (12, 18). What is the scale factor?",
+    "right": "3",
+    "wrong": [
+     "8",
+     "1/3",
+     "14"
+    ],
+    "why": "Each coordinate was multiplied by the scale factor, so divide new by old: 12 ÷ 4 = 3 and 18 ÷ 6 = 3. Both give 3. 8 comes from subtracting. 1/3 is the factor that would go the other way. 14 comes from adding 2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four. Dilations change size but keep the shape. That brings us to the word similar."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Similar: one figure can be moved onto the other by a sequence of rotations, reflections, translations and dilations."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In everyday words, similar means same shape, different size. That fits the definition because of two facts. The matching angles are equal. The matching sides are proportional."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Matching angles: equal | Matching sides: all in the same ratio (the scale factor)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example. One triangle has sides 3, 4 and 5. Another has sides 6, 8 and 10. Divide each new side by its matching old side."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6 ÷ 3 = 2\n8 ÷ 4 = 2\n10 ÷ 5 = 2\nSame ratio every time, so the sides are proportional. Scale factor = 2."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a trap. Both shapes below are rectangles, so every angle is 90 degrees. Do the sides pass the test?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Rectangle one is 2 wide and 3 tall. Rectangle two is 4 wide and 9 tall."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Is the 2 by 3 rectangle similar to the 4 by 9 rectangle?",
+    "right": "No. The widths grow by 2 times but the heights grow by 3 times, so the sides are not proportional.",
+    "wrong": [
+     "Yes, because both are rectangles.",
+     "Yes, because all the angles are 90 degrees.",
+     "Yes, because the second one is bigger."
+    ],
+    "why": "Similar needs both things: equal matching angles and one shared ratio for the sides. The angles match, but 4 ÷ 2 = 2 while 9 ÷ 3 = 3. Those ratios differ, so no dilation can turn one into the other."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To show two figures are similar, describe a sequence. Dilate to get the right size. Then use rigid motions to land exactly on the other figure."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Find the scale factor from matching sides.\n2. Dilate by that factor.\n3. Slide, flip or turn the result onto the other figure."
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example. Triangle P has corners (1, 1), (3, 1) and (1, 2). Triangle Q has corners (4, 3), (8, 3) and (4, 5). P's bottom side is 2 long and Q's is 4, so the factor is 2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dilate P by 2 from the origin: (2, 2), (6, 2), (2, 4)\nTranslate 2 right, 1 up: (4, 3), (8, 3), (4, 5)\nThat is exactly Q."
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sequence takes triangle P onto triangle Q?",
+    "right": "Dilate by 2 from the origin, then translate 2 right and 1 up.",
+    "wrong": [
+     "Translate 2 right and 1 up only.",
+     "Dilate by 3 from the origin, then translate 2 right and 1 up.",
+     "Dilate by 1/2 from the origin, then translate 2 right and 1 up."
+    ],
+    "why": "Q is twice as big as P, so the dilation needs scale factor 2. A translation alone cannot change size. A factor of 3 or 1/2 gives the wrong size. After doubling, a slide of 2 right and 1 up lines the corners up with Q."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One link back to last class. Congruent figures need only rigid motions. Similar figures may also need a dilation."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Congruent: rigid motions only, same size | Similar: dilations plus rigid motions, size can differ"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement is correct?",
+    "right": "Similar figures can be different sizes, but congruent figures cannot.",
+    "wrong": [
+     "Congruent figures can be different sizes.",
+     "Similar figures must be exactly the same size.",
+     "A dilation is a rigid motion."
+    ],
+    "why": "Rigid motions keep size, so congruent figures match exactly in size. Similarity allows a dilation, which changes size. That is why a dilation is called a non-rigid transformation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That's today's four steps. Take a breath. Here is the whole class in four lines."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A dilation uses a center and a scale factor.\nScale factor above 1 enlarges. Below 1 shrinks.\nFrom the origin, (x, y) becomes (kx, ky).\nSimilar means equal angles, sides in one ratio, and a dilation plus rigid motions."
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nice work, {name}. Next class we look at angles in triangles and with parallel lines. They will help us explain why similar triangles work."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Angles in Triangles and with Parallel Lines"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Dilations and similar figures",
+   "links": [
+    "[[Congruent Figures]]",
+    "[[Rigid Motions: Translations, Reflections and Rotations]]",
+    "[[Transformations on the Coordinate Plane]]"
+   ]
+  },
+  {
+   "topic": "Scale factor as a ratio",
+   "links": [
+    "[[Proportional Relationships and Unit Rate]]"
+   ]
+  },
+  {
+   "topic": "Where similar triangles come back",
+   "links": [
+    "[[Slope]]",
+    "[[The Pythagorean Theorem: Why It Works]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Similar means 'same shape, different size'.",
+   "other_view": "That phrase is a good everyday picture, and the Illustrative Mathematics task notes link it to the formal idea. But the formal definition uses a sequence of dilations and rigid motions, because two figures can merely look alike without being similar.",
+   "cite": [
+    "s4",
+    "s2"
+   ]
+  },
+  {
+   "claim": "In 8th grade, dilations from the origin are enough.",
+   "other_view": "The Eureka companion says 8th-grade students only work with dilations from the origin. Other curricula, such as Mathspace and Illustrative Mathematics, also dilate from centers that are not the origin. Both approaches are used, and the origin-only rule (x, y) → (kx, ky) is the simpler start.",
+   "cite": [
+    "s5",
+    "s6",
+    "s2"
+   ]
+  }
+ ]
+}

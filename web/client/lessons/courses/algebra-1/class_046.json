@@ -1,0 +1,456 @@
+{
+ "about": {
+  "title": "Comparing Linear, Exponential and Quadratic Functions",
+  "course": "algebra-1",
+  "class_n": 46,
+  "audience": [
+   "teenagers aged 14 to 16"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes fits. There are three tests to learn, one at a time, then graphs, stories and long-term growth. Each test is followed by a short check, so you can pause after any beat."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 46. Today's job is detective work: look at a table, a graph or a story, and decide which kind of function it is."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Which function fits?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You already know three kinds: linear, exponential and quadratic. We'll quickly remind ourselves what each one does, then learn simple tests to tell them apart."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Linear\nExponential\nQuadratic"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Linear first. A linear function adds the same amount every time x goes up by 1. Example: y = 3x + 2 starts at 2 and adds 3 each step."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Linear = add the same amount"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A savings jar starts with $5 and you add $3 every week. What kind of growth is that?",
+    "right": "Linear, because the same $3 is added each week",
+    "wrong": [
+     "Exponential, because the money keeps growing",
+     "Quadratic, because it starts at $5",
+     "It can't be told"
+    ],
+    "why": "Adding the same amount each step is the mark of a linear function."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Exponential next. An exponential function multiplies by the same number every step. Example: y = 2^x doubles each time, so 1, 2, 4, 8, 16."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Exponential = multiply by the same number"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quadratic last. A quadratic has an x² term, like y = x². Its values go 0, 1, 4, 9, 16. The jumps between them keep getting bigger, but in a steady way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quadratic = has an x² term"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Test one: the constant difference. Check the x-values go up by the same step. Then subtract each y from the next one. In this table you get 3 every time."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3, 4\ny: 5, 8, 11, 14, 17\nDifferences: +3, +3, +3, +3"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The differences are all the same, so the table is linear. That 3 is the slope, the amount added each step."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same differences → linear"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "x goes 0, 1, 2, 3 and y goes 4, 9, 14, 19. What kind of function is it?",
+    "right": "Linear, because the difference is +5 every time",
+    "wrong": [
+     "Exponential, because the numbers get bigger",
+     "Quadratic, because there are four rows",
+     "Not enough information"
+    ],
+    "why": "9-4, 14-9 and 19-14 are all 5. A constant difference means linear."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Test two: the constant ratio. The differences here are 3, 6, 12, 24. They are not the same, so it's not linear. Now divide each y by the one before it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3, 4\ny: 3, 6, 12, 24, 48\nDifferences: 3, 6, 12, 24\nRatios: ×2, ×2, ×2, ×2"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The ratio is 2 every time. A constant ratio means exponential. The 3 at the start is where it begins, and the 2 is the number we multiply by."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same ratio → exponential"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "y goes 2, 6, 18, 54 as x goes 0, 1, 2, 3. What kind of function is it?",
+    "right": "Exponential, because each y is 3 times the one before",
+    "wrong": [
+     "Linear, because it keeps going up",
+     "Quadratic, because the numbers jump a lot",
+     "Linear, because 2 is the starting value"
+    ],
+    "why": "6÷2, 18÷6 and 54÷18 are all 3. The differences (4, 12, 36) are not constant, so it isn't linear."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Test three: second differences. Here the first differences are 1, 3, 5, 7. They change, so it's not linear. Now take differences of those differences."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3, 4\ny: 1, 2, 5, 10, 17\nFirst differences: 1, 3, 5, 7\nSecond differences: 2, 2, 2"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second differences are all 2. That's the mark of a quadratic. Also, the ratios here (2, 2.5, 2, 1.7) are not constant, so it isn't exponential."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same second differences → quadratic"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "y goes 3, 4, 7, 12, 19 as x goes 0 to 4. The first differences are 1, 3, 5, 7. What are the second differences, and what is the function?",
+    "right": "All 2, so it's quadratic",
+    "wrong": [
+     "All 1, so it's linear",
+     "They change, so it's exponential",
+     "All 2, so it's exponential"
+    ],
+    "why": "The differences 3-1, 5-3 and 7-5 are all 2. Constant second differences mean quadratic."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put the tests in order. Do the same steps every time, and you won't get lost."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Are the x-values going up by equal steps?\n2. Same differences? Linear.\n3. Same ratios? Exponential.\n4. Same second differences? Quadratic."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more twist. If the ratio is less than 1, the function is exponential decay. For 80, 40, 20, 10 the ratio is one half each time, so the values shrink."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "x: 0, 1, 2, 3\ny: 80, 40, 20, 10\nRatios: ×½, ×½, ×½"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "y goes 100, 90, 80, 70 as x goes 0, 1, 2, 3. Which function is it?",
+    "right": "Linear, because the difference is -10 every time",
+    "wrong": [
+     "Exponential decay, because it goes down",
+     "Quadratic, because it goes down",
+     "Exponential, because the ratio is 1"
+    ],
+    "why": "Subtracting 10 each step is a constant difference. Going down doesn't make it exponential. The ratios (0.9, 0.89, 0.88) aren't constant."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now graphs. A linear graph is a straight line. It rises or falls at one steady rate everywhere."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A straight diagonal line crossing the y-axis, with evenly spaced points on it."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "An exponential graph is a curve. On the left it's nearly flat, then it climbs faster and faster. It never touches the x-axis. Decay is the mirror image: it falls quickly, then flattens."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A smooth curve that starts very close to the x-axis on the left and then shoots steeply upward on the right."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A graph starts almost flat near the x-axis, then climbs steeper and steeper without ever turning around. Which type is it?",
+    "right": "Exponential",
+    "wrong": [
+     "Linear",
+     "Quadratic",
+     "None of these"
+    ],
+    "why": "A curve that gets steeper and steeper and never turns is exponential. A line has constant steepness, and a quadratic turns around."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A quadratic graph is a parabola, a U-shape. It turns around at one point called the vertex. The two sides mirror each other."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A U-shaped curve with its lowest point in the middle. The left and right sides are mirror images."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A graph falls, turns around at a low point, then rises again, with both sides matching. Which type is it?",
+    "right": "Quadratic",
+    "wrong": [
+     "Linear",
+     "Exponential",
+     "Exponential decay"
+    ],
+    "why": "A U-shape with a turning point (the vertex) is a parabola, so it's quadratic."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stories give clues too. 'Adds the same each time' means linear. 'Doubles' or 'grows by a percent' means exponential. 'Area' or 'thrown ball' often means quadratic."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Add the same → linear\nDouble / percent → exponential\nArea, squared, thrown object → quadratic"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A video gets twice as many views every day. Which function fits?",
+    "right": "Exponential",
+    "wrong": [
+     "Linear",
+     "Quadratic",
+     "Cannot be modelled"
+    ],
+    "why": "Twice as many each day is multiplying by 2 each step, which is exponential."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, the long run. Take x = 10 in three functions: 3x + 2, x² and 2^x. Watch the bars."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Value at x = 10",
+    "chart": "c1"
+   },
+   "cite": [],
+   "move": "bars-grow",
+   "ask": {
+    "q": "At x = 10, which of the three has the biggest value?",
+    "right": "The exponential, 2^10 = 1024",
+    "wrong": [
+     "The linear, 32",
+     "The quadratic, 100",
+     "They are all equal"
+    ],
+    "why": "The exponential gives 1024, the quadratic 100 and the linear 32."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Go further. At x = 20 the linear gives 62 and the quadratic gives 400. The exponential gives over a million."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2^20 = 1,048,576"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A warning: early values can fool you. At x = 3, 3x + 2 gives 11, x² gives 9, and 2^x gives only 8. The exponential starts slowly, then overtakes the others."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "At x = 3: linear 11, quadratic 9, exponential 8\nAt x = 10: linear 32, quadratic 100, exponential 1024"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In these examples, which one is biggest at x = 3?",
+    "right": "The linear, 3x + 2 = 11",
+    "wrong": [
+     "The exponential, 2^x",
+     "The quadratic, x²",
+     "All three are tied"
+    ],
+    "why": "At x = 3 the values are 11, 9 and 8. The exponential only takes the lead later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Choosing a model also means explaining it. Use this sentence: 'I chose ___ because ___.' Name the type, then give the evidence."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "I chose exponential because each y is 2 times the one before."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Game time. Plan A gives 50 coins × the day number. Plan B gives 2^day coins. Plan C gives day² coins. On day 5 the totals are 250, 32 and 25. On day 10 they are 500, 1024 and 100."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Plan A (linear): 50 × day\nPlan B (exponential): 2^day\nPlan C (quadratic): day²"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The game runs for 30 days. Which plan should you pick, and why?",
+    "right": "Plan B, because doubling overtakes the others by day 10 and keeps pulling ahead",
+    "wrong": [
+     "Plan A, because it's biggest on day 5",
+     "Plan C, because squares grow fastest",
+     "All the same, because they all grow"
+    ],
+    "why": "Plan A leads early. Exponential growth beats linear and quadratic growth in the long run, and by day 10 Plan B is already ahead."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That's the class. Check the steps, run the three tests, look at the graph shape, read the story clues, and always give your reason. Next class starts statistics."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Same differences → linear\nSame ratios → exponential\nSame second differences → quadratic\nExponential wins in the long run\nAlways say why"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Value at x = 10 for three functions",
+   "rows": [
+    {
+     "label": "Linear: 3x + 2",
+     "value": 32,
+     "source": ""
+    },
+    {
+     "label": "Quadratic: x²",
+     "value": 100,
+     "source": ""
+    },
+    {
+     "label": "Exponential: 2^x",
+     "value": 1024,
+     "source": ""
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Sources: web research could not be run when this lesson was written. All numbers are worked out in the lesson itself, and the methods are standard algebra. The lesson cites no outside sources. Before publishing, check it against a textbook or the Common Core F-LE standards.",
+   "links": []
+  },
+  {
+   "topic": "Constant difference, ratio and second difference tests",
+   "links": [
+    "[[Slope and Rate of Change]]",
+    "[[Exponential Functions: Growth and Decay]]",
+    "[[Quadratic Functions and Their Graphs]]"
+   ]
+  },
+  {
+   "topic": "Choosing a model and long-term growth",
+   "links": [
+    "[[Geometric Sequences and Linear vs Exponential]]",
+    "[[Quadratic Models]]",
+    "[[Exponential Models and Compound Interest]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Exponential growth always wins in the long run.",
+   "other_view": "That is true for the pure math functions in this class. Real things, such as a viral video, a population or an app's users, usually can't keep doubling forever. They run out of people, space or resources, and the growth slows. Later courses use other models for that. Real data also rarely fits one type perfectly, so people choose the best fit and say how sure they are.",
+   "cite": []
+  }
+ ]
+}

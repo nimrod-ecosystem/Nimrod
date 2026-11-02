@@ -1,0 +1,533 @@
+{
+ "about": {
+  "title": "Function Notation: Reading and Using f(x)",
+  "course": "algebra-1",
+  "class_n": 11,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, a normal half-hour class. There are four small ideas (what f(x) means, evaluating, finding x for a given f(x), and meaning in context). Each one gets an example and a check question. Pause whenever you need to, because every beat stands on its own."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "4.4.2 Defining Functions by a Rule (Algebra 1)",
+   "publisher": "OpenStax",
+   "date": "2025-06-04",
+   "link": "https://openstax.org/books/algebra-1/pages/4-4-2-defining-functions-by-a-rule",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "3.1 Functions and Function Notation (College Algebra)",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/college-algebra/pages/3-1-functions-and-function-notation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Standards: Understand the concept of a function and use function notation (CCSS.Math.Content.HSF-IF.A)",
+   "publisher": "Smithsonian Learning Lab",
+   "date": "undated",
+   "link": "https://learninglab.si.edu/standards/CCSS.Math.Content.HSF-IF.A/531",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "3.1 Functions and Function Notation (College Algebra with Corequisite Support)",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/college-algebra-corequisite-support/pages/3-1-functions-and-function-notation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "1.1: Functions and Function Notation (Precalculus 1e, OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "undated",
+   "link": "https://math.libretexts.org/Bookshelves/Precalculus/Precalculus_1e_(OpenStax)/01:_Functions/1.01:_Functions_and_Function_Notation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "1.1 Functions and Function Notation (Precalculus 2e)",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/precalculus-2e/pages/1-1-functions-and-function-notation",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "3.5 Relations and Functions (Intermediate Algebra 2e)",
+   "publisher": "OpenStax",
+   "date": "2020-05-06",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/3-5-relations-and-functions",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome! Today we learn a short way to write a function. We'll go one small step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Function Notation: f(x)"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a reminder from last class. A function gives exactly one output for each input."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "one input → one output"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the new way to write it: f(x). We say it out loud as \"f of x\"."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "f(x)  =  \"f of x\""
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It has three parts. f is the name of the function. x is the input. f(x) is the output that comes back."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "f | the name of the function || x | the input || f(x) | the output"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Watch out: in f(3), the parentheses do not mean times. It means \"put 3 in as the input\"."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "f(3) = the output when the input is 3"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How do you read f(3) out loud?",
+    "right": "\"f of 3\"",
+    "wrong": [
+     "\"f times 3\"",
+     "\"f plus 3\"",
+     "\"3 f\""
+    ],
+    "why": "f(3) is read \"f of 3\". The parentheses hold the input. They do not mean multiply."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "f is only a name. We often use f, g or h, but other letters work too, like W for a function about weight."
+   },
+   "show": {
+    "kind": "list",
+    "text": "f(x)  |  g(x)  |  h(x)  |  W(d)"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You already know equations like y = 4x − 5. In function notation we can write the same rule as f(x) = 4x − 5."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 4x − 5 | f(x) = 4x − 5"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the first skill. Evaluating means finding f(x) for a given x. Swap the number in for x, then work it out."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evaluate = put the number in for x"
+   },
+   "cite": [
+    "s7",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: f(x) = 4x − 5. Find f(2). Put 2 in for x: 4·2 − 5. That is 8 − 5, which is 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "f(2) = 4·2 − 5 || = 8 − 5 || = 3"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn, same function: f(x) = 4x − 5. What is f(3)?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "f(x) = 4x − 5.  f(3) = ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "If f(x) = 4x − 5, what is f(3)?",
+    "right": "7",
+    "wrong": [
+     "12",
+     "2",
+     "3"
+    ],
+    "why": "Put 3 in for x: 4·3 − 5 = 12 − 5 = 7. 12 forgets the − 5. 2 adds 4 + 3 instead of multiplying. 3 is the answer for f(2), not f(3)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Inputs can be negative or zero too. Put a negative input in brackets so the sign doesn't get lost. Take f(x) = 2x − 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "f(−6) = 2(−6) − 5 = −12 − 5 = −17 || f(0) = 2(0) − 5 = −5"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try one with a negative input. Take your time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "f(x) = 2x − 5.  f(−1) = ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "If f(x) = 2x − 5, what is f(−1)?",
+    "right": "−7",
+    "wrong": [
+     "−3",
+     "3",
+     "−5"
+    ],
+    "why": "Put −1 in brackets: 2(−1) − 5 = −2 − 5 = −7. −3 happens if the negative sign gets dropped. −5 is f(0)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a real-world one. In a game you start with 20 points and earn 5 points per level. Let g(n) be your points after n levels: g(n) = 20 + 5n."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "g(n) = 20 + 5n   (n = levels)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Evaluate g(4): 20 + 5·4 = 40. In words: after 4 levels, you have 40 points. The input is levels and the output is points."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "g(4) = 40 | After 4 levels, you have 40 points"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Reading a statement like this back in plain words is called interpreting it in context. Let's practise."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "g(10) = 70"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the game, what does g(10) = 70 mean?",
+    "right": "After 10 levels you have 70 points.",
+    "wrong": [
+     "10 times 70 points.",
+     "After 70 levels you have 10 points.",
+     "The function g is multiplied by 10 to get 70."
+    ],
+    "why": "The number inside the parentheses is the input (levels). The number after the equals sign is the output (points). Here, 10 levels gives 70 points."
+   },
+   "extra": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The second skill goes the other way. Sometimes you know the output and want the input. Then set the formula equal to that output and solve."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Know the output? Set the formula equal to it and solve."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: f(x) = 2x − 5. Find x so that f(x) = 11. Write 2x − 5 = 11. Add 5: 2x = 16. Divide by 2: x = 8."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2x − 5 = 11 || 2x = 16 || x = 8 || Check: f(8) = 2·8 − 5 = 11 ✓"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now in the game. g(n) = 20 + 5n. How many levels gives exactly 45 points?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "g(n) = 20 + 5n.  g(n) = 45.  n = ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "For g(n) = 20 + 5n, which n makes g(n) = 45?",
+    "right": "5",
+    "wrong": [
+     "9",
+     "65",
+     "25"
+    ],
+    "why": "Solve 20 + 5n = 45. Subtract 20: 5n = 25. Divide by 5: n = 5. Check: 20 + 25 = 45. 9 skips the 20."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's keep the two skills apart. Evaluate: you know the input and find the output. Solve: you know the output and find the input."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Evaluate: f(5) = ? | input known, find output || Solve: f(x) = 17 | output known, find input"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the statement f(5) = 17, which number is the output?",
+    "right": "17",
+    "wrong": [
+     "5",
+     "f",
+     "There is no output."
+    ],
+    "why": "The 5 inside the parentheses is the input. The 17 after the equals sign is the output."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more story, with money. A gift card has $120. A streaming plan takes $15 each week. The balance after w weeks is B(w) = 120 − 15w."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "B(w) = 120 − 15w   (w = weeks)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Evaluate: B(3) = 120 − 45 = 75. After 3 weeks, $75 is left. Solve: B(w) = 30 means 120 − 15w = 30. So −15w = −90 and w = 6."
+   },
+   "show": {
+    "kind": "list",
+    "text": "B(3) = 75: after 3 weeks, $75 is left || B(w) = 30 → w = 6: after 6 weeks, $30 is left"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What question is B(w) = 30 asking?",
+    "right": "After how many weeks is $30 left on the card?",
+    "wrong": [
+     "How much money is left after 30 weeks?",
+     "How many dollars does each week cost?",
+     "What is the balance after 3 weeks?"
+    ],
+    "why": "30 is the output, and the output here is dollars left. So we are looking for the input, which is the number of weeks."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last idea. Inputs have to be in the function's domain, meaning the inputs that make sense. For B, w = 10 gives −$30, which is not a real balance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "B(10) = 120 − 150 = −30 ✗"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which input would NOT make sense for B(w) = 120 − 15w, if the balance can't go below $0?",
+    "right": "w = 10",
+    "wrong": [
+     "w = 0",
+     "w = 4",
+     "w = 8"
+    ],
+    "why": "B(10) = −30, which is below zero. B(0) = 120, B(4) = 60 and B(8) = 0 all work."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A heads-up for later. With lines you get one answer when you solve. With curved graphs, different inputs can give the same output, so there can be more than one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lines: one answer. Curves: sometimes more than one."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Great work. Here is today in four lines."
+   },
+   "show": {
+    "kind": "list",
+    "text": "f(x) is read \"f of x\": the output for input x || Evaluate: put the number in for x || Solve: set the formula equal to the output || In a story, say what the input and output mean"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Final check. Read it carefully: is it asking you to evaluate or to solve?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "f(x) = 3x + 1.  f(x) = 10.  x = ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "If f(x) = 3x + 1 and f(x) = 10, what is x?",
+    "right": "3",
+    "wrong": [
+     "31",
+     "9",
+     "13"
+    ],
+    "why": "10 is the output, so solve 3x + 1 = 10. Subtract 1: 3x = 9. Divide by 3: x = 3. 31 is what you get by putting 10 in as the input. 13 is f(4)."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Function notation",
+   "links": [
+    "[[Relations and Functions]]",
+    "[[Evaluating Expressions]]",
+    "[[Two-Step Equations]]",
+    "[[Slope-Intercept Form and Graphing Lines]]"
+   ]
+  },
+  {
+   "topic": "Interpreting f(x) in context",
+   "links": [
+    "[[Graphs of Functions: Domain, Range and Behavior]]",
+    "[[Building Linear Models from Data]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "f is the name of the function, and f(x) is the output for the input x.",
+   "other_view": "In everyday teaching, people often loosely say \"the function f(x) = 4x − 5\", and that is fine in this course. Higher-level math keeps a firmer line between the function f, which is a rule, and the output y it gives for an input. Both ways of speaking are common, so expect to see both.",
+   "cite": [
+    "s1",
+    "s6"
+   ]
+  }
+ ]
+}

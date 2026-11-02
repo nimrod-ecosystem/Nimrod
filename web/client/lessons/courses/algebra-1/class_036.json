@@ -1,0 +1,504 @@
+{
+ "about": {
+  "title": "Factoring Out the Greatest Common Factor and Grouping",
+  "course": "algebra-1",
+  "class_n": 36,
+  "audience": [
+   "age 14 to 16",
+   "teenagers"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class teaches two methods (pulling out a GCF, then grouping four terms), and each is explained, shown and checked in turn. Pause as long as you need on the questions."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Ch. 7 Key Concepts, Elementary Algebra 2e (7.1 Greatest Common Factor and Factor by Grouping)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra-2e/pages/7-key-concepts",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "6.1 Greatest Common Factor and Factor by Grouping, Intermediate Algebra 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/6-1-greatest-common-factor-and-factor-by-grouping",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "10.10: Introduction to Factoring Polynomials, Prealgebra 1e (OpenStax)",
+   "publisher": "Mathematics LibreTexts",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Bookshelves/PreAlgebra/Prealgebra_1e_(OpenStax)/10:_Polynomials/10.10:_Introduction_to_Factoring_Polynomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "4.2: Factoring by Grouping, Corequisite Codex",
+   "publisher": "Mathematics LibreTexts, Cosumnes River College",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Courses/Cosumnes_River_College/Corequisite_Codex/04:_Factoring_Techniques/4.02:_Factoring_by_Grouping",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "1.5 Factoring Polynomials, Algebra and Trigonometry",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/algebra-and-trigonometry/pages/1-5-factoring-polynomials",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Tutorial 7: Factoring Polynomials, College Algebra",
+   "publisher": "West Texas A&M University, Virtual Math Lab",
+   "date": "n.d.",
+   "link": "https://www.wtamu.edu/academic/anns/mps/math/mathlab/col_algebra/col_alg_tut7_factor.htm",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "6.4.4 Factoring Polynomials by Grouping, Algebra 1",
+   "publisher": "OpenStax, Rice University",
+   "date": "2026-01-20",
+   "link": "https://openstax.org/books/algebra-1/pages/6-4-4-factoring-polynomials-by-grouping",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 36. Last time we multiplied polynomials. Today we run that backwards. It's called factoring, and we'll go one small step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Factoring: the Distributive Property in reverse"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a word. To factor means to write something as a multiplication. 12 can be written as 3 times 4, so 3 and 4 are factors of 12."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "factor = one piece of a multiplication"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Say you have 12 chocolate cookies and 18 oat cookies. You want identical bags with none left over. The most bags you can make is 6. That 6 is the greatest common factor, or GCF."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "cookie",
+    "count": 12,
+    "layout": "group",
+    "text": "12 chocolate cookies (and 18 oat cookies) shared into 6 identical bags"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To find a GCF, list the factors of each number. The biggest number that shows up on both lists is the GCF."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Factors of 12: 1, 2, 3, 4, 6, 12\nFactors of 18: 1, 2, 3, 6, 9, 18\nBiggest on both lists: 6"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the GCF of 24 and 36?",
+    "right": "12",
+    "wrong": [
+     "6",
+     "4",
+     "24"
+    ],
+    "why": "The factors of 24 are 1, 2, 3, 4, 6, 8, 12, 24. The factors of 36 are 1, 2, 3, 4, 6, 9, 12, 18, 36. The biggest one on both lists is 12. 6 and 4 divide both numbers but are not the greatest. 24 does not divide 36."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Letters have a GCF too. Look at the numbers first, then the letters. For 16x and 20x², the GCF is 4x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "16x and 20x²  |  GCF is 4x"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For the letters, take the smaller power. x³ is x·x·x and x² is x·x. They share two x's, so the shared part is x²."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x³ = x · x · x\nx² = x · x\nShared: x · x = x²"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the GCF of 6x³ and 9x²?",
+    "right": "3x²",
+    "wrong": [
+     "3x³",
+     "6x²",
+     "3x"
+    ],
+    "why": "The GCF of 6 and 9 is 3. For the letters, x³ and x² share two x's, so x². Together that is 3x². 3x³ is not a factor of 9x². 6x² does not divide 9x². 3x is a common factor but not the greatest."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the reverse idea. Distributing turns 3(x + 4) into 3x + 12. Factoring starts at 3x + 12 and finds 3(x + 4)."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Distribute: 3(x + 4) → 3x + 12  |  Factor: 3x + 12 → 3(x + 4)"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the four steps. Find the GCF of all the terms. Rewrite each term using it. Use the Distributive Property in reverse. Then check by multiplying."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Find the GCF of all the terms\n2. Rewrite each term as a product using the GCF\n3. Use the Distributive Property in reverse\n4. Check by multiplying"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try 4x + 12. The GCF of 4x and 12 is 4. Write 4·x + 4·3. Pull the 4 out front to get 4(x + 3). Check: 4 times x is 4x, and 4 times 3 is 12. It matches."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4x + 12\n= 4·x + 4·3\n= 4(x + 3)\nCheck: 4x + 12 ✓"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Factor 5x + 15.",
+    "right": "5(x + 3)",
+    "wrong": [
+     "5(x + 15)",
+     "5(x + 10)",
+     "x(5 + 15)"
+    ],
+    "why": "The GCF of 5x and 15 is 5. Dividing each term by 5 leaves x and 3, so 5(x + 3). Checking the others: 5(x + 15) gives 5x + 75, 5(x + 10) gives 5x + 50, and x(5 + 15) gives 5x + 15x."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now three terms with letters: 6x³ − 9x² + 3x. The numbers share 3 and every term has an x, so the GCF is 3x. Divide each term by 3x."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6x³ ÷ 3x = 2x²\n−9x² ÷ 3x = −3x\n3x ÷ 3x = 1\nSo 3x(2x² − 3x + 1)"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at the last term. 3x divided by 3x leaves 1, not nothing. Forgetting that 1 is a very common slip. The check catches it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Don't lose the 1"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Factor 5x² + 5x completely.",
+    "right": "5x(x + 1)",
+    "wrong": [
+     "5x(x)",
+     "5(x² + x)",
+     "x(5x + 5)"
+    ],
+    "why": "The GCF is 5x. 5x² ÷ 5x is x, and 5x ÷ 5x is 1, so 5x(x + 1). 5x(x) multiplies out to only 5x². 5(x² + x) and x(5x + 5) are true but still have a common factor left inside the brackets."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sometimes the first term is negative. Then we pull the negative out with the GCF. For −4x − 8, the GCF is −4. That gives −4(x + 2). Check: −4 times x is −4x, and −4 times 2 is −8."
+   },
+   "show": {
+    "kind": "list",
+    "text": "−4x − 8\n= −4·x + (−4)·2\n= −4(x + 2)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Factor −3x + 12.",
+    "right": "−3(x − 4)",
+    "wrong": [
+     "3(x − 4)",
+     "−3(x + 4)",
+     "−3(x − 12)"
+    ],
+    "why": "Take out −3. Then −3x ÷ −3 is x, and 12 ÷ −3 is −4, so −3(x − 4). Multiplying back gives −3x + 12. 3(x − 4) gives 3x − 12. −3(x + 4) gives −3x − 12. −3(x − 12) gives −3x + 36."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Multiplying back proves the two forms are equal. It doesn't prove you're finished. Always look inside the brackets for one more common factor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check, then look inside the brackets"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A student writes 2x² + 8x = 2(x² + 4x). Multiplying back works. Is the factoring finished?",
+    "right": "No. x² + 4x still has a common factor x, so the full answer is 2x(x + 4).",
+    "wrong": [
+     "Yes, because multiplying back works.",
+     "No, it should be 2(x² + 8x).",
+     "No, because you can't take a number out of x²."
+    ],
+    "why": "The GCF has to be the greatest one. The GCF of 2x² and 8x is 2x, not just 2. So 2x(x + 4) is complete. 2(x² + 8x) is simply wrong: it multiplies back to 2x² + 16x."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why bother? Picture a game map that is a rectangle with area 12x² + 8x. Factor it to 4x(3x + 2). Now you know possible side lengths: 4x and 3x + 2."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rectangle labelled 'area = 12x² + 8x' with sides 4x and (3x + 2)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a twist. The common factor can be a whole bracket. In x(x + 2) + 5(x + 2), both parts contain (x + 2). Pull it out to get (x + 2)(x + 5)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x(x + 2) + 5(x + 2)\n= (x + 2)(x + 5)\nCheck: x² + 5x + 2x + 10 ✓"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Factor a(b + 4) + 3(b + 4).",
+    "right": "(b + 4)(a + 3)",
+    "wrong": [
+     "(b + 4)(a + 4)",
+     "(a + 3)(b + 3)",
+     "ab + 12"
+    ],
+    "why": "Both parts contain (b + 4). Pulling it out leaves a from the first part and 3 from the second, so (b + 4)(a + 3). The other answers either change the bracket or don't have the right terms when multiplied back."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That twist is the key to grouping. Sometimes four terms have no common factor in all four. Then we split them into two groups of two and hope a common bracket appears."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Grouping: four terms, no GCF for all four"
+   },
+   "cite": [
+    "s7",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The steps: group the terms in twos. Factor the GCF out of each group. If the two brackets match, pull that bracket out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Group terms in twos\n2. Factor the GCF out of each group\n3. Factor out the common bracket"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Try xy + 4y + 3x + 12. No one thing divides all four terms. So group: (xy + 4y) and (3x + 12). The first group gives y(x + 4). The second gives 3(x + 4). The brackets match."
+   },
+   "show": {
+    "kind": "list",
+    "text": "xy + 4y + 3x + 12\n= (xy + 4y) + (3x + 12)\n= y(x + 4) + 3(x + 4)\n= (x + 4)(y + 3)"
+   },
+   "cite": [
+    "s7",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check by multiplying. (x + 4)(y + 3) gives xy + 3x + 4y + 12. Those are the same four terms as the start, in a different order. So it is right."
+   },
+   "show": {
+    "kind": "list",
+    "text": "(x + 4)(y + 3)\n= xy + 3x + 4y + 12 ✓"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watch the signs. Take x² + 5x − 3x − 15. The second group is −3x − 15. Pull out −3, not 3, so the bracket matches. Then (x + 5) is common."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x² + 5x − 3x − 15\n= x(x + 5) − 3(x + 5)\n= (x + 5)(x − 3)"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Factor 2x² + 6x − 5x − 15 by grouping.",
+    "right": "(x + 3)(2x − 5)",
+    "wrong": [
+     "(x + 3)(2x + 5)",
+     "(x − 3)(2x − 5)",
+     "(2x + 3)(x − 5)"
+    ],
+    "why": "Group as (2x² + 6x) + (−5x − 15). The first group gives 2x(x + 3). The second gives −5(x + 3). Pulling out (x + 3) leaves (2x − 5). Multiplying back gives 2x² − 5x + 6x − 15, which matches."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Grouping doesn't always work. If the brackets don't match, try rearranging the terms and group again. If no arrangement gives a common bracket, grouping can't factor it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "xy + 2y + 3x + 5\n= y(x + 2) + (3x + 5)\nBrackets don't match → try another order"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "After grouping, the brackets don't match. What should you do?",
+    "right": "Try rearranging the terms. If no arrangement matches, grouping won't work.",
+    "wrong": [
+     "Change a number so the brackets match.",
+     "Multiply everything out and stop.",
+     "Write the answer anyway."
+    ],
+    "why": "We can't change the problem, because the answer has to multiply back to the original. Some polynomials can't be factored by grouping. Others, like x² + 5x + 6, have a GCF of 1 but still factor another way. That is coming in class 37."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To wrap up. Always look for a GCF first. With four terms and no overall GCF, try grouping. Then always check by multiplying. Well done. You can pause and redo any example."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. GCF first\n2. Four terms? Try grouping\n3. Check by multiplying"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Distributive Property (forward and reverse)",
+   "links": [
+    "[[Properties and Simplifying Expressions]]",
+    "[[Multiplying Polynomials]]"
+   ]
+  },
+  {
+   "topic": "Greatest common factor",
+   "links": [
+    "[[Ratios, Rates, Proportions and Percent]]"
+   ]
+  },
+  {
+   "topic": "Factoring by grouping",
+   "links": [
+    "[[Factoring x² + bx + c]]",
+    "[[Factoring ax² + bx + c]]",
+    "[[Special Factoring and a Factoring Strategy]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

@@ -1,0 +1,821 @@
+{
+ "about": {
+  "title": "Angles in Triangles and with Parallel Lines",
+  "course": "math-grade-8",
+  "class_n": 27,
+  "audience": [
+   "age 13 to 15",
+   "teenagers"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. This class has four linked ideas, and each has a worked example and a check question. The natural pause is after the exterior-angle ideas, before the parallel lines. If you need a shorter class, stop there and do the rest next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Grade 8 » Geometry (standard 8.G.A.5)",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/G/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "MI.Math.Content.8.G.A.5",
+   "publisher": "Michigan Learning Channel",
+   "date": "n.d.",
+   "link": "https://www.michiganlearning.org/learning-hub/standards/michigan-state-math-standards/mi-math-content-8-g-a-5/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Angles and Parallel Lines",
+   "publisher": "MathBitsNotebook",
+   "date": "n.d.",
+   "link": "https://mathbitsnotebook.com/Geometry/ParallelPerp/PPangles.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "Parallel Lines and Transversal",
+   "publisher": "CK-12 Foundation (FlexBook)",
+   "date": "n.d.",
+   "link": "https://flexbooks.ck12.org/cbook/ck-12-cbse-math-class-9/section/6.3/primary/lesson/parallel-lines-and-transversal-16947905/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Exterior Angles of a Triangle",
+   "publisher": "FreeMathHelp.com",
+   "date": "n.d.",
+   "link": "https://www.freemathhelp.com/exterior-angles/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Triangle Sum Theorem: Proof, Formula, Examples",
+   "publisher": "Bhanzu",
+   "date": "n.d.",
+   "link": "https://bhanzu.com/math/geometry/triangle-sum-theorem",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Triangle Angle Sum Theorem and Exterior Angles",
+   "publisher": "Study With Us Academy",
+   "date": "n.d.",
+   "link": "https://studywithus.academy/us/grade-8/math/triangle-angle-sum-theorem-and-exterior-angles/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "AA Triangle Similarity",
+   "publisher": "CK-12 Foundation (FlexBook)",
+   "date": "n.d.",
+   "link": "https://flexbooks.ck12.org/cbook/ck-12-cbse-math-class-10/section/6.5/primary/lesson/aa-triangle-similarity/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "CCSS.Math.Content.8.G.A.5 (8th Grade): Standard Explained",
+   "publisher": "Lesson Maker Pro",
+   "date": "n.d.",
+   "link": "https://lessonmakerpro.com/standards/ccss-math/8-g-a-5",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Math.8.G.5 practice (angle-angle similarity example)",
+   "publisher": "Learning Farm",
+   "date": "n.d.",
+   "link": "https://www.learningfarm.com/web/practicePassThrough.cfm?TopicID=1526",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "Exterior angle theorem",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Exterior_angle_theorem",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we find missing angles, and we also say why each answer is true. In maths, a reason matters as much as the number."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Missing angles, with reasons"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A triangle has three corners. The angle inside each corner is an interior angle. We measure angles in degrees."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Interior angle: the angle inside a corner of the triangle"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the first big rule. The three interior angles of any triangle add up to 180 degrees."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "180°"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To find a missing angle, add the two you know, then take that away from 180. Say the angles are 45 and 85. Together that is 130, and 180 minus 130 is 50."
+   },
+   "show": {
+    "kind": "list",
+    "text": "45 + 85 = 130\n180 − 130 = 50\nThe third angle is 50°"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Use the same two steps."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: find the third angle"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Two angles of a triangle are 35° and 65°. What is the third angle?",
+    "right": "80°",
+    "wrong": [
+     "100°",
+     "115°",
+     "145°"
+    ],
+    "why": "The three angles must add to 180°. 35 + 65 = 100, and 180 − 100 = 80. The answer 100° is just the sum of the two known angles, so it is a step along the way and not the answer. The answers 115° and 145° each take away only one of the angles instead of both."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sometimes the angles are written with a letter. If they are x, 2x and 3x, we add them and set the total equal to 180."
+   },
+   "show": {
+    "kind": "list",
+    "text": "x + 2x + 3x = 180\n6x = 180\nx = 30\nAngles: 30°, 60°, 90°"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try one yourself. Same idea: add all three, set the total to 180, then solve."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: angles with a letter"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The angles of a triangle are x, x + 10 and x + 20. What is x?",
+    "right": "x = 50",
+    "wrong": [
+     "x = 60",
+     "x = 40",
+     "x = 70"
+    ],
+    "why": "Add the three angles: x + (x + 10) + (x + 20) = 3x + 30. Set that equal to 180, so 3x = 150 and x = 50. The angles are 50°, 60° and 70°, and they add to 180°. The answer x = 60 comes from splitting 180 into three equal parts, but these angles are not equal."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New idea. Stretch one side of the triangle past a corner. The new angle outside the triangle is an exterior angle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Exterior angle: the angle outside, made by extending one side"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The exterior angle and the interior angle next to it sit on one straight line. So together they make 180 degrees."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A triangle ABC. Side BC is extended past C along a straight line to point D. The angle at C inside the triangle and the angle ACD outside it sit side by side on the straight line B–C–D."
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check of that idea."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: exterior plus its neighbour"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The interior angle at corner C is 70°. A side is extended past C. What is the exterior angle at C?",
+    "right": "110°",
+    "wrong": [
+     "70°",
+     "20°",
+     "290°"
+    ],
+    "why": "The interior angle and the exterior angle at C lie on a straight line, so they add to 180°. 180 − 70 = 110. The answer 70° just repeats the interior angle. The answer 20° uses 90 instead of 180, and 290° uses 360 instead of 180."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a shortcut that follows from that. The exterior angle equals the sum of the two interior angles it does not touch. Those two are called remote interior angles."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Exterior angle = the two remote (far) interior angles added together"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: the far angles are 50 and 60. The exterior angle is 50 + 60 = 110. We can double-check. The third interior angle is 70, and 70 + 110 makes 180."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Remote angles: 50° and 60°\nExterior angle: 50 + 60 = 110°\nCheck: third interior angle 70°, and 70 + 110 = 180 ✓"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does it work? Call the interior angles x, y and z, and the exterior angle at z's corner w. Two facts are true, and both equal 180."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Fact 1 (triangle sum): x + y + z = 180\nFact 2 (straight line): w + z = 180\nBoth equal 180, so x + y + z = w + z\nTake away z from both sides: x + y = w"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now use the shortcut. Add only the two remote angles."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: exterior angle shortcut"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The two remote interior angles are 35° and 48°. What is the exterior angle?",
+    "right": "83°",
+    "wrong": [
+     "97°",
+     "13°",
+     "132°"
+    ],
+    "why": "The exterior angle equals the sum of the two remote interior angles: 35 + 48 = 83. The answer 97° is 180 − 83, which is the interior angle next to it. The answer 13° subtracts the two angles instead of adding them. The answer 132° is 180 − 48, which ignores the 35° angle."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Good. That is the triangle half of today. Next, parallel lines. Parallel lines run side by side and never meet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Parallel lines: lines that never meet"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A third line that cuts across both of them is called a transversal. It makes eight angles, four at each crossing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Transversal: a line that crosses two other lines"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's number the eight angles so we can talk about them. Keep this picture in mind for the next few steps."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two horizontal parallel lines, the top one and the bottom one, with a slanted transversal crossing both. At the top crossing the angles are numbered 1 (upper left), 2 (upper right), 3 (lower left), 4 (lower right). At the bottom crossing the same pattern: 5 (upper left), 6 (upper right), 7 (lower left), 8 (lower right)."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First pair: vertical angles. They sit opposite each other at one crossing, like 1 and 4, or 2 and 3. They are always equal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vertical angles: opposite each other at a crossing, always equal"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try it using the picture."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: vertical angles"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Angle 2 is 115°. What is angle 3, which is opposite angle 2 at the same crossing?",
+    "right": "115°",
+    "wrong": [
+     "65°",
+     "25°",
+     "245°"
+    ],
+    "why": "Angles 2 and 3 are vertical angles, and vertical angles are equal. The answer 65° is what you get for a neighbour on a straight line (180 − 115). That is a different relationship from the one in this question."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second pair: corresponding angles. They sit in the same spot at each crossing, like 1 and 5, or 4 and 8. Think of the letter F. When the lines are parallel, corresponding angles are equal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Corresponding angles (F shape): same spot at each crossing, equal when lines are parallel"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check it with the same picture. The two lines are parallel."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: corresponding angles"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The lines are parallel and angle 1 is 70°. What is angle 5, in the same spot at the bottom crossing?",
+    "right": "70°",
+    "wrong": [
+     "110°",
+     "20°",
+     "290°"
+    ],
+    "why": "Angles 1 and 5 are both in the upper-left spot at their crossings. They are corresponding angles, and corresponding angles are equal when the lines are parallel. The answer 110° would be right for a neighbour on a straight line, but angle 5 is not a neighbour of angle 1."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third pair: alternate interior angles. Interior means between the two parallel lines. Alternate means on opposite sides of the transversal. Angles 3 and 6 are one pair, and 4 and 5 are the other. Look for a letter Z."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alternate interior angles (Z shape): between the lines, opposite sides, equal when lines are parallel"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Look for the Z."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: alternate interior angles"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The lines are parallel and angle 3 is 62°. Which angle is its alternate interior partner, and what is its measure?",
+    "right": "Angle 6, which is 62°",
+    "wrong": [
+     "Angle 6, which is 118°",
+     "Angle 5, which is 62°",
+     "Angle 7, which is 28°"
+    ],
+    "why": "Angle 3 is between the lines on the left of the transversal. Its alternate partner is between the lines on the right, which is angle 6. For parallel lines, alternate interior angles are equal, so angle 6 is 62°. Angle 5 is on the same side as angle 3, not the opposite side."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fourth pair: same-side interior angles, like 4 and 6, or 3 and 5. They are between the lines on the same side. For parallel lines they add up to 180."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same-side interior angles: between the lines, same side, add to 180° when lines are parallel"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check this one. These two do not match. They make 180."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: same-side interior angles"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The lines are parallel and angle 4 is 80°. What is angle 6, its same-side interior partner?",
+    "right": "100°",
+    "wrong": [
+     "80°",
+     "10°",
+     "280°"
+    ],
+    "why": "Same-side interior angles add to 180° when the lines are parallel, so angle 6 is 180 − 80 = 100. The answer 80° would be right for alternate interior angles, so it is easy to mix up. The Z pair is equal and the same-side pair adds to 180."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why are Z angles equal? We can build it from two facts we already have. Angle 3 equals angle 2 because they are vertical. Angle 2 equals angle 6 because they are corresponding."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Step | Reason\nAngle 3 = angle 2 | Vertical angles are equal\nAngle 2 = angle 6 | Corresponding angles, lines parallel\nSo angle 3 = angle 6 | Both equal angle 2"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check that you followed the chain."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: the chain of reasons"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which two facts did we chain together to show that alternate interior angles are equal?",
+    "right": "Vertical angles are equal, then corresponding angles are equal.",
+    "wrong": [
+     "Triangle angles add to 180, then vertical angles are equal.",
+     "Same-side interior angles add to 180, then triangle angles add to 180.",
+     "Exterior angles equal the remote angles, then corresponding angles are equal."
+    ],
+    "why": "We first moved to the vertical partner (angle 3 to angle 2). Then we moved down to the other crossing using corresponding angles (angle 2 to angle 6). No triangle was needed for that argument."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One warning. These rules only work when the lines are parallel. If a diagram does not say the lines are parallel, you can't use them. Also the other way round: if the Z angles are equal, the lines must be parallel."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No parallel lines, no Z, F or 180 rules"
+   },
+   "cite": [
+    "s9",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check that warning."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: when can I use the rules?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A diagram shows two lines cut by a transversal. Nothing says the lines are parallel. Can you say the Z-shaped angles are equal?",
+    "right": "No. The rule only works when the lines are known to be parallel.",
+    "wrong": [
+     "Yes. Z-shaped angles are always equal.",
+     "Yes, but only if the angles are acute.",
+     "No. Z-shaped angles are never equal."
+    ],
+    "why": "Alternate interior angles are equal only when the lines are parallel. If the lines are not parallel, the angles can differ. So we need the parallel marks or a statement that the lines are parallel before we use the rule."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we can answer something we skipped: why do triangle angles add to 180? Draw a line through the top corner, parallel to the base. Then the two base angles reappear at the top as Z angles."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A triangle sits on a flat base. A new line is drawn through the top corner, parallel to the base. The two sides of the triangle act as transversals. At the top corner there are three angles side by side on the straight line: left, middle (the triangle's own top angle) and right. The left one matches the bottom-left angle of the triangle, and the right one matches the bottom-right angle."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You can try this by hand too. Cut out three copies of one triangle and place the three angles side by side. They form a straight line."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Left angle = bottom-left angle (Z pair)\nRight angle = bottom-right angle (Z pair)\nThe three angles at the top make a straight line = 180°\nSo the triangle's three angles add to 180°"
+   },
+   "cite": [
+    "s7",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check that you saw the reason."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: why 180?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "In the picture, the base angles of the triangle match angles at the top corner. Which kind of angle pair is that?",
+    "right": "Alternate interior angles (Z pairs)",
+    "wrong": [
+     "Vertical angles",
+     "Same-side interior angles",
+     "Exterior angles of the triangle"
+    ],
+    "why": "The new line is parallel to the base and each triangle side crosses both lines, so each side acts as a transversal. The base angle and the top angle are between the lines and on opposite sides of that transversal. That makes them alternate interior angles, so they are equal."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now put it all together, with a reason for each step. Say angle 4 is 110 degrees, and the lines are parallel."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Step | Reason\nAngle 4 = 110° | Given\nAngle 5 = 110° | Alternate interior angles, lines parallel\nAngle 6 = 70° | Angles 5 and 6 are on a straight line: 180 − 110"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now you give the answer and the reason."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: answer and reason"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "The lines are parallel and angle 4 is 110°. What is angle 8 at the bottom crossing, and why?",
+    "right": "110°, because angles 4 and 8 are corresponding angles",
+    "wrong": [
+     "70°, because angles 4 and 8 are corresponding angles",
+     "110°, because angles 4 and 8 are same-side interior angles",
+     "70°, because angles 4 and 8 are vertical angles"
+    ],
+    "why": "Angle 4 is in the lower-right spot at the top crossing, and angle 8 is in the lower-right spot at the bottom crossing. That is a corresponding pair, so they are equal. The answers with 70° mix this up with a straight-line neighbour. Angles 4 and 8 are also not same-side interior angles, because angle 8 is not between the lines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last idea. In the last class, we met similar figures: the same shape, but a different size. Angles can tell us when two triangles are similar."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Angle-angle (AA) similarity: two matching angle pairs mean the triangles are similar"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does two pairs do the job? The third angle is forced by the 180 rule. Take triangle EFG with angles 90 and 44. Its third angle is 46. Triangle XYZ with 90 and 45 has a third angle of 45. The angles differ, so they are not similar."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "EFG: 90°, 44°, third = 180 − 90 − 44 = 46°\nXYZ: 90°, 45°, third = 180 − 90 − 45 = 45°\nAngles don't match, so not similar"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful: similar does not mean the same size. Similar triangles have the same angles, but they can be bigger or smaller."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Similar is not the same as congruent"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's try it. Remember to find the third angle of each triangle first. The matching angles don't have to be in the same order."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: are they similar?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Triangle 1 has angles 40° and 80°. Triangle 2 has angles 80° and 60°. Are the triangles similar?",
+    "right": "Yes. Both have angles 40°, 60° and 80°.",
+    "wrong": [
+     "No. The 40° and 60° are not in matching positions.",
+     "No. We would need to know the side lengths.",
+     "Yes, and they must be the same size."
+    ],
+    "why": "Triangle 1 has a third angle of 180 − 40 − 80 = 60. Triangle 2 has a third angle of 180 − 80 − 60 = 40. Both triangles have angles 40°, 60° and 80°, so they match and are similar by AA. Side lengths are not needed. Similar triangles may be different sizes, so the last answer is wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more, mixing the first ideas. Use the exterior angle shortcut. The exterior angle is 125 degrees, and one remote angle is 50 degrees."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Mixed check: find the other remote angle"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "An exterior angle is 125° and one remote interior angle is 50°. What is the other remote interior angle?",
+    "right": "75°",
+    "wrong": [
+     "175°",
+     "55°",
+     "25°"
+    ],
+    "why": "The exterior angle equals the sum of the two remote angles, so 50 + (other) = 125, and the other is 125 − 50 = 75. The answer 175° adds when we should be taking away. The answer 55° is 180 − 125, which is the interior angle next to the exterior one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Here is what to remember. Each one is a tool, and a good answer names the tool it used."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Triangle angles add to 180°\nExterior angle = the two remote interior angles added\nParallel lines: corresponding (F) and alternate interior (Z) are equal\nParallel lines: same-side interior angles add to 180°\nTwo matching angle pairs make triangles similar (AA)"
+   },
+   "cite": [
+    "s1",
+    "s6",
+    "s5",
+    "s3",
+    "s8"
+   ],
+   "move": "count-in"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Triangle angle sum and exterior angles",
+   "links": [
+    "[[Congruent Figures]]",
+    "[[Angles in Triangles and with Parallel Lines]]"
+   ]
+  },
+  {
+   "topic": "Parallel lines and transversals",
+   "links": [
+    "[[Rigid Motions: Translations, Reflections and Rotations]]",
+    "[[Slope]]"
+   ]
+  },
+  {
+   "topic": "Angle-angle similarity",
+   "links": [
+    "[[Dilations and Similar Figures]]",
+    "[[The Pythagorean Theorem: Why It Works]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The angles of a triangle always add up to 180°.",
+   "other_view": "This holds on a flat surface, which is what we use in this class. On a curved surface such as a sphere, it fails. One example is a triangle from the North Pole down to the equator, where both sides meet the equator at right angles. Its angles add to more than 180°.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "claim": "Informal arguments, such as the Z-shape and straight-line reasoning in this class, are enough to establish these angle facts.",
+   "other_view": "Grade 8 asks for informal arguments, and this is a deliberate choice. Later maths courses ask students to justify the same facts in formal proofs, so the informal reasoning here is a stepping stone and not the final standard of proof.",
+   "cite": [
+    "s1",
+    "s9"
+   ]
+  }
+ ]
+}

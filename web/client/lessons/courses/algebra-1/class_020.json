@@ -1,0 +1,632 @@
+{
+ "about": {
+  "title": "Piecewise and Absolute Value Functions, and Transformations",
+  "course": "algebra-1",
+  "class_n": 20,
+  "audience": [
+   "age 14 to 16",
+   "teenagers",
+   "follows 8th-grade math"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. This class has five linked ideas: piecewise rules, the absolute value V, shifts, flips and stretches, and putting them together. You can stop after the beat on the V graph (beat 9) and take a break, or split the class into two sittings."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "3.6 Absolute Value Functions, College Algebra 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/college-algebra-2e/pages/3-6-absolute-value-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "1.5 Transformation of Functions, Precalculus 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/precalculus-2e/pages/1-5-transformation-of-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "1.2 Basic Classes of Functions, Calculus Volume 1",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/calculus-volume-1/pages/1-2-basic-classes-of-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "A1.F-BF.B.3 (Algebra 1 standard: effect of changes on a graph)",
+   "publisher": "Arizona Department of Education",
+   "date": "not stated on page",
+   "link": "https://k12standards.az.gov/content/a1f-bfb3",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Absolute Value Graph",
+   "publisher": "MathBitsNotebook",
+   "date": "not stated on page",
+   "link": "https://mathbitsnotebook.com/Algebra2/AbsoluteValue/AVGraphs.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "Graph piecewise-defined functions (College Algebra)",
+   "publisher": "Lumen Learning",
+   "date": "not stated on page",
+   "link": "https://courses.lumenlearning.com/odessa-collegealgebra/chapter/graph-piecewise-defined-functions/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "1.6 Absolute Value Functions, Precalculus 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "not stated on page",
+   "link": "https://openstax.org/books/precalculus-2e/pages/1-6-absolute-value-functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s8",
+   "title": "Shifting Linear Equations in Function Notation (Algebra 1, MCC@WCCUSD)",
+   "publisher": "West Contra Costa Unified School District",
+   "date": "2015-03-15",
+   "link": "https://resources.finalsite.net/images/v1730168185/wccusdnet/mmockxcnfwrkodcnap0d/shiftinglinearequationsinfunctionnotationv3.pdf",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s9",
+   "title": "1.6: Transformation of Functions, Precalculus 2e (OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "not stated on page",
+   "link": "https://math.libretexts.org/Bookshelves/Precalculus/Precalculus_2e_(OpenStax)/01:_Functions/1.06:_Transformation_of_Functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s10",
+   "title": "Module 3, Functions and Transformations, Lesson 2",
+   "publisher": "Texas Instruments Education",
+   "date": "not stated on page",
+   "link": "https://education.ti.com/html/t3_free_courses/calculus84_online/mod03/mod03_lesson2.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s11",
+   "title": "3.6: Absolute Value Functions, Algebra and Trigonometry (OpenStax)",
+   "publisher": "LibreTexts Mathematics",
+   "date": "not stated on page",
+   "link": "https://math.libretexts.org/Bookshelves/Algebra/Algebra_and_Trigonometry_1e_(OpenStax)/03:_Functions/3.06:_Absolute_Value_Functions",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 20. Today we learn two new kinds of graphs, and then how to slide, flip and stretch them."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Piecewise and Absolute Value Functions, and Transformations"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First idea: a piecewise function uses more than one formula. Each formula only works for part of the inputs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Piecewise function = more than one formula, each for its own part of the inputs"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a pretend arcade. The first 10 tokens cost $1 each. After that, each extra token costs 50 cents. That is two rules, so it is piecewise."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rule | When to use it\nC(t) = t | when t is 0 to 10 tokens\nC(t) = 0.5t + 5 | when t is more than 10 tokens"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The trick is to pick the rule first, then do the math. Try it: what do 14 tokens cost?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Step 1: Is 14 more than 10? Yes.\nStep 2: Use C(t) = 0.5t + 5.\nStep 3: Put in 14."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Using the arcade rules, what do 14 tokens cost?",
+    "right": "$12",
+    "wrong": [
+     "$14",
+     "$7",
+     "$9"
+    ],
+    "why": "14 is more than 10, so use the second rule: 0.5 times 14 is 7, plus 5 is 12. Using the first rule gives $14, and forgetting the +5 gives $7."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To graph a piecewise function, graph each piece only where its rule applies, all on the same axes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Piece 1: from (0, 0) to (10, 10)\nPiece 2: from (10, 10) to (20, 15)\nSame axes, each piece in its own stretch of t"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture it: a straight line going up, then a bend at 10 tokens, then a line that keeps going up but more gently."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph with tokens on the bottom and cost up the side. A steeper line from (0,0) to (10,10), then a flatter line from (10,10) to (20,15)."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which piece of the arcade graph is flatter?",
+    "right": "The second piece, after 10 tokens",
+    "wrong": [
+     "The first piece, before 10 tokens",
+     "They are exactly the same steepness",
+     "Neither one is a line"
+    ],
+    "why": "Slope is the price per token. The first piece has slope 1 and the second has slope 0.5, so the second is flatter."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a famous piecewise function. Absolute value means distance from zero on the number line, so it is never negative."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "|−3| = 3 and |3| = 3 (both are 3 steps from 0)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Written as a piecewise function, it has two rules. Positive or zero inputs stay the same. Negative inputs get their sign flipped."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rule | When\n|x| = x | when x ≥ 0\n|x| = −x | when x < 0"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is |−5|?",
+    "right": "5",
+    "wrong": [
+     "−5",
+     "0",
+     "10"
+    ],
+    "why": "−5 is less than 0, so use the rule −x. The opposite of −5 is 5. It is also 5 steps from zero."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Plot those points and you get a V. The pointy bottom is called the corner point, where the graph changes direction."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Graph of y = |x|: a V with its corner at (0, 0)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s11",
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Good place for a breather if you need one. Next we change the formula and watch the V move. This skill is part of Algebra 1 standards for absolute value and piecewise functions."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Transformations: moving a graph by changing its formula"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Move 1: add a number outside. Adding k to the whole function slides the graph up if k is positive, and down if k is negative."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "f(x) + k: up or down. Example: |x| + 3 has its corner at (0, 3)"
+   },
+   "cite": [
+    "s2",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where is the corner of y = |x| − 2?",
+    "right": "(0, −2)",
+    "wrong": [
+     "(0, 2)",
+     "(−2, 0)",
+     "(2, 0)"
+    ],
+    "why": "The −2 is outside the absolute value, so it moves the graph down 2. The corner goes from (0, 0) to (0, −2)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Move 2: add inside. Changing x itself slides the graph left or right. It feels backwards: x + k moves it left when k is positive."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "f(x + k): left or right. |x − 3| has its corner at (3, 0). |x + 4| has its corner at (−4, 0)."
+   },
+   "cite": [
+    "s2",
+    "s8",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where is the corner of y = |x + 4|?",
+    "right": "(−4, 0)",
+    "wrong": [
+     "(4, 0)",
+     "(0, 4)",
+     "(0, −4)"
+    ],
+    "why": "A plus inside moves the graph left, so the corner goes 4 left to (−4, 0). The inside number changes x, which is why it feels backwards."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You can use both shifts together. In |x + 1| − 3, the inside +1 moves the V left 1, and the outside −3 moves it down 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = |x + 1| − 3\nInside +1: left 1\nOutside −3: down 3\nCorner: (−1, −3)"
+   },
+   "cite": [
+    "s9",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Move 3: flip it. A negative sign outside, −f(x), flips the graph over the x-axis. The V becomes an upside-down V."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "−f(x): flips over the x-axis. y = −|x| + 5 is a ∧ with its peak at (0, 5)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which formula makes an upside-down V with its peak at (0, 5)?",
+    "right": "y = −|x| + 5",
+    "wrong": [
+     "y = |x| + 5",
+     "y = |x| − 5",
+     "y = −|x| − 5"
+    ],
+    "why": "The minus sign outside flips it upside down. The +5 lifts the peak to (0, 5). Without the flip, the V would point up."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A flip left to right, f(−x), is different. For the plain V it changes nothing, because the V is already symmetric."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Some functions have symmetry, so a reflection gives back the original graph."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Move 4: stretch. Multiplying the whole function by 2 doubles every output, so every point is twice as far from the x-axis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a · f(x): stretch. If a is 2, every height doubles. |x| at x = 1 is 1, and 2|x| at x = 1 is 2."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For y = 3|x|, what is y when x = 2?",
+    "right": "6",
+    "wrong": [
+     "5",
+     "2",
+     "12"
+    ],
+    "why": "|2| is 2, and 3 times 2 is 6. Because the stretch multiplies every height by 3, the V gets narrower."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If the multiplier is negative, you get a stretch and a flip at once."
+   },
+   "show": {
+    "kind": "list",
+    "text": "a = 2: stretch by 2\na = −2: stretch by 2 and flip over the x-axis"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the one pattern to keep. It holds all four moves in a single formula."
+   },
+   "show": {
+    "kind": "list",
+    "text": "f(x) = a|x − h| + k\nCorner (vertex) at (h, k)\nOpens up if a > 0, down if a < 0\nk is the vertical shift"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Worked example: y = 2|x − 3| + 4. Start with |x|, move right 3, stretch by 2, move up 4. The corner lands at (3, 4)."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "y = 2|x − 3| + 4: a narrow V with its corner at (3, 4)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Read the formula one piece at a time: inside number, outside number, and the sign in front."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Read it: f(x) = −2|x + 1| − 4"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "For f(x) = −2|x + 1| − 4, what are the corner and the direction it opens?",
+    "right": "Corner (−1, −4), opens down",
+    "wrong": [
+     "Corner (1, −4), opens down",
+     "Corner (−1, −4), opens up",
+     "Corner (1, 4), opens up"
+    ],
+    "why": "x + 1 inside means left 1, so h = −1. The −4 outside means down 4. The negative multiplier means it opens down."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more fact. A V can cross the x-axis at no points, one point, or two, depending on how it was shifted and flipped."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = |x| + 3: never touches the x-axis\ny = |x|: touches at one point, (0, 0)\ny = −|x| + 3: crosses at x = −3 and x = 3"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Does y = |x| + 3 ever cross the x-axis?",
+    "right": "No, its lowest point is 3 above the axis",
+    "wrong": [
+     "Yes, at one point",
+     "Yes, at two points",
+     "Yes, at x = −3 only"
+    ],
+    "why": "|x| is never below 0, so |x| + 3 is never below 3. The graph stays above the x-axis."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last check. A V has its corner at (−2, 1), opens up, and is narrower than the plain V. Which formula fits?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Left 2: inside +2\nUp 1: outside +1\nNarrower: multiplier bigger than 1\nOpens up: positive multiplier"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which formula has its corner at (−2, 1), opens up, and is narrower than y = |x|?",
+    "right": "y = 2|x + 2| + 1",
+    "wrong": [
+     "y = 2|x − 2| + 1",
+     "y = 2|x + 2| − 1",
+     "y = −2|x + 2| + 1"
+    ],
+    "why": "The corner is (h, k) = (−2, 1), so write x + 2 inside and +1 outside. A multiplier of 2 makes it narrower and opens it up. The other options put the corner in the wrong place or flip the V."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nicely done. Piecewise means more than one rule. Absolute value is a two-rule V. Then shift, flip and stretch it with a|x − h| + k."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Piecewise: pick the rule, then calculate\n|x|: a V with its corner at (0, 0)\nOutside +k: up or down. Inside x + k: left or right (backwards!)\nMinus sign outside: flip. Multiplier: stretch."
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "y = |x| for x from −3 to 3",
+   "rows": [
+    {
+     "label": "−3",
+     "value": 3,
+     "source": "s1"
+    },
+    {
+     "label": "−2",
+     "value": 2,
+     "source": "s1"
+    },
+    {
+     "label": "−1",
+     "value": 1,
+     "source": "s1"
+    },
+    {
+     "label": "0",
+     "value": 0,
+     "source": "s1"
+    },
+    {
+     "label": "1",
+     "value": 1,
+     "source": "s1"
+    },
+    {
+     "label": "2",
+     "value": 2,
+     "source": "s1"
+    },
+    {
+     "label": "3",
+     "value": 3,
+     "source": "s1"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "line",
+   "title": "y = 2|x − 3| + 4 for x from 1 to 5",
+   "rows": [
+    {
+     "label": "1",
+     "value": 8,
+     "source": "s1"
+    },
+    {
+     "label": "2",
+     "value": 6,
+     "source": "s1"
+    },
+    {
+     "label": "3",
+     "value": 4,
+     "source": "s1"
+    },
+    {
+     "label": "4",
+     "value": 6,
+     "source": "s1"
+    },
+    {
+     "label": "5",
+     "value": 8,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Piecewise rules and pricing tiers",
+   "links": [
+    "[[Function Notation]]",
+    "[[Slope and Rate of Change]]",
+    "[[Graphs of Functions: Domain, Range and Behavior]]"
+   ]
+  },
+  {
+   "topic": "Absolute value graph and transformations",
+   "links": [
+    "[[Compound Inequalities and Absolute Value]]",
+    "[[Vertex Form and Transformations of Parabolas]]",
+    "[[Quadratic Functions and Their Graphs]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "In y = 2|x − 3| + 4, the 2 is a vertical stretch.",
+   "other_view": "For absolute value graphs it can be read two ways. A vertical stretch by 2 gives the same graph as a horizontal compression, because |2x| = 2|x|. OpenStax and MathBitsNotebook both say the two descriptions are equivalent here. The TI lesson adds that this only looks the same for some functions, like absolute value. For many other functions, horizontal and vertical changes are not interchangeable, so check each new function.",
+   "cite": [
+    "s7",
+    "s5",
+    "s10"
+   ]
+  }
+ ]
+}

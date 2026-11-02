@@ -1,0 +1,509 @@
+{
+ "about": {
+  "title": "Slope-Intercept Form and Graphing Lines",
+  "course": "algebra-1",
+  "class_n": 14,
+  "audience": [
+   "age 14 to 16",
+   "teenagers",
+   "follows 8th-grade math"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 16 short steps, one idea each, and a quick check after most of them. That is enough time to learn the form, graph it step by step, and read what m and b mean, without rushing. Anyone who wants more time can pause after any step and replay it."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "4.5 Use the Slope–Intercept Form of an Equation of a Line (Elementary Algebra)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/elementary-algebra/pages/4-5-use-the-slope-intercept-form-of-an-equation-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s2",
+   "title": "Graphing a Line Using the Slope and Y-Intercept",
+   "publisher": "Brigham Young University–Idaho",
+   "date": "n.d.",
+   "link": "https://content.byui.edu/file/b8b83119-9acc-4a7b-bc84-efacf9043998/1/Math-2-10-3.html",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s3",
+   "title": "Grade 8, Expressions & Equations, Standard 8.EE.B.6",
+   "publisher": "Common Core State Standards Initiative",
+   "date": "n.d.",
+   "link": "https://www.thecorestandards.org/Math/Content/8/EE/B/6/",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s4",
+   "title": "1.3: Describing Relationships with Linear Functions",
+   "publisher": "LibreTexts Mathematics (Clovis Community College)",
+   "date": "n.d.",
+   "link": "https://math.libretexts.org/Courses/Clovis_Community_College/Precalculus:__Describing_Relationships_Between_Quantities_in_the_World_Around_Us/01:_Describing_Relationships_with_Functions/1.03:_Describing_Relationships_with_Linear_Functions",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s5",
+   "title": "Proportional vs. Non-Proportional",
+   "publisher": "Varsity Tutors",
+   "date": "n.d.",
+   "link": "https://www.varsitytutors.com/practice/subjects/prealgebra/lessons/proportional-vs-non-proportional",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s6",
+   "title": "3.2 Slope of a Line (Intermediate Algebra 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/intermediate-algebra-2e/pages/3-2-slope-of-a-line",
+   "read": "2026-11-01"
+  },
+  {
+   "id": "s7",
+   "title": "Linear function (calculus)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Linear_function_(calculus)",
+   "read": "2026-11-01"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today you'll learn to draw a line straight from its equation, and to say what its numbers mean in real life."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Graph a line from y = mx + b"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick reminder from last class. Slope tells how steep a line is. It is rise over run: the change in y over the change in x."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "slope = rise ÷ run"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A line goes up 3 and right 2 on each step. What is its slope?",
+    "right": "3/2",
+    "wrong": [
+     "2/3",
+     "5",
+     "-3/2"
+    ],
+    "why": "The rise is 3 and the run is 2, so slope = rise ÷ run = 3/2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next idea: the y-intercept. It is the point where the line crosses the y-axis. On that axis x is 0, so the point looks like (0, b)."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid. A line crosses the vertical y-axis at one marked dot, labeled (0, b)."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A line crosses the y-axis at 5. What is its y-intercept point?",
+    "right": "(0, 5)",
+    "wrong": [
+     "(5, 0)",
+     "(5, 5)",
+     "(0, 0)"
+    ],
+    "why": "On the y-axis x is 0, so the point is (0, 5). The number you cross at goes second."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we put slope and y-intercept into one equation: y = mx + b. The m is the slope. The b is the y-intercept. Some books call it the y-form."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = mx + b"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You have seen this before. In 8th grade, the standard says a line crossing the vertical axis at b has this equation."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "y = mx + b for a line intercepting the vertical axis at b"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To read m and b, look at the equation. In y = 2x + 3, the number with x is m, so m = 2. The number on its own is b, so b = 3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = 2x + 3 | m = 2 (slope) | b = 3 (y-intercept point is (0, 3))"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two tricky cases. If x has no number, as in y = −x + 4, then m = −1. And a minus sign belongs to the number after it, so in y = 4x − 5, b = −5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "y = −x + 4 → m = −1, b = 4 | y = 4x − 5 → m = 4, b = −5"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In y = 4x − 5, what are m and b?",
+    "right": "m = 4 and b = −5",
+    "wrong": [
+     "m = 4 and b = 5",
+     "m = −5 and b = 4",
+     "m = 5 and b = 4"
+    ],
+    "why": "The number with x is the slope, 4. The number on its own is −5, because the minus sign goes with the 5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we graph. Take y = 2x + 1. Step one: plot the y-intercept. Here b = 1, so put a dot at (0, 1)."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coordinate grid with one dot on the y-axis at (0, 1)."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "To graph y = 3x − 2, which point do you plot first?",
+    "right": "(0, −2)",
+    "wrong": [
+     "(3, −2)",
+     "(−2, 0)",
+     "(0, 3)"
+    ],
+    "why": "Step one always uses b. Here b = −2, so the first point is (0, −2)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: use the slope. Here m = 2, which is 2/1. From your dot, go up 2 and right 1. A positive slope climbs as you move right."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same grid. An arrow goes from (0, 1) up 2 and right 1 to a second dot at (1, 3)."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You are at (0, 1) and the slope is 2. Which point comes next?",
+    "right": "(1, 3)",
+    "wrong": [
+     "(2, 2)",
+     "(1, 2)",
+     "(3, 1)"
+    ],
+    "why": "Slope 2 = 2/1. Go up 2 and right 1: (0, 1) becomes (1, 3)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three: connect the two dots with a straight line. Add arrows at both ends, because the line keeps going."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A straight line through (0, 1) and (1, 3), with arrowheads at both ends."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a negative slope. For y = −x + 4, start at (0, 4). The slope −1 is −1/1, so go down 1 and right 1. A negative slope falls as you move right."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid. A dot at (0, 4), an arrow down 1 and right 1, and a second dot at (1, 3). A line slopes downward through them."
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For y = −x + 4, you start at (0, 4). Which point comes next?",
+    "right": "(1, 3)",
+    "wrong": [
+     "(1, 5)",
+     "(−1, 3)",
+     "(0, 3)"
+    ],
+    "why": "The slope is −1/1: down 1, right 1. So (0, 4) becomes (1, 3)."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the meaning. In a real situation, b is the starting value, when x is 0. And m is the rate of change, how much y changes for each 1 of x."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "b = starting value (x = 0) | m = change in y for each 1 step in x"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: Sam has $20 saved and adds $5 every week. With x as weeks and y as dollars, that is y = 5x + 20. Here b = 20 and m = 5."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Sam's savings by week",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In y = 5x + 20, what does the 20 mean?",
+    "right": "Sam starts with $20 before any weeks pass.",
+    "wrong": [
+     "He saves $20 every week.",
+     "He saves for 20 weeks.",
+     "He has $20 after 5 weeks."
+    ],
+    "why": "b is the value when x = 0, which is the start. The 5 is the weekly change."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's use it. Put x = 3 weeks into y = 5x + 20. That is 5 times 3, plus 20. Look at the chart to check."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5(3) + 20 = 35"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Using y = 5x + 20, how many dollars does Sam have after 3 weeks?",
+    "right": "$35",
+    "wrong": [
+     "$25",
+     "$15",
+     "$100"
+    ],
+    "why": "5 × 3 = 15 dollars saved, plus the $20 he began with, makes $35."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A slope can be negative, too. Pretend a game's battery starts at 100 percent and drains a steady 10 points an hour: y = −10x + 100."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "y = −10x + 100"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In y = −10x + 100, what does the −10 mean?",
+    "right": "The battery drops 10 points each hour.",
+    "wrong": [
+     "The battery starts at 10 percent.",
+     "The battery starts at −10 percent.",
+     "The battery takes 10 hours to charge."
+    ],
+    "why": "The slope is the rate of change. A negative slope means y goes down, here 10 points per hour. The 100 is the starting charge."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last idea. If b is 0, the line goes through (0, 0), and we call it proportional. If b is not 0, it is still a straight line, but not proportional."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "y = mx (b = 0): through (0, 0), proportional | y = mx + b (b ≠ 0): not through (0, 0), not proportional"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Arcade A costs $2 a game: y = 2x. Arcade B has a $5 entry plus $2 a game: y = 2x + 5. Which is proportional?",
+    "right": "Arcade A, because b = 0 and its line goes through (0, 0).",
+    "wrong": [
+     "Arcade B, because it has a $5 entry.",
+     "Both, because both slopes are 2.",
+     "Neither, because both are straight lines."
+    ],
+    "why": "Only y = 2x has b = 0. Both are linear with slope 2, but only Arcade A is proportional."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Recap. Read m and b. Plot (0, b). Use m as rise over run. Connect the dots. In a story, b is the start and m is the change."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Read m and b | 2. Plot (0, b) | 3. Use rise ÷ run for the next point | 4. Connect with a line | Story: b = start, m = change per step"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the best first step to graph y = −2x + 6?",
+    "right": "Plot the point (0, 6).",
+    "wrong": [
+     "Plot the point (−2, 6).",
+     "Plot the point (6, 0).",
+     "Draw a line, then look for the dots."
+    ],
+    "why": "Start with b = 6, the y-intercept, so plot (0, 6). Then use the slope −2 to find the next point."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Sam's savings in dollars, y = 5x + 20 (made-up example)",
+   "rows": [
+    {
+     "label": "Week 0",
+     "value": 20,
+     "source": "s4"
+    },
+    {
+     "label": "Week 1",
+     "value": 25,
+     "source": "s4"
+    },
+    {
+     "label": "Week 2",
+     "value": 30,
+     "source": "s4"
+    },
+    {
+     "label": "Week 3",
+     "value": 35,
+     "source": "s4"
+    },
+    {
+     "label": "Week 4",
+     "value": 40,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Slope and rate of change (class 13)",
+   "links": [
+    "[[Slope and Rate of Change]]"
+   ]
+  },
+  {
+   "topic": "Reading a graph's y-intercept and slope",
+   "links": [
+    "[[Function Notation]]",
+    "[[Graphs of Functions: Domain, Range and Behavior]]"
+   ]
+  },
+  {
+   "topic": "Other ways to write a line",
+   "links": [
+    "[[Point-Slope and Standard Form]]",
+    "[[Writing Linear Equations from Information]]"
+   ]
+  },
+  {
+   "topic": "Proportional relationships and percent",
+   "links": [
+    "[[Ratios, Rates, Proportions and Percent]]"
+   ]
+  },
+  {
+   "topic": "Where two lines cross",
+   "links": [
+    "[[Systems of Equations by Graphing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "In Algebra 1, any equation y = mx + b counts as a linear function.",
+   "other_view": "Not everyone uses the word this way. Some advanced math texts use \"linear function\" only for lines through the origin (b = 0). Algebra 1 and 8th-grade standards use the wider meaning, so a line with b ≠ 0 still counts here.",
+   "cite": [
+    "s7",
+    "s3"
+   ]
+  },
+  {
+   "claim": "A line like y = 5x + 20 or y = −10x + 100 describes real life.",
+   "other_view": "It only does if the rate of change really stays steady. Real savings, and real batteries, often speed up or slow down. So a line is a model that works while the rate stays roughly constant. It is not a perfect copy of reality.",
+   "cite": [
+    "s4"
+   ]
+  }
+ ]
+}
