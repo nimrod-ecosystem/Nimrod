@@ -616,6 +616,86 @@ try {
   }
 
   // =====================================================================================
+  // Row 2.190 (2026-11-02): the message bar keeps the words while the board changes underneath them.
+  section('*** the message bar: words kept across boards, said together ***');
+  {
+    const host = document.getElementById('host');
+    const clock = fakeClock();
+    const bus = createBus();
+    const said = [], toCall = [];
+    const st = fakeState({ boardId: 'yesno' });
+    const inst = mountModule('board', {
+      mount: host, bus, events: fakeEvents(), state: st,
+      output: { say: (t) => said.push(t) }, callTransport: { sendWords: (t) => toCall.push(t) },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+    });
+    inst.init();
+    await sleep(20);
+    const p = () => inst.impl.__probe();
+    const bar = () => host.querySelector('[data-msg]');
+    const words = () => host.querySelector('[data-msg-words]').textContent;
+    const btn = (a) => host.querySelector(`[data-msg-act="${a}"]`);
+    const pick = (i) => { bus.publish('board/pick', { index: i }); };
+    check('it is off to start: no line, and pressing a card keeps nothing', bar().hidden === true
+      && (pick(0), p().message.length === 0), JSON.stringify(p().message));
+    st.set({ messageBar: true });
+    await sleep(10);
+    check('turned on, the line shows, empty, its buttons dimmed', !bar().hidden && words() === ''
+      && btn('say').disabled && btn('undo').disabled && btn('clear').disabled);
+    said.length = 0;
+    pick(0); pick(1);
+    check('each word is still said when it is pressed, AND joins the line', said.join('|') === 'Yes|No'
+      && p().message.join(' ') === 'Yes No' && words() === 'Yes No', `${said.join('|')} / ${words()}`);
+    st.set({ boardId: 'care' });
+    await sleep(10);
+    check('*** the line is kept when the board changes ***', p().boardId === 'care' && words() === 'Yes No', words());
+    pick(0);
+    const careWord = p().message[2];
+    check('...and a word from the new board joins it', p().message.length === 3 && !!careWord, JSON.stringify(p().message));
+    said.length = 0;
+    btn('say').click();
+    check('*** Say it says the whole line, once ***', said.length === 1 && said[0] === `Yes No ${careWord}`, JSON.stringify(said));
+    check('...into a live call too, as one line', toCall[toCall.length - 1] === `Yes No ${careWord}`, JSON.stringify(toCall));
+    check('...and keeps the line (Clear empties it)', p().message.length === 3);
+    btn('undo').click();
+    check('⌫ takes off the last word', p().message.join(' ') === 'Yes No');
+    btn('clear').click();
+    check('Clear empties it, and the buttons dim again', p().message.length === 0 && btn('say').disabled && words() === '');
+    inst.destroy();
+  }
+  {
+    const host = document.getElementById('host');
+    const clock = fakeClock();
+    const bus = createBus();
+    const said = [];
+    const st = fakeState({ boardId: 'yesno', scan: true, stepMs: 15000, messageBar: true });
+    const inst = mountModule('board', {
+      mount: host, bus, events: fakeEvents(), state: st, output: { say: (t) => said.push(t) },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+    });
+    inst.init();
+    await sleep(20);
+    const p = () => inst.impl.__probe();
+    check('by switch: with nothing in the line, the scan is the three cards alone', JSON.stringify(p().scanItems) === '[0,1,2]',
+      JSON.stringify(p().scanItems));
+    bus.publish('board/select');                 // Yes
+    check('*** a word in the line adds Say it, ⌫ and Clear at the END of the pass ***',
+      JSON.stringify(p().scanItems) === '[0,1,2,"msg:say","msg:undo","msg:clear"]', JSON.stringify(p().scanItems));
+    clock.advance(1200 + 15000 * 3);             // the pause, then past the three cards
+    check('the scan reaches Say it after the cards, and lights it', p().litMsg === 'msg:say'
+      && host.querySelector('[data-msg-act="say"]').classList.contains('ab-lit'), String(p().litMsg));
+    said.length = 0;
+    bus.publish('board/select');
+    check('*** select on it says the line ***', said.join() === 'Yes', JSON.stringify(said));
+    clock.advance(1200 + 15000 * 4);
+    check('...then ⌫ the next time round', p().litMsg === 'msg:undo', String(p().litMsg));
+    bus.publish('board/select');
+    check('⌫ empties a one-word line, and the three stops leave the scan with it',
+      p().message.length === 0 && JSON.stringify(p().scanItems) === '[0,1,2]' && p().litMsg === null, JSON.stringify(p()));
+    inst.destroy();
+  }
+
+  // =====================================================================================
   section('*** latencyMs — a real gap measures as a real gap, and only the scanner’s own '
     + 'prompt counts as one ***');
   {

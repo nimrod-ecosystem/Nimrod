@@ -496,6 +496,23 @@
 .ab-bchip[aria-pressed="true"]{background:var(--ab-lit);border-color:var(--ab-lit);
   color:var(--ab-bg);opacity:1}
 .ab-bchip:focus-visible{outline:3px solid var(--ab-lit);outline-offset:2px}
+/* THE MESSAGE BAR (row 2.190; board.js argues it): the line of words so far, and Say it / ⌫ / Clear. Same palette and
+   unit as the row of boards above. The words get the room; the buttons keep their size. A lit button (the scan on it)
+   is the same ring a lit card wears. */
+.ab-msg{display:flex;align-items:stretch;gap:calc(var(--u,1px) * 2);flex:0 0 auto;min-width:0}
+.ab-msg[hidden]{display:none}
+.ab-msg-words{flex:1 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:none;
+  border:1px solid var(--ab-line);border-radius:calc(var(--u,1px) * 4);padding:calc(var(--u,1px) * 2) calc(var(--u,1px) * 4);
+  color:var(--ab-ink);background:var(--ab-card,transparent);font:700 clamp(18px,calc(var(--u,1px) * 18),40px)/1.25 var(--font,system-ui,sans-serif);
+  min-height:max(44px,calc(var(--u,1px) * 26));display:flex;align-items:center}
+.ab-msg-words[data-empty="1"]::before{content:"the words you press go here";font-weight:500;opacity:.55}
+.ab-msgb{flex:0 0 auto;border:1px solid var(--ab-line);background:transparent;color:var(--ab-ink);cursor:pointer;
+  border-radius:calc(var(--u,1px) * 4);padding:0 calc(var(--u,1px) * 6);min-height:max(44px,calc(var(--u,1px) * 26));
+  font:700 clamp(15px,calc(var(--u,1px) * 13),28px)/1.2 var(--font,system-ui,sans-serif)}
+.ab-msgb.ab-msg-say{background:var(--ab-lit);border-color:var(--ab-lit);color:var(--ab-bg)}
+.ab-msgb:disabled{opacity:.45;cursor:default}
+.ab-msgb.ab-lit{outline:max(3px,calc(var(--u,1px) * 2.5)) solid var(--ab-lit);outline-offset:2px}
+.ab-msgb:focus-visible{outline:3px solid var(--ab-lit);outline-offset:2px}
 /* *** THE BOARD'S OWN SETTINGS PANEL (its gear) IS GONE (row 2.95, Mike 2026-10-16: "No module should
  * have a settings menu separate from that."). *** Choosing a board, the row, the lock, Edit this board and
  * Make a new board are rows in the one settings menu; the cards keep the whole surface. */

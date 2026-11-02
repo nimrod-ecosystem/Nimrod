@@ -169,6 +169,8 @@ const SWITCHER_MIN_H = 220;
 const LOPSIDED = 2.2;
 
 export const BOARD_TOPIC = 'board/selected';   // live nudge for anything on the same screen
+// The message bar's buttons as scan stops (row 2.190), after the cards: say the line, take off the last word, empty it.
+export const MSG_STOPS = Object.freeze(['msg:say', 'msg:undo', 'msg:clear']);
 
 // The id under which a board somebody BUILT is offered in the switcher. Not a real entry in
 // `BUILTIN_BOARDS` — it means "the one stored on this instance", whatever that is today.
@@ -238,6 +240,8 @@ const DEFAULTS = {
   // which is where the rest of the caregiver controls are, so the row is a convenience rather than
   // the only route — and anybody who wants it can still turn it on.
   showBoards: false,
+  // The message bar (row 2.190, 2026-11-02): OFF to start. See its SETTINGS entry.
+  messageBar: false,
   // Hides the row (and, until row 2.95, the gear). See the SETTINGS entry for the way back out, which is the only
   // part of a lock worth arguing about.
   locked: false,
@@ -420,6 +424,20 @@ export const SETTINGS = [
     level: 'standard', onLabel: 'Yes — a row of boards above the cards', offLabel: 'No',
     note: 'The row sits above the cards, where a resting hand can reach it. You can change boards '
       + 'in this menu either way.' },
+  // *** THE MESSAGE BAR (row 2.190, 2026-11-02). *** Mike: *"I could see having different part of speech boards like
+  // noun and verb that you could switch between to form an idea quicker."* A sentence built across boards needs
+  // somewhere to keep the words while the board changes underneath them: each word pressed is still said at once, AND
+  // added to a line above the cards, and the line stays when the board changes (Previous page / Next page, the row, the
+  // menu). Say it says the whole line; ⌫ takes off the last word; Clear empties it.
+  // OFF TO START, ARGUED: FOR on - it costs nothing to a person who ignores it. AGAINST, and it wins: it is three more
+  // buttons on the communication surface, the ones a resting hand reaches first (showBoards' lesson, above), and three
+  // more stops for a switch; a yes/no board has no sentence to build. Mike, the same day: "Not everything needs to be
+  // built for the least capable users. They could use whatever boards work best for them" - so it is one choice away.
+  // A switch reaches its buttons at the END of each lap, and only while the line has words in it.
+  { key: 'messageBar', label: 'Keep the words in a line, to say together', kind: 'toggle', default: false,
+    level: 'standard', onLabel: 'Yes — a line above the cards, kept when the board changes', offLabel: 'No',
+    note: 'Each word is still said when it is pressed. "Say it" says the whole line; ⌫ takes off the last word; Clear '
+      + 'empties it. A switch reaches them at the end of each pass, while the line has words.' },
   // *** LOCK. AND THE ONLY QUESTION THAT MATTERS ABOUT A LOCK IS HOW YOU GET BACK OUT. ***
   //
   // `CLAUDE.md`: *"a caregiver locked out of their own lock is worse than no lock at all."*
@@ -663,6 +681,10 @@ registerModule(
     let cardEls = [];
     let fingerOn = null;     // { id, i }: a finger down on a card, chosen when it lifts (see draw)
     let lit = 0;
+    // The message bar (row 2.190): the words so far, kept for as long as this board is, whichever board it shows; and
+    // which of its buttons the scan is on (one of MSG_STOPS), or null while the scan is on a card.
+    let message = [];
+    let litMsg = null;
     // *** WHEN THE CURRENTLY-LIT CELL BECAME LIT, VIA THE SCANNER'S OWN STEP. ***
     //
     // The one timestamp this file was missing — "the AAC board reporting 0ms means the
@@ -1013,10 +1035,57 @@ registerModule(
     function paint() {
       const showOne = cfg.reveal === 'one' && !!scan;
       const highlight = !!scan || pointed;
+      const onCard = !litMsg;
       cardEls.forEach((b, i) => {
-        b.classList.toggle('ab-lit', highlight && i === lit);
-        b.classList.toggle('ab-away', showOne && i !== lit);
+        b.classList.toggle('ab-lit', highlight && onCard && i === lit);
+        b.classList.toggle('ab-away', showOne && (!onCard || i !== lit));
       });
+      for (const b of mount.querySelectorAll('[data-msg-act]')) {
+        b.classList.toggle('ab-lit', !!scan && litMsg === `msg:${b.dataset.msgAct}`);
+      }
+    }
+
+    // ------------------------------------------------------------------------------------
+    // THE MESSAGE BAR (row 2.190; the setting argues it)
+    // ------------------------------------------------------------------------------------
+    const messageText = () => message.join(' ');
+    function drawMessage() {
+      const bar = mount.querySelector('[data-msg]');
+      if (!bar) return;
+      bar.hidden = !cfg.messageBar;
+      const words = bar.querySelector('[data-msg-words]');
+      if (words) {
+        words.textContent = messageText();
+        words.dataset.empty = message.length ? '0' : '1';
+        // The newest words stay in view on a long line.
+        try { words.scrollLeft = words.scrollWidth; } catch { /* not laid out */ }
+      }
+      for (const b of bar.querySelectorAll('[data-msg-act]')) b.disabled = !message.length;
+    }
+    // Say it / ⌫ / Clear, however pressed. Returns whether it did anything.
+    function messageAct(act) {
+      if (destroyed || !message.length) return false;
+      if (act === 'say') {
+        const text = messageText();
+        try {
+          if (ctx.output?.say) ctx.output.say(text, { source: 'board' });
+          else speak(text);
+        } catch (err) { console.error('board: say the line', err); }
+        // Into a live call too, as one line, for the reason a single word goes there (see `choose`).
+        if (cfg.intoCall !== false) {
+          try { ctx.callTransport?.sendWords?.(text, { source: 'board' }); } catch (err) { console.error('board: line into the call', err); }
+        }
+        try { bus?.publish?.(BOARD_TOPIC, { message: text, board: board.id }); } catch (err) { console.error('board: publish', err); }
+      } else if (act === 'undo') {
+        message = message.slice(0, -1);
+      } else if (act === 'clear') {
+        message = [];
+      } else return false;
+      drawMessage();
+      if (!message.length) litMsg = null;
+      refreshScanItems();
+      paint();
+      return true;
     }
 
     // ------------------------------------------------------------------------------------
@@ -1079,6 +1148,7 @@ registerModule(
       const latencyMs = (fromScanStep && litAt != null && i === lit)
         ? Math.max(0, now() - litAt) : null;
       lit = i;
+      litMsg = null;
       paint();
       flash(i);
 
@@ -1125,6 +1195,14 @@ registerModule(
         })?.catch?.((err) => console.error('board: log', err));
       } catch (err) { console.error('board: log', err); }
 
+      // (row 2.190) The word joins the message bar's line, which outlives the board it came from. The scan's stops are
+      // brought up to date first, so its pause after this choice still holds.
+      if (cfg.messageBar) {
+        message = [...message, text];
+        drawMessage();
+        refreshScanItems();
+      }
+
       // Tell the scanner a choice was made, however it was made. It holds for `pauseMs` and
       // then starts a fresh pass from the top — so a touch and a scan-select leave the board in
       // the same state, and the two can never disagree about where they are.
@@ -1157,6 +1235,7 @@ registerModule(
     function stopScan() {
       try { scan?.destroy(); } catch { /* already gone */ }
       scan = null;
+      litMsg = null;
       // The hold belonged to a scanner that no longer exists. Leaving it set would make the
       // NEXT scanner start life suppressed by a finger that left the screen minutes ago.
       aimHold = false;
@@ -1166,16 +1245,31 @@ registerModule(
       paint();
     }
 
-    function startScan() {
-      stopScan();
-      if (!cfg.scan) return;
+    // What the scan steps through: the real cards, then (row 2.190) the message bar's buttons while it has words.
+    function scanItems() {
       // Only real cards are scanned. Stepping onto a hole would offer somebody an option that
       // is not there, and on a 15-second step that is fifteen seconds of nothing.
       const idxs = board.cells.map((c, i) => (c ? i : -1)).filter((i) => i >= 0);
+      return cfg.messageBar && message.length ? [...idxs, ...MSG_STOPS] : idxs;
+    }
+    // A change to the stops is handed to the scanner BEFORE its `select()`, so the pause after a choice still holds.
+    function refreshScanItems() {
+      if (!scan) return;
+      const next = scanItems();
+      if (next.join() !== scan.items().join()) scan.setItems(next);
+    }
+
+    function startScan() {
+      stopScan();
+      if (!cfg.scan) return;
       scan = createScan({
-        items: idxs,
+        items: scanItems(),
         settings: () => ({ stepMs: cfg.stepMs, pauseMs: cfg.pauseMs, restart: 'first' }),
-        onStep: (i) => { lit = i; litAt = now(); paint(); },
+        onStep: (i) => {
+          if (typeof i === 'string') litMsg = i;
+          else { litMsg = null; lit = i; }
+          litAt = now(); paint();
+        },
         setTimer, clearTimer,
         flashLimit: () => flashLimit(ctx),   // the step floor (input_scan.js scanStepFloorMs)
       });
@@ -1556,6 +1650,7 @@ registerModule(
       pointed = false;
       applyAppearance();
       draw();
+      drawMessage();          // (row 2.190) the line stays; only whether it shows follows the setting
       startScan();
     }
 
@@ -1574,6 +1669,7 @@ registerModule(
 
       __probe: () => ({
         boardId: board.id, tier: board.tier, cells: board.cells.length,
+        message: [...message], litMsg, scanItems: scan ? scan.items() : null,   // (row 2.190) the message bar
         // The shared layers AS DRAWN, so a test asserts the elements rather than the string
         // that made them.
         surface: !!mount.querySelector('[data-surface]'),
@@ -1641,6 +1737,12 @@ registerModule(
         mount.innerHTML = `
           <div class="aboard">
             <div class="ab-surface" data-surface aria-hidden="true"></div>
+            <div class="ab-msg" data-msg role="group" aria-label="your message" hidden>
+              <div class="ab-msg-words" data-msg-words aria-live="polite" data-empty="1"></div>
+              <button type="button" class="ab-msgb ab-msg-say" data-msg-act="say" disabled>Say it</button>
+              <button type="button" class="ab-msgb" data-msg-act="undo" aria-label="take off the last word" title="take off the last word" disabled>⌫</button>
+              <button type="button" class="ab-msgb" data-msg-act="clear" disabled>Clear</button>
+            </div>
             <div class="ab-boards" data-boards role="group" aria-label="which board" hidden></div>
             <div class="ab-grid" data-grid role="group" aria-label="AAC board"></div>
             <div class="ab-flight" data-flight aria-hidden="true"></div>
@@ -1694,6 +1796,12 @@ registerModule(
         // disagree — a visible control that shadowed the menu would be a second source of
         // truth about which board somebody is on. `state.set` fires `subscribe` below, which
         // re-reads and redraws; nothing here applies the change by hand.
+        // (row 2.190) The message bar's buttons. A press here is a choice like a card's, so the scanner hears it too.
+        listen(mount, 'click', (e) => {
+          const b = e.target.closest('[data-msg-act]');
+          if (!b || !mount.contains(b) || b.disabled) return;
+          if (messageAct(b.dataset.msgAct) && scan) scan.select();
+        });
         listen(mount, 'click', (e) => {
           const chip = e.target.closest('[data-board]');
           if (!chip || !mount.contains(chip)) return;
@@ -1734,6 +1842,12 @@ registerModule(
         // different card while scanning happens to be on is a real, if rare, combination
         // (see `aimAt`), and it has no scan-step prompt of its own to measure against.
         bus?.subscribe?.('board/select', () => {
+          // (row 2.190) The scan on one of the message bar's buttons presses it.
+          if (scan && litMsg && !pointed) {
+            const act = litMsg.slice(4);
+            if (messageAct(act) && scan) scan.select();
+            return;
+          }
           if (scan || pointed) choose(lit, { fromScanStep: !!scan && !pointed });
         });
         // Where the aim is. See `aimAt` — fractions of the viewport, the same units
