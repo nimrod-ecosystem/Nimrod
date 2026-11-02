@@ -5162,9 +5162,34 @@ export async function mountKiosk(root, {
       onStep: (key, value) => { try { settings.set({ [key]: value }); } catch (err) { console.error('kiosk: voice open', err); } },
     });
     const t = MENU_TAB.screen;
-    return rows.length ? [{ kind: 'heading', id: 'voice-open-head', label: 'Asked for by voice', ...t(2) },
-      ...rows.map((it) => ({ ...it, ...t(2) }))] : [];
+    // (row 2.187) A book on a room's shelf: the same opener, so its choice lives beside these.
+    const books = fieldItems([normalizeField(BOOKS_OPEN_FIELD)], {
+      values: () => { try { return settings.get() || {}; } catch { return {}; } },
+      level: complexity(),
+      onStep: (key, value) => { try { settings.set({ [key]: value }); } catch (err) { console.error('kiosk: books', err); } },
+    });
+    return [
+      ...(rows.length ? [{ kind: 'heading', id: 'voice-open-head', label: 'Asked for by voice', ...t(2) },
+        ...rows.map((it) => ({ ...it, ...t(2) }))] : []),
+      ...(books.length ? [{ kind: 'heading', id: 'books-open-head', label: 'Books on a shelf', ...t(2) },
+        ...books.map((it) => ({ ...it, ...t(2) }))] : []),
+    ];
   }
+  // *** A BOOK OPENS ITS MODULE OVER THE ROOM, OR IN ITS PLACE (row 2.187, 2026-11-02). *** Mike: "There should be an option
+  // for when you select a book to have it over the module or replace the module, like the first screenshot shows on the
+  // module page. I think it should default to over the module bc you could use the promote button to move it to full
+  // screen if you want." Over: the opener above (Back, Smaller and quiet put it away; Bigger takes it full screen). In its
+  // place: the room's panel becomes that module, as Switch module does (the room's settings are kept for changing back,
+  // and it lasts until the dashboard is saved). A room that is the dashboard's own backdrop, not a panel, has no place to
+  // give, so its books open over it either way; so does a locked panel.
+  const BOOKS_OPEN_FIELD = Object.freeze({
+    key: 'booksOpen', label: 'A book opens its module', kind: 'choice', default: 'over', level: 'standard',
+    options: [
+      { value: 'over', label: 'Over the room (Back goes back to the room)' },
+      { value: 'here', label: 'In the room’s place (Switch module changes it back)' },
+    ],
+    note: 'For a module that is not already on this dashboard. A book whose module is here goes to it.',
+  });
 
   // ---- "SWITCH MODULE": THE MODULES LIBRARY IN THE PANEL'S PLACE (2026-10-02) ------------------------
   //
@@ -5755,7 +5780,10 @@ export async function mountKiosk(root, {
     // (voice open: Bigger dims while a module opened by voice shows -- it is already over the dashboard; Smaller is lit.)
     let voiceUp = false;
     try { voiceUp = voiceOpen.isOpen(); } catch { voiceUp = false; }
-    return { can: !!rec && !voiceUp, top: !!rec && (voiceUp || promotedScreen === rec.id), promoted,
+    // (row 2.187, 2026-11-02) ...except one opened in a box (a book's room): Bigger takes it to the whole screen.
+    let boxed = false;
+    try { const c = voiceOpen.current(); boxed = !!c && c.place !== 'full'; } catch { boxed = false; }
+    return { can: (!!rec && !voiceUp) || boxed, top: (voiceUp && !boxed) || (!!rec && promotedScreen === rec.id), promoted,
       name: rec ? panelName(rec) : null, id: rec ? rec.id : null };
   }
 
@@ -5782,7 +5810,14 @@ export async function mountKiosk(root, {
   }
   function promotePanel(id = null) {
     if (torn) return null;
-    if (voiceOpen.isOpen()) return null;     // voice open: nothing goes bigger over a module opened by voice
+    // voice open: nothing goes bigger over a module opened by voice. One opened in a box (a book's room, row 2.187;
+    // Mike: "you could use the promote button to move it to full screen") goes to the whole screen itself.
+    if (voiceOpen.isOpen()) {
+      let c = null;
+      try { c = voiceOpen.current(); } catch { c = null; }
+      if (c && c.place !== 'full' && voiceOpen.move('full')) { syncPromote(); return 'voice-full'; }
+      return null;
+    }
     let rec = null;
     try { rec = id ? (menuPanelRecs().find((r) => r.id === id) || null) : panelSubject(); } catch { rec = null; }
     if (!rec) return null;
@@ -5805,7 +5840,14 @@ export async function mountKiosk(root, {
   }
   function demotePanel() {
     // voice open (2026-10-12): the nearest level down is the module opened by voice -- it goes, the dashboard comes back.
-    if (voiceOpen.isOpen()) { voiceOpen.close('bar'); return 'voice'; }
+    // (row 2.187) One that Bigger took to the whole screen goes back to its box first, then closes on the next press.
+    if (voiceOpen.isOpen()) {
+      let c = null;
+      try { c = voiceOpen.current(); } catch { c = null; }
+      if (c && c.place === 'full' && c.from && voiceOpen.move(c.from)) { syncPromote(); return 'voice-box'; }
+      voiceOpen.close('bar');
+      return 'voice';
+    }
     if (promotedScreen) {
       promotedScreen = null;
       // (2026-10-05, screen_lock.js: locked, the screen stays in full screen; the panel still goes back down.)
@@ -8876,6 +8918,17 @@ export async function mountKiosk(root, {
       // that one has (Back, Smaller, Escape, "go back", and by itself once quiet). Promote (the bar's Bigger) is the way to
       // the whole screen, as it is for anything. A room NOT on a screen (the Modules page) still says what to add.
       if (p.source !== 'room' || embedded) return;
+      // (row 2.187) "In the room's place", when the room is a panel that can be switched (BOOKS_OPEN_FIELD argues it).
+      let how = 'over';
+      try { how = (settings.get() || {}).booksOpen === 'here' ? 'here' : 'over'; } catch { how = 'over'; }
+      if (how === 'here') {
+        const rec = roomPanelOf(type);
+        if (rec && !lockedNow(rec.id)) {
+          claimed(p);
+          Promise.resolve(doSwitch(rec.id, type)).catch((err) => console.error('kiosk: a book, in its place', err));
+          return;
+        }
+      }
       const place = roomBoxOf(type);
       try {
         const r = voiceOpen.open(type, { place: place || 'full' });
@@ -8886,6 +8939,15 @@ export async function mountKiosk(root, {
     claimed(p);
     Promise.resolve(showModule(type)).catch((err) => console.error('kiosk: open module', err));
   }));
+  /** The dashboard panel holding the room whose book for `type` was pressed, or null (a room that is the backdrop). */
+  function roomPanelOf(type) {
+    try {
+      const book = [...kioskEl.querySelectorAll('[data-book]')].find((b) => b.dataset.book === type && b.isConnected);
+      const box = book?.closest('.k-cell, .k-pcell') || null;
+      if (!box) return null;
+      return menuPanelRecs().find((r) => r.el && box.contains(r.el) && r.id !== ROOM_PANEL_ID) || null;
+    } catch { return null; }
+  }
   /** The box (percent of the screen) of the room whose book for `type` was pressed: its panel's box, else the room's own. */
   function roomBoxOf(type) {
     try {

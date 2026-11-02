@@ -546,8 +546,11 @@ const toTab = (m, id) => {
       // of the other person on calls", on the Subtitles heading - one choice per person, every screen of theirs. 59.)
       // (row 2.191, 2026-11-02, DELIBERATELY: "Mirror: the camera, full screen" on This screen while the dashboard has a
       // camera, so the bar can lose Mirror without the screen losing it. This dashboard has one. 60.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 60) ***',
-        lapStops.length === 15 && oldStops.length === 60 && oldStops.some((i) => i.id === 'mirror') /* Mirror */
+      // (row 2.187, 2026-11-02, DELIBERATELY: "A book opens its module", over the room or in its place, under "Books on a
+      // shelf" beside "Asked for by voice". 61.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 61) ***',
+        lapStops.length === 15 && oldStops.length === 61 && oldStops.some((i) => i.id === 'mirror') /* Mirror */
+        && oldStops.some((i) => i.id === 'set:booksOpen') /* books */
         && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
         && oldStops.some((i) => i.id === 'set:callTheirCaptions') /* subtitles a caller sends */
         && oldStops.some((i) => i.id === 'set:callOwnCaptions') /* subtitles of what is said here */

@@ -177,7 +177,8 @@ const settle = async () => { for (let i = 0; i < 6; i += 1) await tick(); };
   check('*** full screen: the whole screen, the dashboard hidden under it, before the mirror (which steps aside by CSS) ***',
     box()?.dataset.voiceView === 'full' && box()?.style.width === '100%' && box()?.nextSibling === mirror && kioskEl.dataset.voiceOpen === 'full', box()?.outerHTML?.slice(0, 200));
   check('*** its own instance id and its own settings row, per module type (never a dashboard panel\'s) ***',
-    J(host.current()) === J({ id: 'voice:calculator', type: 'calculator', place: 'full', name: 'Calculator', mounted: true })
+    // (`from`, 2026-11-02, row 2.187: the box it was in before Bigger took it full screen; none here.)
+    J(host.current()) === J({ id: 'voice:calculator', type: 'calculator', place: 'full', name: 'Calculator', mounted: true, from: null })
     && host.rec()?.stateKey === 'voice-open-calculator', J([host.current(), host.rec()?.stateKey]));
   check('*** the switch\'s focus is on it, and it is the ONLY stop in the lap ***',
     focusId === 'voice:calculator' && J(host.ring([{ id: 'p1', type: 'photos' }])) === J([{ id: 'voice:calculator', type: 'calculator' }]));
@@ -266,6 +267,27 @@ const settle = async () => { for (let i = 0; i < 6; i += 1) await tick(); };
   await host.open('clock', { quiet: true }).ready;
   host.close('test');
   vals = {};
+
+  // (row 2.187, 2026-11-02) Bigger takes a book's module from the room's box to the whole screen, and Smaller back.
+  section('*** moving what is open: a box to the whole screen, and back ***');
+  {
+    const roomBox = { left: 50, top: 0, width: 50, height: 60 };
+    log.length = 0;
+    await host.open('calculator', { place: roomBox, quiet: true }).ready;
+    const el = () => kioskEl.querySelector('.k-voiceview');
+    const mounts = log.filter((x) => x.startsWith('mount:')).length;
+    check('(setup) open in the room\'s box', host.current()?.place === roomBox && el()?.style.left === '50%');
+    check('*** move(full): the same module fills the screen, nothing mounted again, and the dashboard under it is hidden ***',
+      host.move('full') && host.current()?.place === 'full' && el()?.style.left === '0%' && el()?.style.width === '100%'
+      && log.filter((x) => x.startsWith('mount:')).length === mounts && log.includes('hide:true'), J([host.current(), log]));
+    check('...and it remembers the box it came from', J(host.current()?.from) === J(roomBox));
+    check('moving to where it already is does nothing', host.move('full') === false);
+    check('*** move(back to the box): the box again, the dashboard shown, nothing remembered ***',
+      host.move(host.current().from) && J(host.current()?.place) === J(roomBox) && el()?.style.left === '50%'
+      && log.includes('hide:false') && host.current()?.from === null, J([host.current(), log]));
+    host.close('test');
+    check('with nothing open, move does nothing', host.move('full') === false);
+  }
 
   section('*** BY ITSELF: the quiet rule ***');
   await host.open('calculator').ready;

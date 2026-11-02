@@ -469,6 +469,37 @@ export function createVoiceOpen({
     return rec;
   }
 
+  /**
+   * MOVE WHAT IS OPEN (row 2.187, 2026-11-02; Mike, on a book: "default to over the module bc you could use the promote
+   * button to move it to full screen if you want"). The bar's Bigger takes a module opened in a box (a book's room) to
+   * the whole screen; Smaller brings it back to the box it came from (`from`), and only then closes it. Nothing is
+   * mounted again: the same module, the same game in progress, in a different box. Returns whether it moved.
+   */
+  function move(where) {
+    const v = view;
+    if (!v || torn || !v.box) return false;
+    const w = where === 'full' || isBox(where) ? where : placeFor(where, opts());
+    if (!w || w === v.place) return false;
+    const b = placeBox(w);
+    const wasFull = v.place === 'full', full = w === 'full';
+    if (full && !wasFull) v.from = v.place;
+    if (!full) v.from = null;
+    const s = v.box.style;
+    s.left = `${b.left}%`; s.top = `${b.top}%`; s.width = `${b.width}%`; s.height = `${b.height}%`;
+    s.border = full ? '' : '2px solid var(--border)';
+    s.borderRadius = full ? '' : '12px';
+    s.boxShadow = full ? '' : '0 6px 24px rgba(0,0,0,.35)';
+    v.box.dataset.voiceView = isBox(w) ? 'panel' : w;
+    const p = ask(parent, null);
+    try { p.dataset.voiceOpen = full ? 'full' : 'region'; } catch { /* not an element */ }
+    if (full !== wasFull) { try { hideUnder?.(full); } catch (err) { console.error('voice open: hide the dashboard', err); } }
+    v.place = w;
+    try { v.rec?.instance?.onResize?.(); } catch { /* the module's own */ }
+    tell({ open: true, id: v.id, type: v.type, place: w });
+    changed();
+    return true;
+  }
+
   /** It goes, and the screen is as it was. `why` for a suite: 'said', 'quiet', 'rest', 'bar', 'replaced', ... */
   function close(why = 'closed') {
     const v = view;
@@ -510,11 +541,13 @@ export function createVoiceOpen({
     handle,
     open,
     close,
+    move,
     poke,
     modules,
     isOpen: () => !!view,
-    /** What is open ({ id, type, place, name }), or null. */
-    current: () => (view ? { id: view.id, type: view.type, place: view.place, name: view.name, mounted: !!view.rec } : null),
+    /** What is open ({ id, type, place, name, from }), or null. `from`: the box it was in before Bigger, if it went full. */
+    current: () => (view ? { id: view.id, type: view.type, place: view.place, name: view.name, mounted: !!view.rec,
+      from: view.from || null } : null),
     /** The mounted record, shaped like a dashboard panel's, or null. */
     rec: () => (view && view.rec ? view.rec : null),
     /** The switch lap: while it shows, it is the only stop; else the dashboard's own. */
