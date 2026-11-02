@@ -82,6 +82,7 @@ import { mountBoardEditor, blankBoard } from '../board_editor.js';
 import { draftOf, setCell as draftSetCell, setGrid as draftSetGrid, moveCell as draftMove, addCell as draftAdd,
   removeCell as draftRemove, createUndo, MAX_DIM as DRAFT_MAX_DIM } from '../board_draft.js';
 import { SYMBOL_NAMES } from '../aac_symbols.js';
+import { openSoundDialog } from '../sound_dialog.js';
 import { speak as speakDefault } from '../voice.js';
 import { mountScene, listScenes, listOverlays } from '../livescene.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
@@ -1579,8 +1580,45 @@ registerModule(
     // so nothing is lost when the editor closes by itself; the moment it closes (Done, Escape, idle) the panel shows the
     // real board again. While the draft shows, the scan is stopped and the switch's board verbs do nothing, so nobody
     // speaks from a half-made board. A locked board offers no parts at all.
-    let drafting = null;     // { of, fromBuiltIn, draft, undo, note } while the one editor is open on this board
+    let drafting = null;     // { of, fromBuiltIn, draft, undo, note, fresh } while the one editor is open on this board
     let wantNew = false;     // "Make a new board": the next draft starts empty
+    let soundDlg = null;     // (stage 2) the recorder dialog, open only while the board is being edited
+
+    // (row 2.184 stage 2) A sound kept while editing and then replaced, removed or thrown away is deleted from this
+    // device: nothing else can be using it (board_editor.js's rule). The person's Nimrod folder copy is never deleted here.
+    function dropFresh(file) {
+      if (!drafting || !file || !drafting.fresh?.has(file)) return;
+      drafting.fresh.delete(file);
+      try { soundsNow()?.remove?.(file); } catch { /* gone */ }
+    }
+    function closeSoundDialog() { try { soundDlg?.close?.(); } catch { /* gone */ } soundDlg = null; }
+    function openSound(cellId, mode) {
+      if (!drafting) return;
+      const cell = (drafting.draft.cells || []).find((x) => x && x.id === cellId);
+      if (!cell) return;
+      closeSoundDialog();
+      soundDlg = openSoundDialog({
+        word: cell.say || cell.word, mode, sounds: soundsNow(),
+        recorder: ctx.wordRecorder || (() => createWordRecorder({ micOwner: ctx.micOwner || null })),
+        onKept: (r) => {
+          if (!drafting || !r || !r.file) return;
+          const prev = (drafting.draft.cells || []).find((x) => x && x.id === cellId)?.sound?.file || null;
+          if (prev && prev !== r.file) dropFresh(prev);
+          (drafting.fresh ||= new Set()).add(r.file);
+          changeDraft((b) => {
+            const k = (b.cells || []).findIndex((x) => x && x.id === cellId);
+            return { board: k < 0 ? b : draftSetCell(b, k, { sound: { file: r.file, from: r.from } }) };
+          });
+        },
+      });
+    }
+    async function playCellSound(file) {
+      let r = null;
+      try { r = await soundsNow()?.url?.(file); } catch { r = null; }
+      if (!r) return;
+      try { const a = new Audio(r.url); a.onended = () => { try { r.release?.(); } catch { /* gone */ } }; a.play()?.catch?.(() => {}); }
+      catch { try { r.release?.(); } catch { /* gone */ } }
+    }
 
     const editingMe = () => { try { return !!mount.closest?.('[data-editing]'); } catch { return false; } };
 
@@ -1611,6 +1649,7 @@ registerModule(
     }
     function endDraft() {
       if (!drafting) return;
+      closeSoundDialog();
       drafting = null;
       applyConfig();
     }
@@ -1648,6 +1687,7 @@ registerModule(
     }
     function throwDraft() {
       if (!drafting) return false;
+      for (const f of [...(drafting.fresh || [])]) dropFresh(f);
       try { state?.set?.({ ...(state.get?.() || {}), boardDraft: null }); } catch (err) { console.error('board: draft', err); }
       const real = boardFor(cfg.boardId);
       drafting = { of: real.id, fromBuiltIn: Object.prototype.hasOwnProperty.call(BUILTIN_BOARDS, real.id),
@@ -1715,6 +1755,21 @@ registerModule(
             move('left', '◂ Move left'), move('right', 'Move right ▸'), move('up', '▴ Move up'), move('down', 'Move down ▾'),
             { id: 'remove', label: 'Remove this word', note: 'Its slot is left empty; Undo puts it back.',
               run: () => { changeDraft((b) => { const k = at(b); return { board: k < 0 ? b : draftRemove(b, k) }; }); } },
+            // (stage 2) ITS OWN SOUND: the board maker's recorder, as a dialog (sound_dialog.js). Only where sounds can be kept.
+            ...(soundsNow() ? [
+              { id: 'sound-record', label: c.sound ? 'Record it again…' : 'Record this word…',
+                note: 'The person this board speaks for, or somebody they have said may lend their voice.',
+                run: () => { openSound(c.id, 'record'); } },
+              { id: 'sound-file', label: 'Use a sound file…', run: () => { openSound(c.id, 'file'); } },
+            ] : []),
+            ...(c.sound && soundsNow() ? [
+              { id: 'sound-play', label: 'Play its sound', run: () => { playCellSound(c.sound.file); } },
+              { id: 'sound-remove', label: 'Remove the sound', note: 'The board then says the word in its own voice.',
+                run: () => {
+                  dropFresh(c.sound.file);
+                  changeDraft((b) => { const k = at(b); return { board: k < 0 ? b : draftSetCell(b, k, { sound: undefined }) }; });
+                } },
+            ] : []),
           ],
         });
       });
@@ -1828,7 +1883,7 @@ registerModule(
 
     function applyConfig() {
       // (row 2.184) A lock ends the draft (it is kept); the panel shows the draft only while it is being edited.
-      if (drafting && (cfg.locked || !editingMe())) drafting = null;
+      if (drafting && (cfg.locked || !editingMe())) { closeSoundDialog(); drafting = null; }
       board = drafting ? drafting.draft : boardFor(cfg.boardId);
       loadOwnSounds();                       // own board clips: the cards' own sounds, ready before a press
       drawBoards();
@@ -2104,10 +2159,10 @@ registerModule(
           { kind: 'item', id: 'board-new', label: 'Make a new board…', closesMenu: true, disabled: locked,
             hint: locked ? why : (draftNew ? 'carries on from the one left unfinished' : 'starts from an empty board, in the editor'),
             run: () => { if (!cfg.locked) openInEditor(true); } },
-          // The board maker's own form, until the editor does everything it does (recording a card's sound is the piece
-          // still to come there). Then it goes (the proposal's decision 1, Mike's).
+          // The board maker's own form. The editor now does everything it did (stage 2 added recording a card's sound);
+          // whether the form goes or stays as a second way is the proposal's decision 1, Mike's. Kept until he says.
           { kind: 'item', id: 'board-edit-old', label: 'Edit with the old board maker', closesMenu: true, disabled: locked,
-            hint: locked ? why : (draftThis ? 'the form; carries on from the changes left unsaved' : 'the form, with recording a card’s own sound'),
+            hint: locked ? why : (draftThis ? 'the form; carries on from the changes left unsaved' : 'the form, as it was'),
             run: () => { if (!cfg.locked) openEditor('edit'); } },
           { kind: 'item', id: 'board-new-old', label: 'Make a new board with the old board maker', closesMenu: true, disabled: locked,
             hint: locked ? why : (draftNew ? 'the form; carries on from the one left unfinished' : 'the form, starting from an empty board'),

@@ -754,6 +754,57 @@ try {
   }
 
   // =====================================================================================
+  // Row 2.184 stage 2 (2026-11-02): a card's own sound, recorded from the one editor (sound_dialog.js).
+  section('*** a card\'s own sound, from the one editor ***');
+  {
+    const host = document.getElementById('host');
+    const bus = createBus();
+    const kept = [], removed = [];
+    const store = { keep: async (blob, o) => { const r = { file: `snd-${kept.length + 1}.webm`, from: o.from, folder: 'saved' }; kept.push({ ...o, file: r.file }); return r; },
+      url: async () => ({ url: 'about:blank', release: () => {} }), remove: (f) => removed.push(f) };
+    let stopped = 0;
+    const recorder = () => ({ start: async ({ onStop }) => { setTimeout(() => onStop(new Blob(['x'], { type: 'audio/webm' })), 5); return true; },
+      stop: () => { stopped++; }, cancel: () => {}, state: () => 'done' });
+    const st = fakeState({ boardId: 'custom', board: { id: 'own-s', name: 'Mine', cols: 2, rows: 1, cells: [{ id: 'a', word: 'Tea' }] } });
+    const inst = mountModule('board', { mount: host, bus, events: fakeEvents(), state: st, instanceId: 'b-s',
+      output: { say: () => {} }, boardSounds: store, wordRecorder: recorder });
+    inst.init();
+    await sleep(20);
+    host.dataset.editing = '1';
+    const tea = () => inst.impl.editTargets().find((t) => t.label === 'Tea');
+    check('a card offers "Record this word…" and "Use a sound file…"', !!tea().actions.find((a) => a.id === 'sound-record')
+      && !!tea().actions.find((a) => a.id === 'sound-file') && !tea().actions.find((a) => a.id === 'sound-play'));
+    tea().actions.find((a) => a.id === 'sound-record').run();
+    const dlg = () => document.querySelector('[data-sound-dialog]');
+    check('*** it opens the recorder, which says whose voice to record and records nothing yet ***',
+      !!dlg() && /speaks for/.test(dlg().textContent) && /Say “Tea” once/.test(dlg().textContent) && !!dlg().querySelector('[data-snd-start]'));
+    dlg().querySelector('[data-snd-start]').click();
+    await sleep(40);
+    check('...recorded: play it back, then keep it', !!dlg()?.querySelector('[data-snd-play]') && !!dlg()?.querySelector('[data-snd-keep]'));
+    dlg().querySelector('[data-snd-keep]').click();
+    await sleep(20);
+    check('*** kept: the dialog closes, and the DRAFT\'s card has its sound (the board itself does not, yet) ***',
+      !dlg() && kept.length === 1 && kept[0].word === 'Tea' && inst.impl.__draft().draft.cells[0].sound?.file === 'snd-1.webm'
+      && !st.get().board.cells[0].sound, JSON.stringify(inst.impl.__draft().draft.cells[0]));
+    check('the card now offers Play and Remove', !!tea().actions.find((a) => a.id === 'sound-play') && !!tea().actions.find((a) => a.id === 'sound-remove'));
+    tea().actions.find((a) => a.id === 'sound-remove').run();
+    check('*** removed before it was used: gone from the draft, and deleted from the device (nothing else used it) ***',
+      !inst.impl.__draft().draft.cells[0].sound && removed.includes('snd-1.webm'));
+    tea().actions.find((a) => a.id === 'sound-record').run();
+    check('a recorder opened again...', !!dlg());
+    delete host.dataset.editing;
+    bus.publish('edit/ended', { id: 'b-s', reason: 'idle' });
+    check('*** ...is closed the moment the editor leaves: never left over the screen ***', !dlg() && inst.impl.__draft() === null);
+    host.dataset.editing = '1';
+    tea().actions.find((a) => a.id === 'sound-record').run();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Escape closes it too', !dlg());
+    delete host.dataset.editing;
+    bus.publish('edit/ended', { id: 'b-s' });
+    inst.destroy();
+  }
+
+  // =====================================================================================
   // Row 2.184 (2026-11-02, Mike, with a screenshot: "The make an AAC board setup is not useable"): on a see-through board
   // the board maker took the board's cleared colours and was drawn see-through over the cards.
   section('*** the board maker is solid on a see-through board ***');
