@@ -213,6 +213,24 @@ try {
   em.enter('vp');
   em.select(`piece-${jessI}`);
   check('*** chosenTarget() is the piece, with its handles ***', em.chosenTarget()?.id === `piece-${jessI}` && em.chosenTarget()?.handles?.geometry === 'svg');
+  // (row 2.145, Mike 2026-11-02: "moving an object with the panel's buttons leaves its box and handles behind")
+  {
+    let told = 0;
+    const em2 = createEditMode({ bus: createBus(), doc: document, recs: () => [rec], boxOf: () => w.box, onChange: () => { told++; } });
+    em2.enter('vp');
+    em2.select(`piece-${jessI}`);
+    const before = em2.chosenTarget().handles;
+    const x0 = before.piece.x;
+    told = 0;
+    em2.selection().set('x', x0 + 50);
+    await new Promise((r) => setTimeout(r, 30));
+    const after = em2.chosenTarget()?.handles;
+    check('*** moved from its rows: the handles are handed over again, on the redrawn piece, at its new place ***',
+      !before.el.isConnected && after && after.el.isConnected && Math.abs(after.piece.x - (x0 + 50)) < 0.01 && told > 0,
+      J({ oldConnected: before.el.isConnected, newConnected: after?.el?.isConnected, x: after?.piece?.x, want: x0 + 50, told }));
+    check('...and the piece is still the chosen one', em2.active()?.target === `piece-${jessI}`);
+    em2.destroy();
+  }
   em.select(null);
   check('the scene chosen: no handles (it is the whole panel)', em.chosenTarget()?.id === 'scene' && !em.chosenTarget()?.handles);
   em.destroy();

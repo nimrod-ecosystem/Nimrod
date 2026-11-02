@@ -578,6 +578,27 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     active.chosen = t ? t.id : null;
     const sel = selectionFor(active.rec, t, { pressed });
     active.sel = sel;
+    // *** A THING WITH HANDLES, CHANGED FROM ITS ROWS (row 2.145, Mike 2026-11-02: "moving an object with the panel's
+    // buttons leaves its box and handles behind"). *** The module redraws the thing (the village draws its whole scene
+    // again), so the element the handles were drawn on is gone. A drag already chooses it again once the module has
+    // redrawn (arrangement.js syncTargetHandles); a press on a row did not. Now a write from the rows finds the targets
+    // again and tells the dashboard, which draws the handles on the new element. The card is NOT drawn again: a person
+    // stepping a value by switch keeps their place in it.
+    if (t && t.handles) {
+      const id = t.id;
+      const again = () => setTimer(() => {
+        if (!active || active.chosen !== id) return;
+        unmark(active);
+        active.targets = targetsOf(active.rec);
+        markTargets();
+        const now = active.targets.find((x) => x.id === id);
+        if (now && !now.whole && now.el) { now.el.dataset.editSelected = ''; now.el.dataset.editHelp = sel.help; now.el.dataset.editLabel = sel.label; }
+        tell();
+      }, 0);
+      const set = sel.set, patch = sel.patch;
+      sel.set = (k, v) => { const ok = set(k, v); if (ok) again(); return ok; };
+      sel.patch = (p) => { const ok = patch(p); if (ok) again(); return ok; };
+    }
     if (t && !t.whole) {
       t.el.dataset.editSelected = ''; t.el.dataset.editHelp = sel.help; t.el.dataset.editLabel = sel.label;
       for (const e of t.also || []) e.dataset.editSelected = '';
