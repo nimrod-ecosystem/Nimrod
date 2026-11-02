@@ -1404,6 +1404,14 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
    the moment it is the brightest thing on the panel it starts reading as one. */
 .tv-score { font-weight: 700; color: var(--accent, #839958); }
 .tv-q { margin: 0 0 14px; font-size: 1.35rem; line-height: 1.25; }
+/* A QUESTION'S PICTURE (row 2.175, modules/trivia.js pictureHtml): as large as fits with the question and answers still
+   on the panel, never cropped (contain). 45% of the panel's height at most: the question and four answers need the rest
+   at the panel sizes the suites measure; a setting if a screen needs more. Its credit small, under it. */
+.tv-pic { margin: 0 0 10px; display: flex; flex-direction: column; align-items: center; }
+.tv-pic img { display: block; max-width: 100%; max-height: 45cqh; height: auto; width: auto; object-fit: contain;
+  border-radius: 8px; background: var(--surface-alt, var(--surface)); pointer-events: none; user-select: none; }
+@supports not (height: 1cqh) { .tv-pic img { max-height: 40vh; } }
+.tv-credit { margin: 4px 0 0; font-size: .8rem; color: var(--text-muted, #5d7064); text-align: center; }
 .tv-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 /* *** `var(--surface)`, NEVER A LITERAL WHITE, ON ANYTHING CARRYING `var(--text)`. ***
  *

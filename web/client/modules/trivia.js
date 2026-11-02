@@ -98,6 +98,8 @@ export const GAME = 'trivia';
 export const DEFAULTS = {
   roundLength: 10,
   askedCap: ASKED_CAP_DEFAULT,   // questions each player's memory keeps (the setting, below)
+  pictureQuestions: 'ask',       // row 2.175: questions that need a picture (the setting, below)
+  pictureWaitMs: 4000,           // ...and how long a picture has to arrive
   // *** A SCORE ON SCREEN, ON BY DEFAULT. *** Reversed 2026-09-22 -- Mike: "Why should a screen
   // someone can't walk away from not show a score? Games have scores. That's pretty standard."
   // The earlier off-by-default was itself already a correction of a misquote (see the SETTINGS
@@ -258,13 +260,12 @@ export function packToTriviaBank(pack, { base = '/packs/' } = {}) {
   });
 }
 
-// *** A QUESTION THAT NEEDS ITS PICTURE IS NOT DEALT UNTIL TRIVIA DRAWS PICTURES (2026-11-02). *** The pack fields and their
-// checks landed first (packs.js); drawing the picture above the question, the credit after the answer and the
-// "Questions that need a picture: Ask them / Leave them out" row come next (the proposal's order). Until then "Who painted
-// this?" without the painting is a question nobody can answer, so every place that deals pack rows leaves these out.
-// A question whose picture is only a help is dealt as it is: it stands on its own.
-export const PICTURES_DRAWN = false;
-export const playableWithoutPictures = (rows) => (PICTURES_DRAWN ? rows : rows.filter((r) => !r.needsPicture));
+// *** A QUESTION THAT NEEDS ITS PICTURE IS DEALT ONLY WHERE THE PICTURE IS DRAWN (row 2.175). *** Trivia draws pictures
+// (`pictureHtml`, and deals a picture question only once its picture has loaded: PICTURES, in the panel below). Anything
+// else that deals pack rows and does not draw pictures (Quiz mix's trivia rounds) leaves these out: "Who painted this?"
+// without the painting is a question nobody can answer. A question whose picture is only a help is dealt everywhere.
+export const PICTURES_DRAWN = true;
+export const playableWithoutPictures = (rows) => rows.filter((r) => !r.needsPicture);
 
 // ---------------------------------------------------------------------------------------
 // *** QUESTIONS AT EVERY LEVEL (Mike, 2026-10-05: "a lot of questions at pretty much every level") ***
@@ -494,9 +495,29 @@ export function makeQuestion(item, bank, { choices = DEFAULTS.choices, rand = Ma
   // `explain` (2026-10-04): why the answer is right, for "Say why after the answer" — a pack item's (packToTriviaBank)
   // or a review-pack item's (playableBank). '' for a written bank row, which shows nothing.
   // `spell` (2026-10-07): a spelling question, whose answers the voice reads letter by letter (SPEECH).
+  // `picture` (row 2.175): drawn above the question (`pictureHtml`), its short credit before the answer, its full one after.
   return { question: item.question, answer: item.answer, options,
            correctIndex: options.indexOf(item.answer), source: item.source || '', sources,
-           explain: answerExplainText(item.explain), spell: spellsAloud(item) };
+           explain: answerExplainText(item.explain), spell: spellsAloud(item),
+           ...(item.picture ? { picture: item.picture, needsPicture: !!item.needsPicture } : {}) };
+}
+
+// *** A QUESTION'S PICTURE (row 2.175; proposal_pack_pictures_20261101.md, revised after its Goldfish gate). ***
+//   * Above the question, as large as the panel allows with the question and answers still fitting, never cropped. Its
+//     width and height (from the pack) keep its space before it loads, so the answers never move under a finger or scan.
+//   * Before the answer only the short credit shows (the collection and licence: it must not give the answer away); after
+//     the answer, the full one (artist, title, date).
+//   * `alt` is what a screen reader says. It is not read aloud to the room (it can hint the answer to sighted players).
+//   * Pressing the picture does nothing: a stray touch must not open anything.
+export function pictureHtml(q, done) {
+  const p = q && q.picture;
+  if (!p || !p.url) return '';
+  const w = Number(p.width) > 0 ? Number(p.width) : null, h = Number(p.height) > 0 ? Number(p.height) : null;
+  const credit = done ? (p.credit || '') : (p.creditBefore || '');
+  return `<figure class="tv-pic" data-picture>
+    <img src="${esc(p.url)}" alt="${esc(p.alt || '')}"${w && h ? ` width="${w}" height="${h}" style="aspect-ratio:${w}/${h}"` : ''} draggable="false" decoding="async">
+    ${credit ? `<figcaption class="tv-credit" data-credit>${esc(credit)}</figcaption>` : ''}
+  </figure>`;
 }
 
 const esc = (s) => String(s == null ? '' : s)
@@ -550,9 +571,10 @@ function loadPackCached(id) {
  * account's handle or null) only as `playableBank` allows: passed questions, and open ones only with
  * `includeUnreviewed`. The same question in two packs is one question.
  */
-export async function triviaPackRows({ reviews = null, includeUnreviewed = false } = {}) {
+// `pictures`: the caller draws pictures (Trivia), so questions that need one are kept; otherwise they are left out.
+export async function triviaPackRows({ reviews = null, includeUnreviewed = false, pictures = false } = {}) {
   const built = await Promise.all(packsFor('trivia').map((p) => loadPackCached(p.id)
-    .then((pack) => playableWithoutPictures(packToTriviaBank(pack)).map((r) => ({ ...r, pool: p.id })))
+    .then((pack) => { const rows = packToTriviaBank(pack); return (pictures ? rows : playableWithoutPictures(rows)).map((r) => ({ ...r, pool: p.id })); })
     .catch((err) => { console.error(`trivia: pack "${p.id}" did not load`, err); return []; })));
   const out = built.flat();
   if (reviews) {
@@ -634,6 +656,16 @@ const SETTINGS = [
     options: [{ value: 0, label: 'None (only this sitting)' }, { value: 200, label: '200' }, { value: 500, label: '500' },
               { value: 1000, label: '1,000' }, { value: 2000, label: '2,000' }, { value: 5000, label: '5,000' }],
     note: 'Kept with the person, so a question they answered on one screen is not asked again on another.' },
+  // (row 2.175; Mike: "there should be a toggle to only have questions that don't rely on images.") One row, argued in the
+  // proposal: a question whose picture is only a help is still asked, and still shows its picture.
+  { key: 'pictureQuestions', label: 'Questions that need a picture', kind: 'choice', default: 'ask', level: 'standard',
+    options: [{ value: 'ask', label: 'Ask them' }, { value: 'leave', label: 'Leave them out' }],
+    note: 'Somebody who cannot see the pictures well can leave these out; a question whose picture only helps is still asked.' },
+  // How long a picture has to arrive before its question is set aside for this sitting (it is never shown and then pulled).
+  // 4 s: a guess on Mike's list (2026-11-01); a picture copied into the site is about 100 KB, a second or so on a slow line.
+  { key: 'pictureWaitMs', label: 'Wait for a question\'s picture', kind: 'choice', default: 4000, level: 'advanced',
+    options: [{ value: 2000, label: '2 seconds' }, { value: 4000, label: '4 seconds' }, { value: 8000, label: '8 seconds' },
+              { value: 15000, label: '15 seconds' }] },
   { key: 'choices', label: 'Answers to choose from', kind: 'choice', default: 4,
     level: 'standard',
     // FEWER IS EASIER, AND IT IS THE FIRST THING TO REACH FOR. With one switch and a scan,
@@ -1066,6 +1098,11 @@ registerModule(
         // a lesson has not been watched yet is not a bank that was never written — saying "add
         // the Questions module" here would be actively wrong, and would read as the game not
         // knowing its own state.
+        // (row 2.175) Every question left is waiting on its picture: say so, and the first that arrives is dealt.
+        if (picsLoading()) {
+          mount.innerHTML = '<div class="tv"><div class="tv-empty" data-pictures-wait><p><b>Getting the pictures ready…</b></p></div></div>';
+          return;
+        }
         mount.innerHTML = held.length
           ? `<div class="tv"><div class="tv-empty">
               <p><b>Questions are waiting until a lesson has been watched.</b></p>
@@ -1090,6 +1127,7 @@ registerModule(
           <p class="tv-count">${at + 1} of ${deck.length}${own
             ? ` <span class="tv-score">· ${rightCount} right</span>` : ''}</p>
           ${held.length ? `<p class="tv-held" data-held>${heldNote()}</p>` : ''}
+          ${pictureHtml(q, done)}
           <h3 class="tv-q">${turnChip(done)}${esc(q.question)}</h3>
           <ol class="tv-opts" data-opts>
             ${q.options.map((o, i) => {
@@ -1278,9 +1316,45 @@ registerModule(
 
     // ---- THE LADDER: the pick, the deal, the record (QUESTIONS AT EVERY LEVEL, above) ----
     // A row's level NOW: from its rating (moved by play), capped at the top of what this bank has.
+    // ---- PICTURES (row 2.175): a question that needs its picture is dealt only once the picture has LOADED. ----
+    // It is asked for when the question is first considered; until it arrives the question is not a candidate, so a
+    // question is never shown and then pulled. If it fails, or has not arrived in `pictureWaitMs`, it is set aside for
+    // this sitting. At most PIC_LOADING at once: a pack of 250 paintings is not fetched all at once on a Pi.
+    // PIC_LOADING 3, argued: one to show next and two behind it; more is bandwidth nobody may use.
+    const PIC_LOADING = 3;
+    const setTimer = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
+    const clearTimer = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (t) => clearTimeout(t);
+    const pics = new Map();       // url -> 'loading' | 'ok' | 'failed'
+    const picsLoading = () => [...pics.values()].some((s) => s === 'loading');
+    function pictureReady(b) {
+      if (!b || !b.needsPicture || !b.picture?.url) return true;
+      const url = b.picture.url;
+      const s = pics.get(url);
+      if (!s) loadPicture(url);
+      return pics.get(url) === 'ok';
+    }
+    function loadPicture(url) {
+      if (dead || pics.has(url) || [...pics.values()].filter((s) => s === 'loading').length >= PIC_LOADING) return;
+      const Img = mount.ownerDocument?.defaultView?.Image;
+      if (typeof Img !== 'function') { pics.set(url, 'failed'); return; }
+      pics.set(url, 'loading');
+      const img = new Img();
+      let timer = null;
+      const done = (state) => {
+        if (pics.get(url) !== 'loading') return;
+        if (timer != null) clearTimer(timer);
+        pics.set(url, state);
+        // Nothing was up because every candidate was waiting on a picture: deal now (or say there is nothing).
+        if (!dead && !q && deck.length) show(at, { count: false });
+      };
+      timer = setTimer(() => done('failed'), Math.max(500, Number(cfg.pictureWaitMs) || 4000));
+      img.onload = () => done('ok');
+      img.onerror = () => done('failed');
+      img.src = url;
+    }
     function candidates(pool, maxLevel) {
       const out = contests ? contests.held() : null;
-      return pool.filter((b) => !(out && out.size && isHeldItem(b, out)) && !isFlaggedItem(b)).map((b) => {
+      return pool.filter((b) => !(out && out.size && isHeldItem(b, out)) && !isFlaggedItem(b) && pictureReady(b)).map((b) => {
         const id = idOf.get(b) || triviaId(b);
         const r = ladder.questionRow({ id, level: itemLevel(b) || UNLEVELLED }).rating;
         return { id, item: b, level: Math.min(levelOf(r, TRIVIA_RATING), maxLevel) };
@@ -1295,7 +1369,9 @@ registerModule(
       const cands = candidates(roundPool, win.maxLevel);
       const sitting = seenBy[p.id] || new Set();
       const avoid = { has: (id) => sitting.has(id) || !!asked?.has(p.id, id) };
-      for (let i = 0; i < 12 && asked && asked.size(p.id) && cands.every((c) => avoid.has(c.id) || never.has(c.id)); i++) {
+      // (row 2.175) Not when there are no candidates at all: every question may be waiting on its picture, and an empty list
+      // is not "everything has been asked".
+      for (let i = 0; i < 12 && asked && asked.size(p.id) && cands.length && cands.every((c) => avoid.has(c.id) || never.has(c.id)); i++) {
         asked.forgetOldest(p.id);
       }
       const pick = pickNear(cands, { lo: win.lo, hi: win.hi,
@@ -1533,7 +1609,7 @@ registerModule(
     // more rounds than anybody plays in a sitting, so dealing open-first is what gets them through.
     // A "pick which packs" choice is NOT here: the settings menu has no many-of-a-list row, and a row per pack
     // (about thirty) would swamp a menu walked one press at a time. [On Mike's list.]
-    const allPacksBank = () => triviaPackRows({ reviews, includeUnreviewed: !!cfg.includeUnreviewed });
+    const allPacksBank = () => triviaPackRows({ reviews, includeUnreviewed: !!cfg.includeUnreviewed, pictures: true });
 
     async function readBank() {
       if (dead) return;
@@ -1563,7 +1639,7 @@ registerModule(
         try {
           const pack = await loadPackCached(cfg.packId);
           if (gen !== bankGen || dead) return; // superseded while the fetch was in flight
-          applyBank([...playableWithoutPictures(packToTriviaBank(pack)), ...lessonItems()]);
+          applyBank([...packToTriviaBank(pack), ...lessonItems()]);
           return;
         } catch (err) {
           console.error(`trivia: pack "${cfg.packId}" failed to load, falling back to the bank`, err);
@@ -1641,7 +1717,9 @@ registerModule(
       // fallback — otherwise a small bank would deal the whole bank, contested ones included.
       const out = contests ? contests.held() : null;
       const playable = (out && out.size ? bank.filter((b) => !isHeldItem(b, out)) : bank)
-        .filter((b) => !isFlaggedItem(b));
+        .filter((b) => !isFlaggedItem(b))
+        // (row 2.175) "Questions that need a picture: Leave them out".
+        .filter((b) => !(b.needsPicture && cfg.pictureQuestions === 'leave'));
       const open = gate(playable, unlocked).open;
       held = lockedTopics(playable, unlocked, topics);
       const pool = open.length >= 4 ? open : playable;
@@ -1653,7 +1731,9 @@ registerModule(
         deck = new Array(Math.min(Math.max(0, Math.floor(Number(cfg.roundLength) || 0)), pool.length)).fill(null);
       } else {
         roundPool = [];
-        deck = dealDeck(pool);
+        // The shuffled round deals its questions up front, so it cannot wait for a picture: it leaves out questions that
+        // need one (a written bank never has them; a pack has levels and goes the ladder's way above).
+        deck = dealDeck(pool.filter((b) => !b.needsPicture));
       }
       if (!deck.length) { q = null; render(); return; }
       show(0);

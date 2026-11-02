@@ -704,8 +704,59 @@ Shared Q | Shared A` });
         rows[0].picture.url === '/packs/pictures/art/1.webp' && rows[0].needsPicture === true && rows[2].picture.url === 'https://example.org/s.webp', JSON.stringify(rows.map((x) => x.picture?.url)));
       check('*** two "Who painted this?" with the same answer and different paintings are two questions ***', triviaId(rows[0]) !== triviaId(rows[1]));
       check('...and a question with no picture keeps the id it always had', triviaId({ question: '2 + 2', answer: '4' }) === triviaId(mapped[0]));
-      check(`*** until Trivia draws pictures (PICTURES_DRAWN ${PICTURES_DRAWN}), a question that needs one is never dealt; a helper picture's is ***`,
-        PICTURES_DRAWN || (playableWithoutPictures(rows).length === 1 && playableWithoutPictures(rows)[0] === rows[2]));
+      check(`*** where pictures are NOT drawn (Quiz mix), a question that needs one is left out; a helper picture's is kept (Trivia draws: ${PICTURES_DRAWN}) ***`,
+        PICTURES_DRAWN && playableWithoutPictures(rows).length === 1 && playableWithoutPictures(rows)[0] === rows[2]);
+    }
+    // (row 2.175) THE PANEL: a picture question is dealt only once its picture has loaded; a picture that never loads is
+    // set aside; the short credit before the answer, the full one after; "Leave them out" leaves them out.
+    {
+      const { addUserPack } = await import('../user_packs.js');
+      // An SVG, not a PNG: the repo's .gitignore keeps *.png and *.jpg out (packs' real pictures are WebP, which it keeps).
+      const okPic = { url: 'pictures/dev-test/one.svg', alt: 'a small square', credit: 'Full credit: Somebody, A square, 2026',
+        creditBefore: 'Test collection · CC0', licence: 'CC0', width: 40, height: 40 };
+      const pack = { schema: 'nimrod.pack.v1', kind: 'trivia', name: 'Pictures test', source: { name: 'test' }, items: [
+        { question: 'Which picture question loads?', answers: ['This one', 'No', 'Neither'], correct: 'This one', difficulty: 'easy', picture: okPic, needsPicture: true },
+        { question: 'Which picture question never loads?', answers: ['That one', 'No', 'Neither'], correct: 'That one', difficulty: 'easy',
+          picture: { ...okPic, url: 'pictures/dev-test/missing.png' }, needsPicture: true },
+        { question: 'A plain question one?', answers: ['Yes', 'No', 'Maybe'], correct: 'Yes', difficulty: 'easy' },
+        { question: 'A plain question two?', answers: ['Yes', 'No', 'Maybe'], correct: 'Yes', difficulty: 'easy' },
+      ] };
+      const entry = addUserPack({ kind: 'trivia', name: 'Pictures test' }, JSON.stringify(pack));
+      const memRow = () => { let d = {}; return { get: () => d, set: (p) => { d = { ...d, ...p }; }, load: async () => {}, flush: async () => {},
+        startPolling() {}, subscribe: () => () => {}, destroy() {} }; };
+      const play = async (saved) => {
+        const r = rig({ bankText: null, saved: { contentSource: 'pack', packId: entry.id, roundLength: 4, ...saved }, personId: 'pic', ladderRow: memRow() });
+        await until(() => r.probe().bank > 0);
+        await sleep(600);                                    // the pictures' loads (the missing one fails at once here)
+        const seen = [];
+        let credits = null;
+        for (let i = 0; i < 12; i++) {
+          const q = r.probe().question;
+          if (!q) { await sleep(150); continue; }
+          seen.push(q.question);
+          if (q.picture && !credits) {
+            const before = r.host.querySelector('[data-credit]')?.textContent || '';
+            const img = r.host.querySelector('[data-picture] img');
+            r.host.querySelector(`[data-opt="${q.correctIndex}"]`)?.click();
+            await sleep(20);
+            credits = { before, after: r.host.querySelector('[data-credit]')?.textContent || '', img: !!img && img.getAttribute('alt') === 'a small square' };
+          } else r.host.querySelector(`[data-opt="${q.correctIndex}"]`)?.click();
+          await sleep(20);
+          r.host.querySelector('[data-next]')?.click();
+          await sleep(60);
+        }
+        r.inst.destroy();
+        return { seen, credits };
+      };
+      const asked = await play({});
+      check('*** the picture question is asked, its picture drawn, the short credit before the answer and the full one after ***',
+        asked.seen.includes('Which picture question loads?') && asked.credits?.img && asked.credits.before === 'Test collection · CC0'
+          && /Full credit/.test(asked.credits.after), JSON.stringify(asked));
+      check('*** a picture that never loads: its question is never shown ***', !asked.seen.includes('Which picture question never loads?'), JSON.stringify(asked.seen));
+      const left = await play({ pictureQuestions: 'leave' });
+      check('*** "Questions that need a picture: Leave them out": none is asked; the plain ones are ***',
+        !left.seen.some((s) => /picture question/.test(s)) && left.seen.some((s) => /plain question/.test(s)), JSON.stringify(left.seen));
+      try { localStorage.removeItem('nimrod:userpacks:v1'); } catch { /* none */ }
     }
 
     // The real, shipped pack — fetched for real against this suite's own server, the same way
