@@ -15,13 +15,16 @@ conditions — and for the families and clinicians around them. A **screen** is 
 phone, or ask for help. Almost every rule below follows from that, and if you only remember one
 thing, remember this:
 
-> ### A SCREEN MUST NEVER ENTER A STATE THAT ONLY AN INPUT CAN LEAVE, WHEN THE PERSON IN FRONT OF IT CANNOT GIVE THAT INPUT.
+> ### EVERY SCREEN HAS A WAY OUT THE PERSON IN FRONT OF IT CAN USE, OR ONE THAT HAPPENS BY ITSELF.
 >
 > Starting something can need a press. **Being stranded must not be possible.**
 
-That is a safety invariant, not a preference — **edge cases hunted, and signed off by Mike on
-2026-08-28.** It is why a paused video shows a marker, why a call countdown connects on its
-own, and why a stalled video moves on by itself. It has caught real bugs.
+That is a safety invariant, not a preference. **Mike accepted this wording on 2026-11-02**, in place of the one he signed
+off on 2026-08-28 (*"A screen must never enter a state that only an input can leave, when the person in front of it
+cannot give that input"*). Same rule, said the way round a builder can check: name the way out, and who can use it. What
+"can use" means for a given person (one switch, voice, nothing at all) is what that person's needs say. It is why a
+paused video shows a marker, why a call countdown connects on its own, and why a stalled video moves on by itself. It has
+caught real bugs.
 
 **It used to be phrased as *"nothing may require an input in order to keep doing what it is
 already doing"*, and that was too strong.** Two counterexamples killed it:
