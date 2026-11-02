@@ -545,7 +545,7 @@ export const ACCENT_VARS = ['--accent', '--link', '--accent-warm-deep'];
 // id RETURNED is that painted theme's, so every caller's `THEMES[applyTheme(...)]` is still a real theme.
 // `now`/`lat`/`holidays` pass through to paintedTheme, for a suite.
 export function applyTheme(rootEl, id, opts = {}) {
-  const { flashLimit, now, lat, holidays, device } = opts || {};
+  const { flashLimit, motion, now, lat, holidays, device } = opts || {};
   const theme = paintedTheme(id, { now, lat, holidays, device });
   const resolved = theme.id;
   // (row 2.164, 2026-10-31) THE PAGE'S OWN <html>, WHILE THE PAGE IS STILL FINDING OUT ITS THEME: asked for, not
@@ -583,7 +583,10 @@ export function applyTheme(rootEl, id, opts = {}) {
   // A live theme's animated world, behind whatever `rootEl` is -- <html> for the whole page, or
   // any element carrying `data-scene-host` for a single panel wearing its own theme. Safe on
   // every other call site: `syncScene` itself checks for that marker and no-ops otherwise.
-  syncScene(rootEl, theme, flashLimit !== undefined ? { flashLimit } : {});
+  // (2026-11-02) `motion` ('gentle' | 'calm' | 'still'): a host that knows the screen's own "keep movement low" (the
+  // kiosk: the screen's or the person's setting) passes it, so a moving theme somebody picked stands still for them.
+  // Omitted, the scene follows only the device's reduce-motion, as before.
+  syncScene(rootEl, theme, { ...(flashLimit !== undefined ? { flashLimit } : {}), ...(motion ? { motion } : {}) });
   return resolved;
 }
 

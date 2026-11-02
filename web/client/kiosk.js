@@ -736,6 +736,11 @@ export async function mountKiosk(root, {
     themeGate.waits.delete(name);
     if (!themeGate.waits.size) openThemeGate();
   }
+  /** 'still' when this screen or its person asks for less movement (avatarContextNow), else 'gentle'. Early in boot, before
+   *  those rows exist, 'gentle': the device's own reduce-motion still applies inside the scene. */
+  function sceneMotion() {
+    try { const a = avatarContextNow(); return a && (a.reduceMotion || a.deviceReduced) ? 'still' : 'gentle'; } catch { return 'gentle'; }
+  }
   // (seasons, 2026-10-05) `fade`: the date changed the look by itself (sky.js) - the scene fades (livescene FADE_MS).
   function applyKioskTheme(id, { fade = false } = {}) {
     // An embed lives on somebody's page, which already has a theme (its own picker, or the
@@ -753,14 +758,20 @@ export async function mountKiosk(root, {
     }
     clearTimeout(spacedThemeT); spacedThemeT = null;
     if (id !== paintedThemeId) { paintedThemeId = id; paintedThemeAt = Date.now(); }
-    const resolved = applyTheme(document.documentElement, id, { flashLimit: flashLimitNow });
+    // *** A MOVING THEME STANDS STILL FOR SOMEBODY WHO ASKED FOR LESS MOVEMENT (2026-11-02). *** Found by the Goldfish
+    // review of the theme-fallbacks proposal: the scenes take a `motion`, but nothing here passed one, so only the
+    // DEVICE's reduce-motion stilled a live theme; the screen's or the person's "movement makes me unwell" (the same
+    // context the avatars and solitaire already read) did nothing to a moving theme somebody had picked. Now both
+    // scenes on a kiosk (the page's and the kiosk's own) are told. 'gentle' otherwise, so turning it off moves again.
+    const motion = sceneMotion();
+    const resolved = applyTheme(document.documentElement, id, { flashLimit: flashLimitNow, motion });
     // Subtitles follow the theme's subtitle style (theme.js `--subtitles-style`). In a try: `subtitles`
     // is a later `let`, and the first theme is applied before it exists.
     try { subtitles?.restyle(); } catch (err) { console.error('kiosk: subtitles', err); }
     // The scene's own flashes (neon signs, lightning) follow the screen's flash limit, read every render.
     // (2026-10-05: `paintedTheme`, not THEMES[resolved] -- the same theme, plus what "With the seasons"
     // adds to it while it falls back, e.g. Halloween's cat on Night. See theme.js.)
-    syncScene(kioskEl, paintedTheme(id), { flashLimit: flashLimitNow, fade });
+    syncScene(kioskEl, paintedTheme(id), { flashLimit: flashLimitNow, fade, motion });
     // The mixer's "sounds like: match the scene" follows the scene the screen is actually showing.
     soundScene = THEMES[resolved]?.scene || null;
     try { mixer?.setScene(soundScene); } catch (err) { console.error('kiosk: mixer scene', err); }

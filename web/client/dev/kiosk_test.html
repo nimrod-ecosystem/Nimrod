@@ -4645,6 +4645,21 @@ const toTab = (m, id) => {
       check('...a second press (stop editing) does not open it again or close it by itself', !!k.sceneEditor() || !k.editView());
       k.closeEditView();
       k.destroy();
+      // (2026-11-02) A moving theme somebody picked stands still on a screen set to keep movement low.
+      {
+        const M = await profiles.create('TEST-still-scene');
+        await profiles.addModule(M.id, 'clock');
+        await remote(M.id, () => ({ theme: 'fall', reduceMotion: true }));
+        const mroot = box();
+        const mk = await mountKiosk(mroot, { user: USER, profileId: M.id, profiles, bus: createBus() });
+        const still = () => [...document.querySelectorAll('.ls')].filter((e) => e.isConnected);
+        check('*** a moving theme on a screen set to "keep movement low": its scenes are still ***',
+          await settled(() => still().length > 0 && still().every((e) => e.classList.contains('ls-still')), 6000),
+          JSON.stringify(still().map((e) => e.className)));
+        mk.destroy();
+        mroot.remove();
+        try { (await import('../theme.js')).applyTheme(document.documentElement, 'default'); } catch { /* the suite's own page */ }
+      }
       root.remove();
 
       // ---- 1d. ROW 2.145 STEP 3 (2026-10-31): `?wording=1` IS THE ONE EDITOR, ITS WORDS SHOWN; a kept "on" is not ----
