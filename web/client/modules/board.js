@@ -85,6 +85,37 @@ import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 import { SYMBOL_SETS, setForTheme, symbolSet, pickSymbol, symbolUrl, themeIdFromRoot,
          parseColour, setHas, setColours, drawingContrast, SYMBOL_MIN_CONTRAST } from '../aac_sets.js';
 import { showChoiceCard, createChoiceMemory, CHOICE_TIMEOUT_MS } from '../choice_card.js';
+import { symbolSvg as themedSvg, THEME_SET_IDS, THEMES as THEMED } from '../aac_themed.js';
+import { readDeviceSignals } from '../theme_default.js';
+
+// *** THEMED PICTURES (Design, 2026-11-01; Mike's rulings of 2026-11-01 and 2026-11-02; row 2.146). ***
+// Design's ruling 8: "Themed symbol sets get their own pictures that fit the theme; they may be richer and animated,
+// because themed sets don't assume low vision. The base sets stay simple." Each picture is the word's own simple
+// drawing set inside a piece of the theme (`aac_themed.js`), so the shape a person knows is still there.
+//   WHEN: the board follows the screen's theme and Design drew that theme (eight: Halloween, Night, Fall, Winter, Ocean,
+//   Steampunk, Cyberpunk, Cozy), or somebody pinned one ("Always the ... pictures"). A word Design gave no picture
+//   keeps the set's (or the board's own) drawing. "Pictures that fit the theme: Off" goes back to the simple sets.
+//   NO CONTRAST GUARD: the guard (aac_sets.js pickSymbol) measures a drawing against the CARD it sits on. A themed
+//   picture brings its own background, the piece; its word drawing was measured on the piece (2026-11-01, 23 pairs,
+//   all at least 3:1, lowest 3.93; the carved pumpkin's ink sits on a dark outline at 11.15:1).
+//   MOVEMENT, ON BY DEFAULT (Mike, 2026-11-02, DZ 3), and off: under the device's own "reduce motion"; under the
+//   person's "movement makes me unwell" (handed over in the avatars' context, as solitaire reads it); and, on
+//   'auto', on a screen set to simpler 3D detail or measured as slow (theme_default.js readDeviceSignals). The slow
+//   case is a GUESS on Mike's list: a full board of moving pictures has not been timed on the bench Pi 400, so it
+//   stays still there until it has. Nothing in the pieces flashes; the fastest is a bat's wing at about half a beat a
+//   second. The picture also stops under the device's reduce-motion by itself (its own media query).
+export const THEMED_PICTURE_IDS = Object.freeze(THEME_SET_IDS.slice());
+const themedCache = new Map();
+/** A themed picture as an <img>, or '' when Design drew none for this word in this theme. */
+export function themedPictureHTML(theme, word, moving) {
+  const key = `${theme}|${word}|${moving ? 1 : 0}`;
+  if (!themedCache.has(key)) {
+    const svg = themedSvg(word, theme, { animated: !!moving });
+    themedCache.set(key, svg ? `<img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}" alt="" `
+      + 'draggable="false" decoding="async" style="width:100%;height:100%;display:block">' : '');
+  }
+  return themedCache.get(key);
+}
 
 // *** A THEME PICKED ON THIS SCREEN, BY SOMEBODY STANDING AT IT. ***
 //
@@ -339,6 +370,10 @@ const DEFAULTS = {
   // (theme_schedule.js). The second is answered per word by `pickSymbol`'s guard. A board already set keeps its value.
   symbols: 'theme',
 
+  // THEMED PICTURES (row 2.146; see the SETTINGS rows). On, following a theme Design drew pictures for. Movement 'auto'.
+  themedPictures: true,
+  movingPictures: 'auto',
+
   // How long the choice card stays if nobody answers it. See the SETTINGS row.
   choiceCardMs: CHOICE_TIMEOUT_MS,
 };
@@ -474,10 +509,25 @@ export const SETTINGS = [
         label: `Always the ${s.label} set${s.card === 'dark' ? ' (for dark cards)'
           : s.card === 'light' ? ' (for light cards)' : ''}`,
       })),
+      ...THEMED_PICTURE_IDS.map((id) => ({ value: `pictures:${id}`, label: `Always the ${THEMED[id].label} pictures` })),
     ],
     note: 'When symbols follow the theme, a hard-to-see drawing is swapped for the '
       + 'board’s own. A set chosen here is always used as it is. The words never change. '
       + 'If somebody finds words by their pictures, choose the board’s own drawings or one set, so the pictures stay put.' },
+  // THEMED PICTURES (header). On by default: Design's ruling 8, the themed sets are the theme's pictures. Off is the
+  // simple sets, as before 2026-11-02, for a person who needs the plainest drawings.
+  { key: 'themedPictures', label: 'Pictures that fit the theme', kind: 'toggle', default: true, level: 'standard',
+    onLabel: 'Yes', offLabel: 'No, the simple drawings',
+    appliesWhen: (v) => v?.symbols == null || v.symbols === 'theme',
+    note: 'Following the theme, each word’s drawing sits inside something from the theme: a pumpkin, a snow globe, a gear. '
+      + 'The drawing itself is the same one.' },
+  { key: 'movingPictures', label: 'The pictures move', kind: 'choice', default: 'auto', level: 'standard',
+    options: [
+      { value: 'auto', label: 'Yes, gently, unless this screen is slow or set to keep movement low' },
+      { value: 'on', label: 'Yes, unless set to keep movement low' },
+      { value: 'off', label: 'No, keep them still' },
+    ],
+    note: 'Only the themed pictures move, slowly. Nothing flashes. "Reduce motion" on the device always keeps them still.' },
   // *** THE CHOICE CARD GOES BY ITSELF, AND THIS IS HOW SOON. ***
   //
   // Thirty seconds by default: long enough to close a settings menu, look at the board and read
@@ -834,6 +884,8 @@ registerModule(
       const setId = activeSet();
       const guard = symbolMode() === 'theme';
       const { bg, ink } = setId ? cardColours() : { bg: null, ink: null };
+      const pictures = activePictures();
+      const moving = pictures ? picturesMove() : false;
       // Every slot in the tier is rendered, including empty ones. A hole is drawn as a hole:
       // the positions after it must not move, which is the whole rule in `aac_vocab.js`.
       for (let i = 0; i < t.cells; i++) {
@@ -850,9 +902,12 @@ registerModule(
           // PER WORD: a word the set did not draw, or (following the theme) one that would read
           // worse than the board's own on this card, keeps the board's own drawing of it.
           const pick = setId ? pickSymbol({ name: cell.symbol, setId, guard, bg, ink }) : null;
-          const sym = pick && pick.from === 'set'
-            ? designedSymbolHTML(pick.setId, cell.symbol) : symbolSvg(cell.symbol);
-          if (pick) b.dataset.sym = pick.from === 'set' ? `set:${pick.setId}` : pick.from;
+          const themed = pictures && cell.symbol ? themedPictureHTML(pictures, cell.symbol, moving) : '';
+          const sym = themed || (pick && pick.from === 'set'
+            ? designedSymbolHTML(pick.setId, cell.symbol) : symbolSvg(cell.symbol));
+          if (themed) b.dataset.sym = `pictures:${pictures}${moving ? ':moving' : ''}`;
+          else if (pick) b.dataset.sym = pick.from === 'set' ? `set:${pick.setId}` : pick.from;
+          else if (pictures) b.dataset.sym = 'own';
           // *** THE PICTURE IS OPTIONAL AND ARRIVES LATE; THE WORD IS NEITHER. ***
           //
           // A card with an image renders the WORD immediately and an empty picture frame, then
@@ -1187,14 +1242,44 @@ registerModule(
      *  the drawings the board has always had, never a guess at a replacement. */
     function symbolMode() {
       if (cfg.symbols === 'theme') return 'theme';
-      if (symbolSet(cfg.symbols)) return 'lock';
+      if (symbolSet(cfg.symbols) || pinnedPictures()) return 'lock';
       return 'own';
+    }
+    /** The pinned themed pictures' theme ("Always the Winter pictures"), or null. */
+    function pinnedPictures() {
+      const m = /^pictures:(\w+)$/.exec(String(cfg.symbols || ''));
+      return m && THEMED_PICTURE_IDS.includes(m[1]) ? m[1] : null;
+    }
+    /** THEMED PICTURES (top of file): the theme whose pictures the cards use now, or null. */
+    function activePictures() {
+      const pinned = pinnedPictures();
+      if (pinned) return pinned;
+      if (symbolMode() !== 'theme' || cfg.themedPictures === false) return null;
+      const t = themeId || readTheme();
+      return THEMED_PICTURE_IDS.includes(t) ? t : null;
+    }
+    /** Do the themed pictures move now? (top of file: MOVEMENT). Read at each draw, never cached. */
+    function picturesMove() {
+      const how = cfg.movingPictures || 'auto';
+      if (how === 'off') return false;
+      try {
+        const a = typeof ctx.avatarContext === 'function' ? ctx.avatarContext() : null;
+        if (a && (a.reduceMotion || a.deviceReduced)) return false;
+      } catch { /* no host context */ }
+      let s = null;
+      try { s = readDeviceSignals(); } catch { s = null; }
+      if (!s) return how === 'on';
+      if (s.reducedMotion || s.motionSetting) return false;
+      if (how === 'on') return true;
+      if (s.detail === 'proxy') return false;
+      try { if (s.cpu?.slow) return false; } catch { /* not measurable: as if not slow */ }
+      return true;
     }
 
     function activeSet() {
       const mode = symbolMode();
       if (mode === 'theme') return setForTheme(themeId || readTheme());
-      if (mode === 'lock') return cfg.symbols;
+      if (mode === 'lock') return pinnedPictures() ? null : cfg.symbols;
       return null;
     }
 
@@ -1235,7 +1320,15 @@ registerModule(
       return { bg: bg && bg.alpha >= 1 ? bg.hex : null, ink: ink ? ink.hex : null };
     }
 
-    const setLabel = (id) => (id ? `${symbolSet(id)?.label || id} set` : 'board’s own drawings');
+    // A "look" is a simple set's id or a themed picture set's `pictures:<theme>` (THEMED PICTURES), which is also what
+    // "Keep the ..." saves, so keeping what was on the cards keeps the pictures, not the simple set under them.
+    const setLabel = (id) => {
+      if (!id) return 'board’s own drawings';
+      const m = /^pictures:(\w+)$/.exec(id);
+      return m ? `${THEMED[m[1]]?.label || m[1]} pictures` : `${symbolSet(id)?.label || id} set`;
+    };
+    const lookFor = (theme) => (cfg.themedPictures !== false && THEMED_PICTURE_IDS.includes(theme)
+      ? `pictures:${theme}` : setForTheme(theme));
 
     /**
      * The screen's theme changed. `local` is true only when it was picked in THIS screen's own
@@ -1272,8 +1365,9 @@ registerModule(
      */
     function offerChoice(mode, prevTheme, nextTheme) {
       if (cfg.locked || mode === 'lock') return;
-      const before = setForTheme(prevTheme);
-      const after = setForTheme(nextTheme);
+      const before = lookFor(prevTheme);
+      const after = lookFor(nextTheme);
+      const pics = String(after || '').startsWith('pictures:');
       const host = mount.querySelector('.aboard');
       if (!host) return;
       let ask = null;
@@ -1293,11 +1387,12 @@ registerModule(
       } else {
         // Only offered where it would actually read: a set drawn for dark cards is not offered
         // to a board whose cards are white, and the reverse.
-        if (!after || !setReadsHere(after)) return;
+        // Themed pictures bring their own background (THEMED PICTURES), so they read on any card.
+        if (!after || (!pics && !setReadsHere(after))) return;
         ask = {
           id: 'board.symbols.offer',
           title: 'This theme has matching board symbols',
-          text: `The ${setLabel(after)} was drawn for this theme. Use designed symbols on this `
+          text: `The ${setLabel(after)} ${pics ? 'were' : 'was'} drawn for this theme. Use designed symbols on this `
             + 'board, changing with the theme? The words stay the same either way.',
           options: [
             { value: 'follow', label: 'Use them' },
@@ -1486,6 +1581,7 @@ registerModule(
         hc: !!mount.querySelector('.aboard.ab-hc'),
         // Symbols AS DRAWN: where each card's picture came from, and the file when it is a set's.
         symbols: cfg.symbols, symbolMode: symbolMode(), symbolSet: activeSet(), theme: themeId,
+        pictures: activePictures(),
         symbolFrom: cardEls.map((b) => (b.disabled ? null : b.dataset.sym
           || (b.querySelector('.ab-sym svg') ? 'own' : 'none'))),
         symbolSrc: cardEls.map((b) => b.querySelector('.ab-sym img')?.getAttribute('src') || null),

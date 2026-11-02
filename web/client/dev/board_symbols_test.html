@@ -154,7 +154,7 @@ try {
 
   section('*** "Follow the theme": the symbols change when the theme does ***');
   {
-    const b = await mountBoard({ boardId: 'care', symbols: 'theme' });
+    const b = await mountBoard({ boardId: 'care', symbols: 'theme', themedPictures: false });
     await theme('night');
     let p = b.p();
     check('night theme: every card draws the night set', p.symbolSet === 'night' && allFrom(p, 'set:night'),
@@ -204,7 +204,7 @@ try {
   // themes." Halloween borrowed Fall's set until Design drew it one; it now wears its own, and adds six words.
   section('*** Halloween: its own set, and six words of its own (row 2.141, Design item 48) ***');
   {
-    const b = await mountBoard({ boardId: 'care', symbols: 'theme' });
+    const b = await mountBoard({ boardId: 'care', symbols: 'theme', themedPictures: false });
     await theme('fall');
     check('fall theme: the fall set', allFrom(b.p(), 'set:fall'));
     await theme('halloween');
@@ -241,7 +241,7 @@ try {
       own.p().theme === 'halloween' && allFrom(own.p(), 'own')
       && own.p().cardHTML.slice(0, 7).every((h) => /<svg/.test(h)), JSON.stringify(own.p().symbolFrom));
     own.inst.destroy();
-    const follow = await mountBoard({ board: mine, symbols: 'theme' });
+    const follow = await mountBoard({ board: mine, symbols: 'theme', themedPictures: false });
     await theme('halloween');
     p = follow.p();
     // The six are an outlined filled shape; measured one colour at a time (aac_sets.js OUTLINED_WORDS) their
@@ -255,6 +255,70 @@ try {
       JSON.stringify(pinned.p().symbolFrom));
     pinned.inst.destroy();
     await theme('default');
+  }
+
+  // (row 2.146, Design 2026-11-01, ruling 8) "Themed symbol sets get their own pictures that fit the theme; they may be
+  // richer and animated." Mike, 2026-11-02: moving pictures ON by default.
+  section('*** Themed pictures: following a theme Design drew, each word sits in a piece of the theme ***');
+  {
+    const { GLYPHS, THEME_SET_IDS } = await import('../aac_themed.js');
+    const { SETTINGS } = await import('../modules/board.js');
+    const reduced = !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    check('the eight themes Design drew pictures for', THEME_SET_IDS.join() === 'halloween,night,fall,winter,ocean,steampunk,cyberpunk,cozy',
+      THEME_SET_IDS.join());
+    check('every word on the care board has a themed picture', CARE.cells.filter(Boolean).every((c) => GLYPHS[c.symbol]),
+      CARE.cells.filter(Boolean).filter((c) => !GLYPHS[c.symbol]).map((c) => c.symbol).join());
+    const b = await mountBoard({ boardId: 'care', symbols: 'theme', movingPictures: 'off' });
+    check('the default theme has no themed pictures, so none are used', b.p().pictures === null, String(b.p().pictures));
+    await theme('winter');
+    let p = b.p();
+    check('*** winter theme: every card is a winter picture ***', p.pictures === 'winter' && allFrom(p, 'pictures:winter'),
+      JSON.stringify(p.symbolFrom));
+    check('...drawn from Design\'s module, not a file', p.symbolSrc.filter(Boolean).every((s) => s.startsWith('data:image/svg+xml')));
+    await sleep(300);
+    const img = document.querySelector('#host .ab-sym img');
+    check('the pictures actually load', img && img.complete && img.naturalWidth > 0, img ? String(img.naturalWidth) : 'no img');
+    check('...decoration: alt is empty, the card is named by its word', img && img.getAttribute('alt') === ''
+      && img.closest('.ab-card').getAttribute('aria-label'));
+    check('"The pictures move: No": still, with no movement in the picture', !decodeURIComponent(p.symbolSrc.find(Boolean)).includes('@keyframes'));
+    b.state.set({ movingPictures: 'on' });
+    await tick();
+    p = b.p();
+    check(`*** "Yes": they move${reduced ? ' (this browser asks for reduced motion, so still)' : ''}, and only inside the picture's own "no reduced motion" ***`,
+      reduced ? allFrom(p, 'pictures:winter') : allFrom(p, 'pictures:winter:moving')
+        && decodeURIComponent(p.symbolSrc.find(Boolean)).includes('@media (prefers-reduced-motion: no-preference)'), JSON.stringify(p.symbolFrom.slice(0, 3)));
+    const words = p.words.join('|');
+    await theme('ocean');
+    check('*** the theme changes, the pictures follow, with no reload; the words do not change ***',
+      b.p().pictures === 'ocean' && b.p().words.join('|') === words);
+    await theme('dusk');
+    check('a theme Design drew no pictures for (dusk): the simple set it follows, as before', b.p().pictures === null && allFrom(b.p(), 'set:night'));
+    await theme('winter');
+    b.state.set({ themedPictures: false });
+    await tick();
+    check('*** "Pictures that fit the theme: No": back to the simple winter set ***', b.p().pictures === null && allFrom(b.p(), 'set:winter'));
+    b.inst.destroy();
+    await theme('default');
+    const pin = await mountBoard({ boardId: 'care', symbols: 'pictures:ocean', movingPictures: 'off' });
+    check('*** "Always the Ocean pictures": pinned on the default theme ***', pin.p().symbolMode === 'lock' && pin.p().pictures === 'ocean'
+      && allFrom(pin.p(), 'pictures:ocean'), JSON.stringify(pin.p().symbolFrom.slice(0, 3)));
+    await theme('night');
+    check('...and the night theme does not move it', allFrom(pin.p(), 'pictures:ocean'));
+    pin.inst.destroy();
+    await theme('default');
+    const { SYMBOL_NAMES } = await import('../aac_symbols.js');
+    const undrawn = SYMBOL_NAMES.find((s) => !GLYPHS[s]);
+    if (undrawn) {
+      const mine = await mountBoard({ board: { cells: [{ word: 'Yes', symbol: 'yes', kind: 'yes' }, { word: undrawn, symbol: undrawn, kind: 'plain' }] },
+        symbols: 'pictures:winter', movingPictures: 'off' });
+      check(`a word Design drew no picture for ("${undrawn}") keeps the board's own drawing`,
+        mine.p().symbolFrom[0] === 'pictures:winter' && mine.p().symbolFrom[1] === 'own', JSON.stringify(mine.p().symbolFrom));
+      mine.inst.destroy();
+    }
+    const opts = SETTINGS.find((s) => s.key === 'symbols').options.map((o) => o.value);
+    check('the Symbols setting offers each of the eight pinned', THEME_SET_IDS.every((id) => opts.includes(`pictures:${id}`)));
+    check('"The pictures move" starts at "Yes, gently, unless this screen is slow or set to keep movement low"',
+      SETTINGS.find((s) => s.key === 'movingPictures').default === 'auto' && SETTINGS.find((s) => s.key === 'themedPictures').default === true);
   }
 
   section('*** "Lock to one set": pinned, whatever the theme ***');
@@ -307,7 +371,8 @@ try {
 
   section('*** the choice card appears ONLY after a theme picked on this screen ***');
   {
-    const b = await mountBoard({ boardId: 'care', symbols: 'own' });
+    // The simple sets here (themedPictures off); the card with themed pictures is checked after.
+    const b = await mountBoard({ boardId: 'care', symbols: 'own', themedPictures: false });
     await theme('night');
     check('a theme arriving from elsewhere (polling, another device) asks nothing', !b.p().card
       && !document.querySelector('.choice-card'));
@@ -361,7 +426,7 @@ try {
     await theme('default');
   }
   {
-    const b = await mountBoard({ boardId: 'care', symbols: 'theme' });
+    const b = await mountBoard({ boardId: 'care', symbols: 'theme', themedPictures: false });
     await theme('warm');
     await theme('forge', { local: true, bus: b.bus });
     check('following, a picked theme whose set is the same (warm -> forge, both cozy) asks nothing',
@@ -369,6 +434,29 @@ try {
     await theme('night');
     check('following, a theme from elsewhere switches the set silently',
       allFrom(b.p(), 'set:night') && !b.p().card);
+    b.inst.destroy();
+    await theme('default');
+  }
+
+  section('*** the card with themed pictures on: it names the pictures, and "Keep" keeps the pictures ***');
+  {
+    const b = await mountBoard({ boardId: 'care', symbols: 'own', movingPictures: 'off' });
+    await theme('night', { local: true, bus: b.bus });
+    let p = b.p();
+    check('offered: "The Night pictures were drawn for this theme"', p.card && /Night pictures were drawn/.test(p.cardEl.textContent),
+      p.cardEl && p.cardEl.textContent);
+    p.cardEl.querySelectorAll('[data-cc-opt]')[0].click();
+    await tick();
+    check('"Use them": following, in Night pictures', b.state.get().symbols === 'theme' && allFrom(b.p(), 'pictures:night'),
+      JSON.stringify(b.p().symbolFrom.slice(0, 3)));
+    await theme('winter', { local: true, bus: b.bus });
+    p = b.p();
+    check('following: Winter pictures, and the card offers to keep the Night pictures', allFrom(p, 'pictures:winter')
+      && /Keep the Night pictures/.test(p.cardEl?.textContent || ''), p.cardEl && p.cardEl.textContent);
+    [...p.cardEl.querySelectorAll('[data-cc-opt]')].find((x) => /Keep the Night/.test(x.textContent)).click();
+    await tick();
+    check('*** "Keep the Night pictures" pins the pictures, not the simple Night set under them ***',
+      b.state.get().symbols === 'pictures:night' && b.p().symbolMode === 'lock' && allFrom(b.p(), 'pictures:night'));
     b.inst.destroy();
     await theme('default');
   }
@@ -390,7 +478,7 @@ try {
   section('*** the two checkboxes, remembered per profile ***');
   {
     const stores = {};
-    const a = await mountBoard({ boardId: 'care', symbols: 'own' }, { stores });
+    const a = await mountBoard({ boardId: 'care', symbols: 'own', themedPictures: false }, { stores });
     await theme('night', { local: true, bus: a.bus });
     const el = a.p().cardEl;
     el.querySelector('[data-cc-always]').click();
@@ -403,7 +491,7 @@ try {
     await theme('default');
 
     // Another board on the same profile, still on its own drawings.
-    const b = await mountBoard({ boardId: 'care', symbols: 'own' }, { stores });
+    const b = await mountBoard({ boardId: 'care', symbols: 'own', themedPictures: false }, { stores });
     await theme('ocean', { local: true, bus: b.bus });
     check('*** next time: applied without a card ***', !b.p().card && !document.querySelector('.choice-card')
       && b.state.get().symbols === 'theme' && allFrom(b.p(), 'set:ocean'), JSON.stringify(b.state.get()));
@@ -412,7 +500,7 @@ try {
   }
   {
     const stores = {};
-    const a = await mountBoard({ boardId: 'care', symbols: 'own' }, { stores });
+    const a = await mountBoard({ boardId: 'care', symbols: 'own', themedPictures: false }, { stores });
     await theme('night', { local: true, bus: a.bus });
     const el = a.p().cardEl;
     el.querySelector('[data-cc-mute]').click();
@@ -433,7 +521,8 @@ try {
     check('a LOCKED board shows no caregiver control on its cards — this card included', !b.p().card);
     b.inst.destroy();
     await theme('default');
-    const c = await mountBoard({ boardId: 'care', symbols: 'own' });
+    // The simple sets: with themed pictures on, Cozy's pictures carry their own background and ARE offered.
+    const c = await mountBoard({ boardId: 'care', symbols: 'own', themedPictures: false });
     await theme('cozy', { local: true, bus: c.bus });
     check('a set that would not read on this board’s cards is not offered (cozy on the dark card)',
       !c.p().card);

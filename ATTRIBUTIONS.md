@@ -109,6 +109,20 @@ record here — this entry is the credit.
 
 ---
 
+## AAC themed pictures — made with Claude Design
+
+`web/client/aac_themed.js`
+
+| | |
+|---|---|
+| **What** | Themed picture sets for the AAC board (Halloween, Night, Fall, Winter, Ocean, Steampunk, Cyberpunk, Cozy): each word's simple drawing set inside a piece that fits the theme (a carved pumpkin, a snow globe, a gear...), composed when the board draws it; some pieces move gently. Used by `modules/board.js` when a board follows one of those themes, or pins one |
+| **Made by** | [Claude Design](https://claude.ai), for this project, delivered 2026-11-01 |
+| **Changed** | Nothing in the code; a header comment was added. Design's starting value for movement (off) is overridden by the board's own setting, on (Mike, 2026-11-02) |
+
+Made for this project; this entry is the credit.
+
+---
+
 ## Nimrod the cat — made with Claude Design
 
 `web/client/design-assets/nimrod-cat/`
