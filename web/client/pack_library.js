@@ -74,6 +74,14 @@ export const PACK_LIBRARY = [
   { id: 'trivia_words_easy', kind: 'trivia', label: 'Words trivia (easy)', url: '/packs/trivia_words_easy.json' },
   { id: 'trivia_words_medium', kind: 'trivia', label: 'Words trivia (medium)', url: '/packs/trivia_words_medium.json' },
   { id: 'trivia_words_hard', kind: 'trivia', label: 'Words trivia (hard)', url: '/packs/trivia_words_hard.json' },
+  // Picture questions (2026-11-02, row 2.175): 244 about works in the Cleveland Museum of Art's open-access (CC0)
+  // collection, each written from the museum's own record and checked by a second pass; of the 30 it flagged, 16 were
+  // reworded (mostly a described picture that gave the answer away), two left out, and twelve stand because the full
+  // record states the answer. The pictures load from the museum's own open-access server for now: a question is dealt
+  // only once its picture has loaded (trivia.js), so with no connection these are simply not asked. Copies kept here
+  // wait on Mike's go to download them.
+  { id: 'trivia_art_pictures', kind: 'trivia', label: 'Art you can see (Cleveland Museum of Art)',
+    url: '/packs/trivia_art_pictures.json' },
 ];
 
 // `listUserPacks()` reads localStorage fresh on every call — cheap, small, and it means a

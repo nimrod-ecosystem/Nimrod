@@ -115,6 +115,25 @@ try {
     check('no two built-in packs share an id', new Set(PACK_LIBRARY.map((p) => p.id)).size === PACK_LIBRARY.length);
   }
 
+  // Row 2.175 (2026-11-02): the picture pack. Every question in it must carry a picture it can be dealt with -- a
+  // picture question without one is never asked, so a broken item would vanish without a word.
+  section('the picture pack: every question carries a picture');
+  {
+    const { loadPack, pictureProblems } = await import('../packs.js');
+    const row = packById('trivia_art_pictures');
+    check('the picture pack is listed', !!row);
+    const pack = row && await loadPack(row.url);
+    const items = (pack && pack.items) || [];
+    check('it holds the 244 checked questions', items.length === 244, items.length);
+    // needsPicture false is the writer's call that the words alone still make a fair question (37 of them): those are
+    // the ones a quiz mix may deal with no picture at all.
+    const bad = items.filter((it) => typeof it.needsPicture !== 'boolean' || !it.picture || pictureProblems(it).length);
+    check('each has a picture with a valid address, a description and a credit, and says whether it needs it', !bad.length,
+      bad.slice(0, 3).map((it) => it.question).join(' | '));
+    check('most of them need their picture', items.filter((it) => it.needsPicture).length >= 200);
+    check('each credit names the museum', items.every((it) => /Cleveland Museum of Art/.test(it.picture.credit)));
+  }
+
   clearStore();
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
