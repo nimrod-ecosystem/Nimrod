@@ -949,6 +949,22 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     check('the page editor checks ran', false, String(e && e.stack || e));
   }
 
+  // (row 2.164; Mike, 2026-11-02: "person's choice would be first for everything or else there isn't sense in giving
+  // them a choice.") The look is resolved person first, then the nearest level set, as kiosk.js shownTheme does.
+  try {
+    const { LOOK_ORDER } = await import('../kiosk.js');
+    const { resolveLevel } = await import('../settings.js');
+    const at = (layers) => resolveLevel('theme', layers, { from: 'person', order: LOOK_ORDER });
+    check('*** the person\'s own theme wins over the dashboard\'s stored "Best for this device", the screen\'s and the device\'s ***',
+      at({ person: { theme: 'night' }, dashboard: { theme: 'device' }, screen: { theme: 'fall' }, device: { theme: 'winter' } }).value === 'night');
+    check('...a person who chose nothing: the nearest level set, as before (the dashboard first)',
+      at({ person: {}, dashboard: { theme: 'device' }, screen: { theme: 'fall' } }).value === 'device'
+        && at({ person: { theme: null }, screen: { theme: 'fall' } }).value === 'fall');
+    check('...and a screen with no person level at all looks exactly as it did', at({ dashboard: { theme: 'ocean' }, screen: { theme: 'fall' } }).value === 'ocean');
+  } catch (e) {
+    check('the person-first checks ran', false, String(e && e.stack || e));
+  }
+
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;
   sum.className = failed ? 'fail' : 'pass';

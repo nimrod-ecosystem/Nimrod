@@ -201,6 +201,9 @@ import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
 import { createPanelRing, PANEL_RING_FIELD } from './panel_ring.js';   // panel ring
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
+// The order the LOOK (theme, panel backgrounds, panel spacing) is resolved in: the person this screen is for first
+// (row 2.164, Mike 2026-11-02), then the nearest level set. Argued where it is used (shownPanelSurface).
+export const LOOK_ORDER = Object.freeze(['person', 'dashboard', 'screen', 'device']);
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf, chooseModeFrom, showsAtLevel, keepFields } from './settings_fields.js';
 // LIVE AND BETA (2026-10-14): the person's "Beta things" row, and a beta panel says so in its own settings.
@@ -2439,10 +2442,24 @@ export async function mountKiosk(root, {
   // stores an account level yet, so the chain stops at the person. A device or a person that never picked
   // either changes nothing: every screen today looks exactly as it did. Not on an embed (a preview on
   // somebody's page has no device or person of its own here).
+  // *** THE PERSON'S OWN CHOICE OF LOOK COMES FIRST (row 2.164; Mike, 2026-11-02: "Yes, person's choice would be first for
+  // everything or else there isn't sense in giving them a choice."). *** The chain above is "the nearest one set wins",
+  // dashboard first and the person last, so a person's chosen theme showed only where no dashboard, screen or device had
+  // one -- and a starter dashboard stores "Best for this device", so on Home it never showed at all. For the LOOK (the
+  // theme, the panel backgrounds, the space between panels) the person this screen is for now comes first, then the
+  // chain as before. Everything else a level sets is unchanged. A screen with no person (a kiosk nobody is signed in to,
+  // an embed) has no person level, so it looks exactly as it did. The Theme and Panel backgrounds rows say when a
+  // person's choice is the one showing, so a pick made at the screen that does not show is explained, not a mystery.
+  /** "chosen for the person this screen is for" when the person's choice of `key` is the one showing, else undefined. */
+  function personLookNote(key) {
+    const p = levelLayers().person;
+    const v = p && p[key];
+    return v !== undefined && v !== null && v !== '' ? 'the person this screen is for chose this, and it comes first' : undefined;
+  }
   function shownPanelSurface(s) {
     const L = levelLayers();
     if (s && typeof s === 'object') L.screen = s;
-    for (const lv of ['dashboard', 'screen', 'device', 'person']) {
+    for (const lv of LOOK_ORDER) {
       const v = L[lv] && L[lv].panelSurface;
       if (PANEL_SURFACES.includes(v)) return v;
     }
@@ -2457,7 +2474,7 @@ export async function mountKiosk(root, {
   // After the value on the row ("Solid · chosen for this screen"): settings_fields.js `status`.
   function panelSurfaceFrom() {
     const L = levelLayers();
-    for (const lv of ['dashboard', 'screen', 'device', 'person']) {
+    for (const lv of LOOK_ORDER) {
       if (PANEL_SURFACES.includes(L[lv] && L[lv].panelSurface)) return lv;
     }
     return null;
@@ -2482,7 +2499,7 @@ export async function mountKiosk(root, {
   function shownPanelGap(s) {
     const L = levelLayers();
     if (s && typeof s === 'object') L.screen = s;
-    for (const lv of ['dashboard', 'screen', 'device', 'person']) {
+    for (const lv of LOOK_ORDER) {
       const v = L[lv] && L[lv].panelGap;
       if (PANEL_GAPS.includes(v)) return v;
     }
@@ -2499,7 +2516,8 @@ export async function mountKiosk(root, {
   // device looks able and nothing asks for less movement, the Nimrod theme everywhere else. Not on an embed: an embed
   // that never picked keeps the page around it (`applyKioskTheme` below).
   function shownTheme() {
-    const v = resolveLevel('theme', levelLayers(), { from: 'dashboard', order: LEVEL_ORDER }).value;
+    // (row 2.164) the person's own choice first (LOOK_ORDER, above), then the nearest one set.
+    const v = resolveLevel('theme', levelLayers(), { from: 'person', order: LOOK_ORDER }).value;
     return v ?? (embedded ? undefined : DEVICE_THEME);
   }
   function themeDoc() {
@@ -4469,7 +4487,9 @@ export async function mountKiosk(root, {
     // picked here and why.)
     { key: 'theme', label: 'Theme', kind: 'choice', level: 'essential',
       default: DEVICE_THEME,
-      options: listThemes().map((t) => ({ value: t.id, label: t.label })) },
+      options: listThemes().map((t) => ({ value: t.id, label: t.label })),
+      // (row 2.164, PERSON FIRST) when the person this screen is for has chosen, a pick here does not show; said so.
+      status: (() => { try { return personLookNote('theme'); } catch { return undefined; } })() },
     // *** HOW MUCH THIS MENU SHOWS — the switch, and its escape, in the same commit. ***
     //
     // The comment above `complexity` said this had no control ON PURPOSE: "a level that hides
