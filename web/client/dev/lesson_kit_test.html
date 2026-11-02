@@ -63,6 +63,14 @@ try {
         if (!isSvg(s) || !parses(s)) bad.push(`${t}: layout ${layout} (svg=${isSvg(s)} parses=${parses(String(s))})`); }
       catch (e) { bad.push(`${t}: layout ${layout} threw ${e.message}`); }
     }
+    // (Design, 2026-11-01, Mike's answer 4) two voices: two teachers at one desk, the speaker shown three ways.
+    for (const speaker of [0, 1]) {
+      try { const s = layoutSvg({ ...lesson, layout: 'study', teachers: ['king', 'queen'], speaker }, t, 'study').svg;
+        const bold = (name) => new RegExp(`font-weight="800"[^>]*>${name}<|font-weight:\\s*800[^>]*>${name}<`).test(s);
+        if (!isSvg(s) || !parses(s) || !/>King</.test(s) || !/>Queen</.test(s)) bad.push(`${t}: two teachers, speaker ${speaker}`);
+        else if (bold(speaker ? 'Queen' : 'King') === false && /800/.test(s) === false) bad.push(`${t}: two teachers, speaker ${speaker} not in bold`);
+      } catch (e) { bad.push(`${t}: two teachers threw ${e.message}`); }
+    }
     for (const pose of ['stand', 'desk', 'point', 'listen']) {
       try { const s = teacherSvg('queen', pose, t); if (!isSvg(s) || !parses(s)) bad.push(`${t}: teacher ${pose}`); }
       catch (e) { bad.push(`${t}: teacher ${pose} threw ${e.message}`); }

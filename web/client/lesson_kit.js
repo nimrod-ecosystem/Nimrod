@@ -14,6 +14,7 @@
  *
  * ASSUMED LESSON SHAPE (the chat's lesson_shape doc couldn't be read from here; adjust to match it):
  *   { title, teacher: 'queen', place: 'library', layout: 'study',
+ *     teachers: ['king', 'queen'], speaker: 0,   // optional: two voices at one desk (study layout; Design, 2026-11-01)
  *     parts: [ { type: 'text', body } | { type: 'keyword', word, meaning } | { type: 'quote', text, who }
  *            | { type: 'chart', kind, data, caption, citation } ] }
  */
@@ -251,7 +252,22 @@ export function layoutSvg(lesson = {}, theme = 'nimrod', layout = lesson.layout 
     out.push(`<rect x="${fx + fw - 92}" y="${fy + fh + 18}" width="92" height="26" rx="6" fill="${t.surface}"/>` + text(fx + fw - 46, fy + fh + 37, 'Photos', { ...st.caption, size: 14, color: t.ink }, 90, 'middle').svg);
     out.push(text(fx + 20, fy + 42, lesson.title, { ...st.title, size: 28 }, fw - 40).svg);
     if (vis) out.push(nest(vis.svg, fx + 20, fy + 64, fw - 40, fh - 80));
-    out.push(nest(teacherSvg(lesson.teacher || 'queen', lesson.pose || 'desk', theme), 60, 120, 340, 420));
+    const pair = Array.isArray(lesson.teachers) ? lesson.teachers.slice(0, 2) : [];
+    if (pair.length < 2) out.push(nest(teacherSvg(lesson.teacher || 'queen', lesson.pose || 'desk', theme), 60, 120, 340, 420));
+    else {
+      /* TWO VOICES (Mike, 2026-11-01, answer 4): two teachers behind one desk. The one speaking is
+         told apart three ways, never by colour alone: their pose (pointing at the visual; the other standing by, a setting: listenPose), a
+         filled name plate, and bold type on it. `speaker` (0 or 1) starts at 0. */
+      const sp = lesson.speaker === 1 ? 1 : 0, wood = (t.floor && t.floor.color) || '#8a5f3c';
+      const NAMES = { king: 'King', queen: 'Queen', jack: 'Jack', joker: 'Joker' };
+      pair.forEach((role, i) => out.push(nest(teacherSvg(role, i === sp ? (lesson.pose && lesson.pose !== 'desk' ? lesson.pose : 'point') : (lesson.listenPose || 'stand'), theme), 14 + i * 196, 140, 196, 314)));
+      out.push(`<rect x="8" y="342" width="404" height="14" rx="4" fill="${blend(wood, '#ffffff', 0.85)}"/><rect x="14" y="356" width="392" height="184" fill="${wood}"/><rect x="14" y="356" width="392" height="184" fill="#000" opacity=".12"/>`);
+      pair.forEach((role, i) => {
+        const x = 40 + i * 196, on = i === sp, name = (lesson.names && lesson.names[i]) || NAMES[role] || role;
+        out.push(`<rect x="${x}" y="382" width="144" height="40" rx="6" fill="${on ? t.accent : t.surface}" stroke="${on ? t.accent : t.ink}" stroke-opacity="${on ? 1 : 0.35}" stroke-width="2"/>`);
+        out.push(text(x + 72, 409, name, { ...st.caption, size: 18, weight: on ? 800 : 500, color: on ? (contrast(t.accent, '#ffffff') >= contrast(t.accent, '#12181c') ? '#ffffff' : '#12181c') : t.ink }, 140, 'middle').svg);
+      });
+    }
   }
   return { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(lesson.title || 'Lesson')}">${out.join('')}</svg>`, warnings: [...t.warnings, ...((vis && vis.warnings) || [])].filter((x, i, a) => a.findIndex((y) => y.what === x.what) === i) };
 }
