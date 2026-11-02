@@ -230,7 +230,20 @@ function courseShow(o, guess, at) {
   if (kind === 'word') return { kind: 'word', text: text || String(o.word || '') };
   if (kind === 'lines') {
     if (Array.isArray(o.items)) return { kind: 'lines', items: o.items };
-    const parts = o.kind === 'timeline' && !text.includes('\n') ? text.split(/\s+(?:>|\.\.\.|→)\s+/) : text.split(/\n+/);
+    let parts = o.kind === 'timeline' && !text.includes('\n') ? text.split(/\s+(?:>|\.\.\.|→)\s+/) : text.split(/\n+/);
+    // (row 2.181, Mike's screenshot of Grade 8 class 1 beat 4, 2026-11-02) A list or two-column show written as ONE
+    // line - its steps run together as a paragraph, or joined by " | " - is read as one line per step: split at " | ",
+    // else at sentence ends, and said as a guess so the course can be fixed at the source. Only when that gives three
+    // or more lines: one or two sentences are a caption, not a list. A sentence end is a full stop, ! or ? then a space
+    // then a capital or a digit, so "0.375" and "3.000" never split.
+    if (o.kind !== 'timeline' && parts.length === 1) {
+      const one = parts[0];
+      const split = one.includes(' | ') ? one.split(/\s+\|\s+/) : one.split(/(?<=[.!?])\s+(?=[A-Z0-9])/);
+      if (split.filter((x) => x.trim()).length >= 3) {
+        parts = split.map((x) => x.replace(/[.]$/, ''));
+        guess(`${at}: the ${o.kind.replace('_', ' ')} "${one.slice(0, 40)}..." had no line breaks; read as ${parts.length} lines.`);
+      }
+    }
     const items = parts.map((x) => x.trim()).filter(Boolean);
     if (o.kind !== 'two_columns') return { kind: 'lines', items };
     const pairs = items.map((line) => {

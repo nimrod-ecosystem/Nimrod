@@ -169,6 +169,21 @@ try {
       close.length === 3 && close[0].klass.title === 'At the same time' && /At the same time, 1929/.test(close[0].beat.say.text)
         && close[2].klass.title === 'The other side' && close[2].beat.say.who === 'b' && close[2].beat.say.text === 'The expansion rate is debated.');
     check('...the other side off: only "At the same time"', closingBeats(L1, { otherSide: false }).length === 1);
+    // (row 2.181, 2026-11-02) Steps written as one paragraph, or joined by " | ", are read one line per step.
+    {
+      const run = checkLesson({ about: { title: 'T' }, sources: [], beats: [
+        { show: { kind: 'two_columns', text: 'Left: the step. Right: the result. 30 ÷ 8 → digit 3, remainder 6. 60 ÷ 8 → digit 7, remainder 4. 40 ÷ 8 → digit 5, remainder 0, so stop. Answer: 0.375' } },
+        { show: { kind: 'list', text: '2(x + 4) + 3x = 28 | 2x + 8 + 3x = 28 | 5x + 8 = 28 | 5x = 20 | x = 4' } },
+        { show: { kind: 'list', text: 'Multiply every term by 10. It clears 0.5 and 1.2.' } },
+      ] });
+      const s = (i) => run.lesson.classes[0].beats[i].show;
+      check('*** a two-column show written as one paragraph is read as its six steps, "0.375" whole, each step a pair ***',
+        s(0).items.length === 6 && s(0).items[5] === 'Answer: 0.375' && J(s(0).pairs[2]) === J(['30 ÷ 8', 'digit 3, remainder 6'])
+          && run.problems.some((p) => /had no line breaks; read as 6 lines/.test(p)), J([s(0), run.problems]));
+      check('...a list joined by " | " is read as its five lines', J(s(1).items) === J(['2(x + 4) + 3x = 28', '2x + 8 + 3x = 28', '5x + 8 = 28', '5x = 20', 'x = 4']), J(s(1)));
+      check('...but two sentences are a caption, not a list: one line, no guess', s(2).items.length === 1
+        && run.problems.filter((p) => /no line breaks/.test(p)).length === 2, J([s(2), run.problems]));
+    }
     // Counted things, read carefully (a wrong number is the worst thing a counting lesson can show).
     const O = (t) => objectsFromText(t);
     check('*** objects: a clear count of one shared thing ***', O('Four red apples in a row.')?.count === 4 && O('Four red apples in a row.')?.object === 'apple'
