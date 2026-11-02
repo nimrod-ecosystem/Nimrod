@@ -1,0 +1,766 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "History trivia (medium)",
+ "description": "41 medium questions about world and US history, from ancient times to about 2000. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which French scholar announced in 1822 that he had deciphered Egyptian hieroglyphs, using the Rosetta Stone as a key?",
+   "answers": [
+    "Jean-François Champollion",
+    "Thomas Young",
+    "Johan David Åkerblad",
+    "Pierre-François Bouchard"
+   ],
+   "correct": "Jean-François Champollion",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Champollion accomplished the complete decipherment in 1822 after years of work. Young and Åkerblad made only partial progress.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/hieroglyphic-writing/Discovery-of-the-Rosetta-Stone",
+    "title": "Hieroglyphic writing - Rosetta Stone, Ancient Egypt, Decipherment | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Rosetta Stone was found in 1799 by members of whose military expedition to Egypt?",
+   "answers": [
+    "Napoleon Bonaparte",
+    "Horatio Nelson",
+    "Duke of Wellington",
+    "Louis XVIII"
+   ],
+   "correct": "Napoleon Bonaparte",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Members of Napoleon's expedition to Egypt found the stone near Rashid (Rosetta) on the Mediterranean coast.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/hieroglyphic-writing/Discovery-of-the-Rosetta-Stone",
+    "title": "Hieroglyphic writing - Rosetta Stone, Ancient Egypt, Decipherment | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Rosetta Stone carries the same text in hieroglyphic, demotic and which other language?",
+   "answers": [
+    "Ancient Greek",
+    "Latin",
+    "Aramaic",
+    "Coptic"
+   ],
+   "correct": "Ancient Greek",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The stone has three scripts: hieroglyphic, demotic and Greek. Scholars could read the Greek, which gave them a way into the other two.",
+   "source": {
+    "url": "https://www.britannica.com/topic/hieroglyphic-writing/Discovery-of-the-Rosetta-Stone",
+    "title": "Hieroglyphic writing - Rosetta Stone, Ancient Egypt, Decipherment | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The text carved on the Rosetta Stone is a fairly mundane decree about the accomplishments of which ruler?",
+   "answers": [
+    "Ptolemy V Epiphanes",
+    "Cleopatra VII",
+    "Ramses II",
+    "Alexander the Great"
+   ],
+   "correct": "Ptolemy V Epiphanes",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The inscription turned out to be a decree honoring Ptolemy V Epiphanes, a Macedonian king of Egypt, not a store of ancient secrets.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/september-27/rosetta-stone-code-cracked",
+    "title": "French scholar announces he's cracked the Rosetta Stone code | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Athenian general led the Greeks to victory over the Persians at the Battle of Marathon in 490 BCE?",
+   "answers": [
+    "Miltiades",
+    "Themistocles",
+    "Pericles",
+    "Leonidas"
+   ],
+   "correct": "Miltiades",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Miltiades the Younger led the Athenian forces to their decisive victory at Marathon. Themistocles is associated with Salamis, and Leonidas with Thermopylae.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Miltiades-the-Younger",
+    "title": "Miltiades the Younger | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greek city sent a smaller force to fight beside the Athenians at Marathon?",
+   "answers": [
+    "Plataea",
+    "Sparta",
+    "Corinth",
+    "Thebes"
+   ],
+   "correct": "Plataea",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Plataea fought alongside Athens at Marathon, honoring an alliance made in 519 BCE. The Spartans arrived only after the battle was over.",
+   "source": {
+    "url": "https://www.britannica.com/place/ancient-Greece/The-Battle-of-Marathon",
+    "title": "Ancient Greek civilization - Battle of Marathon, Athenians, Persians | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the traditional ancient accounts, about how many Persians died at Marathon, against only 192 Athenians?",
+   "answers": [
+    "About 6,400",
+    "About 640",
+    "About 64,000",
+    "About 1,600"
+   ],
+   "correct": "About 6,400",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Britannica notes the Athenian victory was overwhelming, with 6,400 Persian casualties to 192 Athenian.",
+   "source": {
+    "url": "https://www.britannica.com/place/ancient-Greece/The-Battle-of-Marathon",
+    "title": "Ancient Greek civilization - Battle of Marathon, Athenians, Persians | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two men led the conspiracy that assassinated Julius Caesar in 44 BCE?",
+   "answers": [
+    "Brutus and Cassius",
+    "Mark Antony and Octavian",
+    "Pompey and Crassus",
+    "Cicero and Cato"
+   ],
+   "correct": "Brutus and Cassius",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The plot, involving some 60 men, was led by Marcus Junius Brutus and Gaius Cassius Longinus. Antony and Octavian were Caesar's successors.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Julius-Caesar-Roman-ruler",
+    "title": "Julius Caesar | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After the civil wars that followed Caesar's assassination, his grand-nephew Octavian became the first Roman emperor under what name?",
+   "answers": [
+    "Augustus",
+    "Tiberius",
+    "Constantine",
+    "Trajan"
+   ],
+   "correct": "Augustus",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Octavian emerged from the civil wars as Augustus, the first Roman emperor, and ended the Republic for good.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/march-15/the-ides-of-march",
+    "title": "The Ides of March | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Julius Caesar is said to have died from how many stab wounds when he was assassinated in the Senate?",
+   "answers": [
+    "23",
+    "12",
+    "33",
+    "60"
+   ],
+   "correct": "23",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Accounts say the senators stabbed Caesar 23 times. About 60 men were in the conspiracy, which may tempt people to guess that number.",
+   "source": {
+    "url": "https://www.history.com/articles/julius-caesar-assassination-fall-roman-republic",
+    "title": "Julius Caesar's Assassination: Fall of the Roman Republic | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which meadow beside the River Thames did King John seal Magna Carta in June 1215?",
+   "answers": [
+    "Runnymede",
+    "Agincourt",
+    "Smithfield",
+    "Salisbury Plain"
+   ],
+   "correct": "Runnymede",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "On 15 June 1215, King John set his seal to Magna Carta at Runnymede, facing rebellious barons.",
+   "source": {
+    "url": "https://www.archives.gov/exhibits/featured-documents/magna-carta",
+    "title": "Magna Carta | National Archives"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who annulled Magna Carta only about ten weeks after King John sealed it in 1215?",
+   "answers": [
+    "Pope Innocent III",
+    "Archbishop Stephen Langton",
+    "King Philip II of France",
+    "King Henry III"
+   ],
+   "correct": "Pope Innocent III",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Pope Innocent III nullified the agreement and England slid into civil war. Langton had helped draft the charter, and Henry III reissued it later.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.archives.gov/exhibits/featured-documents/magna-carta",
+    "title": "Magna Carta | National Archives"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which English king issued the final, definitive version of Magna Carta in 1225?",
+   "answers": [
+    "Henry III",
+    "Edward I",
+    "Richard I",
+    "Henry II"
+   ],
+   "correct": "Henry III",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "King John's son Henry III reissued the charter in 1225 in exchange for a new tax grant. His version, not John's, is the one that went into the statute book.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://read.uolpress.co.uk/read/magna-carta/section/04a1a094-dabc-46d1-8d9e-068891c5d896",
+    "title": "Magna Carta 1215: its social and political context | University of London Press"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which German city did Johannes Gutenberg set up his movable-type printing press around 1450?",
+   "answers": [
+    "Mainz",
+    "Cologne",
+    "Nuremberg",
+    "Heidelberg"
+   ],
+   "correct": "Mainz",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Gutenberg was from Mainz and developed his press there. The Gutenberg Museum stands opposite Mainz's cathedral.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Johannes_Gutenberg",
+    "title": "Johannes Gutenberg | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which famous book did Gutenberg complete printing in 1455?",
+   "answers": [
+    "The Bible",
+    "The Iliad",
+    "The Canterbury Tales",
+    "The Divine Comedy"
+   ],
+   "correct": "The Bible",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "In 1455 Gutenberg completed his 42-line Bible, known as the Gutenberg Bible.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Johannes_Gutenberg",
+    "title": "Johannes Gutenberg | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Traders from which Italian port city are traditionally said to have carried the plague from the Black Sea to Europe in the 1340s?",
+   "answers": [
+    "Genoa",
+    "Venice",
+    "Florence",
+    "Pisa"
+   ],
+   "correct": "Genoa",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The Black Death is thought to have entered Europe on Genoese trading ships sailing from the Black Sea.",
+   "source": {
+    "url": "https://www.worldhistory.org/Black_Death/",
+    "title": "Black Death | World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What share of Europe's population is commonly estimated to have died in the Black Death between 1347 and 1351?",
+   "answers": [
+    "About one-third",
+    "About one-tenth",
+    "About one-twentieth",
+    "About nine-tenths"
+   ],
+   "correct": "About one-third",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Britannica's timeline says the Black Death killed about one-third of Europe's people between 1347 and 1351. Historians still debate the exact figure.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Black-Death-Timeline",
+    "title": "Black Death Timeline | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Black Death arrived in Europe in October 1347 at which Sicilian port?",
+   "answers": [
+    "Messina",
+    "Palermo",
+    "Syracuse",
+    "Catania"
+   ],
+   "correct": "Messina",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The second plague pandemic reached Messina, probably via Genoese ships, in October 1347. It then spread quickly across Europe.",
+   "source": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7513766/",
+    "title": "History of the Plague: An Ancient Pandemic for the Age of COVID-19 | PMC"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which bacterium causes the plague that produced the Black Death?",
+   "answers": [
+    "Yersinia pestis",
+    "Vibrio cholerae",
+    "Salmonella typhi",
+    "Bacillus anthracis"
+   ],
+   "correct": "Yersinia pestis",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The Black Death's bacterial agent was Yersinia pestis, which still causes occasional outbreaks.",
+   "source": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7513766/",
+    "title": "History of the Plague: An Ancient Pandemic for the Age of COVID-19 | PMC"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1494 the Treaty of Tordesillas moved the dividing line farther west, letting Portugal claim the eastern coast of what is now which country?",
+   "answers": [
+    "Brazil",
+    "Argentina",
+    "Peru",
+    "Colombia"
+   ],
+   "correct": "Brazil",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The 1494 treaty moved the Spanish-Portuguese line about 270 leagues west (the pope confirmed it in 1506), which let Portugal claim eastern Brazil.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/treaty-tordesillas/",
+    "title": "Treaty of Tordesillas | National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Ottoman sultan conquered Constantinople in 1453?",
+   "answers": [
+    "Mehmed II",
+    "Suleiman I",
+    "Selim I",
+    "Murad II"
+   ],
+   "correct": "Mehmed II",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Sultan Mehmed II, later called the Conqueror, took the city on May 29, 1453, after a siege of about 55 days.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/event/Fall-of-Constantinople-1453",
+    "title": "Fall of Constantinople | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The fall of Constantinople to the Ottomans in 1453 marked the end of which empire?",
+   "answers": [
+    "The Byzantine Empire",
+    "The Holy Roman Empire",
+    "The Sasanian Empire",
+    "The Mongol Empire"
+   ],
+   "correct": "The Byzantine Empire",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Constantinople's capture ended the Byzantine Empire, the surviving eastern remnant of the Roman world.",
+   "source": {
+    "url": "https://www.britannica.com/event/Siege-of-Constantinople1453",
+    "title": "Siege of Constantinople | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What did Mehmed II do with Hagia Sophia after capturing Constantinople?",
+   "answers": [
+    "Turned it into a mosque",
+    "Turned it into a palace",
+    "Tore it down for stone",
+    "Left it as a church"
+   ],
+   "correct": "Turned it into a mosque",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Mehmed II transformed the great church of Hagia Sophia into a mosque after the conquest.",
+   "source": {
+    "url": "https://www.britannica.com/event/Siege-of-Constantinople1453",
+    "title": "Siege of Constantinople | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which weapon did Mehmed II use to maintain a constant barrage on Constantinople's formidable walls in 1453?",
+   "answers": [
+    "Heavy cannon",
+    "Greek fire",
+    "Battering rams",
+    "Poisoned arrows"
+   ],
+   "correct": "Heavy cannon",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Mehmed II blockaded the city and used cannon to pound its walls until they were breached.",
+   "source": {
+    "url": "https://www.britannica.com/event/Fall-of-Constantinople-1453",
+    "title": "Fall of Constantinople | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The tea dumped into Boston Harbor in December 1773 belonged to which company?",
+   "answers": [
+    "The British East India Company",
+    "The Hudson's Bay Company",
+    "The Royal African Company",
+    "The Virginia Company"
+   ],
+   "correct": "The British East India Company",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Patriots dumped 342 chests of tea belonging to the British East India Company, protesting the Tea Act of 1773.",
+   "source": {
+    "url": "https://www.britannica.com/event/Boston-Tea-Party",
+    "title": "Boston Tea Party | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Patriot leader organized the Boston Tea Party with about 60 members of the Sons of Liberty?",
+   "answers": [
+    "Samuel Adams",
+    "Patrick Henry",
+    "Benjamin Franklin",
+    "Thomas Jefferson"
+   ],
+   "correct": "Samuel Adams",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "After Governor Hutchinson refused to send the tea ships back, Samuel Adams organized the protest.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/december-16/the-boston-tea-party",
+    "title": "The Boston Tea Party | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these was one of the three ships whose tea was destroyed in the Boston Tea Party?",
+   "answers": [
+    "The Beaver",
+    "The Mayflower",
+    "The Bounty",
+    "The Constitution"
+   ],
+   "correct": "The Beaver",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The tea ships were the Dartmouth, the Eleanor and the Beaver, moored at Griffin's Wharf.",
+   "source": {
+    "url": "https://www.masshist.org/features/boston-tea-party",
+    "title": "Boston Tea Party | Massachusetts Historical Society"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name did colonists give to the laws Parliament passed to punish Massachusetts after the Boston Tea Party?",
+   "answers": [
+    "The Intolerable Acts",
+    "The Stamp Act",
+    "The Townshend Acts",
+    "The Navigation Acts"
+   ],
+   "correct": "The Intolerable Acts",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Shortly after the Tea Party, Parliament passed a set of punitive laws known as the Intolerable Acts to tighten control over the colonies.",
+   "source": {
+    "url": "https://guides.bpl.org/c.php?g=800717&p=10389855",
+    "title": "1773: The Boston Tea Party | Boston Public Library"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French admiral's fleet controlled the Chesapeake Bay during the 1781 siege of Yorktown?",
+   "answers": [
+    "François de Grasse",
+    "Comte d'Estaing",
+    "Comte de Rochambeau",
+    "Marquis de Lafayette"
+   ],
+   "correct": "François de Grasse",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Admiral de Grasse's fleet blocked access to Yorktown by sea, trapping Cornwallis's army. Rochambeau and Lafayette were army commanders.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.loc.gov/item/today-in-history/october-19/",
+    "title": "Today in History - October 19 | Library of Congress"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which British prime minister reportedly cried out \"Oh God, it is all over!\" on hearing of the Yorktown surrender?",
+   "answers": [
+    "Lord North",
+    "William Pitt the Younger",
+    "Robert Walpole",
+    "Lord Grenville"
+   ],
+   "correct": "Lord North",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Prime Minister Frederick North, Lord North, reacted this way to news of Cornwallis's surrender. Parliament moved toward ending the war in 1782.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/articles/siege-of-yorktown",
+    "title": "Battle of Yorktown: Facts, Victory & Importance | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How much did the United States pay France for the Louisiana Territory in 1803?",
+   "answers": [
+    "$15 million",
+    "$5 million",
+    "$50 million",
+    "$150 million"
+   ],
+   "correct": "$15 million",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Napoleon offered the entire territory for $15 million, far more than Jefferson's envoys were authorized to spend.",
+   "source": {
+    "url": "https://history.state.gov/milestones/1801-1829/louisiana-purchase",
+    "title": "Louisiana Purchase, 1803 | Office of the Historian, U.S. Department of State"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What did Jefferson's envoys originally go to Paris in 1803 to try to buy from France?",
+   "answers": [
+    "The port of New Orleans",
+    "The Oregon Country",
+    "The Texas coastline",
+    "The island of Hispaniola"
+   ],
+   "correct": "The port of New Orleans",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Jefferson wanted New Orleans and nearby land for American access to the Mississippi. Napoleon surprised the envoys by offering all of Louisiana.",
+   "source": {
+    "url": "https://www.cfr.org/ten-best-ten-worst-us-foreign-policy-decisions/louisiana-purchase/",
+    "title": "Louisiana Purchase | Council on Foreign Relations"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which future U.S. president did Jefferson send to Paris to join Robert Livingston in negotiating for New Orleans in 1803?",
+   "answers": [
+    "James Monroe",
+    "John Adams",
+    "James Madison",
+    "Andrew Jackson"
+   ],
+   "correct": "James Monroe",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Jefferson sent James Monroe to join Livingston, and the two accepted Napoleon's offer of the whole territory.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://history.state.gov/milestones/1801-1829/louisiana-purchase",
+    "title": "Louisiana Purchase, 1803 | Office of the Historian, U.S. Department of State"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Prussian field marshal's army arrived late in the day to help Wellington defeat Napoleon at Waterloo?",
+   "answers": [
+    "Gebhard von Blücher",
+    "Michel Ney",
+    "Emmanuel de Grouchy",
+    "Karl von Schwarzenberg"
+   ],
+   "correct": "Gebhard von Blücher",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Blücher's Prussians reached the field and attacked Napoleon's flank, completing the French defeat. Ney and Grouchy were French marshals.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/event/Battle-of-Waterloo",
+    "title": "Battle of Waterloo | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the period from Napoleon's escape from exile to his defeat at Waterloo?",
+   "answers": [
+    "The Hundred Days",
+    "The Reign of Terror",
+    "The Continental System",
+    "The Peninsular War"
+   ],
+   "correct": "The Hundred Days",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Waterloo took place during the Hundred Days, the period from Napoleon's escape from Elba to the return of Louis XVIII.",
+   "source": {
+    "url": "https://www.britannica.com/event/Battle-of-Waterloo",
+    "title": "Battle of Waterloo | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which enslaved people did Lincoln's Emancipation Proclamation of January 1, 1863 declare free?",
+   "answers": [
+    "Those in states in rebellion",
+    "Those in every Union state",
+    "Those in the loyal border states",
+    "Those in Washington, D.C. only"
+   ],
+   "correct": "Those in states in rebellion",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The proclamation covered only the seceded states and left slavery untouched in the loyal border states. Its promise depended on Union military victory.",
+   "source": {
+    "url": "https://www.archives.gov/press/press-releases/1998/nr98-37",
+    "title": "Information on the Emancipation Proclamation | National Archives"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Besides declaring freedom in rebel states, what else did the Emancipation Proclamation announce?",
+   "answers": [
+    "Black men would join the Union military",
+    "Rebel officers would receive full pardons",
+    "Slaveholders would be paid for losses",
+    "Foreign volunteers could join Union units"
+   ],
+   "correct": "Black men would join the Union military",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The proclamation announced that Black men would be accepted into the Union army and navy. Almost 200,000 served by the war's end.",
+   "source": {
+    "url": "https://www.archives.gov/press/press-releases/1998/nr98-37",
+    "title": "Information on the Emancipation Proclamation | National Archives"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which famous orator spoke for about two hours before Lincoln gave his two-minute Gettysburg Address?",
+   "answers": [
+    "Edward Everett",
+    "Charles Sumner",
+    "Frederick Douglass",
+    "Wendell Phillips"
+   ],
+   "correct": "Edward Everett",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Edward Everett was the featured speaker at the cemetery dedication on November 19, 1863. Lincoln's remarks lasted only about two minutes.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://constitutioncenter.org/the-constitution/historic-document-library/detail/abraham-lincoln-the-gettysburg-address-1863",
+    "title": "The Gettysburg Address (1863) | National Constitution Center"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Gettysburg Address, Lincoln's phrase \"four score and seven years ago\" pointed back to which year?",
+   "answers": [
+    "1776",
+    "1787",
+    "1789",
+    "1783"
+   ],
+   "correct": "1776",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "A score is 20, so 87 years before 1863 is 1776, the year of the Declaration of Independence.",
+   "source": {
+    "url": "https://bensguide.gpo.gov/gettysburg-address-1863",
+    "title": "Gettysburg Address: 1863 | Ben's Guide to the U.S. Government (GPO)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Meiji Restoration of 1868 overthrew which ruling regime in Japan?",
+   "answers": [
+    "The Tokugawa shogunate",
+    "The Ashikaga shogunate",
+    "The Qing dynasty",
+    "The Joseon dynasty"
+   ],
+   "correct": "The Tokugawa shogunate",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Activists overthrew the Tokugawa family, which had ruled Japan for more than 260 years, and restored imperial power.",
+   "source": {
+    "url": "https://www.worldhistory.org/Meiji_Restoration/",
+    "title": "Meiji Restoration | World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The reign title \"Meiji\", adopted by Emperor Mutsuhito in 1868, means what in English?",
+   "answers": [
+    "Enlightened rule",
+    "Eastern capital",
+    "Divine wind",
+    "Rising sun"
+   ],
+   "correct": "Enlightened rule",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "After the Tokugawa were overthrown, Mutsuhito adopted the reign title Meiji, meaning \"enlightened rule\".",
+   "source": {
+    "url": "https://www.worldhistory.org/Meiji_Restoration/",
+    "title": "Meiji Restoration | World History Encyclopedia"
+   },
+   "ai_written": true
+  }
+ ]
+}

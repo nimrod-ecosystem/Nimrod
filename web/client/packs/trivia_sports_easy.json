@@ -1,0 +1,921 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Sports trivia (easy)",
+ "description": "50 easy questions about rules, famous athletes, events and records that no longer change. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "How long is an official marathon?",
+   "answers": [
+    "24.8 miles",
+    "26.2 miles",
+    "28.6 miles",
+    "31.1 miles"
+   ],
+   "correct": "26.2 miles",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "All official marathons are 26.2 miles (42.195 km), a distance standardized in the early 20th century.",
+   "source": {
+    "url": "https://www.britannica.com/sports/marathon-race",
+    "title": "Marathon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city was the first organized marathon run at the 1896 Games, the start of the modern Olympic era?",
+   "answers": [
+    "Paris",
+    "London",
+    "Athens",
+    "Rome"
+   ],
+   "correct": "Athens",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The first organized marathon was run in Athens at the 1896 Olympics, the first Games of the modern era.",
+   "source": {
+    "url": "https://www.history.com/articles/why-is-a-marathon-26-2-miles",
+    "title": "Why Is a Marathon 26.2 Miles?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The marathon commemorates a legendary run to bring news of an Athenian victory over which enemy?",
+   "answers": [
+    "The Spartans",
+    "The Romans",
+    "The Trojans",
+    "The Persians"
+   ],
+   "correct": "The Persians",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The legend says a Greek soldier ran from Marathon to Athens in 490 BCE to announce the victory over the Persians.",
+   "source": {
+    "url": "https://www.britannica.com/sports/marathon-race",
+    "title": "Marathon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1908 Olympic marathon, which gave us today's standard distance, started at which royal residence?",
+   "answers": [
+    "Buckingham Palace",
+    "Balmoral Castle",
+    "Edinburgh Castle",
+    "Windsor Castle"
+   ],
+   "correct": "Windsor Castle",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The British Olympic Committee started the 1908 race at Windsor Castle and finished it in front of the royal box in the London stadium, which produced the 26.2-mile distance.",
+   "source": {
+    "url": "https://www.britannica.com/sports/marathon-race",
+    "title": "Marathon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who invented the game of basketball in 1891?",
+   "answers": [
+    "Walter Camp",
+    "Dr. James Naismith",
+    "Abner Doubleday",
+    "John Wooden"
+   ],
+   "correct": "Dr. James Naismith",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "James Naismith, a physical education instructor in Springfield, Massachusetts, invented basketball in 1891.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/James-Naismith/330934",
+    "title": "James Naismith"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What were the goals in the very first games of basketball?",
+   "answers": [
+    "Metal hoops",
+    "Wooden crates",
+    "Garden buckets",
+    "Peach baskets"
+   ],
+   "correct": "Peach baskets",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Naismith started out using 10-foot-high peach baskets as the goals for each team.",
+   "source": {
+    "url": "https://www.biography.com/scholar/james-a-naismith",
+    "title": "James Naismith - Inventions, Family & 13 Rules"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country was basketball's inventor, James Naismith, born?",
+   "answers": [
+    "Canada",
+    "Scotland",
+    "England",
+    "United States"
+   ],
+   "correct": "Canada",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Naismith was born in Almonte, Ontario, Canada, in 1861.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/James-Naismith/330934",
+    "title": "James Naismith"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1947, Jackie Robinson broke Major League Baseball's color barrier playing for which team?",
+   "answers": [
+    "New York Yankees",
+    "Boston Red Sox",
+    "Chicago Cubs",
+    "Brooklyn Dodgers"
+   ],
+   "correct": "Brooklyn Dodgers",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Robinson took the field for the Brooklyn Dodgers on April 15, 1947, ending the decades-old color line in MLB.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Jackie-Robinson",
+    "title": "Jackie Robinson"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which jersey number is worn by every MLB player on Jackie Robinson Day each April 15?",
+   "answers": [
+    "No. 24",
+    "No. 42",
+    "No. 7",
+    "No. 21"
+   ],
+   "correct": "No. 42",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "April 15 is observed throughout MLB with players wearing Robinson's former Dodgers number, 42.",
+   "source": {
+    "url": "https://www.history.com/articles/jackie-robinson",
+    "title": "Jackie Robinson - Facts, Quotes & Stats"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which award did Jackie Robinson win in 1947, his first season in the majors?",
+   "answers": [
+    "Cy Young Award",
+    "Gold Glove Award",
+    "Rookie of the Year",
+    "Triple Crown"
+   ],
+   "correct": "Rookie of the Year",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Robinson took home the Rookie of the Year Award in 1947, and later won the MVP Award in 1949.",
+   "source": {
+    "url": "https://jackierobinson.com/about/baseball/",
+    "title": "Baseball - Jackie Robinson"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1976, Nadia Comăneci became the first Olympian to score a perfect 10 in which sport?",
+   "answers": [
+    "Diving",
+    "Figure skating",
+    "Swimming",
+    "Gymnastics"
+   ],
+   "correct": "Gymnastics",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Comăneci was the first gymnast to be awarded a perfect 10 in an Olympic event, at the Montreal Games.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Nadia-Comaneci",
+    "title": "Nadia Comaneci"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How old was Nadia Comăneci when she scored her first perfect 10 at the 1976 Olympics?",
+   "answers": [
+    "14 years old",
+    "16 years old",
+    "18 years old",
+    "21 years old"
+   ],
+   "correct": "14 years old",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "She was only 14 when she scored the first perfect 10 on the uneven bars on July 18, 1976.",
+   "source": {
+    "url": "https://www.olympics.com/en/news/this-week-in-olympic-history-july-15-21-nadia-comaneci-scores-the-first-perfect-10-in-gymnastics",
+    "title": "This week in Olympic history July 15-21: Nadia Comaneci scores the first perfect 10 in gymnastics"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many perfect 10s did Nadia Comăneci score at the 1976 Montreal Olympics?",
+   "answers": [
+    "Three",
+    "Five",
+    "Seven",
+    "Ten"
+   ],
+   "correct": "Seven",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "She received seven perfect scores in Montreal and won three gold medals there.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Nadia-Comaneci",
+    "title": "Nadia Comaneci"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many gold medals did Jesse Owens win at the 1936 Berlin Olympics?",
+   "answers": [
+    "Two",
+    "Three",
+    "Four",
+    "Six"
+   ],
+   "correct": "Four",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Owens won gold in the long jump, the 100 m, the 200 m and the 4 x 100 m relay.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Jesse-Owens",
+    "title": "Jesse Owens"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these events did Jesse Owens NOT win gold in at the 1936 Olympics?",
+   "answers": [
+    "200-metre dash",
+    "Long jump",
+    "110-metre hurdles",
+    "4 x 100-metre relay"
+   ],
+   "correct": "110-metre hurdles",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Owens won the long jump, the 100 m, the 200 m and the 4 x 100 m relay, but not the hurdles.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Jesse-Owens",
+    "title": "Jesse Owens"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American sprinter matched Jesse Owens' four track-and-field golds at a single Games in 1984?",
+   "answers": [
+    "Michael Johnson",
+    "Carl Lewis",
+    "Edwin Moses",
+    "Bob Beamon"
+   ],
+   "correct": "Carl Lewis",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Owens' feat stood alone until Carl Lewis matched it at the 1984 Olympics.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/articles/jesse-owens-adolf-hitler-1936-olympics",
+    "title": "How Jesse Owens Foiled Hitler's Plans for the 1936 Olympics"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who became the first athlete to run a mile in under four minutes?",
+   "answers": [
+    "Sebastian Coe",
+    "Steve Ovett",
+    "Emil Zátopek",
+    "Roger Bannister"
+   ],
+   "correct": "Roger Bannister",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Roger Bannister ran 3 minutes 59.4 seconds in a meet at Oxford.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Roger-Bannister",
+    "title": "Roger Bannister"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the first sub-four-minute mile take place?",
+   "answers": [
+    "1936",
+    "1948",
+    "1954",
+    "1964"
+   ],
+   "correct": "1954",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Bannister broke the four-minute barrier on May 6, 1954.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Roger-Bannister",
+    "title": "Roger Bannister"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which English university city did Roger Bannister run his historic four-minute mile?",
+   "answers": [
+    "Cambridge",
+    "Oxford",
+    "Manchester",
+    "Birmingham"
+   ],
+   "correct": "Oxford",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "He ran it at the Iffley Road track in Oxford, during a meet between the Amateur Athletic Association and Oxford University.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/may-6/first-four-minute-mile",
+    "title": "Roger Bannister runs first four-minute mile"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the 1974 \"Rumble in the Jungle,\" Muhammad Ali knocked out which heavyweight champion?",
+   "answers": [
+    "Joe Frazier",
+    "Sonny Liston",
+    "George Foreman",
+    "Ken Norton"
+   ],
+   "correct": "George Foreman",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Ali beat champion George Foreman by knockout in Kinshasa on October 30, 1974.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/sports/Rumble-in-the-Jungle",
+    "title": "Rumble in the Jungle"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which African city was the \"Rumble in the Jungle\" fought?",
+   "answers": [
+    "Lagos",
+    "Nairobi",
+    "Cairo",
+    "Kinshasa"
+   ],
+   "correct": "Kinshasa",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The fight took place in Kinshasa, in what was then Zaire and is now the Democratic Republic of the Congo.",
+   "source": {
+    "url": "https://www.britannica.com/sports/Rumble-in-the-Jungle",
+    "title": "Rumble in the Jungle"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the name of the strategy Ali used against Foreman, leaning on the ropes to let his opponent tire?",
+   "answers": [
+    "Rope-a-dope",
+    "Ali shuffle",
+    "Phantom punch",
+    "Peek-a-boo style"
+   ],
+   "correct": "Rope-a-dope",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Ali leaned against the ropes and let Foreman throw punches and exhaust himself, a tactic known as the rope-a-dope.",
+   "source": {
+    "url": "https://www.britannica.com/sports/Rumble-in-the-Jungle",
+    "title": "Rumble in the Jungle"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which round did Muhammad Ali knock out George Foreman in 1974?",
+   "answers": [
+    "Second",
+    "Fifth",
+    "Twelfth",
+    "Eighth"
+   ],
+   "correct": "Eighth",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Ali won by knockout in the eighth round.",
+   "source": {
+    "url": "https://www.britannica.com/sports/Rumble-in-the-Jungle",
+    "title": "Rumble in the Jungle"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many FIFA World Cups did Pelé win, a feat no other player has achieved?",
+   "answers": [
+    "Two",
+    "Three",
+    "Four",
+    "Five"
+   ],
+   "correct": "Three",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Pelé won the World Cup in 1958, 1962 and 1970, and he is the only player to have won it three times.",
+   "source": {
+    "url": "https://www.fifa.com/en/tournaments/mens/worldcup/articles/pele-three-world-cup-titles-only-player",
+    "title": "Pele's three titles"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which national team did Pelé lead to three World Cup titles?",
+   "answers": [
+    "Argentina",
+    "Italy",
+    "Germany",
+    "Brazil"
+   ],
+   "correct": "Brazil",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Pelé was part of the Brazilian teams that won the World Cup in 1958, 1962 and 1970.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Pele-Brazilian-football-player",
+    "title": "Pelé"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How old was Pelé when he won his first World Cup in 1958, making him the youngest winner ever?",
+   "answers": [
+    "15",
+    "17",
+    "19",
+    "21"
+   ],
+   "correct": "17",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Pelé won the 1958 World Cup at just 17 years old, the youngest player to win the tournament.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pel%C3%A9",
+    "title": "Pelé"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Pelé was nicknamed \"O Rei\" after the 1958 World Cup. What does this mean in English?",
+   "answers": [
+    "The Emperor",
+    "The Wizard",
+    "The Captain",
+    "The King"
+   ],
+   "correct": "The King",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "\"O Rei\" is Portuguese for \"the King\", a nickname Pelé earned after the 1958 World Cup.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pel%C3%A9",
+    "title": "Pelé"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which jersey number was retired across the entire NHL in honor of Wayne Gretzky?",
+   "answers": [
+    "No. 9",
+    "No. 66",
+    "No. 87",
+    "No. 99"
+   ],
+   "correct": "No. 99",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The NHL retired Gretzky's number 99 league-wide, so no player can wear it again.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Wayne-Gretzky",
+    "title": "Wayne Gretzky"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Wayne Gretzky's famous nickname?",
+   "answers": [
+    "The Golden Jet",
+    "The Great One",
+    "The Rocket",
+    "Mr. Hockey"
+   ],
+   "correct": "The Great One",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Gretzky was nicknamed \"the Great One\" for his achievements in the NHL.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Wayne-Gretzky/353215",
+    "title": "Wayne Gretzky - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Gretzky led which team to four Stanley Cup championships in the 1980s?",
+   "answers": [
+    "Los Angeles Kings",
+    "Edmonton Oilers",
+    "New York Rangers",
+    "Montreal Canadiens"
+   ],
+   "correct": "Edmonton Oilers",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "As center and team captain, Gretzky led the Edmonton Oilers to four Stanley Cup titles.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Wayne-Gretzky/353215",
+    "title": "Wayne Gretzky - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many interlocking rings make up the Olympic symbol?",
+   "answers": [
+    "Three",
+    "Four",
+    "Five",
+    "Six"
+   ],
+   "correct": "Five",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The symbol has five interlaced rings, which Pierre de Coubertin said represent the five parts of the world.",
+   "source": {
+    "url": "https://www.olympics.com/ioc/faq/olympic-symbol-and-identity/who-created-the-olympic-rings-symbol",
+    "title": "Who created the Olympic rings symbol?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who created the Olympic rings symbol in 1913?",
+   "answers": [
+    "Avery Brundage",
+    "Pierre de Coubertin",
+    "Juan Antonio Samaranch",
+    "Lord Killanin"
+   ],
+   "correct": "Pierre de Coubertin",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The rings first appeared in 1913 on a letter by Pierre de Coubertin, founder of the modern Olympic Games.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.olympics.com/ioc/faq/olympic-symbol-and-identity/who-created-the-olympic-rings-symbol",
+    "title": "Who created the Olympic rings symbol?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Olympic motto \"Citius, Altius, Fortius\" is Latin for what?",
+   "answers": [
+    "Together, Tougher, Braver",
+    "Quicker, Smarter, Fairer",
+    "Faster, Higher, Stronger",
+    "Further, Bolder, Prouder"
+   ],
+   "correct": "Faster, Higher, Stronger",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The Latin motto, proposed by Pierre de Coubertin, translates as \"Faster, Higher, Stronger\".",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Olympic_symbols",
+    "title": "Olympic symbols"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which colour is NOT one of the five Olympic ring colours?",
+   "answers": [
+    "Blue",
+    "Purple",
+    "Green",
+    "Yellow"
+   ],
+   "correct": "Purple",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The rings are blue, yellow, black, green and red on a white background, with no purple.",
+   "source": {
+    "url": "https://www.olympics.com/ioc/news/the-power-of-the-rings",
+    "title": "The Power of the Rings - Olympic News"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Wimbledon is the only Grand Slam tennis tournament still played on which surface?",
+   "answers": [
+    "Clay",
+    "Hard court",
+    "Grass",
+    "Carpet"
+   ],
+   "correct": "Grass",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Of the four Grand Slams, only Wimbledon is still played on grass, which is where the name \"lawn tennis\" comes from.",
+   "source": {
+    "url": "https://westportlibrary.libguides.com/Wimbledon",
+    "title": "Wimbledon: About"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was the first Wimbledon championship held, making it the world's oldest tennis tournament?",
+   "answers": [
+    "1837",
+    "1877",
+    "1907",
+    "1927"
+   ],
+   "correct": "1877",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The first Wimbledon was held in 1877, with a single event, the Gentleman's Singles.",
+   "source": {
+    "url": "https://westportlibrary.libguides.com/Wimbledon",
+    "title": "Wimbledon: About"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Grand Slam tennis tournament is played on clay?",
+   "answers": [
+    "Australian Open",
+    "US Open",
+    "Wimbledon",
+    "French Open"
+   ],
+   "correct": "French Open",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The Australian and US Opens are played on hard courts and the French Open is played on clay.",
+   "source": {
+    "url": "https://westportlibrary.libguides.com/Wimbledon",
+    "title": "Wimbledon: About"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the maximum break, a perfect clearance, in a standard frame of snooker?",
+   "answers": [
+    "120",
+    "147",
+    "180",
+    "250"
+   ],
+   "correct": "147",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "A maximum break is 147: all 15 reds each followed by the black, then all six colours.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Maximum_break",
+    "title": "Maximum break"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many red balls are racked at the start of a full frame of snooker?",
+   "answers": [
+    "10",
+    "12",
+    "15",
+    "18"
+   ],
+   "correct": "15",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "A full frame starts with 15 reds, which is why a maximum break involves potting 15 reds with 15 blacks.",
+   "source": {
+    "url": "https://snookerhq.com/records/147-breaks/",
+    "title": "Every 147 Break in Snooker History (Updated)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which player passed Babe Ruth's career total of 714 home runs in 1974?",
+   "answers": [
+    "Willie Mays",
+    "Mickey Mantle",
+    "Lou Gehrig",
+    "Hank Aaron"
+   ],
+   "correct": "Hank Aaron",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Ruth's 714 home runs stood as the record until Hank Aaron surpassed it in 1974.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.sungazette.com/news/top-news/2023/12/babe-ruth-the-sultan-of-swat-and-his-williamsport-legacy/",
+    "title": "Babe Ruth: The Sultan of Swat and his Williamsport legacy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which team did Babe Ruth begin his major league career with, as a star left-handed pitcher?",
+   "answers": [
+    "Boston Red Sox",
+    "Brooklyn Dodgers",
+    "St. Louis Cardinals",
+    "Chicago White Sox"
+   ],
+   "correct": "Boston Red Sox",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Ruth started as a pitcher for the Boston Red Sox before becoming a slugging outfielder for the Yankees.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Babe_Ruth",
+    "title": "Babe Ruth"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which nickname did sportswriters give Babe Ruth?",
+   "answers": [
+    "The Iron Horse",
+    "The Georgia Peach",
+    "The Say Hey Kid",
+    "The Sultan of Swat"
+   ],
+   "correct": "The Sultan of Swat",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Sportswriters nicknamed Ruth the \"Sultan of Swat\" while he was an outfielder for the New York Yankees.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Babe-Ruth",
+    "title": "Babe Ruth"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many home runs did Babe Ruth hit in 1927, a single-season record that stood until 1961?",
+   "answers": [
+    "45",
+    "54",
+    "60",
+    "73"
+   ],
+   "correct": "60",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Ruth hit 60 home runs in 1927, a record that stood until 1961.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Babe-Ruth",
+    "title": "Babe Ruth"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many points did Wilt Chamberlain score in a single NBA game on March 2, 1962?",
+   "answers": [
+    "73",
+    "81",
+    "100",
+    "125"
+   ],
+   "correct": "100",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "Chamberlain scored 100 points for the Philadelphia Warriors in a 169-147 win, an NBA single-game record.",
+   "source": {
+    "url": "https://www.nba.com/history/top-moments/1962-wilt-chamberlain-100-points",
+    "title": "1962 Wilt Chamberlain 100 points"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which team did Wilt Chamberlain's Warriors beat in his 100-point game?",
+   "answers": [
+    "Boston Celtics",
+    "Los Angeles Lakers",
+    "Chicago Bulls",
+    "New York Knicks"
+   ],
+   "correct": "New York Knicks",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The Philadelphia Warriors beat the New York Knicks 169-147 on the night Chamberlain scored 100.",
+   "source": {
+    "url": "https://www.nba.com/history/top-moments/1962-wilt-chamberlain-100-points",
+    "title": "1962 Wilt Chamberlain 100 points"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Pennsylvania town was Wilt Chamberlain's 100-point game played?",
+   "answers": [
+    "Philadelphia",
+    "Hershey",
+    "Pittsburgh",
+    "Allentown"
+   ],
+   "correct": "Hershey",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The game was held in a small arena in Hershey, Pennsylvania, and was not televised.",
+   "source": {
+    "url": "https://www.britannica.com/today-in-history/March-2-Wilt-Chamberlains-100-point-record-game",
+    "title": "Today in History March 2"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1980, the \"Miracle on Ice\" saw the US men's hockey team upset which heavily favored opponent?",
+   "answers": [
+    "Canada",
+    "Sweden",
+    "Czechoslovakia",
+    "Soviet Union"
+   ],
+   "correct": "Soviet Union",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "A team of American college players beat the defending four-time gold-medal-winning Soviet Union at the Lake Placid Games.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Miracle-on-Ice",
+    "title": "Miracle on Ice"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which New York town were the 1980 Winter Olympics, home of the \"Miracle on Ice,\" held?",
+   "answers": [
+    "Lake Placid",
+    "Saratoga Springs",
+    "Lake George",
+    "Cooperstown"
+   ],
+   "correct": "Lake Placid",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The Miracle on Ice game was played at the Lake Placid 1980 Olympic Winter Games.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Miracle-on-Ice",
+    "title": "Miracle on Ice"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the final score of the \"Miracle on Ice\" game between the United States and the Soviet Union?",
+   "answers": [
+    "3-2",
+    "4-3",
+    "5-4",
+    "6-3"
+   ],
+   "correct": "4-3",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The United States beat the Soviet Union 4-3 on February 22, 1980, then won the gold medal by beating Finland.",
+   "source": {
+    "url": "https://usopm.org/1980-mens-ice-hockey-team/",
+    "title": "1980 Men's Ice Hockey Team"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who coached the US hockey team to its \"Miracle on Ice\" win over the Soviets in 1980?",
+   "answers": [
+    "Scotty Bowman",
+    "Al Arbour",
+    "Herb Brooks",
+    "Mike Keenan"
+   ],
+   "correct": "Herb Brooks",
+   "difficulty": "easy",
+   "category": "Sports",
+   "explain": "The Miracle on Ice team of college players was coached by Herb Brooks.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/articles/miracle-on-ice-hockey-olympic-game",
+    "title": "When the US Olympic Hockey Team Stunned the World"
+   },
+   "ai_written": true
+  }
+ ]
+}

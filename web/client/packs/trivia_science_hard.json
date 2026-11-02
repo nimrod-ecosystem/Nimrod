@@ -1,0 +1,922 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Science trivia (hard)",
+ "description": "50 hard questions about physics, chemistry, biology, astronomy, the human body, inventions. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "A white dwarf is held up against its own gravity by which quantum effect, whose failure at high enough mass defines the Chandrasekhar limit?",
+   "answers": [
+    "Neutron degeneracy pressure",
+    "Electron degeneracy pressure",
+    "Thermal radiation pressure",
+    "Strong-force repulsion"
+   ],
+   "correct": "Electron degeneracy pressure",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Above the limit, electron degeneracy pressure in the star's core can no longer balance gravitational self-attraction, so the white dwarf cannot remain stable.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Chandrasekhar_limit",
+    "title": "Chandrasekhar limit"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly what is the maximum mass of a stable white dwarf star, known as the Chandrasekhar limit?",
+   "answers": [
+    "About 0.8 solar masses",
+    "About 2.2 solar masses",
+    "About 1.4 solar masses",
+    "About 3.0 solar masses"
+   ],
+   "correct": "About 1.4 solar masses",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Chandrasekhar's calculation gave a limit of about 1.44 solar masses, above which the star continues to collapse.",
+   "source": {
+    "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/Astro/whdwar.html",
+    "title": "White Dwarfs and Electron Degeneracy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which astrophysicist calculated the maximum mass of a white dwarf while sailing from India to England to begin graduate study at Cambridge?",
+   "answers": [
+    "Arthur Eddington",
+    "Edmund Stoner",
+    "Lev Landau",
+    "Subrahmanyan Chandrasekhar"
+   ],
+   "correct": "Subrahmanyan Chandrasekhar",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Chandrasekhar worked out the limit, about 1.44 times the mass of the Sun, on the 1930 voyage from India to Cambridge.",
+   "source": {
+    "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/Astro/whdwar.html",
+    "title": "White Dwarfs and Electron Degeneracy"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which type of supernova is thought to occur when a white dwarf accretes enough matter to tip over the Chandrasekhar limit?",
+   "answers": [
+    "Type Ib",
+    "Type II-P",
+    "Type IIb",
+    "Type Ia"
+   ],
+   "correct": "Type Ia",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Type Ia supernovae are thought to result when a white dwarf gains enough mass to pass the Chandrasekhar limit and collapses catastrophically.",
+   "source": {
+    "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/Astro/whdwar.html",
+    "title": "White Dwarfs and Electron Degeneracy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In water, light slows to roughly what fraction of its vacuum speed, allowing fast charged particles to outrun it and produce Cherenkov radiation?",
+   "answers": [
+    "About 90 percent",
+    "About 75 percent",
+    "About 55 percent",
+    "About 40 percent"
+   ],
+   "correct": "About 75 percent",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Light travels at about 75 percent of its vacuum speed in water, so energetic particles from nuclear fuel can exceed it and give off a blue glow.",
+   "source": {
+    "url": "https://www.energy.gov/ne/articles/cherenkov-radiation-explained",
+    "title": "Cherenkov Radiation, Explained"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Pavel Cherenkov shared the 1958 Nobel Prize in Physics with Ilya Frank and which other physicist?",
+   "answers": [
+    "Lev Landau",
+    "Pyotr Kapitsa",
+    "Nikolay Basov",
+    "Igor Tamm"
+   ],
+   "correct": "Igor Tamm",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "The 1958 physics prize went to Cherenkov, Frank and Tamm for experimentally demonstrating and explaining the Cherenkov glow.",
+   "source": {
+    "url": "https://www.iaea.org/newscenter/news/what-is-cherenkov-radiation",
+    "title": "What is Cherenkov Radiation?"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "A charged particle in a transparent medium of refractive index n emits Cherenkov radiation only if its speed exceeds what?",
+   "answers": [
+    "The vacuum light speed times n",
+    "Half the vacuum light speed",
+    "The speed of sound in the medium",
+    "The vacuum light speed divided by n"
+   ],
+   "correct": "The vacuum light speed divided by n",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Light travels at c/n in the medium. Particles slower than c/n produce no Cherenkov radiation.",
+   "source": {
+    "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12504552",
+    "title": "Fiber reinforced aerogel composites"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the chain of middle-ear ossicles, which bone sits between the malleus (hammer) and the stapes (stirrup)?",
+   "answers": [
+    "Vomer",
+    "Incus",
+    "Hyoid",
+    "Sphenoid"
+   ],
+   "correct": "Incus",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "The incus (anvil) bridges the malleus and stapes, passing sound vibrations from the eardrum toward the cochlea.",
+   "source": {
+    "url": "https://my.clevelandclinic.org/health/body/ossicles",
+    "title": "Ossicles: Function & Anatomy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The footplate of the stapes transmits sound vibrations into the inner ear through which opening of the cochlea?",
+   "answers": [
+    "The round window",
+    "The eustachian opening",
+    "The oval window",
+    "The internal acoustic meatus"
+   ],
+   "correct": "The oval window",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "The stapes footplate sits in the oval window and passes vibrations into the fluid-filled cochlea.",
+   "source": {
+    "url": "https://my.clevelandclinic.org/health/body/ossicles",
+    "title": "Ossicles: Function & Anatomy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the stapedius muscle, widely cited as the smallest skeletal muscle, do in response to a loud noise?",
+   "answers": [
+    "Contracts to limit stapes movement",
+    "Relaxes so the stapes vibrates more freely",
+    "Shifts the incus away from the malleus",
+    "Pumps fluid out of the cochlea"
+   ],
+   "correct": "Contracts to limit stapes movement",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "The stapedius contracts and pulls on the annular ligament, which stops the stapes from moving too much.",
+   "source": {
+    "url": "https://healthwire.pk/healthcare/smallest-bone-in-the-human-body/",
+    "title": "Uncovering the Mighty Role of the Tiniest - A Guide to the Smallest Bone in the Human Body! - Healthwire"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which German university did Fritz Haber develop his 1909 laboratory method for making ammonia from nitrogen and hydrogen?",
+   "answers": [
+    "Heidelberg",
+    "Göttingen",
+    "Leipzig",
+    "Karlsruhe"
+   ],
+   "correct": "Karlsruhe",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Haber worked at the University of Karlsruhe when he demonstrated high-pressure ammonia synthesis in 1909.",
+   "source": {
+    "url": "https://sciencenotes.org/haber-bosch-process/",
+    "title": "Haber-Bosch Process"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The first industrial ammonia plant using the Haber-Bosch process began operating in 1913 at which German site?",
+   "answers": [
+    "Oppau",
+    "Leuna",
+    "Bitterfeld",
+    "Essen"
+   ],
+   "correct": "Oppau",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Carl Bosch's team at BASF scaled up Haber's method, and the first industrial plant started up at Oppau in 1913.",
+   "source": {
+    "url": "https://sciencenotes.org/haber-bosch-process/",
+    "title": "Haber-Bosch Process"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which metal served as the catalyst in Fritz Haber's original 1909 laboratory synthesis of ammonia?",
+   "answers": [
+    "Platinum",
+    "Iron",
+    "Palladium",
+    "Osmium"
+   ],
+   "correct": "Osmium",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Haber reacted nitrogen with hydrogen under high temperature and pressure using an osmium catalyst. Iron-based catalysts came with industrialisation.",
+   "source": {
+    "url": "https://sciencenotes.org/haber-bosch-process/",
+    "title": "Haber-Bosch Process"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who received the 1918 Nobel Prize in Chemistry for the synthesis of ammonia from its elements?",
+   "answers": [
+    "Carl Bosch",
+    "Wilhelm Ostwald",
+    "Fritz Haber",
+    "Walther Nernst"
+   ],
+   "correct": "Fritz Haber",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Haber won the 1918 chemistry prize. Carl Bosch shared a later prize, in 1931, for high-pressure chemical engineering.",
+   "source": {
+    "url": "https://sciencenotes.org/haber-bosch-process/",
+    "title": "Haber-Bosch Process"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "To build a commercial ammonia plant, Carl Bosch and colleagues tested roughly how many catalysts?",
+   "answers": [
+    "Roughly 250",
+    "Roughly 2,500",
+    "Roughly 25",
+    "Roughly 25,000"
+   ],
+   "correct": "Roughly 2,500",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Bosch and his coworkers tested over 2,500 catalysts and developed the high-pressure, high-temperature equipment the process needed.",
+   "source": {
+    "url": "https://www.sciencedirect.com/topics/engineering/haber-bosch-process",
+    "title": "Haber-Bosch Process - an overview"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bakelite, the first fully synthetic plastic, is made by reacting which two chemicals?",
+   "answers": [
+    "Urea and ammonia",
+    "Cellulose and nitric acid",
+    "Phenol and formaldehyde",
+    "Styrene and butadiene"
+   ],
+   "correct": "Phenol and formaldehyde",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Leo Baekeland controlled the phenol-formaldehyde condensation reaction under heat and pressure to produce Bakelite.",
+   "source": {
+    "url": "https://www.sciencehistory.org/education/scientific-biographies/leo-hendrik-baekeland/",
+    "title": "Leo Hendrik Baekeland"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bakelite replaced hard rubber and which natural resin in the early electric power industry and home appliances?",
+   "answers": [
+    "Amber",
+    "Copal",
+    "Dammar",
+    "Shellac"
+   ],
+   "correct": "Shellac",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Because of its excellent insulating properties, Bakelite replaced shellac and hard rubber in electrical uses.",
+   "source": {
+    "url": "https://www.britannica.com/science/Bakelite",
+    "title": "Bakelite"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which early cellulose-based plastic, invented decades before Bakelite, was one of the world's first plastics?",
+   "answers": [
+    "Celluloid",
+    "Nylon",
+    "Polystyrene",
+    "Polyvinyl chloride"
+   ],
+   "correct": "Celluloid",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Celluloid was made from modified natural cellulose. Bakelite came more than 40 years later as the first wholly synthetic plastic.",
+   "source": {
+    "url": "https://www.acs.org/education/whatischemistry/landmarks/bakelite.html",
+    "title": "Leo Hendrick Baekeland and the Invention of Bakelite®"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name did Leo Baekeland give to the heated pressure vessels in which he formed Bakelite?",
+   "answers": [
+    "Resin kettles",
+    "Phenolators",
+    "Bakelizers",
+    "Polymerizers"
+   ],
+   "correct": "Bakelizers",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Baekeland called his machines \"Bakelizers\". The original was used from 1907 to 1910 to react phenol and formaldehyde under pressure.",
+   "source": {
+    "url": "https://www.acs.org/education/whatischemistry/landmarks/bakelite.html",
+    "title": "Leo Hendrick Baekeland and the Invention of Bakelite®"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to Oregon State volcanologists, the absence of what process on Mars let its giant shield volcanoes just keep growing?",
+   "answers": [
+    "River erosion",
+    "Meteorite impacts",
+    "Plate tectonics",
+    "Seasonal frost"
+   ],
+   "correct": "Plate tectonics",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Without moving plates, Martian volcanoes could keep growing in one place, limited only by the volume of lava available.",
+   "source": {
+    "url": "https://volcano.oregonstate.edu/giant-shield-volcanoes",
+    "title": "Giant Shield Volcanoes"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Before space probes revealed it to be a volcano, astronomers knew Olympus Mons as a bright albedo feature with what Latin name?",
+   "answers": [
+    "Syrtis Major",
+    "Mare Acidalium",
+    "Solis Lacus",
+    "Nix Olympica"
+   ],
+   "correct": "Nix Olympica",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Nix Olympica (\"Olympic Snow\") was observed from Earth in the late 19th century. Mariner 9 showed in 1971 that it was an immense volcano.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/astronomy-and-astrophysics/olympus-mons/",
+    "title": "Olympus mons"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly what is the average slope of Olympus Mons, which gives the shield volcano its low, squat profile?",
+   "answers": [
+    "About 5 percent",
+    "About 15 percent",
+    "About 30 percent",
+    "About 45 percent"
+   ],
+   "correct": "About 5 percent",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Shield volcanoes form as lava flows slowly down their sides, so Olympus Mons has an average slope of only about 5 percent.",
+   "source": {
+    "url": "https://www.space.com/20133-olympus-mons-giant-mountain-of-mars.html",
+    "title": "Olympus Mons: The largest volcano in the solar system"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the dried-out, curled-up form a tardigrade takes during cryptobiosis?",
+   "answers": [
+    "Cyst",
+    "Ephippium",
+    "Pupa",
+    "Tun"
+   ],
+   "correct": "Tun",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "A tardigrade expels most of its body water, retracts its head and legs, and curls into a dried ball called a tun.",
+   "source": {
+    "url": "https://www.livescience.com/57985-tardigrade-facts.html",
+    "title": "What are tardigrades and why are they nearly indestructible?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which German scientist first identified the tardigrade's suspended state in 1922, calling it a tönnchenform, later shortened to \"tun\"?",
+   "answers": [
+    "Johann Goeze",
+    "H. Baumann",
+    "Ernst Haeckel",
+    "Lazzaro Spallanzani"
+   ],
+   "correct": "H. Baumann",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "H. Baumann coined tönnchenform in 1922 for the barrel-shaped dormant state, and the term was later shortened to tun.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/zoology/tardigrade/",
+    "title": "Tardigrade"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In the tun state, a tardigrade's metabolism drops to roughly what fraction of normal levels?",
+   "answers": [
+    "About 1 percent",
+    "About 10 percent",
+    "About 0.0001 percent",
+    "About 0.01 percent"
+   ],
+   "correct": "About 0.01 percent",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Entering the tun slows the tardigrade's metabolism drastically, to near 0.01 percent of normal levels.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/zoology/tardigrade/",
+    "title": "Tardigrade"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Krebs cycle enzyme is anchored in the inner mitochondrial membrane instead of lying in the matrix with the others?",
+   "answers": [
+    "Succinate dehydrogenase",
+    "Citrate synthase",
+    "Aconitase",
+    "Fumarase"
+   ],
+   "correct": "Succinate dehydrogenase",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Most Krebs cycle enzymes are in the mitochondrial matrix. Succinate dehydrogenase is the exception, locked into the inner mitochondrial membrane.",
+   "source": {
+    "url": "https://www.news-medical.net/life-sciences/Krebs-Cycle-Enzymes.aspx",
+    "title": "Krebs Cycle Enzymes"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Hans Adolf Krebs first propose the cycle that now bears his name?",
+   "answers": [
+    "1921",
+    "1951",
+    "1937",
+    "1962"
+   ],
+   "correct": "1937",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Krebs first proposed the citric acid cycle in 1937.",
+   "source": {
+    "url": "https://www.news-medical.net/life-sciences/Krebs-Cycle-Enzymes.aspx",
+    "title": "Krebs Cycle Enzymes"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The regeneration of which compound completes each turn of the Krebs cycle?",
+   "answers": [
+    "Pyruvate",
+    "Acetyl-CoA",
+    "Glucose-6-phosphate",
+    "Oxaloacetate"
+   ],
+   "correct": "Oxaloacetate",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Acetyl-CoA is the starting point of the cycle. Oxaloacetate is regenerated at the end, which closes the loop.",
+   "source": {
+    "url": "https://sciencenotes.org/krebs-cycle-or-citric-acid-cycle/",
+    "title": "Krebs Cycle or Citric Acid Cycle"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A day on Titan lasts as long as the time it takes Titan to orbit Saturn. About how long is that?",
+   "answers": [
+    "About 4 days",
+    "About 16 days",
+    "About 29 days",
+    "About 8 days"
+   ],
+   "correct": "About 16 days",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "A Titan day lasts about 15 days and 22 hours, equal to its orbital period around Saturn.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Climate_of_Titan",
+    "title": "Climate of Titan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Cassini radar scans showed that which large Titan sea is mostly pure liquid methane, rather than the ethane scientists expected?",
+   "answers": [
+    "Kraken Mare",
+    "Jingpo Lacus",
+    "Ligeia Mare",
+    "Ontario Lacus"
+   ],
+   "correct": "Ligeia Mare",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Scientists expected Ligeia Mare to be mostly ethane, but Cassini radar data showed it is predominantly liquid methane.",
+   "source": {
+    "url": "https://www.esa.int/Science_Exploration/Space_Science/Cassini-Huygens/Profile_of_a_methane_sea_on_Titan",
+    "title": "ESA - Profile of a methane sea on Titan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Radio signals measured during the Huygens probe's descent strongly suggested an ocean at what depth beneath Titan's surface?",
+   "answers": [
+    "55 to 80 km",
+    "5 to 8 km",
+    "150 to 200 km",
+    "1 to 2 km"
+   ],
+   "correct": "55 to 80 km",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Huygens measured radio signals during its descent that strongly suggested an ocean 35 to 50 miles (55 to 80 km) below the surface.",
+   "source": {
+    "url": "https://science.nasa.gov/mission/cassini/science/titan/",
+    "title": "Titan - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Walther Meissner discovered the expulsion of magnetic fields from superconductors in 1933 with which colleague?",
+   "answers": [
+    "Fritz London",
+    "Heike Kamerlingh Onnes",
+    "Max von Laue",
+    "Robert Ochsenfeld"
+   ],
+   "correct": "Robert Ochsenfeld",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "The effect is named for Meissner and Ochsenfeld, the German physicists who discovered it in 1933.",
+   "source": {
+    "url": "https://sciencenotes.org/meissner-effect-in-superconductors/",
+    "title": "Meissner Effect in Superconductors"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Meissner and Ochsenfeld discovered the effect by measuring the magnetic flux outside specimens of which two metals as they were cooled?",
+   "answers": [
+    "Mercury and niobium",
+    "Tin and lead",
+    "Aluminium and zinc",
+    "Copper and silver"
+   ],
+   "correct": "Tin and lead",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "In 1933 they measured the flux distribution outside tin and lead specimens cooled below their transition temperature in a magnetic field.",
+   "source": {
+    "url": "https://www.chemeurope.com/en/encyclopedia/Meissner_effect.html",
+    "title": "Meissner_effect"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A superconductor in the Meissner state is a perfect diamagnet. What magnetic susceptibility does it have?",
+   "answers": [
+    "Zero",
+    "+1",
+    "Infinity",
+    "-1"
+   ],
+   "correct": "-1",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Surface currents create a magnetization equal and opposite to the applied field, giving a magnetic susceptibility of -1.",
+   "source": {
+    "url": "https://eng.libretexts.org/Workbench/Materials_Science_for_Electrical_Engineering/05:_Magnetism/5.1_Magnetic_Properties/5.1.09:_Meissner_Effect",
+    "title": "5.1.9: Meissner Effect - Engineering LibreTexts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Dmitri Mendeleev predict the existence of gallium, along with its low melting point and density?",
+   "answers": [
+    "1869",
+    "1871",
+    "1884",
+    "1859"
+   ],
+   "correct": "1871",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Mendeleev predicted gallium in 1871, before it was discovered, and accurately forecast key properties such as its density and low melting point.",
+   "source": {
+    "url": "https://www.odditycentral.com/technology/gallium-the-rare-metal-that-melts-in-your-hand-and-attacks-other-metals.html",
+    "title": "Gallium"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The melting point of gallium, about 29.76 °C, is a formal fixed reference point on which temperature scale?",
+   "answers": [
+    "The Réaumur temperature scale",
+    "The Rankine temperature scale",
+    "The International Temperature Scale of 1990",
+    "The Delisle temperature scale"
+   ],
+   "correct": "The International Temperature Scale of 1990",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Gallium's melting point is one of the formal temperature reference points of ITS-90, set by the International Bureau of Weights and Measures.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Gallium",
+    "title": "Gallium"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which common metal's structure does liquid gallium infiltrate and weaken, so that a drink can can be pierced with a thumb?",
+   "answers": [
+    "Stainless steel",
+    "Copper",
+    "Aluminium",
+    "Titanium"
+   ],
+   "correct": "Aluminium",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Liquid gallium infiltrates aluminium's structure and compromises its integrity, making a can feel like tin foil.",
+   "source": {
+    "url": "https://www.odditycentral.com/technology/gallium-the-rare-metal-that-melts-in-your-hand-and-attacks-other-metals.html",
+    "title": "Gallium"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which PhD student of Rosalind Franklin worked with her at King's College London to take the famous X-ray image known as Photograph 51?",
+   "answers": [
+    "Maurice Wilkins",
+    "Raymond Gosling",
+    "Aaron Klug",
+    "Francis Crick"
+   ],
+   "correct": "Raymond Gosling",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Franklin took Photograph 51 together with her PhD student Raymond Gosling at King's College London in May 1952.",
+   "source": {
+    "url": "https://www.kcl.ac.uk/the-story-behind-photograph-51",
+    "title": "The story behind Photograph 51"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "According to Franklin's lab notebook, DNA was exposed to X-rays for how long to take Photograph 51?",
+   "answers": [
+    "6 hours",
+    "22 hours",
+    "62 hours",
+    "112 hours"
+   ],
+   "correct": "62 hours",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Franklin's notebook records a total of 62 hours of X-ray exposure for Photograph 51.",
+   "source": {
+    "url": "https://www.kcl.ac.uk/the-story-behind-photograph-51",
+    "title": "The story behind Photograph 51"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which journal was Photograph 51 published on 25 April 1953, alongside Watson and Crick's double-helix model?",
+   "answers": [
+    "Science",
+    "The Lancet",
+    "Nature",
+    "Biochemical Journal"
+   ],
+   "correct": "Nature",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Franklin and Gosling's paper appeared in Nature on 25 April 1953, next to the Watson and Crick paper presenting the double helix.",
+   "source": {
+    "url": "https://www.kcl.ac.uk/the-story-behind-photograph-51",
+    "title": "The story behind Photograph 51"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Photo 51 captured which highly hydrated form of DNA, rather than the drier A form that doesn't show a distinct helical structure?",
+   "answers": [
+    "A-DNA",
+    "B-DNA",
+    "Z-DNA",
+    "C-DNA"
+   ],
+   "correct": "B-DNA",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Photo 51 shows the hydrated B form of DNA, whose diffraction pattern revealed the helical structure much more clearly.",
+   "source": {
+    "url": "https://www.mun.ca/biology/scarr/Franklins_crystallograph.html",
+    "title": "Franklin's X-Ray Crystallography"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mathematician worked out the first three collinear Lagrange points in 1765, seven years before Lagrange's own publication?",
+   "answers": [
+    "Joseph-Louis Lagrange",
+    "Pierre-Simon Laplace",
+    "Leonhard Euler",
+    "Carl Friedrich Gauss"
+   ],
+   "correct": "Leonhard Euler",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Euler solved the gravitational equations in 1765 and found L1, L2 and L3, which lie on a straight line.",
+   "source": {
+    "url": "https://www.popsci.com/science/james-webb-telescope-destination-lagrange-point/",
+    "title": "James Webb telescope is headed for Lagrange point 2"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The James Webb Space Telescope is not parked at L2 but orbits it. How long does one circuit of its halo orbit take?",
+   "answers": [
+    "About 27 days",
+    "About 168 days",
+    "About 365 days",
+    "About 84 days"
+   ],
+   "correct": "About 168 days",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Webb orbits L2 in a large halo orbit that takes about 168 days to complete one circuit.",
+   "source": {
+    "url": "https://science.nasa.gov/asset/webb/webbs-orbit-at-sun-earth-lagrange-point-2-l2/",
+    "title": "Webb's Orbit at Sun-Earth Lagrange Point 2 (L2)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many times farther from Earth than the Moon is the Sun-Earth L2 point?",
+   "answers": [
+    "About ten times",
+    "About twice",
+    "About forty times",
+    "About four times"
+   ],
+   "correct": "About four times",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "L2 lies about 1.5 million km from Earth, roughly four times the Earth-Moon distance.",
+   "source": {
+    "url": "https://science.nasa.gov/asset/webb/webbs-orbit-at-sun-earth-lagrange-point-2-l2/",
+    "title": "Webb's Orbit at Sun-Earth Lagrange Point 2 (L2)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two Lagrange points sit at the tips of equilateral triangles formed with the two large bodies?",
+   "answers": [
+    "L1 and L2",
+    "L4 and L5",
+    "L2 and L3",
+    "L1 and L3"
+   ],
+   "correct": "L4 and L5",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "L1, L2 and L3 lie in a line with the two large bodies, while L4 and L5 sit at the points of equilateral triangles.",
+   "source": {
+    "url": "https://science.nasa.gov/mission/webb/orbit/",
+    "title": "Webb's Orbit"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mineral is the reference for hardness 5 on the Mohs scale?",
+   "answers": [
+    "Fluorite",
+    "Orthoclase",
+    "Quartz",
+    "Apatite"
+   ],
+   "correct": "Apatite",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "The scale runs talc, gypsum, calcite, fluorite, apatite, orthoclase, quartz, topaz, corundum, diamond. That puts apatite at 5.",
+   "source": {
+    "url": "https://geology.com/minerals/mohs-hardness-scale.shtml",
+    "title": "Mohs Hardness Scale: Testing the Resistance to Being Scratched"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On the Mohs scale's absolute hardness, diamond (10) is about how many times as hard as corundum (9)?",
+   "answers": [
+    "About 1.1 times",
+    "About 4 times",
+    "About 10 times",
+    "About 40 times"
+   ],
+   "correct": "About 4 times",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "The Mohs scale is ordinal, not linear. Diamond is roughly four times as hard as corundum in absolute terms.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Mohs_scale",
+    "title": "Mohs scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did German mineralogist Friedrich Mohs create his scale of mineral hardness?",
+   "answers": [
+    "1789",
+    "1839",
+    "1865",
+    "1812"
+   ],
+   "correct": "1812",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Mohs created the scale in 1812, using ten readily available minerals from talc to diamond.",
+   "source": {
+    "url": "https://www.newworldencyclopedia.org/entry/Mohs_scale_of_mineral_hardness",
+    "title": "Mohs scale of mineral hardness - New World Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which physicist applied the Pauli exclusion principle in developing quantum electrodynamics, leading him to predict the positron?",
+   "answers": [
+    "Paul Dirac",
+    "Werner Heisenberg",
+    "Enrico Fermi",
+    "Erwin Schrödinger"
+   ],
+   "correct": "Paul Dirac",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Dirac pioneered quantum electrodynamics and applied the exclusion principle to predict the existence of the positron.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/pauli-formulates-exclusion-principle",
+    "title": "Pauli Formulates the Exclusion Principle"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In 1940 Wolfgang Pauli proved a necessary connection between which two properties of a particle?",
+   "answers": [
+    "Its charge and its mass",
+    "Its energy and its momentum",
+    "Its color and its flavor",
+    "Its spin and its statistics"
+   ],
+   "correct": "Its spin and its statistics",
+   "difficulty": "hard",
+   "category": "Science",
+   "explain": "Pauli showed that particles with half-integer spin must be fermions and obey the exclusion principle, while integer-spin particles must be bosons.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/pauli-formulates-exclusion-principle",
+    "title": "Pauli Formulates the Exclusion Principle"
+   },
+   "ai_written": true
+  }
+ ]
+}

@@ -1,0 +1,543 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Words trivia (hard)",
+ "description": "30 hard questions about word meanings, origins, spelling, idioms, grammar. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "The word 'petrichor', coined in 1964 for the smell of rain on dry earth, joins the Greek for 'stone' with 'ichor'. In Greek myth, what is ichor?",
+   "answers": [
+    "The fluid in the veins of the gods",
+    "The nectar drunk at divine feasts",
+    "The mist rising from the river Styx",
+    "The dust shaken from Hermes' sandals"
+   ],
+   "correct": "The fluid in the veins of the gods",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Petrichor was coined from Greek petros (stone) plus ichor, the fluid that supposedly flows in the veins of the gods.",
+   "source": {
+    "url": "https://wordsmith.org/words/petrichor.html",
+    "title": "A.Word.A.Day --petrichor"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which scientific journal did Isabel Joy Bear and Richard Grenfell Thomas publish the 1964 article that coined 'petrichor'?",
+   "answers": [
+    "Science",
+    "Nature",
+    "The Lancet",
+    "Scientific American"
+   ],
+   "correct": "Nature",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Their article 'Nature of Argillaceous Odour' appeared in the journal Nature in 1964 and introduced the word petrichor.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Richard_Grenfell_Thomas",
+    "title": "Richard Grenfell Thomas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What error created the ghost word 'dord', which appeared in Webster's New International Dictionary, Second Edition (1934)?",
+   "answers": [
+    "A typesetter's mistranscription of the word 'dorm'",
+    "A joke entry added by an editor and left in",
+    "An abbreviation slip 'D or d' read as one word",
+    "A scientist's coinage filed in the main list"
+   ],
+   "correct": "An abbreviation slip 'D or d' read as one word",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "A 1931 slip gave 'D or d' as abbreviations for density. Because of how such slips were spaced, it was misread as a single word, 'dord', meaning density.",
+   "source": {
+    "url": "https://www.merriam-webster.com/video/ghost-word",
+    "title": "How a Ghost Word Appeared in the Dictionary (Video)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Victorian philologist coined the term 'ghost word' for words that have no real existence?",
+   "answers": [
+    "James Murray",
+    "Walter Skeat",
+    "Henry Sweet",
+    "Frederick Furnivall"
+   ],
+   "correct": "Walter Skeat",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "The philologist Skeat coined 'ghost word', saying such words are like ghosts: we may seem to see them, but they have no real entity.",
+   "source": {
+    "url": "https://www.laphamsquarterly.org/roundtable/ghost-words-and-mountweazels",
+    "title": "Ghost Words and Mountweazels"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Horace Walpole coined 'serendipity' in a letter dated 28 January 1754. To which friend was it addressed?",
+   "answers": [
+    "Thomas Gray",
+    "George Selwyn",
+    "Horace Mann",
+    "William Mason"
+   ],
+   "correct": "Horace Mann",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Walpole explained the new word in a letter to his friend Sir Horace Mann, while describing a discovery about a painting.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Serendipity",
+    "title": "Serendipity"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "'Serendip', the old name for Sri Lanka behind 'serendipity', comes via Arabic from the Sanskrit 'Simhaladvipa'. What does that mean?",
+   "answers": [
+    "Island of the Jewel Mountain",
+    "Land of the Cinnamon Rivers",
+    "Realm of the Elephant Kings",
+    "Dwelling-Place-of-Lions Island"
+   ],
+   "correct": "Dwelling-Place-of-Lions Island",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Serendip comes from Arabic Sarandib, from Sanskrit Simhaladvipa, glossed as 'Dwelling-Place-of-Lions Island'.",
+   "source": {
+    "url": "https://www.etymonline.com/word/serendipity",
+    "title": "Serendipity - Etymology, Origin & Meaning"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American writer coined the word 'mondegreen' in a 1954 Harper's Magazine column?",
+   "answers": [
+    "Dorothy Parker",
+    "Mary McCarthy",
+    "Anita Loos",
+    "Sylvia Wright"
+   ],
+   "correct": "Sylvia Wright",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Sylvia Wright coined the word in her column 'The Death of Lady Mondegreen', based on her childhood mishearing of a Scottish ballad.",
+   "source": {
+    "url": "https://www.dictionary.com/browse/mondegreen",
+    "title": "MONDEGREEN Definition & Meaning"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What is the Greek-derived term for a word or phrase that appears only once in a given text or body of literature?",
+   "answers": [
+    "Hendiadys",
+    "Synecdoche",
+    "Hapax legomenon",
+    "Apophasis"
+   ],
+   "correct": "Hapax legomenon",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Hapax legomenon comes from Greek words for 'once' and 'being said', and names a word that occurs once in a corpus.",
+   "source": {
+    "url": "https://www.dictionary.com/browse/hapax-legomenon",
+    "title": "HAPAX LEGOMENON Definition & Meaning"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The term 'hapax legomenon' was created by Hellenistic scholars in Alexandria who were studying which works?",
+   "answers": [
+    "Hesiod's Theogony and Works and Days",
+    "Plato's Republic and Laws",
+    "Aeschylus's Oresteia trilogy",
+    "Homer's Iliad and Odyssey"
+   ],
+   "correct": "Homer's Iliad and Odyssey",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "The term was created by the Homeric scholars in Alexandria during the Hellenistic Age as they studied the Iliad and the Odyssey.",
+   "source": {
+    "url": "https://www.thetorah.com/article/hapax-legomena-ten-biblical-examples",
+    "title": "Hapax Legomena: Ten Biblical Examples - TheTorah.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which law of word frequency predicts that hapax legomena (words occurring once) are very common in any large body of text?",
+   "answers": [
+    "Grimm's law",
+    "Verner's law",
+    "Winter's law",
+    "Zipf's law"
+   ],
+   "correct": "Zipf's law",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Zipf's law says a word's frequency is inversely related to its rank, so many words occur only once. In large corpora roughly 40 to 60 percent of word types are hapax legomena.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Hapax_legomenon",
+    "title": "Hapax legomenon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the linguistic term for inserting a word into the middle of another word, as in 'abso-bloody-lutely'?",
+   "answers": [
+    "Metathesis",
+    "Syncope",
+    "Tmesis",
+    "Haplology"
+   ],
+   "correct": "Tmesis",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Tmesis is the use of a word or words in the middle of another word. The term comes from Greek tmesis, meaning 'a cutting'.",
+   "source": {
+    "url": "https://www.oxfordlearnersdictionaries.com/us/definition/english/tmesis",
+    "title": "tmesis noun - Oxford Advanced Learner's Dictionary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which playwright created Mrs Malaprop, who gave her name to 'malapropism', in the 1775 comedy The Rivals?",
+   "answers": [
+    "Oliver Goldsmith",
+    "William Congreve",
+    "Richard Brinsley Sheridan",
+    "George Farquhar"
+   ],
+   "correct": "Richard Brinsley Sheridan",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Mrs Malaprop appears in Sheridan's The Rivals (1775). The term malapropism derives from her habit of swapping similar-sounding words.",
+   "source": {
+    "url": "https://www.britannica.com/topic/malapropism",
+    "title": "Malapropism | Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Mrs Malaprop's name is taken from the French 'mal à propos'. What does that phrase mean?",
+   "answers": [
+    "Ill-spoken",
+    "Poorly learned",
+    "Inappropriate",
+    "Out of tune"
+   ],
+   "correct": "Inappropriate",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Malapropism is named after Mrs Malaprop, whose name comes from the French mal à propos, meaning 'inappropriate'.",
+   "source": {
+    "url": "https://www.encyclopedia.com/literature-and-arts/language-linguistics-and-literary-terms/language-and-linguistics/malapropism",
+    "title": "Malapropism | Encyclopedia.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The linguistic term 'eggcorn' is itself an eggcorn, an altered form of which word?",
+   "answers": [
+    "Unicorn",
+    "Peppercorn",
+    "Capricorn",
+    "Acorn"
+   ],
+   "correct": "Acorn",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "The term comes from a case where 'acorn' was rendered as 'egg corn'. That is why the word is itself an example of what it names.",
+   "source": {
+    "url": "https://www.merriam-webster.com/dictionary/eggcorn",
+    "title": "EGGCORN Definition & Meaning - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which linguist coined the term 'eggcorn' in 2003?",
+   "answers": [
+    "Steven Pinker",
+    "David Crystal",
+    "Geoffrey Pullum",
+    "John McWhorter"
+   ],
+   "correct": "Geoffrey Pullum",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Linguist Geoffrey Pullum proposed the term in 2003 after a Language Log post about a woman who wrote 'egg corns' for 'acorns'.",
+   "source": {
+    "url": "https://www.dictionary.com/browse/eggcorn",
+    "title": "EGGCORN Definition & Meaning"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The 'Jerusalem' in 'Jerusalem artichoke' is often cited as a folk etymology of an Italian word. What does that word, 'girasole', mean?",
+   "answers": [
+    "Thistle",
+    "Hillside",
+    "Marigold",
+    "Sunflower"
+   ],
+   "correct": "Sunflower",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "'Jerusalem' is thought to be a reshaping of Italian girasole, 'sunflower'. The Jerusalem artichoke is a kind of sunflower.",
+   "source": {
+    "url": "https://www.wordorigins.org/big-list-entries/eggcorn",
+    "title": "eggcorn — Wordorigins.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which bird-themed folk-etymology form is given as a classic case of people reshaping 'asparagus' into something more familiar?",
+   "answers": [
+    "Swallow-weed",
+    "Sparrow-grass",
+    "Finch-wort",
+    "Starling-cress"
+   ],
+   "correct": "Sparrow-grass",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Asparagus was reanalysed as 'sparrow-grass', which sounded more familiar to listeners who did not know the original word.",
+   "source": {
+    "url": "https://www.wordorigins.org/big-list-entries/eggcorn",
+    "title": "eggcorn — Wordorigins.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the word 'interrobang', the 'bang' part comes from the typesetters' name for which mark?",
+   "answers": [
+    "The ampersand",
+    "The asterisk",
+    "The exclamation mark",
+    "The hyphen"
+   ],
+   "correct": "The exclamation mark",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Martin Speckter named the mark from 'interro' (interrogation point) and 'bang', typesetters' slang for the exclamation mark.",
+   "source": {
+    "url": "https://wordoftheweek.com.au/interrobang-he-did-what-the-forgotten-punctuation-mark/",
+    "title": "INTERROBANG—YOU CALL THAT A HAT?! - Word of the Week"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1966 American Type Founders issued a metal typeface that included the interrobang. What was it called?",
+   "answers": [
+    "Helvetica",
+    "Clarendon",
+    "Americana",
+    "Bodoni"
+   ],
+   "correct": "Americana",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "American Type Founders' 1966 metal typeface Americana was among the first to include the interrobang, which Martin Speckter proposed in 1962.",
+   "source": {
+    "url": "https://www.worldwidewords.org/ww-int1.htm",
+    "title": "Interrobang: The Punctuation Mark Invented in 1962"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Roman poet's warning against 'words a foot and a half long' gave English the word 'sesquipedalian'?",
+   "answers": [
+    "Ovid",
+    "Virgil",
+    "Juvenal",
+    "Horace"
+   ],
+   "correct": "Horace",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Horace used the Latin phrase sesquipedalia verba ('words a foot and a half long') in his Ars Poetica, and 'sesquipedalian' derives from it.",
+   "source": {
+    "url": "https://www.collinsdictionary.com/dictionary/english/sesquipedalian",
+    "title": "SESQUIPEDALIAN definition and meaning | Collins"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What choice did Thomas Hobson, the Cambridge stable owner behind the phrase 'Hobson's choice', give his customers?",
+   "answers": [
+    "Take any horse but pay double",
+    "Take the oldest horse or wait a week",
+    "Take a horse unridden for a month",
+    "Take the horse nearest the door or none"
+   ],
+   "correct": "Take the horse nearest the door or none",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Hobson offered the horse in the stall nearest the door or no horse at all, so the phrase means an apparent choice with only one real option.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Hobson's_choice",
+    "title": "Hobson's choice"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which poet helped make the Cambridge carrier Thomas Hobson, and the phrase 'Hobson's choice', well known through his mock epitaphs?",
+   "answers": [
+    "John Dryden",
+    "Andrew Marvell",
+    "John Milton",
+    "Samuel Butler"
+   ],
+   "correct": "John Milton",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Milton, a Cambridge student in the years before Hobson died in 1631, wrote comic epitaphs on him. Etymologists credit him with making the phrase popular.",
+   "source": {
+    "url": "https://www.etymonline.com/word/Hobson%27s%20choice",
+    "title": "Hobson's choice - Origin & Meaning of the Phrase"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "A common error replaces 'Hobson's choice' with a phrase that confuses Thomas Hobson with a philosopher. What is the erroneous phrase?",
+   "answers": [
+    "Lockean choice",
+    "Hobbesian choice",
+    "Humean choice",
+    "Cartesian choice"
+   ],
+   "correct": "Hobbesian choice",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "People sometimes say 'Hobbesian choice', confusing the philosopher Thomas Hobbes with the relatively obscure Thomas Hobson.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Hobson's_choice",
+    "title": "Hobson's choice"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "'Quarantine' derives from the Italian 'quaranta giorni'. For how many days were ships from infected ports made to sit at anchor off Venice?",
+   "answers": [
+    "30",
+    "40",
+    "60",
+    "21"
+   ],
+   "correct": "40",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Ships arriving in Venice from infected ports had to wait at anchor for 40 days. 'Quaranta giorni' means 'forty days'.",
+   "source": {
+    "url": "https://stacks.cdc.gov/view/cdc/84791",
+    "title": "History of quarantine - CDC Stacks"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Latin 'salarium', ancestor of the English word 'salary', is linked to 'sal', the Latin word for what?",
+   "answers": [
+    "Silver",
+    "Soil",
+    "Salt",
+    "Service"
+   ],
+   "correct": "Salt",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "'Salary' comes from Latin salarium, 'pertaining to salt' (sal, 'salt'). The exact connection is unclear, and the claim that Roman soldiers were paid in salt is baseless.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Salary",
+    "title": "Salary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "'Pedigree' comes from the Anglo-French 'pé de grue'. Literally, whose foot is that?",
+   "answers": [
+    "A heron's",
+    "A stork's",
+    "A goose's",
+    "A crane's"
+   ],
+   "correct": "A crane's",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Pé de grue means 'crane's foot'. The branching lines of a genealogical chart resembled the shape of a crane's foot.",
+   "source": {
+    "url": "https://www.merriam-webster.com/dictionary/pedigree",
+    "title": "PEDIGREE Definition & Meaning - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The contronym 'cleave' can mean both 'to split' and 'to cling'. Why does it have two opposite meanings?",
+   "answers": [
+    "One Latin verb whose sense was later reversed",
+    "A Norse loanword respelled by the Normans",
+    "Two separate Old English verbs that merged in form",
+    "A Greek root carrying two opposite prefixes"
+   ],
+   "correct": "Two separate Old English verbs that merged in form",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "'Cleave' comes from two different Old English words, clēofan and cleofian, which became identical in form.",
+   "source": {
+    "url": "https://www.thesaurus.com/articles/11-contronyms-youve-been-using-without-realizing-it",
+    "title": "Contronyms You've Been Using Without Realizing It"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The contronym 'bound' can mean 'tied up' or 'ready to go', as in 'bound for Paris'. The 'ready' sense comes from which language's word 'būinn'?",
+   "answers": [
+    "Old French",
+    "Latin",
+    "Middle Dutch",
+    "Old Norse"
+   ],
+   "correct": "Old Norse",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "One sense of 'bound' comes from Old English bindan ('to bind'). The other comes from Old Norse būinn, 'to get ready'.",
+   "source": {
+    "url": "https://www.thesaurus.com/articles/11-contronyms-youve-been-using-without-realizing-it",
+    "title": "Contronyms You've Been Using Without Realizing It"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which alternative name for a word that is its own opposite refers to a two-faced Roman god?",
+   "answers": [
+    "Mercury word",
+    "Janus word",
+    "Vulcan word",
+    "Saturn word"
+   ],
+   "correct": "Janus word",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "A contronym is also called a Janus word, after the Roman god Janus, who had two faces looking in opposite directions.",
+   "source": {
+    "url": "https://grammarist.com/usage/contronym-and-auto-antonym/",
+    "title": "How to Use Contronym and auto-antonym Correctly"
+   },
+   "ai_written": true
+  }
+ ]
+}

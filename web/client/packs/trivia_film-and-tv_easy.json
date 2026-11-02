@@ -1,0 +1,945 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Film and TV trivia (easy)",
+ "description": "50 easy questions about films, television, animation, actors, directors, from any decade. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Who directed the 1997 film Titanic?",
+   "answers": [
+    "Steven Spielberg",
+    "Ridley Scott",
+    "James Cameron",
+    "Oliver Stone"
+   ],
+   "correct": "James Cameron",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Titanic was written and directed by James Cameron, who won the Best Director Academy Award for it.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Titanic-film-1997",
+    "title": "Titanic | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many Academy Awards did Titanic win at the 1998 ceremony?",
+   "answers": [
+    "Seven",
+    "Nine",
+    "Eleven",
+    "Fourteen"
+   ],
+   "correct": "Eleven",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Titanic received fourteen nominations and won eleven, including Best Picture and Best Director.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Titanic_(1997_film)",
+    "title": "Titanic (1997 film) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Titanic was the first film to pass which worldwide box-office milestone?",
+   "answers": [
+    "$500 million",
+    "$2 billion",
+    "$1 billion",
+    "$3 billion"
+   ],
+   "correct": "$1 billion",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Britannica notes that Titanic was the first film to gross over $1 billion.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Titanic-film-1997",
+    "title": "Titanic | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who directed the 1972 crime film The Godfather?",
+   "answers": [
+    "Martin Scorsese",
+    "Francis Ford Coppola",
+    "Brian De Palma",
+    "Sidney Lumet"
+   ],
+   "correct": "Francis Ford Coppola",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The Godfather was directed by Francis Ford Coppola, who co-wrote it with Mario Puzo.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Godfather",
+    "title": "The Godfather - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which star of The Godfather won the Best Actor Academy Award for his performance in the 1972 film?",
+   "answers": [
+    "Al Pacino",
+    "James Caan",
+    "Robert Duvall",
+    "Marlon Brando"
+   ],
+   "correct": "Marlon Brando",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Brando won Best Actor. Pacino, Caan and Duvall were nominated in the Best Supporting Actor category.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Godfather",
+    "title": "The Godfather - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Godfather film is based on a novel by which author?",
+   "answers": [
+    "Elmore Leonard",
+    "Tom Wolfe",
+    "Norman Mailer",
+    "Mario Puzo"
+   ],
+   "correct": "Mario Puzo",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The film is based on Mario Puzo's novel The Godfather, and Puzo co-wrote the screenplay.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Godfather",
+    "title": "The Godfather - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who directed the 1975 thriller Jaws?",
+   "answers": [
+    "George Lucas",
+    "Steven Spielberg",
+    "William Friedkin",
+    "Brian De Palma"
+   ],
+   "correct": "Steven Spielberg",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Steven Spielberg directed Jaws, which was released in 1975.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://amblin.com/movie/jaws/",
+    "title": "Jaws (1975) - About the Movie | Amblin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who composed the famous score for Jaws?",
+   "answers": [
+    "Hans Zimmer",
+    "Ennio Morricone",
+    "Bernard Herrmann",
+    "John Williams"
+   ],
+   "correct": "John Williams",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "John Williams composed and conducted the Jaws score for Steven Spielberg's film.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Jaws_(soundtrack)",
+    "title": "Jaws (soundtrack) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who wrote and directed the original 1977 Star Wars film?",
+   "answers": [
+    "Steven Spielberg",
+    "George Lucas",
+    "Francis Ford Coppola",
+    "James Cameron"
+   ],
+   "correct": "George Lucas",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Star Wars (later titled A New Hope) was written and directed by George Lucas.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.encyclopedia.com/social-sciences-and-law/political-science-and-government/military-affairs-nonnaval/star-wars",
+    "title": "Star Wars | Encyclopedia.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor provided the voice of Darth Vader in the original Star Wars?",
+   "answers": [
+    "Morgan Freeman",
+    "Alec Guinness",
+    "Peter Cushing",
+    "James Earl Jones"
+   ],
+   "correct": "James Earl Jones",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "David Prowse wore the Vader costume, but George Lucas chose James Earl Jones for the voice.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.wikiwand.com/en/Star_Wars_(film)",
+    "title": "Star Wars (film) - Wikiwand"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played Luke Skywalker in the original Star Wars trilogy?",
+   "answers": [
+    "Mark Hamill",
+    "Kurt Russell",
+    "Richard Dreyfuss",
+    "Christopher Reeve"
+   ],
+   "correct": "Mark Hamill",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Mark Hamill was cast as Luke Skywalker for the original 1977 Star Wars.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Luke_Skywalker",
+    "title": "Luke Skywalker - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played the smuggler Han Solo in the original Star Wars?",
+   "answers": [
+    "Tom Selleck",
+    "Kevin Costner",
+    "Harrison Ford",
+    "Mel Gibson"
+   ],
+   "correct": "Harrison Ford",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Harrison Ford played Han Solo, who teams up with Luke Skywalker to save Princess Leia.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.encyclopedia.com/social-sciences-and-law/political-science-and-government/military-affairs-nonnaval/star-wars",
+    "title": "Star Wars | Encyclopedia.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actress starred as Dorothy Gale in the 1939 film The Wizard of Oz?",
+   "answers": [
+    "Shirley Temple",
+    "Ginger Rogers",
+    "Deanna Durbin",
+    "Judy Garland"
+   ],
+   "correct": "Judy Garland",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Judy Garland played Dorothy Gale and became internationally known for the role.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Wizard_of_Oz_(1939_film)",
+    "title": "The Wizard of Oz (1939 film) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which song from The Wizard of Oz won the Academy Award for Best Original Song?",
+   "answers": [
+    "Follow the Yellow Brick Road",
+    "Over the Rainbow",
+    "If I Only Had a Brain",
+    "We're Off to See the Wizard"
+   ],
+   "correct": "Over the Rainbow",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "\"Over the Rainbow\", with music by Harold Arlen, won the Academy Award for Best Original Song.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/film/wizard-oz-film/",
+    "title": "The Wizard of Oz (film) | EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of Dorothy's dog in The Wizard of Oz?",
+   "answers": [
+    "Fido",
+    "Benji",
+    "Lassie",
+    "Toto"
+   ],
+   "correct": "Toto",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Dorothy tries to save her dog Toto from Miss Gulch before the tornado carries them to Oz.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/film/wizard-oz-film/",
+    "title": "The Wizard of Oz (film) | EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who wrote the 1900 novel that the 1939 film The Wizard of Oz was adapted from?",
+   "answers": [
+    "Lewis Carroll",
+    "C. S. Lewis",
+    "L. Frank Baum",
+    "J. M. Barrie"
+   ],
+   "correct": "L. Frank Baum",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The film was adapted from L. Frank Baum's novel The Wonderful Wizard of Oz.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/film/wizard-oz-film/",
+    "title": "The Wizard of Oz (film) | EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the coffeehouse where the group hangs out in the sitcom Friends?",
+   "answers": [
+    "Monk's Cafe",
+    "Central Perk",
+    "Café Nervosa",
+    "Luke's Diner"
+   ],
+   "correct": "Central Perk",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Central Perk is the coffeehouse frequented by the group, and Rachel works there as a waitress.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rachel_Green",
+    "title": "Rachel Green - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played Ross Geller in Friends?",
+   "answers": [
+    "Matt LeBlanc",
+    "David Schwimmer",
+    "Matthew Perry",
+    "Jerry Seinfeld"
+   ],
+   "correct": "David Schwimmer",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "David Schwimmer played Ross Geller, whose on-and-off romance with Rachel Green runs through the series.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Last_One_(Friends)",
+    "title": "The Last One (Friends) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which instrument does Phoebe Buffay play when she sings at Central Perk?",
+   "answers": [
+    "Cello",
+    "Trumpet",
+    "Banjo",
+    "Acoustic guitar"
+   ],
+   "correct": "Acoustic guitar",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Phoebe plays acoustic guitar and sings her simple, awkward songs at Central Perk.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Phoebe_Buffay",
+    "title": "Phoebe Buffay - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many seasons did the sitcom Friends run for?",
+   "answers": [
+    "Eight",
+    "Ten",
+    "Twelve",
+    "Six"
+   ],
+   "correct": "Ten",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Friends ran from 1994 to 2004 and finished its ten-season run with 236 episodes.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_Friends_episodes",
+    "title": "List of Friends episodes - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who created the animated sitcom The Simpsons?",
+   "answers": [
+    "Seth MacFarlane",
+    "Trey Parker",
+    "Matt Groening",
+    "Mike Judge"
+   ],
+   "correct": "Matt Groening",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Matt Groening, who grew up in Portland, Oregon, created The Simpsons.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.oregonencyclopedia.org/articles/groening-matt/",
+    "title": "Matthew Abram Groening (1954–) | Oregon Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the most commonly used address of the Simpson family home?",
+   "answers": [
+    "1313 Mockingbird Lane",
+    "124 Conch Street",
+    "4 Privet Drive",
+    "742 Evergreen Terrace"
+   ],
+   "correct": "742 Evergreen Terrace",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The most commonly used address for the Simpsons' house in Springfield is 742 Evergreen Terrace.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Simpsons_house",
+    "title": "The Simpsons house - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where does Homer Simpson work as a safety inspector?",
+   "answers": [
+    "At a brewery",
+    "At a police station",
+    "At a nuclear power plant",
+    "At an elementary school"
+   ],
+   "correct": "At a nuclear power plant",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Homer works as a safety inspector at the Springfield Nuclear Power Plant.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Homer_Simpson",
+    "title": "Homer Simpson - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which friendly, devout Springfield resident in The Simpsons is known for using the word \"diddly\"?",
+   "answers": [
+    "Moe Szyslak",
+    "Ned Flanders",
+    "Principal Skinner",
+    "Mr. Burns"
+   ],
+   "correct": "Ned Flanders",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Ned Flanders is a devout, compassionate pillar of the Springfield community, and \"diddly\" is one of his trademark words.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Ned_Flanders",
+    "title": "Ned Flanders - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which TV network produced the fantasy series Game of Thrones?",
+   "answers": [
+    "Netflix",
+    "AMC",
+    "HBO",
+    "Showtime"
+   ],
+   "correct": "HBO",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Game of Thrones was created by David Benioff and D. B. Weiss for HBO.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Game_of_Thrones",
+    "title": "Game of Thrones - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Game of Thrones is based on the book series A Song of Ice and Fire by which author?",
+   "answers": [
+    "Terry Pratchett",
+    "Brandon Sanderson",
+    "Robert Jordan",
+    "George R. R. Martin"
+   ],
+   "correct": "George R. R. Martin",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The series adapts George R. R. Martin's A Song of Ice and Fire novels.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Game_of_Thrones",
+    "title": "Game of Thrones - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Game of Thrones is set on Essos and which other fictional continent?",
+   "answers": [
+    "Narnia",
+    "Westeros",
+    "Tamriel",
+    "Hyrule"
+   ],
+   "correct": "Westeros",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The series is set on two imaginary continents, Westeros and Essos.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Game_of_Thrones",
+    "title": "Game of Thrones - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played Walter White in Breaking Bad?",
+   "answers": [
+    "Aaron Paul",
+    "Bob Odenkirk",
+    "Bryan Cranston",
+    "Giancarlo Esposito"
+   ],
+   "correct": "Bryan Cranston",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Bryan Cranston played Walter White, a high-school chemistry teacher who starts making methamphetamine after a cancer diagnosis.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Breaking_Bad",
+    "title": "Breaking Bad - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Under which alias does Walter White become a drug kingpin in Breaking Bad?",
+   "answers": [
+    "Schrödinger",
+    "Oppenheimer",
+    "Hawking",
+    "Heisenberg"
+   ],
+   "correct": "Heisenberg",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Walter Hartwell White is also known by his alias Heisenberg.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Walter_White_(Breaking_Bad)",
+    "title": "Walter White (Breaking Bad) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which US city is Breaking Bad set and filmed?",
+   "answers": [
+    "Phoenix",
+    "Albuquerque",
+    "Denver",
+    "Las Vegas"
+   ],
+   "correct": "Albuquerque",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Breaking Bad is set and filmed in Albuquerque, New Mexico.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Breaking_Bad",
+    "title": "Breaking Bad - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which 1995 film was the first fully computer-animated feature film?",
+   "answers": [
+    "A Bug's Life",
+    "Shrek",
+    "Toy Story",
+    "Finding Nemo"
+   ],
+   "correct": "Toy Story",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Toy Story, Pixar's debut feature, was the first computer-animated feature film.",
+   "source": {
+    "url": "https://www.oscars.org/collection-highlights/toy-story",
+    "title": "Toy Story | Academy of Motion Picture Arts and Sciences"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Toy Story, what kind of toy is Buzz Lightyear?",
+   "answers": [
+    "A cowboy toy",
+    "A dinosaur toy",
+    "An astronaut toy",
+    "A soldier toy"
+   ],
+   "correct": "An astronaut toy",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Buzz is a shiny new astronaut toy that Andy receives for his birthday, which makes Woody jealous.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/january-19/production-begins-on-toy-story",
+    "title": "Production begins on \"Toy Story\" | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the boy who owns the toys in the original Toy Story?",
+   "answers": [
+    "Billy",
+    "Tommy",
+    "Danny",
+    "Andy"
+   ],
+   "correct": "Andy",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The film follows a roomful of toys and their owner, a young boy named Andy.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.oscars.org/collection-highlights/toy-story",
+    "title": "Toy Story | Academy of Motion Picture Arts and Sciences"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who directed the 1960 horror thriller Psycho?",
+   "answers": [
+    "Stanley Kubrick",
+    "Orson Welles",
+    "Billy Wilder",
+    "Alfred Hitchcock"
+   ],
+   "correct": "Alfred Hitchcock",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Psycho was produced and directed by Alfred Hitchcock.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Psycho-film-1960",
+    "title": "Psycho (1960 film) | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played the shy motel owner Norman Bates in Psycho?",
+   "answers": [
+    "Anthony Perkins",
+    "James Stewart",
+    "Cary Grant",
+    "Vincent Price"
+   ],
+   "correct": "Anthony Perkins",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Anthony Perkins played Norman Bates, who runs the Bates Motel with his domineering mother.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Psycho-film-1960",
+    "title": "Psycho (1960 film) | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actress played Marion Crane, who is murdered in Psycho's famous shower scene?",
+   "answers": [
+    "Tippi Hedren",
+    "Grace Kelly",
+    "Janet Leigh",
+    "Kim Novak"
+   ],
+   "correct": "Janet Leigh",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Janet Leigh played Marion Crane, an embezzler who is killed while she showers.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Psycho_shower_scene",
+    "title": "Psycho shower scene - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played the title role in the 1994 film Forrest Gump?",
+   "answers": [
+    "Tom Cruise",
+    "Kevin Costner",
+    "Tom Hanks",
+    "Robin Williams"
+   ],
+   "correct": "Tom Hanks",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Tom Hanks starred as Forrest Gump and won the Best Actor Academy Award for the role.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Forrest_Gump",
+    "title": "Forrest Gump - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who directed Forrest Gump?",
+   "answers": [
+    "Ron Howard",
+    "Rob Reiner",
+    "Barry Levinson",
+    "Robert Zemeckis"
+   ],
+   "correct": "Robert Zemeckis",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Forrest Gump was directed by Robert Zemeckis, who won the Best Director Academy Award for it.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Forrest_Gump",
+    "title": "Forrest Gump - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Forrest Gump follows the life of a man from which US state?",
+   "answers": [
+    "Georgia",
+    "Texas",
+    "Louisiana",
+    "Alabama"
+   ],
+   "correct": "Alabama",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The film follows an Alabama man named Forrest Gump and his experiences in 20th-century America.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Forrest_Gump",
+    "title": "Forrest Gump - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which fairy-tale heroine starred in Walt Disney's first full-length cel-animated feature, released in 1937?",
+   "answers": [
+    "Cinderella",
+    "Aurora",
+    "Snow White",
+    "Ariel"
+   ],
+   "correct": "Snow White",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Snow White and the Seven Dwarfs (1937) was the first full-length cel-animated feature film.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Snow_White_and_the_Seven_Dwarfs_(1937_film)",
+    "title": "Snow White and the Seven Dwarfs (1937 film) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Disney's 1937 Snow White and the Seven Dwarfs was based on a fairy tale by which writers?",
+   "answers": [
+    "Charles Perrault",
+    "The Brothers Grimm",
+    "Hans Christian Andersen",
+    "Aesop"
+   ],
+   "correct": "The Brothers Grimm",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The film is based on the German fairy tale \"Snow White\" by the Brothers Grimm.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Snow_White_and_the_Seven_Dwarfs_(1937_film)",
+    "title": "Snow White and the Seven Dwarfs (1937 film) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Along with one full-size statuette, how many miniature Academy Awards did Walt Disney receive for Snow White and the Seven Dwarfs?",
+   "answers": [
+    "Three",
+    "Five",
+    "Seven",
+    "Twelve"
+   ],
+   "correct": "Seven",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The Honorary Academy Award for Snow White was one full-size Academy Award statuette and seven miniature ones.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Disney_Golden_Age",
+    "title": "Disney Golden Age - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played Harry Potter in all eight films of the film series?",
+   "answers": [
+    "Rupert Grint",
+    "Tom Holland",
+    "Daniel Radcliffe",
+    "Eddie Redmayne"
+   ],
+   "correct": "Daniel Radcliffe",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Daniel Radcliffe played the title character in all eight Harry Potter films from 2001 to 2011.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Harry_Potter_(character)",
+    "title": "Harry Potter (character) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which school of magic does Harry Potter attend?",
+   "answers": [
+    "Hogwarts",
+    "Beauxbatons",
+    "Durmstrang",
+    "Ilvermorny"
+   ],
+   "correct": "Hogwarts",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Harry attends Hogwarts, where Albus Dumbledore is headmaster and he befriends Ron Weasley and Hermione Granger.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Harry_Potter_(character)",
+    "title": "Harry Potter (character) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many films make up the Harry Potter film series?",
+   "answers": [
+    "Six",
+    "Seven",
+    "Eight",
+    "Ten"
+   ],
+   "correct": "Eight",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The series has eight films, from Philosopher's Stone (2001) to Deathly Hallows – Part 2 (2011).",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Harry_Potter_(film_series)",
+    "title": "Harry Potter (film series) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actress played Hermione Granger in the Harry Potter films?",
+   "answers": [
+    "Keira Knightley",
+    "Emma Stone",
+    "Emily Blunt",
+    "Emma Watson"
+   ],
+   "correct": "Emma Watson",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Emma Watson was selected to play Hermione Granger, alongside Daniel Radcliffe and Rupert Grint.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Harry_Potter_and_the_Philosopher's_Stone_(film)",
+    "title": "Harry Potter and the Philosopher's Stone (film) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who directed all three films of The Lord of the Rings film trilogy?",
+   "answers": [
+    "Guillermo del Toro",
+    "Peter Jackson",
+    "Sam Raimi",
+    "George Lucas"
+   ],
+   "correct": "Peter Jackson",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Peter Jackson directed all three Lord of the Rings films and co-wrote the screenplays.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Lord-of-the-Rings-film-trilogy-by-Jackson",
+    "title": "The Lord of the Rings (LOTR) | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played the wizard Gandalf in The Lord of the Rings films?",
+   "answers": [
+    "Ian Holm",
+    "Christopher Lee",
+    "Ian McKellen",
+    "Sean Bean"
+   ],
+   "correct": "Ian McKellen",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Ian McKellen played Gandalf, appearing opposite Elijah Wood's Frodo.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Lord-of-the-Rings-film-trilogy-by-Jackson",
+    "title": "The Lord of the Rings (LOTR) | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where must Frodo take the One Ring in order to destroy it?",
+   "answers": [
+    "Weathertop",
+    "Helm's Deep",
+    "Minas Tirith",
+    "Mount Doom"
+   ],
+   "correct": "Mount Doom",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "Frodo is tasked with taking the Ring to Mount Doom, the only place where it can be destroyed.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/film/lord-rings-trilogy-film/",
+    "title": "The Lord of the Rings trilogy (film) | EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Lord of the Rings films are based on novels by which author?",
+   "answers": [
+    "C. S. Lewis",
+    "J. R. R. Tolkien",
+    "J. K. Rowling",
+    "George R. R. Martin"
+   ],
+   "correct": "J. R. R. Tolkien",
+   "difficulty": "easy",
+   "category": "Film and TV",
+   "explain": "The trilogy was adapted from J. R. R. Tolkien's Lord of the Rings novels, published in the 1950s.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/film/lord-rings-trilogy-film/",
+    "title": "The Lord of the Rings trilogy (film) | EBSCO Research Starters"
+   },
+   "ai_written": true
+  }
+ ]
+}

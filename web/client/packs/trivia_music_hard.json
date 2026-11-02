@@ -1,0 +1,930 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Music trivia (hard)",
+ "description": "50 hard questions about composers, instruments, genres, famous songs and musicians (no lyrics quoted). Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Who conducted the 1913 Paris premiere of Stravinsky's The Rite of Spring?",
+   "answers": [
+    "Gabriel Pierné",
+    "Ernest Ansermet",
+    "Pierre Monteux",
+    "Serge Koussevitzky"
+   ],
+   "correct": "Pierre Monteux",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Diaghilev's Ballets Russes premiered the work at the Théâtre des Champs-Élysées on 29 May 1913 with Pierre Monteux conducting.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.bso.org/works/the-rite-of-spring",
+    "title": "The Rite of Spring – Boston Symphony Orchestra"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which painter and designer is credited with the costumes and staging for the 1913 premiere of The Rite of Spring?",
+   "answers": [
+    "Léon Bakst",
+    "Alexandre Benois",
+    "Pablo Picasso",
+    "Nicholas Roerich"
+   ],
+   "correct": "Nicholas Roerich",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The premiere had choreography by Vaslav Nijinsky and costumes and staging by Nicholas Roerich.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.classical-music.com/features/works/stravinsky-rite-of-spring",
+    "title": "The riotous premiere of Stravinsky's Rite of Spring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the subtitle of Stravinsky's The Rite of Spring?",
+   "answers": [
+    "Scenes from a Slavic Winter",
+    "Pictures of Pagan Russia",
+    "Visions of Ancient Byzantium",
+    "Portraits of Rural Hungary"
+   ],
+   "correct": "Pictures of Pagan Russia",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The ballet's subtitle is \"Pictures of Pagan Russia in Two Parts\", reflecting its scenario of primitive spring rituals.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Rite_of_Spring",
+    "title": "The Rite of Spring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What term did Berlioz use for the recurring theme that runs through all five movements of his Symphonie fantastique?",
+   "answers": [
+    "Leitmotif",
+    "Cantus firmus",
+    "Idée fixe",
+    "Ritornello"
+   ],
+   "correct": "Idée fixe",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Berlioz called the recurring theme representing the artist's obsession with his beloved the idée fixe. Wagner's leitmotifs are a related later idea.",
+   "source": {
+    "url": "https://www.britannica.com/art/idee-fixe",
+    "title": "Idée fixe"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Berlioz's Symphonie fantastique grew from his infatuation with which actress, whom he first saw playing Ophelia in Hamlet?",
+   "answers": [
+    "Marie Dorval",
+    "Harriet Smithson",
+    "Rachel Félix",
+    "Sarah Siddons"
+   ],
+   "correct": "Harriet Smithson",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The story of the symphony came from Berlioz's despair and love for Harriet Smithson, who had dazzled him in a Paris production of Hamlet.",
+   "answerKind": "person",
+   "source": {
+    "url": "http://www.its.caltech.edu/~tan/Berliozreq/fantastique.html",
+    "title": "Hector Berlioz - Discussion on Symphonie Fantastique"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of Berlioz's work for speaker and music that was conceived as a sequel to the Symphonie fantastique and reuses its idée fixe?",
+   "answers": [
+    "Harold en Italie",
+    "Benvenuto Cellini",
+    "Les Troyens",
+    "Lélio"
+   ],
+   "correct": "Lélio",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Lélio, Op. 14b, mixes music with spoken text and is a sequel to the Symphonie fantastique. It begins and ends with the idée fixe.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/L%C3%A9lio",
+    "title": "Lélio"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The melody Berlioz used for the idée fixe was borrowed from his 1828 Prix de Rome entry that took second prize. What was that cantata?",
+   "answers": [
+    "La mort de Sardanapale",
+    "Le cinq mai",
+    "Herminie",
+    "La Damnation de Faust"
+   ],
+   "correct": "Herminie",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The idée fixe melody was lifted from Berlioz's 1828 cantata Herminie, which took second prize in his second attempt at the Prix de Rome.",
+   "source": {
+    "url": "https://www.bso.org/works/symphonie-fantastique",
+    "title": "Symphonie fantastique – Boston Symphony Orchestra"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the finale of Berlioz's Symphonie fantastique, the idée fixe returns as a trivial, vulgar dance tune. Which instrument plays it?",
+   "answers": [
+    "Piccolo",
+    "E-flat clarinet",
+    "English horn",
+    "Oboe"
+   ],
+   "correct": "E-flat clarinet",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "In the Witches' Sabbath finale the idée fixe is distorted into a dance tune played on the E-flat clarinet.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Symphonie_Fantastique_(Berlioz)",
+    "title": "Symphonie fantastique"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which conductor commissioned Bartók's Concerto for Orchestra in 1943 through his foundation?",
+   "answers": [
+    "Leopold Stokowski",
+    "Eugene Ormandy",
+    "Arturo Toscanini",
+    "Serge Koussevitzky"
+   ],
+   "correct": "Serge Koussevitzky",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The Koussevitzky Music Foundation commissioned the work in memory of Natalie Koussevitzky. Koussevitzky then led the Boston Symphony in the premiere.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.bso.org/works/concerto-for-orchestra",
+    "title": "Concerto for Orchestra – Boston Symphony Orchestra"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bartók's Concerto for Orchestra includes a satirical treatment of a march theme from which Shostakovich symphony?",
+   "answers": [
+    "Symphony No. 5",
+    "Symphony No. 10",
+    "Symphony No. 9",
+    "Symphony No. 7"
+   ],
+   "correct": "Symphony No. 7",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Bartók mocked the march theme from Shostakovich's Seventh (\"Leningrad\") Symphony, which he had heard on a radio broadcast.",
+   "source": {
+    "url": "https://sofiaphilharmonic.com/en/works/bela-bartok-concerto-for-orchestra",
+    "title": "Béla Bartók: Concerto for Orchestra – Sofia Philharmonic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Hungarian violinist and friend of Bartók helped spur Koussevitzky into commissioning the Concerto for Orchestra?",
+   "answers": [
+    "Jascha Heifetz",
+    "Joseph Szigeti",
+    "Yehudi Menuhin",
+    "Fritz Kreisler"
+   ],
+   "correct": "Joseph Szigeti",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Without Koussevitzky and Bartók's Hungarian friend Joseph Szigeti urging him on, Bartók might never have written the piece.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.bso.org/works/concerto-for-orchestra",
+    "title": "Concerto for Orchestra – Boston Symphony Orchestra"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why did Bartók call his 1943 work a concerto rather than a symphony?",
+   "answers": [
+    "Each orchestral section is treated in a soloistic, virtuosic way",
+    "Each movement is built as a strict fugue on a folk theme",
+    "The orchestra only accompanies a single solo instrument",
+    "The structure follows a dance suite rather than sonata form"
+   ],
+   "correct": "Each orchestral section is treated in a soloistic, virtuosic way",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Bartók said that since each instrument group is treated soloistically and virtuosically, he chose \"concerto\" over \"symphony\".",
+   "source": {
+    "url": "https://interlude.hk/bartok-concerto-orchestra-premiered-today-1944/",
+    "title": "Why Did Bartók Name This Work a \"Concerto for Orchestra\"?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Charles Ives's The Unanswered Question, which solo instrument repeatedly poses the question-like theme?",
+   "answers": [
+    "Solo cello",
+    "French horn",
+    "Trumpet",
+    "Trombone"
+   ],
+   "correct": "Trumpet",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Strings play simple harmonies while a trumpet repeats a question-like theme that the flutes answer dissonantly.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Unanswered-Question-by-Ives",
+    "title": "The Unanswered Question"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1908 Ives paired The Unanswered Question with which piece under the title Two Contemplations?",
+   "answers": [
+    "Three Places in New England",
+    "Central Park in the Dark",
+    "The Housatonic at Stockbridge",
+    "Washington's Birthday"
+   ],
+   "correct": "Central Park in the Dark",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Ives originally presented The Unanswered Question together with Central Park in the Dark as Two Contemplations.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Unanswered_Question",
+    "title": "The Unanswered Question"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Harlem venue hosted the early-1940s jam sessions where Gillespie, Parker, Monk and Kenny Clarke helped shape bebop?",
+   "answers": [
+    "Cotton Club",
+    "Savoy Ballroom",
+    "Village Vanguard",
+    "Minton's Playhouse"
+   ],
+   "correct": "Minton's Playhouse",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "From 1941 Gillespie, Parker, Monk and Clarke played together at Minton's Playhouse on 118th Street in Harlem.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/music/bebop/",
+    "title": "Bebop – EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which guitarist is named alongside Gillespie, Monk, Clarke and Parker among the originators of bebop?",
+   "answers": [
+    "Django Reinhardt",
+    "Charlie Christian",
+    "Wes Montgomery",
+    "Freddie Green"
+   ],
+   "correct": "Charlie Christian",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Britannica lists guitarist Charlie Christian among the players from whom bebop originated in the early 1940s.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/art/bebop",
+    "title": "Bebop"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Dizzy Gillespie's January 1945 recording \"Be-Bop\" was at first known by what title?",
+   "answers": [
+    "Gillespie's Stomp",
+    "Diz Goes Uptown",
+    "Bebop Boogie",
+    "Dizzy's Fingers"
+   ],
+   "correct": "Dizzy's Fingers",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Gillespie wrote and recorded the 78 in January 1945, and it was first known as Dizzy's Fingers. Disc jockeys and writers then adopted \"bebop\" for the style.",
+   "source": {
+    "url": "https://www.jazzwax.com/p/jazz-101-the-birth-of-bebop",
+    "title": "Jazz 101: The Birth of Bebop"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "From 1939 to 1941, Dizzy Gillespie was a principal soloist in the band of which bandleader?",
+   "answers": [
+    "Duke Ellington",
+    "Cab Calloway",
+    "Count Basie",
+    "Benny Goodman"
+   ],
+   "correct": "Cab Calloway",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Gillespie was one of the principal soloists in Cab Calloway's band between 1939 and 1941.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://jazz.fm/dizzy-gillespie-a-founding-father-of-the-bebop-revolution/",
+    "title": "Dizzy Gillespie: a founding father of the 'bebop' revolution"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pianist played instead of Bill Evans on the blues-oriented \"Freddie Freeloader\" from Kind of Blue?",
+   "answers": [
+    "Red Garland",
+    "Herbie Hancock",
+    "Wynton Kelly",
+    "Thelonious Monk"
+   ],
+   "correct": "Wynton Kelly",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Davis had Wynton Kelly play on \"Freddie Freeloader\", the album's most blues-oriented track, in place of Bill Evans.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Kind_of_Blue",
+    "title": "Kind of Blue"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Miles Davis composition \"So What\" is set in which mode?",
+   "answers": [
+    "Mixolydian",
+    "Lydian",
+    "Phrygian",
+    "Dorian"
+   ],
+   "correct": "Dorian",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "\"So What\" is modal jazz built on 16 bars of D Dorian, eight of E♭ Dorian and eight more of D Dorian.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/So_What_(Miles_Davis_composition)",
+    "title": "So What (Miles Davis composition)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bill Evans's liner notes describe \"All Blues\" as a twelve-measure blues form in which time signature?",
+   "answers": [
+    "4/4",
+    "6/8",
+    "3/4",
+    "5/4"
+   ],
+   "correct": "6/8",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The liner notes call it a 6/8 twelve-measure blues form that gets its mood from a few modal changes.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/All_Blues",
+    "title": "All Blues"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which drummer joined bassist Paul Chambers in the rhythm section on Kind of Blue?",
+   "answers": [
+    "Art Blakey",
+    "Philly Joe Jones",
+    "Elvin Jones",
+    "Jimmy Cobb"
+   ],
+   "correct": "Jimmy Cobb",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The Library of Congress essay notes that Paul Chambers and drummer Jimmy Cobb kept the music swinging on the album.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.loc.gov/static/programs/national-recording-preservation-board/documents/KindOfBlue.pdf",
+    "title": "\"Kind of Blue\"--Miles Davis (1959) Added to the National Registry: 2002"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these was an early name for the theremin?",
+   "answers": [
+    "Sonovox",
+    "Trautonium",
+    "Ondes",
+    "Ætherphone"
+   ],
+   "correct": "Ætherphone",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The theremin was originally known as the ætherphone, etherphone, thereminophone or termenvox.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Theremin",
+    "title": "Theremin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On a theremin, how does the player raise the pitch?",
+   "answers": [
+    "Moving a hand away from the pitch antenna",
+    "Moving a hand closer to the volume antenna",
+    "Pressing a foot pedal harder",
+    "Moving a hand closer to the pitch antenna"
+   ],
+   "correct": "Moving a hand closer to the pitch antenna",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Higher notes come from moving the hand closer to the pitch antenna. Louder notes come from moving the hand away from the volume antenna.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Theremin",
+    "title": "Theremin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which modern instrument is routinely used to play the parts J.S. Bach wrote for the oboe da caccia?",
+   "answers": [
+    "Bass clarinet",
+    "English horn",
+    "Bassoon",
+    "Oboe d'amore"
+   ],
+   "correct": "English horn",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The oboe da caccia is an alto oboe and a forerunner of the English horn, which is now sometimes used for Bach's parts for it.",
+   "source": {
+    "url": "https://www.britannica.com/art/oboe-da-caccia",
+    "title": "Oboe da caccia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Bach work is a famous example of combining two viole da braccio with two viole da gamba?",
+   "answers": [
+    "Brandenburg Concerto No. 2",
+    "Brandenburg Concerto No. 4",
+    "Brandenburg Concerto No. 5",
+    "Brandenburg Concerto No. 6"
+   ],
+   "correct": "Brandenburg Concerto No. 6",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Bach's Sixth Brandenburg Concerto (1721) pairs two viole da braccio with two viole da gamba.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Viola_da_braccio",
+    "title": "Viola da braccio"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Messiaen's Quartet for the End of Time is scored for violin, cello, piano and which wind instrument?",
+   "answers": [
+    "Flute",
+    "Oboe",
+    "Clarinet",
+    "Bassoon"
+   ],
+   "correct": "Clarinet",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The eight-movement quartet is for clarinet, violin, cello and piano, the instruments and players available in the prison camp.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Quartet-for-the-End-of-Time",
+    "title": "Quartet for the End of Time"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which biblical text did Messiaen cite in his preface as the subject and inspiration of the Quartet for the End of Time?",
+   "answers": [
+    "The Book of Daniel",
+    "The Book of Job",
+    "The Book of Ezekiel",
+    "The Book of Revelation"
+   ],
+   "correct": "The Book of Revelation",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Messiaen cited verses from chapter 10 of the Revelation of John as the work's subject and direct inspiration.",
+   "source": {
+    "url": "https://www2.lawrence.edu/dept/it/musicguides/mq/",
+    "title": "Olivier Messiaen :: Quatuor pour la Fin du Temps"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Messiaen's Quartet for the End of Time often uses rhythmic patterns based on which kind of numbers?",
+   "answers": [
+    "Fibonacci numbers",
+    "Square numbers",
+    "Perfect numbers",
+    "Prime numbers"
+   ],
+   "correct": "Prime numbers",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Britannica notes his patterns are frequently based on prime numbers, especially 5, 7, 11 and 13.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Quartet-for-the-End-of-Time",
+    "title": "Quartet for the End of Time"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1936 Pravda editorial \"Muddle Instead of Music\" condemned which Shostakovich opera?",
+   "answers": [
+    "The Nose",
+    "The Gamblers",
+    "Lady Macbeth of the Mtsensk District",
+    "Moscow, Cheryomushki"
+   ],
+   "correct": "Lady Macbeth of the Mtsensk District",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Stalin saw Lady Macbeth in 1936, and the Pravda review condemned it. Shostakovich then withdrew his Fourth Symphony and wrote his Fifth.",
+   "source": {
+    "url": "https://houstonsymphony.org/a-soviets-response-to-just-criticism-shostakovich-symphony-no-5/",
+    "title": "A Soviet's Response to Just Criticism - Shostakovich Symphony No. 5"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year was Shostakovich's Fourth Symphony, withdrawn before its planned premiere, first heard?",
+   "answers": [
+    "1948",
+    "1953",
+    "1961",
+    "1975"
+   ],
+   "correct": "1961",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Shostakovich shelved the Fourth Symphony in 1936 amid official criticism, and it was not heard until 1961.",
+   "source": {
+    "url": "https://thelistenersclub.com/2020/11/11/shostakovichs-fifth-symphony-the-unlikely-triumph-of-freedom/",
+    "title": "Shostakovich's Fifth Symphony: The Unlikely Triumph of Freedom"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who wrote the libretto for Monteverdi's L'Orfeo?",
+   "answers": [
+    "Ottavio Rinuccini",
+    "Alessandro Striggio",
+    "Lorenzo Da Ponte",
+    "Pietro Metastasio"
+   ],
+   "correct": "Alessandro Striggio",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "L'Orfeo (1607) is an opera by Claudio Monteverdi with a libretto by Alessandro Striggio.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/L'Orfeo",
+    "title": "L'Orfeo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The earliest surviving opera, Euridice, is the work of which composer?",
+   "answers": [
+    "Francesco Cavalli",
+    "Heinrich Schütz",
+    "Jean-Baptiste Lully",
+    "Jacopo Peri"
+   ],
+   "correct": "Jacopo Peri",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Jacopo Peri's Dafne is generally recognised as the first opera, and his Euridice is the earliest that survives. Monteverdi's L'Orfeo is the earliest still regularly performed.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/L'Orfeo",
+    "title": "L'Orfeo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city was Monteverdi's L'Orfeo first performed in 1607?",
+   "answers": [
+    "Venice",
+    "Florence",
+    "Mantua",
+    "Ferrara"
+   ],
+   "correct": "Mantua",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "L'Orfeo was written for a court performance during the annual Carnival at Mantua and first performed at the Ducal Palace there.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/L'Orfeo",
+    "title": "L'Orfeo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the title of the collection Il cimento dell'armonia e dell'inventione, which opens with Vivaldi's The Four Seasons, mean in English?",
+   "answers": [
+    "The Struggle of Passion and Reason",
+    "The Contest between Harmony and Invention",
+    "The Dance of Heaven and Earth",
+    "The Trial of Melody and Rhythm"
+   ],
+   "correct": "The Contest between Harmony and Invention",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The Four Seasons are the first four concertos of Vivaldi's collection \"The Contest between Harmony and Invention\".",
+   "source": {
+    "url": "https://courses.lumenlearning.com/suny-musicapp-medieval-modern/chapter/antonio-vivaldi/",
+    "title": "Antonio Vivaldi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Around 1706, which ailment forced the newly ordained Vivaldi to give up saying Mass?",
+   "answers": [
+    "Gout",
+    "Deafness",
+    "Tuberculosis",
+    "Asthma"
+   ],
+   "correct": "Asthma",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Asthmatic attacks forced Vivaldi, a newly ordained priest, to stop reciting Mass around 1706.",
+   "source": {
+    "url": "https://www.classical-music.com/features/composers/antonio-vivaldi",
+    "title": "Antonio Vivaldi: The Four Seasons and beyond"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Leonard Bernstein's 1973 Norton Lectures at Harvard took their title from a piece by which composer?",
+   "answers": [
+    "Aaron Copland",
+    "Charles Ives",
+    "Samuel Barber",
+    "John Cage"
+   ],
+   "correct": "Charles Ives",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Ives's The Unanswered Question inspired Bernstein's Norton Lectures of the same title at Harvard in 1973.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://timbreandorchestration.org/writings/amazing-moments-in-timbre/2019/4/28/the-unanswered-question",
+    "title": "The Unanswered Question"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which instrument did Dizzy Gillespie play at about twelve, before taking up the trumpet at fourteen?",
+   "answers": [
+    "Clarinet",
+    "Alto saxophone",
+    "Violin",
+    "Trombone"
+   ],
+   "correct": "Trombone",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Gillespie played the trombone at about twelve and took up the trumpet at fourteen.",
+   "source": {
+    "url": "https://jazz.fm/dizzy-gillespie-a-founding-father-of-the-bebop-revolution/",
+    "title": "Dizzy Gillespie: a founding father of the 'bebop' revolution"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the name of the first label Berry Gordy formed in 1959, which later grew into Motown?",
+   "answers": [
+    "Stax Records",
+    "Chess Records",
+    "Philles Records",
+    "Tamla Records"
+   ],
+   "correct": "Tamla Records",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Gordy formed Tamla Records in 1959 and bought the Detroit house that became Hitsville U.S.A.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Hitsville_U.S.A.",
+    "title": "Hitsville U.S.A."
+   },
+   "ai_written": true
+  },
+  {
+   "question": "When Motown moved its headquarters to Los Angeles in 1972, which Gordy family member refused to move and ran the remaining Detroit office?",
+   "answers": [
+    "Raynoma Gordy Singleton",
+    "Kerry Gordy",
+    "Anna Gordy Gaye",
+    "Esther Gordy Edwards"
+   ],
+   "correct": "Esther Gordy Edwards",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Esther Gordy Edwards refused to move to California and was put in charge of what remained of the Detroit office in the Hitsville building.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Hitsville_U.S.A.",
+    "title": "Hitsville U.S.A."
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1988 Berry Gordy sold Motown to which company?",
+   "answers": [
+    "CBS Records",
+    "Warner Bros. Records",
+    "MCA",
+    "EMI"
+   ],
+   "correct": "MCA",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Gordy sold Motown in 1988 to MCA and the investment firm Boston Ventures. Boston Ventures later sold it to PolyGram, in 1993.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/Motown/607036",
+    "title": "Motown – Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Texas city did Robert Johnson make his first recordings in November 1936?",
+   "answers": [
+    "Dallas",
+    "Houston",
+    "Austin",
+    "San Antonio"
+   ],
+   "correct": "San Antonio",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Johnson's first session took place on 23, 26 and 27 November 1936 at the Gunter Hotel in San Antonio. His second round of recordings was made in Dallas in 1937.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Complete_Recordings_(Robert_Johnson_album)",
+    "title": "The Complete Recordings (Robert Johnson album)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who produced Robert Johnson's 1936 and 1937 recording sessions?",
+   "answers": [
+    "Sam Phillips",
+    "Leonard Chess",
+    "Don Law",
+    "John Hammond"
+   ],
+   "correct": "Don Law",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Both of Johnson's recording sessions, in San Antonio and Dallas, were produced by Don Law.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Robert_Johnson",
+    "title": "Robert Johnson"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Robert Johnson's two recording sessions produced how many distinct songs?",
+   "answers": [
+    "17",
+    "42",
+    "29",
+    "59"
+   ],
+   "correct": "29",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The two sessions produced 29 distinct songs, plus surviving alternate takes.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Robert_Johnson",
+    "title": "Robert Johnson"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The title of Robert Johnson's \"32-20 Blues\" refers to what?",
+   "answers": [
+    "A railroad timetable",
+    "A bus route number",
+    "A guitar tuning",
+    "Winchester cartridge ammunition"
+   ],
+   "correct": "Winchester cartridge ammunition",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The title refers to .32-20 Winchester ammunition, which could be used in handguns and smaller rifles.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/32-20_Blues",
+    "title": "32-20 Blues"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who played the prominent harpsichord part on the Beatles' \"Fixing a Hole\"?",
+   "answers": [
+    "Billy Preston",
+    "Nicky Hopkins",
+    "George Martin",
+    "Geoff Emerick"
+   ],
+   "correct": "George Martin",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Producer George Martin played the harpsichord part because McCartney felt it important to perform the bass part himself.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Fixing_a_Hole",
+    "title": "Fixing a Hole"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For the first session of \"Fixing a Hole\", the Beatles used which London studio, their first British studio other than Abbey Road for an EMI recording?",
+   "answers": [
+    "Olympic Sound Studios",
+    "IBC Studios",
+    "Trident Studios",
+    "Regent Sound Studios"
+   ],
+   "correct": "Regent Sound Studios",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Abbey Road was unavailable on 9 February 1967, so the band recorded the first session at Regent Sound.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Fixing_a_Hole",
+    "title": "Fixing a Hole"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The crowd sounds heard at the start of the Beatles' \"Sgt. Pepper's Lonely Hearts Club Band\" were recorded by George Martin during a live recording of which stage show?",
+   "answers": [
+    "Oh! Calcutta!",
+    "The Mousetrap",
+    "Beyond the Fringe",
+    "Hair"
+   ],
+   "correct": "Beyond the Fringe",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "The crowd sounds were recorded in the early 1960s by Martin during a live recording of the stage show Beyond the Fringe.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sgt._Pepper's_Lonely_Hearts_Club_Band_(song)",
+    "title": "Sgt. Pepper's Lonely Hearts Club Band (song)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which band, recording in a neighbouring studio, gained entry to a Beatles session for \"Lovely Rita\"?",
+   "answers": [
+    "The Kinks",
+    "The Rolling Stones",
+    "The Zombies",
+    "Pink Floyd"
+   ],
+   "correct": "Pink Floyd",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Pink Floyd were recording next door and got into the \"Lovely Rita\" session through their producer, Norman Smith, a former Beatles engineer.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Lovely_Rita",
+    "title": "Lovely Rita"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Beatles road manager suggested that Sgt. Pepper act as compère and that the album have a reprise at the end?",
+   "answers": [
+    "Neil Aspinall",
+    "Brian Epstein",
+    "Derek Taylor",
+    "Geoff Emerick"
+   ],
+   "correct": "Neil Aspinall",
+   "difficulty": "hard",
+   "category": "Music",
+   "explain": "Road manager Neil Aspinall suggested both Sgt. Pepper as compère and the reprise at the album's end.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sgt._Pepper's_Lonely_Hearts_Club_Band_(song)",
+    "title": "Sgt. Pepper's Lonely Hearts Club Band (song)"
+   },
+   "ai_written": true
+  }
+ ]
+}

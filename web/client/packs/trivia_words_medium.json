@@ -1,0 +1,924 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Words trivia (medium)",
+ "description": "50 medium questions about word meanings, origins, spelling, idioms, grammar. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "A contronym, a word that is its own opposite, is also called a \"Janus word\" after a Roman god. What is that god usually shown with?",
+   "answers": [
+    "Two faces",
+    "Winged feet",
+    "A trident",
+    "A lyre"
+   ],
+   "correct": "Two faces",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Janus word comes from the Roman god Janus, who is usually depicted with two faces, like a word with two opposite meanings.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Contronym",
+    "title": "Contronym - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which verb can mean both \"to officially approve\" and \"to impose penalties on\"?",
+   "answers": [
+    "Condone",
+    "Censure",
+    "Sanction",
+    "Rebuke"
+   ],
+   "correct": "Sanction",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Sanction is a common contronym. A government can sanction a country by punishing it, or sanction a policy by approving it.",
+   "source": {
+    "url": "https://www.vocabulary.com/dictionary/contronym",
+    "title": "Contronym - Definition, Meaning & Synonyms - Vocabulary.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which everyday verb can mean either to cover something with fine particles or to remove fine particles from it?",
+   "answers": [
+    "Polish",
+    "Scour",
+    "Rinse",
+    "Dust"
+   ],
+   "correct": "Dust",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Dust is a contronym. You can dust a rolling pin with flour, or dust a bookshelf to remove dust.",
+   "source": {
+    "url": "https://www.vocabulary.com/dictionary/contronym",
+    "title": "Contronym - Definition, Meaning & Synonyms - Vocabulary.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why does the verb \"cleave\" mean both \"to split apart\" and \"to stick closely\"?",
+   "answers": [
+    "It merged two separate Old English words",
+    "It was once spelled backwards in Latin",
+    "It came from a medieval legal term",
+    "It was altered by Shakespeare's plays"
+   ],
+   "correct": "It merged two separate Old English words",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Cleave comes from two different Old English words, clēofan and cleofian. They ended up with one modern spelling and opposite meanings.",
+   "source": {
+    "url": "https://www.thesaurus.com/articles/11-contronyms-youve-been-using-without-realizing-it",
+    "title": "Contronyms You've Been Using Without Realizing It - Thesaurus.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who coined the term \"portmanteau word\" for a blend of two words, in Through the Looking-Glass (1871)?",
+   "answers": [
+    "Edward Lear",
+    "Charles Dickens",
+    "J. M. Barrie",
+    "Lewis Carroll"
+   ],
+   "correct": "Lewis Carroll",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Lewis Carroll first applied the luggage term \"portmanteau\" to combined words in Through the Looking-Glass.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Portmanteau",
+    "title": "Portmanteau - Wikipedia"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Lewis Carroll coined \"chortle\" in \"Jabberwocky\". Which two words is it likely a blend of?",
+   "answers": [
+    "Cackle and giggle",
+    "Chirp and rattle",
+    "Chuckle and snort",
+    "Chant and bellow"
+   ],
+   "correct": "Chuckle and snort",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Chortle is likely a portmanteau of \"chuckle\" and \"snort\".",
+   "source": {
+    "url": "https://www.csmonitor.com/Arts-Culture/In-a-Word/2023/1018/Slithy-chortle-and-other-portmanteau-words",
+    "title": "'Slithy,' 'chortle,' and other portmanteau words - CSMonitor.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Through the Looking-Glass, Humpty Dumpty explains that \"slithy\" means \"lithe and\" which other adjective?",
+   "answers": [
+    "Sleepy",
+    "Slimy",
+    "Sinister",
+    "Sullen"
+   ],
+   "correct": "Slimy",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Humpty Dumpty says \"slithy\" means \"lithe and slimy\", which he compares to a portmanteau with two meanings packed into one word.",
+   "source": {
+    "url": "https://www.dictionary.com/articles/words-invented-by-lewis-carroll",
+    "title": "The Frabjous Words Invented By Lewis Carroll - Dictionary.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Before Lewis Carroll applied it to words, what did \"portmanteau\" literally refer to?",
+   "answers": [
+    "A cloak with a built-in hood",
+    "A suitcase hinged in two halves",
+    "A hat box for travellers",
+    "A small coach for two"
+   ],
+   "correct": "A suitcase hinged in two halves",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "A portmanteau was an old-style suitcase made of two halves hinged together. Carroll used it as an image for two meanings packed into one word.",
+   "source": {
+    "url": "https://www.macquariedictionary.com.au/portmanteau-words/",
+    "title": "Portmanteau words - Macquarie Dictionary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word \"podcast\" is a portmanteau of \"broadcast\" and the name of which product?",
+   "answers": [
+    "Podium",
+    "iPod",
+    "Palm Pilot",
+    "Walkman"
+   ],
+   "correct": "iPod",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Podcast blends the brand name iPod with broadcast.",
+   "source": {
+    "url": "https://interestingliterature.com/2020/04/what-is-a-portmanteau-word-definition-introduction-examples/",
+    "title": "What is a Portmanteau Word? - Interesting Literature"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The English word \"salary\" comes from Latin \"salarium\", a derivative of the Latin word for which substance?",
+   "answers": [
+    "Soldier",
+    "Silver",
+    "Salt",
+    "Steward"
+   ],
+   "correct": "Salt",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Salarium derives from sal, \"salt\". The popular story that Roman soldiers were paid in salt goes back to Pliny, but modern scholars doubt it.",
+   "source": {
+    "url": "https://www.merriam-webster.com/dictionary/salary",
+    "title": "SALARY Definition & Meaning - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The term \"malapropism\" comes from a character in which 1775 play by Richard Brinsley Sheridan?",
+   "answers": [
+    "The School for Scandal",
+    "She Stoops to Conquer",
+    "The Beggar's Opera",
+    "The Rivals"
+   ],
+   "correct": "The Rivals",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Mrs Malaprop, who misuses words, is a character in Sheridan's 1775 play The Rivals.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Malapropism",
+    "title": "Malapropism - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Sheridan took the name \"Malaprop\" from a French term. What does that term, \"mal à propos\", mean?",
+   "answers": [
+    "Badly spoken",
+    "Out of tune",
+    "Poorly written",
+    "Inappropriate"
+   ],
+   "correct": "Inappropriate",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Sheridan took the name from the French mal à propos, meaning \"inappropriate\".",
+   "source": {
+    "url": "https://www.merriam-webster.com/dictionary/malapropism",
+    "title": "MALAPROPISM Definition & Meaning - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Mrs Malaprop praises a young man as \"the very pineapple of politeness\". Which word did she mean to say?",
+   "answers": [
+    "Pinnacle",
+    "Pillager",
+    "Pittance",
+    "Penance"
+   ],
+   "correct": "Pinnacle",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Mrs Malaprop's \"pineapple\" is a mistake for \"pinnacle\". It is the classic example of a malapropism.",
+   "source": {
+    "url": "https://www.encyclopedia.com/literature-and-arts/language-linguistics-and-literary-terms/language-and-linguistics/malapropism",
+    "title": "Malapropism - Encyclopedia.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Spoonerisms, which swap the opening sounds of words, are named after which Oxford clergyman and academic?",
+   "answers": [
+    "Benjamin Jowett",
+    "William Whewell",
+    "John Henry Newman",
+    "William Archibald Spooner"
+   ],
+   "correct": "William Archibald Spooner",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The Reverend William Archibald Spooner (1844–1930) was an Oxford don who was reputed to make such slips.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Spoonerism",
+    "title": "Spoonerism - Wikipedia"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which phrase is a classic spoonerism of \"our dear old Queen\"?",
+   "answers": [
+    "Our queer old dean",
+    "Our dear old quean",
+    "Your near old queen",
+    "Our deer old Queen"
+   ],
+   "correct": "Our queer old dean",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Swapping the opening sounds of \"dear\" and \"Queen\" gives \"queer old dean\", the example attributed to Spooner.",
+   "source": {
+    "url": "https://www.studiobinder.com/blog/what-is-a-spoonerism-definition/",
+    "title": "What is a Spoonerism — Definition & Examples Explained - StudioBinder"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "William Spooner, the man behind \"spoonerism\", was Warden of which Oxford college?",
+   "answers": [
+    "Balliol College",
+    "Magdalen College",
+    "New College",
+    "Christ Church"
+   ],
+   "correct": "New College",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Spooner was Warden of New College, Oxford.",
+   "source": {
+    "url": "https://poemanalysis.com/figurative-language/spoonerism/",
+    "title": "Spoonerism - Definition and Examples - Poem Analysis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which wordplay form, in which the writer avoids one or more letters, is described as the opposite of a pangram?",
+   "answers": [
+    "Palindrome",
+    "Lipogram",
+    "Acrostic",
+    "Anagram"
+   ],
+   "correct": "Lipogram",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "A pangram uses every letter of the alphabet, while a lipogram deliberately omits one or more letters.",
+   "source": {
+    "url": "https://dictionary.cambridge.org/dictionary/english/pangram",
+    "title": "PANGRAM - Cambridge Dictionary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which lipogrammatic novel by Mark Dunn is built around the \"quick brown fox\" pangram?",
+   "answers": [
+    "Lettered Lives",
+    "The Missing Vowel",
+    "Ella Minnow Pea",
+    "Fox and Hound"
+   ],
+   "correct": "Ella Minnow Pea",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Mark Dunn's Ella Minnow Pea is built around the \"quick brown fox\" pangram and its inventor.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_quick_brown_fox_jumps_over_the_lazy_dog",
+    "title": "The quick brown fox jumps over the lazy dog - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which author's 1891 novel The Light That Failed contains the first known figurative use of \"bite the bullet\"?",
+   "answers": [
+    "Robert Louis Stevenson",
+    "Thomas Hardy",
+    "Arthur Conan Doyle",
+    "Rudyard Kipling"
+   ],
+   "correct": "Rudyard Kipling",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The first known written use of \"bite the bullet\" as an idiom is in Rudyard Kipling's 1891 book The Light That Failed.",
+   "source": {
+    "url": "https://www.thehistoryofenglish.com/bite-the-bullet-meaning-origin-usage",
+    "title": "Bite the Bullet – Meaning, Origin & Usage"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Library of Congress lists several theories for \"raining cats and dogs\". Which one does it label a false theory?",
+   "answers": [
+    "Odin's storm dogs and wind",
+    "A Greek phrase for \"contrary to belief\"",
+    "Pets washed out of thatched roofs",
+    "A corrupted word for \"waterfall\""
+   ],
+   "correct": "Pets washed out of thatched roofs",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The Library of Congress calls the idea that cats and dogs cuddled in thatch and were washed out a false theory. The other explanations it lists are suggestions from etymologists.",
+   "source": {
+    "url": "https://www.loc.gov/everyday-mysteries/meteorology-climatology/item/what-is-the-origin-of-the-phrase-its-raining-cats-and-dogs/",
+    "title": "What is the origin of the phrase \"it's raining cats and dogs?\" - Library of Congress"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The idiom \"spill the beans\" is said to come from an ancient practice of doing what with beans?",
+   "answers": [
+    "Telling fortunes by scattering them",
+    "Paying tribute with them",
+    "Voting by placing them in jars",
+    "Counting soldiers with them"
+   ],
+   "correct": "Voting by placing them in jars",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The phrase is said to originate from an ancient voting method in which beans were deposited in jars. A spilled jar would reveal the result early.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Idiom",
+    "title": "Idiom - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The cardigan is named after the 7th Earl of Cardigan, who wore a buttoned wool garment while leading what in 1854?",
+   "answers": [
+    "The Charge of the Light Brigade",
+    "The Siege of Sevastopol",
+    "The Battle of Waterloo",
+    "The Relief of Lucknow"
+   ],
+   "correct": "The Charge of the Light Brigade",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "James Brudenell, 7th Earl of Cardigan, led the famous Charge of the Light Brigade in the Crimean War, and the sweater took his title.",
+   "source": {
+    "url": "https://www.csmonitor.com/Arts-Culture/In-a-Word/2020/0917/People-who-lent-their-names-to-words",
+    "title": "Are 'sandwich' and 'cardigan' named after real people? - CSMonitor.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word \"boycott\" comes from a land agent who was ostracized by tenants in which country?",
+   "answers": [
+    "Scotland",
+    "Ireland",
+    "Jamaica",
+    "India"
+   ],
+   "correct": "Ireland",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Captain Charles C. Boycott was a land agent who was ostracized by the Irish for his poor treatment of them.",
+   "source": {
+    "url": "https://www.yourdictionary.com/articles/eponym-meaning-examples",
+    "title": "What Is an Eponym? Meaning and Popular Examples - YourDictionary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which women's rights activist gave her name to a type of garment?",
+   "answers": [
+    "Susan B. Anthony",
+    "Elizabeth Cady Stanton",
+    "Lucy Stone",
+    "Amelia Bloomer"
+   ],
+   "correct": "Amelia Bloomer",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Bloomers take their name from women's rights activist Amelia Bloomer.",
+   "source": {
+    "url": "https://www.yourdictionary.com/articles/eponym-meaning-examples",
+    "title": "What Is an Eponym? Meaning and Popular Examples - YourDictionary"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "\"Sideburns\" are named after a general famous for his facial hair. Who was he?",
+   "answers": [
+    "Ulysses Grant",
+    "Ambrose Burnside",
+    "Robert E. Lee",
+    "George Custer"
+   ],
+   "correct": "Ambrose Burnside",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Sideburns are an eponym from General Ambrose Burnside, who had impressive facial hair.",
+   "source": {
+    "url": "https://englishmeasure.com/en/articles/complete-guide-english-eponyms",
+    "title": "English eponyms revealed: Words named after people"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Caesar salad is named after which person?",
+   "answers": [
+    "Julius Caesar",
+    "Cesare Borgia",
+    "Caesar Cardini",
+    "Augustus Caesar"
+   ],
+   "correct": "Caesar Cardini",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The salad is named for the chef and restaurateur Caesar Cardini, not the Roman ruler.",
+   "source": {
+    "url": "https://englishmeasure.com/en/articles/complete-guide-english-eponyms",
+    "title": "English eponyms revealed: Words named after people"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "\"Nicotine\" is named after which man, who introduced tobacco to France?",
+   "answers": [
+    "Jacques Cartier",
+    "Pierre Ronsard",
+    "Michel de Montaigne",
+    "Jean Nicot"
+   ],
+   "correct": "Jean Nicot",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Nicotine takes its name from Jean Nicot, who introduced tobacco to France.",
+   "source": {
+    "url": "https://www.ethiostarlocalization.com/50-words-named-after-people-the-fascinating-world-of-eponyms/",
+    "title": "50 Words Named After People: The Fascinating World of Eponyms"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The word \"mausoleum\" comes from the name of which ruler, whose grand tomb became one of the Seven Wonders?",
+   "answers": [
+    "Cyrus",
+    "Mausolus",
+    "Croesus",
+    "Xerxes"
+   ],
+   "correct": "Mausolus",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Mausoleum comes from Mausolus, a Persian satrap whose grand tomb became one of the Seven Wonders of the ancient world.",
+   "source": {
+    "url": "https://www.ethiostarlocalization.com/50-words-named-after-people-the-fascinating-world-of-eponyms/",
+    "title": "50 Words Named After People: The Fascinating World of Eponyms"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The word \"maverick\" comes from the surname of Samuel Maverick. What was he?",
+   "answers": [
+    "Sea captain",
+    "Newspaper editor",
+    "Rancher",
+    "Gold miner"
+   ],
+   "correct": "Rancher",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Maverick is an eponym from the rancher Samuel Maverick.",
+   "source": {
+    "url": "https://thevocabulary.app/blogs/words-named-after-real-people",
+    "title": "15 Everyday Words That Are Named After Real People"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word \"algorithm\" derives from the name of which medieval mathematician?",
+   "answers": [
+    "Avicenna",
+    "Omar Khayyam",
+    "Averroes",
+    "Al-Khwarizmi"
+   ],
+   "correct": "Al-Khwarizmi",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Algorithm is an eponym from the mathematician al-Khwārizmī.",
+   "source": {
+    "url": "https://www.lexistry.com/eponyms",
+    "title": "Eponyms — Words Named After Real People"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Greek roots of \"oxymoron\" combine which two meanings?",
+   "answers": [
+    "Bitter and sweet",
+    "Strange and small",
+    "Sharp and foolish",
+    "Loud and quiet"
+   ],
+   "correct": "Sharp and foolish",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Oxymoron comes from Greek oxys, \"sharp, keen\", and mōros, \"foolish\", so it literally means \"pointedly foolish\".",
+   "source": {
+    "url": "https://www.merriam-webster.com/dictionary/oxymoron",
+    "title": "OXYMORON Definition & Meaning - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which everyday word shares its Greek root meaning \"foolish\" with \"oxymoron\"?",
+   "answers": [
+    "Morose",
+    "Mormon",
+    "Moron",
+    "Oxygen"
+   ],
+   "correct": "Moron",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Both oxymoron and moron come from the Greek word mōros, meaning \"foolish\".",
+   "source": {
+    "url": "https://www.merriam-webster.com/dictionary/oxymoron",
+    "title": "OXYMORON Definition & Meaning - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is an accepted plural of \"oxymoron\"?",
+   "answers": [
+    "Oxymorae",
+    "Oxymoroi",
+    "Oxymora",
+    "Oxymori"
+   ],
+   "correct": "Oxymora",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Merriam-Webster gives the plural as oxymorons or oxymora.",
+   "source": {
+    "url": "https://www.merriam-webster.com/dictionary/oxymoron",
+    "title": "OXYMORON Definition & Meaning - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Greek origin of \"onomatopoeia\" means roughly what?",
+   "answers": [
+    "Sound-writing",
+    "Echo-speaking",
+    "Voice-copying",
+    "Name-making"
+   ],
+   "correct": "Name-making",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Onomatopoeia comes from Ancient Greek onoma (\"name\") plus poiéō (\"making\"), meaning \"name-making\".",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Onomatopoeia",
+    "title": "Onomatopoeia - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the list \"pancakes, scrambled eggs, and bacon\", which comma is the Oxford comma?",
+   "answers": [
+    "The one right after \"pancakes\"",
+    "Both commas in the list",
+    "The one just before \"and\"",
+    "There is none in this list"
+   ],
+   "correct": "The one just before \"and\"",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The Oxford (serial) comma is the comma placed before the conjunction in a list of three or more items.",
+   "source": {
+    "url": "https://www.scribbr.com/commas/serial-comma/",
+    "title": "Serial Comma | Rules, Examples & Definition - Scribbr"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Besides \"serial comma\", what other name is the Oxford comma known by?",
+   "answers": [
+    "Cambridge comma",
+    "Harvard comma",
+    "Yale comma",
+    "Boston comma"
+   ],
+   "correct": "Harvard comma",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The serial comma is also called the Oxford comma or the Harvard comma.",
+   "source": {
+    "url": "https://www.scribbr.com/commas/serial-comma/",
+    "title": "Serial Comma | Rules, Examples & Definition - Scribbr"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Shakespeare is credited with the word \"alligator\". In which of his plays does it appear?",
+   "answers": [
+    "Othello",
+    "The Tempest",
+    "Romeo and Juliet",
+    "Macbeth"
+   ],
+   "correct": "Romeo and Juliet",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The Shakespeare Birthplace Trust's list of coined words credits \"alligator\" to Romeo and Juliet.",
+   "source": {
+    "url": "https://media.shakespeare.org.uk/documents/PFS-Classroom_Resources-Game_4-Invented_Words.pdf",
+    "title": "Shakespeare's invented words - Shakespeare Birthplace Trust"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Shakespeare is credited with first using \"lonely\" in which play?",
+   "answers": [
+    "King Lear",
+    "Hamlet",
+    "Twelfth Night",
+    "Coriolanus"
+   ],
+   "correct": "Coriolanus",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Shakespeare was the first to use the word \"lonely\", in Coriolanus.",
+   "source": {
+    "url": "https://www.ef.edu/blog/language/words-phrases-shakespeare-invented/",
+    "title": "20 words and phrases you didn't know Shakespeare invented - EF GO Blog"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Othello, Shakespeare's \"addiction\" described a state of being what?",
+   "answers": [
+    "Sick with fever",
+    "Tempted by wine",
+    "Bound by debt",
+    "Devoted to something"
+   ],
+   "correct": "Devoted to something",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "In Othello, \"addiction\" meant being dedicated or devoted to a thing. It was not yet tied to bad habits.",
+   "source": {
+    "url": "https://thewritelife.com/50-phrases-and-words-invented-by-shakespeare/",
+    "title": "50 Common Words Invented by Shakespeare We Still Use Today"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Shakespeare's \"bandit\" comes from an Italian word for people who had been what?",
+   "answers": [
+    "Bribed",
+    "Branded",
+    "Banned",
+    "Bankrupt"
+   ],
+   "correct": "Banned",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "\"Bandit\" comes from the Italian word for people who were \"banned\", meaning outlaws.",
+   "source": {
+    "url": "https://media.shakespeare.org.uk/documents/PFS-Classroom_Resources-Game_4-Invented_Words.pdf",
+    "title": "Shakespeare's invented words - Shakespeare Birthplace Trust"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "\"Algebra\" comes from the Arabic \"al-jabr\". What did that term refer to?",
+   "answers": [
+    "Counting by tens",
+    "Measuring the stars",
+    "Dividing a whole",
+    "Restoring broken parts"
+   ],
+   "correct": "Restoring broken parts",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Al-jabr means the restoration of broken parts, an idea of restoring balance from 9th-century Arabic mathematics.",
+   "source": {
+    "url": "https://www.thecollector.com/english-words-arabic-origins/",
+    "title": "10 English Words With Arabic Origins - TheCollector"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word \"zero\" traces back to an Arabic word, \"sifr\". What did it mean?",
+   "answers": [
+    "Circle",
+    "Whole",
+    "Secret",
+    "Empty"
+   ],
+   "correct": "Empty",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Fibonacci took the Arabic sifr, meaning \"empty\" or \"nothing\", and Latinized it, and it became our word zero.",
+   "source": {
+    "url": "https://theweek.com/articles/683354/15-english-words-stole-from-arabic",
+    "title": "15 English words we stole from Arabic - The Week"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Italian mathematician introduced zero to Europeans in the early 1200s, having learned it in North Africa?",
+   "answers": [
+    "Galileo",
+    "Cardano",
+    "Pacioli",
+    "Fibonacci"
+   ],
+   "correct": "Fibonacci",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Fibonacci learned the idea of zero from Arabic culture in North Africa and introduced it to Europe in the early 1200s.",
+   "source": {
+    "url": "https://theweek.com/articles/683354/15-english-words-stole-from-arabic",
+    "title": "15 English words we stole from Arabic - The Week"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "\"Alcohol\" comes from the Arabic \"al-kuhl\". What did that term originally refer to?",
+   "answers": [
+    "A potent date wine",
+    "A fine cosmetic powder",
+    "A medicinal tonic",
+    "A scented oil"
+   ],
+   "correct": "A fine cosmetic powder",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Al-kuḥl originally referred to a fine cosmetic powder before its meaning evolved over time.",
+   "source": {
+    "url": "https://newsroom.ucla.edu/stories/how-arabic-helped-shape-everyday-english",
+    "title": "How Arabic helped shape everyday English - UCLA Newsroom"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In English words borrowed from Arabic, such as \"alcove\" and \"alchemy\", what does the prefix \"al-\" mean?",
+   "answers": [
+    "Of",
+    "Not",
+    "The",
+    "Water"
+   ],
+   "correct": "The",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The Arabic prefix al- is the definite article, meaning \"the\", and many borrowed words kept it.",
+   "source": {
+    "url": "https://www.thecollector.com/english-words-arabic-origins/",
+    "title": "10 English Words With Arabic Origins - TheCollector"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these household words came into English from Arabic?",
+   "answers": [
+    "Pillow",
+    "Mattress",
+    "Blanket",
+    "Quilt"
+   ],
+   "correct": "Mattress",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The Week lists mattress, along with sofa, among everyday English words that came from Arabic.",
+   "source": {
+    "url": "https://theweek.com/articles/683354/15-english-words-stole-from-arabic",
+    "title": "15 English words we stole from Arabic - The Week"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the Macquarie Dictionary's list, what is a group of leopards called?",
+   "answers": [
+    "A prowl",
+    "A leap",
+    "A dapple",
+    "A stalk"
+   ],
+   "correct": "A leap",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "Macquarie's list of collective nouns for animals gives \"leap\" for leopards.",
+   "source": {
+    "url": "https://www.macquariedictionary.com.au/collective-nouns-for-animals/",
+    "title": "Common Collective Nouns for Animals - Macquarie Dictionary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the collective noun for a group of crocodiles?",
+   "answers": [
+    "A pride",
+    "A pack",
+    "A swarm",
+    "A bask"
+   ],
+   "correct": "A bask",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "A group of crocodiles is called a bask.",
+   "source": {
+    "url": "https://worldanimalrescuenetwork.org/wildlife-guides/animal-group-names/",
+    "title": "Animal Group Names: Collective Nouns for Animals"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Many animal collective nouns trace back to which 1486 English book on hawking, hunting and heraldry?",
+   "answers": [
+    "The Canterbury Tales",
+    "The Boke of Curtesye",
+    "The Master of Game",
+    "The Book of St Albans"
+   ],
+   "correct": "The Book of St Albans",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "These terms can be traced to the fifteenth century, when they were first published in The Book of St Albans (1486).",
+   "source": {
+    "url": "https://dararochlinbookdoctor.com/2016/04/25/a-murder-of-crows-and-other-collective-nouns-for-animal-groups/",
+    "title": "A Murder of Crows, and other collective nouns for animal groups"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "One theory says \"cats and dogs\" in \"raining cats and dogs\" corrupts the obsolete word \"catadupe\". What did that word mean?",
+   "answers": [
+    "Whirlwind",
+    "Waterfall",
+    "Cloudburst",
+    "Thunderclap"
+   ],
+   "correct": "Waterfall",
+   "difficulty": "medium",
+   "category": "Words",
+   "explain": "The Library of Congress says \"cats and dogs\" may be a perversion of the obsolete word catadupe, meaning waterfall.",
+   "source": {
+    "url": "https://www.loc.gov/everyday-mysteries/meteorology-climatology/item/what-is-the-origin-of-the-phrase-its-raining-cats-and-dogs/",
+    "title": "What is the origin of the phrase \"it's raining cats and dogs?\" - Library of Congress"
+   },
+   "ai_written": true
+  }
+ ]
+}

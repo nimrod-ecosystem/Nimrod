@@ -1,0 +1,921 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Science trivia (easy)",
+ "description": "50 easy questions about physics, chemistry, biology, astronomy, the human body, inventions. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "What is the chemical symbol for gold?",
+   "answers": [
+    "Ag",
+    "Au",
+    "Gd",
+    "Ge"
+   ],
+   "correct": "Au",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Gold is element 79, and its symbol Au comes from the Latin word 'aurum'. Ag is silver.",
+   "source": {
+    "url": "https://periodic-table.rsc.org/element/79/gold",
+    "title": "Gold - Element information, properties and uses"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which element has the chemical symbol Na?",
+   "answers": [
+    "Nitrogen",
+    "Neon",
+    "Sodium",
+    "Nickel"
+   ],
+   "correct": "Sodium",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Na comes from 'natrium', the New Latin name for sodium, an alkali metal in group 1 of the periodic table.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sodium",
+    "title": "Sodium"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which metal has the chemical symbol Fe?",
+   "answers": [
+    "Lead",
+    "Iron",
+    "Fluorine",
+    "Zinc"
+   ],
+   "correct": "Iron",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Fe comes from 'ferrum', the Latin word for iron.",
+   "source": {
+    "url": "https://www.lenntech.com/periodic/name/alphabetic.htm",
+    "title": "Chemical Elements A–Z: Names, Symbols & Atomic Numbers"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gas do plants absorb from the air to carry out photosynthesis?",
+   "answers": [
+    "Oxygen",
+    "Nitrogen",
+    "Carbon dioxide",
+    "Hydrogen"
+   ],
+   "correct": "Carbon dioxide",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Plants use carbon dioxide, water and sunlight to make food, and they release oxygen in the process.",
+   "source": {
+    "url": "https://science.nasa.gov/kids/earth/what-is-the-carbon-cycle/",
+    "title": "What is the Carbon Cycle? - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which green pigment in leaves captures light energy for photosynthesis?",
+   "answers": [
+    "Melanin",
+    "Keratin",
+    "Hemoglobin",
+    "Chlorophyll"
+   ],
+   "correct": "Chlorophyll",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Chlorophyll in leaves captures light energy, which is used to turn carbon dioxide and water into glucose and oxygen.",
+   "source": {
+    "url": "https://www.britannica.com/science/photosynthesis",
+    "title": "Photosynthesis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many oxygen atoms are in one molecule of carbon dioxide (CO2)?",
+   "answers": [
+    "One",
+    "Two",
+    "Three",
+    "Four"
+   ],
+   "correct": "Two",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Carbon dioxide has one carbon atom bonded to two oxygen atoms, which is why it is written CO2.",
+   "source": {
+    "url": "https://science.nasa.gov/kids/earth/what-is-the-carbon-cycle/",
+    "title": "What is the Carbon Cycle? - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many planets are in our solar system?",
+   "answers": [
+    "Seven",
+    "Nine",
+    "Ten",
+    "Eight"
+   ],
+   "correct": "Eight",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The planets are Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune. Pluto is classed as a dwarf planet.",
+   "source": {
+    "url": "https://science.nasa.gov/solar-system/planets/",
+    "title": "About the Planets"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which planet is closest to the Sun?",
+   "answers": [
+    "Venus",
+    "Mercury",
+    "Mars",
+    "Earth"
+   ],
+   "correct": "Mercury",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Mercury is the planet nearest the Sun, and it is also the smallest planet in the solar system.",
+   "source": {
+    "url": "https://science.nasa.gov/solar-system/planets/",
+    "title": "About the Planets"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the largest planet in our solar system?",
+   "answers": [
+    "Saturn",
+    "Neptune",
+    "Jupiter",
+    "Uranus"
+   ],
+   "correct": "Jupiter",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Jupiter is more than twice as massive as all the other planets combined.",
+   "source": {
+    "url": "https://science.nasa.gov/jupiter/",
+    "title": "Jupiter"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which planet is the hottest in our solar system?",
+   "answers": [
+    "Mercury",
+    "Mars",
+    "Jupiter",
+    "Venus"
+   ],
+   "correct": "Venus",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Venus is the hottest planet, even though Mercury is closer to the Sun.",
+   "source": {
+    "url": "https://space-facts.com/planets/",
+    "title": "Planet Facts - Interesting Facts about the Planets"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two planets in our solar system have no moons?",
+   "answers": [
+    "Mars and Neptune",
+    "Earth and Mars",
+    "Venus and Jupiter",
+    "Mercury and Venus"
+   ],
+   "correct": "Mercury and Venus",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Mercury and Venus are the only two planets with no moons.",
+   "source": {
+    "url": "https://science.nasa.gov/resource/our-solar-system-2/",
+    "title": "Our Solar System Information - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How is Pluto classified today?",
+   "answers": [
+    "A dwarf planet",
+    "A moon of Neptune",
+    "An asteroid",
+    "A comet"
+   ],
+   "correct": "A dwarf planet",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Pluto is one of the five officially recognized dwarf planets, along with Ceres, Haumea, Makemake and Eris.",
+   "source": {
+    "url": "https://science.nasa.gov/solar-system/planets/",
+    "title": "About the Planets"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which astronomer made the first detailed telescope observations of Jupiter in 1610 using a small homemade telescope?",
+   "answers": [
+    "Johannes Kepler",
+    "Nicolaus Copernicus",
+    "Isaac Newton",
+    "Galileo Galilei"
+   ],
+   "correct": "Galileo Galilei",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Galileo Galilei made the first detailed observations of Jupiter in 1610 with a small, homemade telescope.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://science.nasa.gov/jupiter/",
+    "title": "Jupiter"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many bones are in the typical adult human skeleton?",
+   "answers": [
+    "156",
+    "206",
+    "256",
+    "312"
+   ],
+   "correct": "206",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "An adult skeleton has 206 bones. Babies are born with more, and many of them fuse as they grow.",
+   "source": {
+    "url": "https://www.hopkinsmedicine.org/health/wellness-and-prevention/anatomy-of-the-bone",
+    "title": "Anatomy of the Bone"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What are the individual bones that make up the spine called?",
+   "answers": [
+    "Phalanges",
+    "Carpals",
+    "Vertebrae",
+    "Ossicles"
+   ],
+   "correct": "Vertebrae",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The spine is made of 33 ring-shaped bones called vertebrae, and it protects the spinal cord.",
+   "source": {
+    "url": "https://kidshealth.org/en/kids/bones.html",
+    "title": "Your Bones (for Kids)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who is credited with patenting the telephone in 1876?",
+   "answers": [
+    "Thomas Edison",
+    "Alexander Graham Bell",
+    "Nikola Tesla",
+    "Guglielmo Marconi"
+   ],
+   "correct": "Alexander Graham Bell",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Bell received the first patent for the telephone in March 1876.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/technology/telephone",
+    "title": "Telephone"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which inventor created the phonograph in 1877, a machine that recorded sound on a rotating cylinder?",
+   "answers": [
+    "Samuel Morse",
+    "Nikola Tesla",
+    "George Westinghouse",
+    "Thomas Edison"
+   ],
+   "correct": "Thomas Edison",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Thomas Edison invented the phonograph in 1877. It recorded and reproduced sound on a rotating cylinder wrapped in tinfoil.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Alexander-Graham-Bell",
+    "title": "Alexander Graham Bell"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What shape is the structure of a DNA molecule?",
+   "answers": [
+    "A double helix",
+    "A triple helix",
+    "A flat sheet",
+    "A closed ring"
+   ],
+   "correct": "A double helix",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "DNA is made of two strands twisted into a double helix, often compared to a twisting ladder or spiral staircase.",
+   "source": {
+    "url": "https://www.britannica.com/science/double-helix",
+    "title": "Double helix"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two scientists published the double-helix model of DNA in 1953?",
+   "answers": [
+    "Gregor Mendel and Charles Darwin",
+    "Louis Pasteur and Robert Koch",
+    "Marie Curie and Pierre Curie",
+    "James Watson and Francis Crick"
+   ],
+   "correct": "James Watson and Francis Crick",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Watson and Crick proposed in 1953 that DNA is shaped like a double helix.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.yourgenome.org/theme/the-discovery-of-dna-unravelling-the-double-helix/",
+    "title": "When was DNA discovered"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the chemical formula for water?",
+   "answers": [
+    "H2O2",
+    "CO2",
+    "NaCl",
+    "H2O"
+   ],
+   "correct": "H2O",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "A water molecule has two hydrogen atoms and one oxygen atom, so its formula is H2O.",
+   "source": {
+    "url": "https://www.britannica.com/science/water",
+    "title": "Water"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At what temperature, in degrees Fahrenheit, does water freeze at sea level?",
+   "answers": [
+    "-10°F",
+    "0°F",
+    "32°F",
+    "50°F"
+   ],
+   "correct": "32°F",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Water freezes at 0°C, which is 32°F.",
+   "source": {
+    "url": "https://www.britannica.com/science/water",
+    "title": "Water"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At what temperature, in degrees Celsius, does pure water boil at sea level?",
+   "answers": [
+    "90°C",
+    "120°C",
+    "100°C",
+    "212°C"
+   ],
+   "correct": "100°C",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "At sea level, water boils at 100°C, which is 212°F.",
+   "source": {
+    "url": "https://www.britannica.com/science/water",
+    "title": "Water"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why does ice float on liquid water?",
+   "answers": [
+    "Ice is more dense than liquid water",
+    "Ice contains many large trapped air pockets",
+    "Ice is less dense than liquid water",
+    "Ice is held up by surface tension alone"
+   ],
+   "correct": "Ice is less dense than liquid water",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Ice has an open structure that makes it less dense than liquid water, so it floats.",
+   "source": {
+    "url": "https://www.britannica.com/science/water/Physical-properties",
+    "title": "Water - Properties, Structure, Chemistry"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly what portion of Earth's surface is covered by water?",
+   "answers": [
+    "About 41%",
+    "About 55%",
+    "About 90%",
+    "About 71%"
+   ],
+   "correct": "About 71%",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Water covers about 71% of Earth's surface, and the seas and oceans hold most of it.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Water",
+    "title": "Water"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how much of the human body is made of water?",
+   "answers": [
+    "About one-tenth",
+    "About one-third",
+    "About two-thirds",
+    "About nine-tenths"
+   ],
+   "correct": "About two-thirds",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Water makes up roughly 65% of the human body, which is about two-thirds.",
+   "source": {
+    "url": "https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Supplemental_Modules_(Physical_and_Theoretical_Chemistry)/Physical_Properties_of_Matter/States_of_Matter/Properties_of_Liquids/Unusual_Properties_of_Water",
+    "title": "Unusual Properties of Water - Chemistry LibreTexts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the main cause of Earth's ocean tides?",
+   "answers": [
+    "Earth's magnetic field",
+    "Prevailing ocean winds",
+    "Heat from Earth's core",
+    "The Moon's gravitational pull"
+   ],
+   "correct": "The Moon's gravitational pull",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The Moon's gravity drives Earth's tides, and the Sun adds a smaller effect.",
+   "source": {
+    "url": "https://science.nasa.gov/moon/tides/",
+    "title": "Tides - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which scientist formulated the three laws of motion and the law of universal gravitation?",
+   "answers": [
+    "Isaac Newton",
+    "Albert Einstein",
+    "Michael Faraday",
+    "Nikola Tesla"
+   ],
+   "correct": "Isaac Newton",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Isaac Newton set out the three laws of motion and the law of universal gravitation.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/",
+    "title": "Newton's Laws of Motion"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to Newton's third law of motion, every action has what?",
+   "answers": [
+    "An equal reaction in the same direction",
+    "A weaker reaction after a delay",
+    "No reaction unless friction exists",
+    "An equal and opposite reaction"
+   ],
+   "correct": "An equal and opposite reaction",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Newton's third law says that when one object pushes on another, the second pushes back with an equal and opposite force.",
+   "source": {
+    "url": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/",
+    "title": "Newton's Laws of Motion"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name for an object's tendency to resist changes in its state of motion?",
+   "answers": [
+    "Momentum",
+    "Inertia",
+    "Friction",
+    "Velocity"
+   ],
+   "correct": "Inertia",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Newton's first law describes inertia, which is the tendency to keep resting or keep moving unless a force acts.",
+   "source": {
+    "url": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/",
+    "title": "Newton's Laws of Motion"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What do we call the force of gravity acting on an object's mass?",
+   "answers": [
+    "Density",
+    "Volume",
+    "Pressure",
+    "Weight"
+   ],
+   "correct": "Weight",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Mass is a property of matter itself, while weight is the force of gravity acting on that mass.",
+   "source": {
+    "url": "https://imagine.gsfc.nasa.gov/educators/programs/swift/classroom/law_grav_guide.html",
+    "title": "Newton's Law of Gravitation - Swift Learning Center - NASA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many chambers does the human heart have?",
+   "answers": [
+    "Two",
+    "Three",
+    "Four",
+    "Five"
+   ],
+   "correct": "Four",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The heart has four chambers: two atria on top and two ventricles below.",
+   "source": {
+    "url": "https://www.cdc.gov/heart-defects/how-the-heart-works/index.html",
+    "title": "How the Heart Works"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gas does the blood pick up in the lungs?",
+   "answers": [
+    "Nitrogen",
+    "Oxygen",
+    "Carbon dioxide",
+    "Hydrogen"
+   ],
+   "correct": "Oxygen",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "In the lungs, oxygen goes into the blood and carbon dioxide is taken out when we breathe.",
+   "source": {
+    "url": "https://www.cdc.gov/heart-defects/how-the-heart-works/index.html",
+    "title": "How the Heart Works"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how big is an adult human heart?",
+   "answers": [
+    "A walnut",
+    "A basketball",
+    "A dinner plate",
+    "A clenched fist"
+   ],
+   "correct": "A clenched fist",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The heart is a muscular organ about the size of a fist.",
+   "source": {
+    "url": "https://www.cdc.gov/heart-defects/how-the-heart-works/index.html",
+    "title": "How the Heart Works"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What are the blood vessels that carry blood away from the heart called?",
+   "answers": [
+    "Veins",
+    "Arteries",
+    "Capillaries",
+    "Valves"
+   ],
+   "correct": "Arteries",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Arteries carry blood away from the heart, and veins carry blood back to it.",
+   "source": {
+    "url": "https://www.cdc.gov/heart-defects/how-the-heart-works/index.html",
+    "title": "How the Heart Works"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the largest artery in the human body?",
+   "answers": [
+    "Carotid artery",
+    "Femoral artery",
+    "Pulmonary vein",
+    "Aorta"
+   ],
+   "correct": "Aorta",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The aorta is the largest artery in the body. It carries blood from the heart to all parts of the body except the lungs.",
+   "source": {
+    "url": "https://jackwestin.com/resources/mcat-content/circulatory-system/four-chambered-heart-structure-and-function",
+    "title": "Four Chambered Heart Structure And Function - Circulatory System - MCAT Content"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who made the first successful powered airplane flights, at Kitty Hawk, North Carolina, in 1903?",
+   "answers": [
+    "Orville and Wilbur Wright",
+    "Charles Lindbergh and Amelia Earhart",
+    "Louis Blériot and Glenn Curtiss",
+    "Auguste and Louis Lumière"
+   ],
+   "correct": "Orville and Wilbur Wright",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "On December 17, 1903, the Wright brothers made the first successful flights of a powered, heavier-than-air machine.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.si.edu/collections/snapshot/wright-brothers-flight",
+    "title": "The Wright Brothers' Flight"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which medium does light travel at its highest speed?",
+   "answers": [
+    "Water",
+    "Glass",
+    "Diamond",
+    "A vacuum"
+   ],
+   "correct": "A vacuum",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Light travels slower inside materials such as glass or water, and its highest speed is in a vacuum.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Speed_of_light",
+    "title": "Speed of light"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how fast does light travel in a vacuum?",
+   "answers": [
+    "About 3,000 kilometres per second",
+    "About 30,000 kilometres per second",
+    "About 300,000 kilometres per second",
+    "About 3 million kilometres per second"
+   ],
+   "correct": "About 300,000 kilometres per second",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The speed of light in a vacuum is about 299,792 km per second, or roughly 186,000 miles per second.",
+   "source": {
+    "url": "https://sciencenotes.org/what-is-the-speed-of-light/",
+    "title": "What Is the Speed of Light?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two planets are classified as ice giants?",
+   "answers": [
+    "Jupiter and Saturn",
+    "Mars and Venus",
+    "Mercury and Earth",
+    "Uranus and Neptune"
+   ],
+   "correct": "Uranus and Neptune",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Jupiter and Saturn are gas giants, while Uranus and Neptune are ice giants.",
+   "source": {
+    "url": "https://science.nasa.gov/solar-system/planets/",
+    "title": "About the Planets"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how long is the cycle of the Moon's phases, from one new moon to the next?",
+   "answers": [
+    "About one week",
+    "About two weeks",
+    "About one year",
+    "About one month"
+   ],
+   "correct": "About one month",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The Moon's phase cycle takes about 29.5 days, which is roughly one month.",
+   "source": {
+    "url": "https://tidesandcurrents.noaa.gov/restles4.html",
+    "title": "NOAA Tides & Currents"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the first person to walk on the Moon, in July 1969?",
+   "answers": [
+    "Buzz Aldrin",
+    "Neil Armstrong",
+    "Michael Collins",
+    "Yuri Gagarin"
+   ],
+   "correct": "Neil Armstrong",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Neil Armstrong, commander of Apollo 11, was the first to step onto the lunar surface. Buzz Aldrin followed him.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.nasa.gov/the-apollo-program/",
+    "title": "The Apollo Program - NASA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What type of star is our Sun?",
+   "answers": [
+    "A red giant",
+    "A white dwarf",
+    "A neutron star",
+    "A yellow dwarf"
+   ],
+   "correct": "A yellow dwarf",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "NASA describes the Sun as a yellow dwarf star, a hot glowing ball of hydrogen and helium.",
+   "source": {
+    "url": "https://science.nasa.gov/sun/facts/",
+    "title": "Sun: Facts - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two elements make up most of the Sun?",
+   "answers": [
+    "Hydrogen and helium",
+    "Oxygen and nitrogen",
+    "Iron and nickel",
+    "Carbon and silicon"
+   ],
+   "correct": "Hydrogen and helium",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The Sun is a huge ball of hydrogen and helium. Nuclear fusion in its core turns hydrogen into helium and powers its heat and light.",
+   "source": {
+    "url": "https://science.nasa.gov/sun/facts/",
+    "title": "Sun: Facts - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how long does sunlight take to reach Earth?",
+   "answers": [
+    "About eight seconds",
+    "About eight minutes",
+    "About eight hours",
+    "About eight days"
+   ],
+   "correct": "About eight minutes",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The Sun is about eight light-minutes from Earth, so its light takes about eight minutes to arrive.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sun",
+    "title": "Sun"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how far is the Sun from Earth?",
+   "answers": [
+    "About 9.3 million miles",
+    "About 93 million miles",
+    "About 930 million miles",
+    "About 9.3 billion miles"
+   ],
+   "correct": "About 93 million miles",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The Sun is about 93 million miles (150 million kilometres) from Earth.",
+   "source": {
+    "url": "https://science.nasa.gov/sun/facts/",
+    "title": "Sun: Facts - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Our Sun and solar system are part of which galaxy?",
+   "answers": [
+    "Andromeda",
+    "Triangulum",
+    "Whirlpool",
+    "The Milky Way"
+   ],
+   "correct": "The Milky Way",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The Sun orbits the center of the Milky Way, carrying the planets and other objects with it.",
+   "source": {
+    "url": "https://science.nasa.gov/sun/facts/",
+    "title": "Sun: Facts - NASA Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does a light-year measure?",
+   "answers": [
+    "Time",
+    "Distance",
+    "Brightness",
+    "Temperature"
+   ],
+   "correct": "Distance",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "A light-year is the distance light travels in one year, about 6 trillion miles.",
+   "source": {
+    "url": "https://solarsystem.nasa.gov/solar-system/sun/in-depth.amp",
+    "title": "In Depth"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the largest organ of the human body?",
+   "answers": [
+    "Liver",
+    "Skin",
+    "Brain",
+    "Lungs"
+   ],
+   "correct": "Skin",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "Skin is the body's largest organ. Adults carry about 8 pounds of it, covering roughly 22 square feet.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/science/article/skin-1",
+    "title": "Skin Information and Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the largest internal organ in the human body?",
+   "answers": [
+    "Heart",
+    "Kidney",
+    "Spleen",
+    "Liver"
+   ],
+   "correct": "Liver",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The liver is the largest solid internal organ. The skin is larger overall but is not internal.",
+   "source": {
+    "url": "https://healthline.com/health/largest-organs-in-the-body",
+    "title": "largest organs in the body"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which organ acts as the main command center that controls the body's processes?",
+   "answers": [
+    "Brain",
+    "Liver",
+    "Spleen",
+    "Kidney"
+   ],
+   "correct": "Brain",
+   "difficulty": "easy",
+   "category": "Science",
+   "explain": "The brain is the body's main control center. It also handles thinking, learning and problem-solving.",
+   "source": {
+    "url": "https://largest.org/people/largest-human-organs/",
+    "title": "6 Largest Human Organs: The Amazing Anatomy of Our Body - Largest.org"
+   },
+   "ai_written": true
+  }
+ ]
+}

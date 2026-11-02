@@ -1,0 +1,929 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Art trivia (easy)",
+ "description": "50 easy questions about visual art: painters, sculptors, famous works, movements, techniques, museums. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Who painted the Mona Lisa?",
+   "answers": [
+    "Leonardo da Vinci",
+    "Michelangelo",
+    "Raphael",
+    "Sandro Botticelli"
+   ],
+   "correct": "Leonardo da Vinci",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Mona Lisa is an oil painting by Leonardo da Vinci, made between about 1503 and 1519.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Mona-Lisa-painting",
+    "title": "Mona Lisa"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In which Paris museum does the Mona Lisa hang?",
+   "answers": [
+    "The Louvre",
+    "Musée d'Orsay",
+    "Centre Pompidou",
+    "Musée Rodin"
+   ],
+   "correct": "The Louvre",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Mona Lisa hangs behind bulletproof glass in the Louvre Museum in Paris.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Mona-Lisa-painting",
+    "title": "Mona Lisa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What type of painting is the Mona Lisa?",
+   "answers": [
+    "A half-length portrait",
+    "A sweeping landscape",
+    "A still life of fruit",
+    "A religious altarpiece"
+   ],
+   "correct": "A half-length portrait",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Mona Lisa is a half-length portrait of a seated woman.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Mona_Lisa",
+    "title": "Mona Lisa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which technique of soft, smoky shading gives the Mona Lisa's face its hazy look?",
+   "answers": [
+    "Sfumato",
+    "Impasto",
+    "Pointillism",
+    "Sgraffito"
+   ],
+   "correct": "Sfumato",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Leonardo used sfumato, a subtle blending of light and shadow, to give the face its soft, lifelike look.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sfumato",
+    "title": "Sfumato"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French ruler once had the Mona Lisa hung in his bedroom in the Tuileries Palace?",
+   "answers": [
+    "Napoleon Bonaparte",
+    "Louis XIV",
+    "Charlemagne",
+    "Henri IV"
+   ],
+   "correct": "Napoleon Bonaparte",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Napoleon borrowed the painting for his bedroom for about four years. It went back on show in the Louvre in 1804.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Mona-Lisa-painting",
+    "title": "Mona Lisa"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Who painted The Starry Night in 1889?",
+   "answers": [
+    "Vincent van Gogh",
+    "Claude Monet",
+    "Paul Cézanne",
+    "Paul Gauguin"
+   ],
+   "correct": "Vincent van Gogh",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Starry Night is an oil painting that Vincent van Gogh made at Saint-Rémy in June 1889.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79802",
+    "title": "Vincent van Gogh. The Starry Night. Saint Rémy, June 1889"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which New York City museum holds Van Gogh's The Starry Night?",
+   "answers": [
+    "Museum of Modern Art",
+    "Metropolitan Museum of Art",
+    "Guggenheim Museum",
+    "Whitney Museum"
+   ],
+   "correct": "Museum of Modern Art",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Museum of Modern Art acquired The Starry Night in 1941, and it has been a visitor favorite there ever since.",
+   "source": {
+    "url": "https://www.moma.org/calendar/exhibitions/5270",
+    "title": "Virtual Views: Van Gogh's Starry Night"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country did Van Gogh paint The Starry Night during a stay at a mental hospital?",
+   "answers": [
+    "France",
+    "The Netherlands",
+    "Belgium",
+    "Italy"
+   ],
+   "correct": "France",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "He painted it at a mental hospital in Saint-Rémy, in the south of France.",
+   "source": {
+    "url": "https://www.moma.org/explore/inside_out/tag/the-starry-night/",
+    "title": "MoMA: Shedding light on The Starry Night"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who painted the ceiling of the Sistine Chapel?",
+   "answers": [
+    "Michelangelo",
+    "Raphael",
+    "Leonardo da Vinci",
+    "Sandro Botticelli"
+   ],
+   "correct": "Michelangelo",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "In 1508 Pope Julius II gave the job to Michelangelo, who painted the ceiling and finished it in 1512.",
+   "source": {
+    "url": "https://www.museivaticani.va/content/museivaticani/en/collezioni/musei/cappella-sistina/storia-cappella-sistina.html",
+    "title": "Sistine Chapel"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Sistine Chapel, with its famous Michelangelo ceiling, lies within which state?",
+   "answers": [
+    "Vatican City",
+    "San Marino",
+    "Monaco",
+    "Luxembourg"
+   ],
+   "correct": "Vatican City",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Sistine Chapel is a papal chapel built within the Vatican and is part of the Vatican Museums.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sistine_Chapel_ceiling",
+    "title": "Sistine Chapel ceiling"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which painting technique, using pigment on wet plaster, did Michelangelo use for the Sistine Chapel ceiling?",
+   "answers": [
+    "Fresco",
+    "Mosaic",
+    "Encaustic",
+    "Watercolor"
+   ],
+   "correct": "Fresco",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The ceiling is a fresco, painted in pigment on wet plaster.",
+   "source": {
+    "url": "https://smarthistory.org/michelangelo-ceiling-of-the-sistine-chapel/",
+    "title": "Michelangelo, Ceiling of the Sistine Chapel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The nine central panels of the Sistine Chapel ceiling show stories from which book of the Bible?",
+   "answers": [
+    "Genesis",
+    "Exodus",
+    "Psalms",
+    "Revelation"
+   ],
+   "correct": "Genesis",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The central panels show scenes from the Book of Genesis, ending with the Creation at the altar end.",
+   "source": {
+    "url": "https://www.thesistinechapel.org/sistine-chapel-ceiling",
+    "title": "The Sistine Chapel's vault by Michelangelo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how long did Michelangelo take to paint the Sistine Chapel ceiling?",
+   "answers": [
+    "About four years",
+    "About four months",
+    "About ten years",
+    "About twenty years"
+   ],
+   "correct": "About four years",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "He worked on the ceiling from 1508 to 1512, so the job took about four years.",
+   "source": {
+    "url": "https://smarthistory.org/michelangelo-ceiling-of-the-sistine-chapel/",
+    "title": "Michelangelo, Ceiling of the Sistine Chapel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who painted the anti-war mural Guernica in 1937?",
+   "answers": [
+    "Pablo Picasso",
+    "Salvador Dalí",
+    "Joan Miró",
+    "Diego Velázquez"
+   ],
+   "correct": "Pablo Picasso",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Guernica is a large oil painting by Pablo Picasso, made after the German bombing of the Spanish town of Guernica.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Guernica-by-Picasso",
+    "title": "Guernica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Picasso's Guernica responds to a bombing that took place during which conflict?",
+   "answers": [
+    "The Spanish Civil War",
+    "The First World War",
+    "The Napoleonic Wars",
+    "The Russian Revolution"
+   ],
+   "correct": "The Spanish Civil War",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The 1937 bombing of the Basque town took place during the Spanish Civil War, and the painting drew worldwide attention to that war.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Guernica_(Picasso)",
+    "title": "Guernica (Picasso)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which colors did Picasso use for Guernica?",
+   "answers": [
+    "Gray, black and white",
+    "Red, yellow and blue",
+    "Green, gold and brown",
+    "Pink, orange and purple"
+   ],
+   "correct": "Gray, black and white",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Picasso painted Guernica in a stark palette of gray, black and white.",
+   "source": {
+    "url": "https://smarthistory.org/picasso-guernica/",
+    "title": "Pablo Picasso, Guernica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Pablo Picasso, who painted Guernica, was an artist from which country?",
+   "answers": [
+    "Spain",
+    "France",
+    "Italy",
+    "Portugal"
+   ],
+   "correct": "Spain",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Guernica is described as a work by the Spanish artist Pablo Picasso.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Guernica_(Picasso)",
+    "title": "Guernica (Picasso)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which art movement took its name from Monet's painting Impression, Sunrise?",
+   "answers": [
+    "Impressionism",
+    "Fauvism",
+    "Cubism",
+    "Romanticism"
+   ],
+   "correct": "Impressionism",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "A critic mocked the painting's title in 1874 and the term Impressionism stuck as the movement's name.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Impression-Sunrise",
+    "title": "Impression, Sunrise"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city was Monet's Impression, Sunrise first shown, at an independent exhibition in 1874?",
+   "answers": [
+    "Paris",
+    "London",
+    "Brussels",
+    "Amsterdam"
+   ],
+   "correct": "Paris",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "It was first shown in Paris at an independent exhibition that offered an alternative to the official Salon.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Impression-Sunrise",
+    "title": "Impression, Sunrise"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Monet's Impression, Sunrise shows the harbor of which French port?",
+   "answers": [
+    "Le Havre",
+    "Marseille",
+    "Bordeaux",
+    "Calais"
+   ],
+   "correct": "Le Havre",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The painting shows the port of Le Havre at sunrise, with small rowboats in the foreground.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Impression,_Sunrise",
+    "title": "Impression, Sunrise"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who painted The Persistence of Memory, famous for its melting clocks?",
+   "answers": [
+    "Salvador Dalí",
+    "René Magritte",
+    "Max Ernst",
+    "Marc Chagall"
+   ],
+   "correct": "Salvador Dalí",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Persistence of Memory is an oil painting made by Salvador Dalí in 1931.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79018",
+    "title": "Salvador Dalí. The Persistence of Memory. 1931"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What everyday objects appear to melt in Dalí's The Persistence of Memory?",
+   "answers": [
+    "Clocks",
+    "Candles",
+    "Mirrors",
+    "Violins"
+   ],
+   "correct": "Clocks",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The painting is known for its soft, melting clocks spread across a desolate landscape.",
+   "source": {
+    "url": "https://www.artchive.com/artwork/the-persistence-of-memory-salvador-dali-1931/",
+    "title": "The Persistence of Memory (1931) by Salvador Dali"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Dalí's The Persistence of Memory is a classic work of which art movement?",
+   "answers": [
+    "Surrealism",
+    "Impressionism",
+    "Pop Art",
+    "Cubism"
+   ],
+   "correct": "Surrealism",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "MoMA describes the painting's aim as the classic Surrealist ambition of discrediting the world of reality.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79018",
+    "title": "Salvador Dalí. The Persistence of Memory. 1931"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What famous feature is missing from the ancient statue known as the Venus de Milo?",
+   "answers": [
+    "Her arms",
+    "Her head",
+    "Her feet",
+    "Her nose"
+   ],
+   "correct": "Her arms",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The marble statue of the goddess stands in the Louvre and is famous for its missing arms.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Venus-de-Milo",
+    "title": "Venus de Milo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which goddess is the Venus de Milo commonly thought to represent?",
+   "answers": [
+    "Aphrodite",
+    "Athena",
+    "Hera",
+    "Artemis"
+   ],
+   "correct": "Aphrodite",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The statue is commonly thought to represent Aphrodite, the Greek goddess of love and beauty, whom the Romans identified with Venus.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Venus-de-Milo",
+    "title": "Venus de Milo"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "What material is the Venus de Milo carved from?",
+   "answers": [
+    "Marble",
+    "Bronze",
+    "Granite",
+    "Sandstone"
+   ],
+   "correct": "Marble",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Venus de Milo is an ancient marble sculpture.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Venus-de-Milo",
+    "title": "Venus de Milo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ancient civilization made the Venus de Milo?",
+   "answers": [
+    "Ancient Greece",
+    "Ancient Egypt",
+    "Ancient Persia",
+    "Ancient Mesopotamia"
+   ],
+   "correct": "Ancient Greece",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Venus de Milo is an ancient Greek marble statue of Aphrodite, found on the island of Melos in 1820.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Venus-de-Milo",
+    "title": "Venus de Milo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who sculpted the 17-foot marble statue of David that stands in Florence?",
+   "answers": [
+    "Michelangelo",
+    "Antonio Canova",
+    "Auguste Rodin",
+    "Lorenzo Ghiberti"
+   ],
+   "correct": "Michelangelo",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Michelangelo carved the marble David between 1501 and 1504.",
+   "source": {
+    "url": "https://www.britannica.com/topic/David-sculpture",
+    "title": "David"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The original of Michelangelo's David stands in a gallery in which Italian city?",
+   "answers": [
+    "Florence",
+    "Rome",
+    "Venice",
+    "Milan"
+   ],
+   "correct": "Florence",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The original David is in the Galleria dell'Accademia in Florence.",
+   "source": {
+    "url": "https://www.britannica.com/topic/David-sculpture",
+    "title": "David"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What weapon does Michelangelo's David carry over his shoulder?",
+   "answers": [
+    "A slingshot",
+    "A sword",
+    "A spear",
+    "A bow"
+   ],
+   "correct": "A slingshot",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The statue shows the biblical hero nude with a slingshot over his shoulder, just before he faces Goliath.",
+   "source": {
+    "url": "https://www.britannica.com/topic/David-sculpture",
+    "title": "David"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which artist created The Scream?",
+   "answers": [
+    "Edvard Munch",
+    "Gustav Klimt",
+    "Egon Schiele",
+    "Henri Matisse"
+   ],
+   "correct": "Edvard Munch",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Edvard Munch first created The Scream in 1893 and then made several versions of it.",
+   "source": {
+    "url": "https://www.moma.org/calendar/exhibitions/1305",
+    "title": "Edvard Munch: The Scream"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Edvard Munch, creator of The Scream, was an artist from which country?",
+   "answers": [
+    "Norway",
+    "Sweden",
+    "Denmark",
+    "Finland"
+   ],
+   "correct": "Norway",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Munch was a Norwegian artist, and the work was conceived in Kristiania, now Oslo.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Scream",
+    "title": "The Scream"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Munch's work, including The Scream, strongly influenced which art movement?",
+   "answers": [
+    "Expressionism",
+    "Neoclassicism",
+    "Realism",
+    "Rococo"
+   ],
+   "correct": "Expressionism",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Munch's work, including The Scream, had a formative influence on the Expressionist movement.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Scream",
+    "title": "The Scream"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who painted Girl with a Pearl Earring?",
+   "answers": [
+    "Johannes Vermeer",
+    "Rembrandt van Rijn",
+    "Frans Hals",
+    "Jan Steen"
+   ],
+   "correct": "Johannes Vermeer",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Girl with a Pearl Earring is Vermeer's most famous painting.",
+   "source": {
+    "url": "https://www.mauritshuis.nl/en/our-collection/artworks/670-girl-with-a-pearl-earring",
+    "title": "Johannes Vermeer Girl with a Pearl Earring"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Vermeer's Girl with a Pearl Earring has been given which nickname?",
+   "answers": [
+    "The Dutch Mona Lisa",
+    "The Delft Madonna",
+    "The Flemish Venus",
+    "The Hague Gioconda"
+   ],
+   "correct": "The Dutch Mona Lisa",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Smarthistory notes that this enigmatic character study was dubbed the \"Dutch Mona Lisa\".",
+   "source": {
+    "url": "https://smarthistory.org/johannes-vermeer-girl-with-a-pearl-earring/",
+    "title": "Johannes Vermeer, Girl with a Pearl Earring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Johannes Vermeer was a painter from which country?",
+   "answers": [
+    "The Netherlands",
+    "Belgium",
+    "Germany",
+    "Denmark"
+   ],
+   "correct": "The Netherlands",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Vermeer was a Dutch artist who painted Girl with a Pearl Earring around 1665.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Girl-with-a-Pearl-Earring-by-Vermeer",
+    "title": "Girl with a Pearl Earring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which artist painted the series Campbell's Soup Cans in 1961–62?",
+   "answers": [
+    "Andy Warhol",
+    "Roy Lichtenstein",
+    "Jasper Johns",
+    "Keith Haring"
+   ],
+   "correct": "Andy Warhol",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Campbell's Soup Cans is a series of 32 paintings that Andy Warhol produced between 1961 and 1962.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Campbell's_Soup_Cans",
+    "title": "Campbell's Soup Cans"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Warhol's Campbell's Soup Cans are a canonical symbol of which art movement?",
+   "answers": [
+    "Pop Art",
+    "Cubism",
+    "Art Nouveau",
+    "Fauvism"
+   ],
+   "correct": "Pop Art",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The series is widely regarded as a canonical symbol of Pop art.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Campbell's_Soup_Cans",
+    "title": "Campbell's Soup Cans"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Andy Warhol, creator of Campbell's Soup Cans, was an artist of which nationality?",
+   "answers": [
+    "American",
+    "British",
+    "Canadian",
+    "French"
+   ],
+   "correct": "American",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Warhol was an American artist who moved to New York City in 1949.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Campbell%27s_Soup_Cans",
+    "title": "Campbell's Soup Cans"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who sculpted The Thinker, the pensive seated nude male figure?",
+   "answers": [
+    "Auguste Rodin",
+    "Edgar Degas",
+    "Constantin Brâncuși",
+    "Henry Moore"
+   ],
+   "correct": "Auguste Rodin",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Thinker is one of the best-known sculptures by the French artist Auguste Rodin.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Thinker-sculpture-by-Rodin",
+    "title": "The Thinker"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Rodin's The Thinker is best known as a cast sculpture in which metal?",
+   "answers": [
+    "Bronze",
+    "Aluminum",
+    "Gold",
+    "Lead"
+   ],
+   "correct": "Bronze",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Thinker is a bronze sculpture, and many casts exist in a variety of sizes.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Thinker-sculpture-by-Rodin",
+    "title": "The Thinker"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who painted The Birth of Venus?",
+   "answers": [
+    "Sandro Botticelli",
+    "Titian",
+    "Raphael",
+    "Caravaggio"
+   ],
+   "correct": "Sandro Botticelli",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The Birth of Venus is a Renaissance painting by Sandro Botticelli from the 1480s.",
+   "source": {
+    "url": "https://www.wikiart.org/en/sandro-botticelli/the-birth-of-venus-1485",
+    "title": "The Birth of Venus, 1483 - 1485 - Sandro Botticelli - WikiArt.org"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Botticelli's The Birth of Venus hangs in which gallery?",
+   "answers": [
+    "Uffizi Gallery",
+    "Accademia Gallery",
+    "Bargello Museum",
+    "Borghese Gallery"
+   ],
+   "correct": "Uffizi Gallery",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The painting is in the Uffizi Gallery in Florence.",
+   "source": {
+    "url": "https://www.wikiart.org/en/sandro-botticelli/the-birth-of-venus-1485",
+    "title": "The Birth of Venus, 1483 - 1485 - Sandro Botticelli - WikiArt.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Botticelli's The Birth of Venus, what is the goddess standing on?",
+   "answers": [
+    "A giant scallop shell",
+    "A marble pedestal",
+    "A wooden boat",
+    "A flowering hill"
+   ],
+   "correct": "A giant scallop shell",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The newly born Venus stands nude in a giant scallop shell.",
+   "source": {
+    "url": "https://www.wikiart.org/en/sandro-botticelli/the-birth-of-venus-1485",
+    "title": "The Birth of Venus, 1483 - 1485 - Sandro Botticelli - WikiArt.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Frida Kahlo is best known for painting what kind of artworks?",
+   "answers": [
+    "Vivid self-portraits",
+    "Quiet landscapes",
+    "Ocean seascapes",
+    "Large battle scenes"
+   ],
+   "correct": "Vivid self-portraits",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Kahlo is best known for her brilliantly colored self-portraits that deal with identity, the human body and death.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Frida-Kahlo",
+    "title": "Frida Kahlo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Frida Kahlo was a painter from which country?",
+   "answers": [
+    "Mexico",
+    "Spain",
+    "Argentina",
+    "Cuba"
+   ],
+   "correct": "Mexico",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Kahlo was a Mexican painter, born in Coyoacán in 1907.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Frida-Kahlo",
+    "title": "Frida Kahlo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Mexican muralist did Frida Kahlo marry in 1929?",
+   "answers": [
+    "Diego Rivera",
+    "David Alfaro Siqueiros",
+    "José Clemente Orozco",
+    "Rufino Tamayo"
+   ],
+   "correct": "Diego Rivera",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "In 1929 Kahlo married the much older Mexican muralist Diego Rivera.",
+   "source": {
+    "url": "https://nmwa.org/art/artists/frida-kahlo/",
+    "title": "Frida Kahlo"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Who painted The Last Supper on a wall in Milan?",
+   "answers": [
+    "Leonardo da Vinci",
+    "Raphael",
+    "Titian",
+    "Caravaggio"
+   ],
+   "correct": "Leonardo da Vinci",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "Leonardo da Vinci painted The Last Supper from about 1495 to 1498 for Duke Ludovico Sforza.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Last_Supper_(Leonardo)",
+    "title": "The Last Supper (Leonardo)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In which Italian city is Leonardo's Last Supper, in a convent dining hall?",
+   "answers": [
+    "Milan",
+    "Rome",
+    "Florence",
+    "Venice"
+   ],
+   "correct": "Milan",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "It covers an end wall of the dining hall of the Convent of Santa Maria delle Grazie in Milan.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Last_Supper_(Leonardo)",
+    "title": "The Last Supper (Leonardo)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does Jesus announce in Leonardo's Last Supper that sparks the apostles' reactions?",
+   "answers": [
+    "One of them will betray him",
+    "One of them will become king",
+    "One of them will leave Judea",
+    "One of them will build a temple"
+   ],
+   "correct": "One of them will betray him",
+   "difficulty": "easy",
+   "category": "Art",
+   "explain": "The painting shows each apostle's reaction to Jesus saying that one of them would betray him.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Last_Supper_(Leonardo)",
+    "title": "The Last Supper (Leonardo)"
+   },
+   "ai_written": true
+  }
+ ]
+}

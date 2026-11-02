@@ -1,0 +1,932 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Art trivia (hard)",
+ "description": "50 hard questions about visual art: painters, sculptors, famous works, movements, techniques, museums. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Besides pointillism, which painting technique is credited to Georges Seurat as his own devising?",
+   "answers": [
+    "Tachisme",
+    "Chromoluminarism",
+    "Synchromism",
+    "Luminism"
+   ],
+   "correct": "Chromoluminarism",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Seurat devised both pointillism and chromoluminarism, his colour-and-light approach to painting. The other terms name different movements or techniques.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Georges_Seurat",
+    "title": "Georges Seurat"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which showing did Seurat's A Sunday on La Grande Jatte make its public debut in 1886?",
+   "answers": [
+    "The Salon des Refusés",
+    "The eighth Impressionist exhibition",
+    "The first Salon d'Automne",
+    "The Paris Universal Exposition"
+   ],
+   "correct": "The eighth Impressionist exhibition",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Met notes the large canvas debuted at the 1886 Impressionist exhibition, the eighth and last of the group shows. Seurat's dotted technique was later labelled pointillism.",
+   "source": {
+    "url": "https://www.metmuseum.org/art/collection/search/437658",
+    "title": "Georges Seurat - Study for \"A Sunday on La Grande Jatte\" - The Metropolitan Museum of Art"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which painter was most strongly influenced by Seurat's pointillism and went on to paint in the same idiom?",
+   "answers": [
+    "Henri Fantin-Latour",
+    "Gustave Caillebotte",
+    "Berthe Morisot",
+    "Paul Signac"
+   ],
+   "correct": "Paul Signac",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Seurat's ideas on pointillism had an especially strong influence on Paul Signac, who subsequently painted in the same idiom.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Georges_Seurat",
+    "title": "Georges Seurat"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the Prado's catalogue first list Velázquez's painting under the title Las Meninas?",
+   "answers": [
+    "1798",
+    "1852",
+    "1843",
+    "1881"
+   ],
+   "correct": "1843",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The work entered the Prado when it was founded in 1819, but the museum's catalogue only listed it as Las Meninas for the first time in 1843.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Las_Meninas",
+    "title": "Las Meninas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Las Meninas is set in a room that Philip IV gave Velázquez as a studio. Whose former living quarters had it been part of?",
+   "answers": [
+    "Infante Don Carlos",
+    "Queen Isabella of Bourbon",
+    "Prince Balthasar Charles",
+    "The Count-Duke of Olivares"
+   ],
+   "correct": "Prince Balthasar Charles",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "In the early 1650s Philip gave Velázquez the main room of the late Balthasar Charles's living quarters, by then the palace museum. Las Meninas is set in that room.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Las_Meninas",
+    "title": "Las Meninas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which royal child stands at the centre of Velázquez's Las Meninas, surrounded by her entourage?",
+   "answers": [
+    "Infanta Maria Theresa",
+    "Infanta Margaret Theresa",
+    "Infanta Isabella Clara Eugenia",
+    "Infanta Maria Anna"
+   ],
+   "correct": "Infanta Margaret Theresa",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The large canvas shows Infanta Margaret Theresa, daughter of King Philip IV, with her attendants. Velázquez stands behind an easel in the same scene.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://mymodernmet.com/diego-velazquez-las-meninas/",
+    "title": "The History and Mystery of 'Las Meninas' by Diego Velázquez"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Under which customs category did US officials classify Brancusi's Bird in Space, taxing it at 40% of its value?",
+   "answers": [
+    "Machine parts and aircraft fittings",
+    "Agricultural tools and farm equipment",
+    "Kitchen utensils and hospital supplies",
+    "Scientific instruments and navigation gear"
+   ],
+   "correct": "Kitchen utensils and hospital supplies",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Because the sculpture did not look much like a bird, customs treated it as a utilitarian object under kitchen utensils and hospital supplies. That set off the famous court case over what counts as sculpture.",
+   "source": {
+    "url": "https://www.moma.org/explore/inside_out/2014/07/24/but-is-it-art-constantin-brancusi-vs-the-united-states/",
+    "title": "\"But Is It Art?\" Constantin Brancusi vs. the United States - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which artist curated Brancusi's 1926 exhibition at the Brummer Gallery in New York, for which Bird in Space was shipped from Paris?",
+   "answers": [
+    "Man Ray",
+    "Francis Picabia",
+    "Alfred Stieglitz",
+    "Marcel Duchamp"
+   ],
+   "correct": "Marcel Duchamp",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "MoMA describes the Brummer Gallery show as curated by Brancusi's great friend and advocate Marcel Duchamp.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.moma.org/explore/inside_out/2014/07/24/but-is-it-art-constantin-brancusi-vs-the-united-states/",
+    "title": "\"But Is It Art?\" Constantin Brancusi vs. the United States - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A maharaja bought three Bird in Space sculptures for a building he asked Brancusi to design in honour of his deceased first wife. What was it to be?",
+   "answers": [
+    "A Temple of Silence",
+    "A Temple of Light",
+    "A Temple of Memory",
+    "A Temple of Love"
+   ],
+   "correct": "A Temple of Love",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Norton Simon Museum says the maharaja asked Brancusi to design a Temple of Love and bought three Bird in Space pieces to be shown in it.",
+   "source": {
+    "url": "https://www.nortonsimon.org/learn/adults/impressions/brancusis-bird-in-space-soars-again",
+    "title": "Brancusi's \"Bird in Space\" Soars Again - Norton Simon Museum"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who gave Picasso's Les Demoiselles d'Avignon its current, less scandalous title in place of Picasso's own Le Bordel d'Avignon?",
+   "answers": [
+    "Guillaume Apollinaire",
+    "Max Jacob",
+    "André Salmon",
+    "Gertrude Stein"
+   ],
+   "correct": "André Salmon",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Salmon had earlier called the work Le bordel philosophique. He renamed it Les Demoiselles d'Avignon, a title Picasso never liked.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Les_Demoiselles_d%27Avignon",
+    "title": "Les Demoiselles d'Avignon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The title Les Demoiselles d'Avignon refers to a street, the carrer d'Avinyó, in which city where Picasso spent his youth?",
+   "answers": [
+    "Madrid",
+    "Paris",
+    "Málaga",
+    "Barcelona"
+   ],
+   "correct": "Barcelona",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "MoMA explains that the title refers to sex workers on Avinyó Street in Barcelona, not to the French town of Avignon.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79766",
+    "title": "Pablo Picasso. Les Demoiselles d'Avignon. Paris, June-July 1907 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where was Les Demoiselles d'Avignon first shown publicly, in July 1916?",
+   "answers": [
+    "The Salon d'Automne",
+    "The Salon d'Antin",
+    "The Armory Show",
+    "The Galerie Vollard"
+   ],
+   "correct": "The Salon d'Antin",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Picasso kept the painting out of public view for years. It was first seen publicly at the Salon d'Antin in July 1916.",
+   "source": {
+    "url": "https://www.wikiart.org/en/pablo-picasso/the-girls-of-avignon-1907",
+    "title": "The girls of Avignon, 1907 - Pablo Picasso - WikiArt.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which art dealer of Picasso's said that Les Demoiselles d'Avignon marked the \"beginning of Cubism\"?",
+   "answers": [
+    "Ambroise Vollard",
+    "Paul Rosenberg",
+    "Berthe Weill",
+    "Daniel-Henry Kahnweiler"
+   ],
+   "correct": "Daniel-Henry Kahnweiler",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "MoMA reports that Kahnweiler saw the painting's fragmented forms and contrasting perspectives as the start of Cubism.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79766",
+    "title": "Pablo Picasso. Les Demoiselles d'Avignon. Paris, June-July 1907 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Montmartre building was Les Demoiselles d'Avignon painted?",
+   "answers": [
+    "The Moulin de la Galette",
+    "The Villa des Arts",
+    "The Bateau-Lavoir",
+    "La Ruche"
+   ],
+   "correct": "The Bateau-Lavoir",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "WikiArt notes the work was painted in Picasso's studio in the Bateau-Lavoir in Montmartre, Paris. La Ruche is a real artists' complex, but in Montparnasse.",
+   "source": {
+    "url": "https://www.wikiart.org/en/pablo-picasso/the-girls-of-avignon-1907",
+    "title": "The girls of Avignon, 1907 - Pablo Picasso - WikiArt.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "From which firm's showroom did Duchamp buy the urinal he submitted as Fountain in 1917?",
+   "answers": [
+    "Crane & Company",
+    "J. L. Mott Iron Works",
+    "Kohler Brothers",
+    "Standard Sanitary Works"
+   ],
+   "correct": "J. L. Mott Iron Works",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "SFMOMA says Duchamp bought the urinal in the showroom of J. L. Mott Iron Works. He signed it with the pseudonym R. Mutt.",
+   "source": {
+    "url": "https://www.sfmoma.org/artwork/98.291/",
+    "title": "Marcel Duchamp, Fountain, 1917/1964 - SFMOMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Fountain was submitted for the Society of Independent Artists' inaugural exhibition in April 1917. Which New York venue was staging it?",
+   "answers": [
+    "The 69th Regiment Armory",
+    "Madison Square Garden",
+    "The Anderson Galleries",
+    "The Grand Central Palace"
+   ],
+   "correct": "The Grand Central Palace",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The inaugural Society of Independent Artists exhibition was staged at the Grand Central Palace in New York.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Fountain_(Duchamp)",
+    "title": "Fountain (Duchamp)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who took the photograph of Duchamp's original Fountain that is the only known photographic record of the lost work?",
+   "answers": [
+    "Man Ray",
+    "Edward Steichen",
+    "Alfred Stieglitz",
+    "Paul Strand"
+   ],
+   "correct": "Alfred Stieglitz",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Stieglitz's photograph of the original readymade, published in The Blind Man No. 2, is the only known photographic record of it.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://nsuartmuseum.org/exhibition/some-aesthetic-decisions-centenary-celebration-of-marcel-duchamps-fountain/",
+    "title": "Some Aesthetic Decisions: A Centennial Celebration of Marcel Duchamp's Fountain"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which short-lived journal, launched in 1917, documented the Fountain affair?",
+   "answers": [
+    "Camera Work",
+    "The Seven Arts",
+    "The Blind Man",
+    "Others"
+   ],
+   "correct": "The Blind Man",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Blind Man was launched in 1917 after the Society of Independent Artists was founded and documented Fountain. Bowdoin's museum says it mattered as much to modern art history as the urinal itself.",
+   "source": {
+    "url": "https://www.bowdoin.edu/art-museum/news/2020/blind-man-duchamp.html",
+    "title": "A Fascinating \"Fountain\" and \"The Blind Man\" (nos. 1 and 2) Enter the BCMA Collection"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which museum is Artemisia Gentileschi's earlier version of Judith Beheading Holofernes (1611–12), as opposed to the Uffizi version?",
+   "answers": [
+    "Palazzo Pitti, Florence",
+    "Museo Nazionale di Capodimonte, Naples",
+    "Galleria Borghese, Rome",
+    "Pinacoteca di Brera, Milan"
+   ],
+   "correct": "Museo Nazionale di Capodimonte, Naples",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Smarthistory identifies the first version as the one in the Museo Nazionale di Capodimonte in Naples. The Uffizi painting is her second telling of the story.",
+   "source": {
+    "url": "https://smarthistory.org/gentileschi-judith-slaying-holofernes/",
+    "title": "Artemisia Gentileschi, Judith Slaying Holofernes - Smarthistory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which painter, himself influenced by Caravaggio, was Artemisia Gentileschi's father and first teacher?",
+   "answers": [
+    "Giovanni Baglione",
+    "Bartolomeo Manfredi",
+    "Orazio Gentileschi",
+    "Simon Vouet"
+   ],
+   "correct": "Orazio Gentileschi",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Britannica says Artemisia was trained by her father, Orazio Gentileschi, and by Agostino Tassi.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Judith-Beheading-Holofernes",
+    "title": "Judith Beheading Holofernes - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Roman palace does Caravaggio's Judith Beheading Holofernes (1598–99), the main source for Gentileschi's version, hang?",
+   "answers": [
+    "Palazzo Doria Pamphilj",
+    "Palazzo Pitti",
+    "Palazzo Madama",
+    "Palazzo Barberini"
+   ],
+   "correct": "Palazzo Barberini",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Smarthistory places Caravaggio's 1598–99 Judith in the Palazzo Barberini in Rome. Gentileschi's naturalism and violence draw on it.",
+   "source": {
+    "url": "https://smarthistory.org/gentileschi-judith-slaying-holofernes/",
+    "title": "Artemisia Gentileschi, Judith Slaying Holofernes - Smarthistory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The costly ultramarine in the headscarf of Vermeer's Girl with a Pearl Earring was made from lapis lazuli that came from what is now which country?",
+   "answers": [
+    "Egypt",
+    "Peru",
+    "Italy",
+    "Afghanistan"
+   ],
+   "correct": "Afghanistan",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Mauritshuis says the semi-precious lapis lazuli came from what is now Afghanistan. Preparing the pigment was time-consuming and laborious.",
+   "source": {
+    "url": "https://www.mauritshuis.nl/en/our-collection/restoration-and-research/closer-to-vermeer-and-the-girl",
+    "title": "Girl with the pearl earring - Mauritshuis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What did Mauritshuis research find the famous pearl in Vermeer's Girl with a Pearl Earring to be?",
+   "answers": [
+    "A real pearl later painted over by restorers",
+    "An illusion made of touches of translucent and opaque white paint",
+    "A gilded glass bead glued onto the canvas",
+    "A mother-of-pearl chip inlaid in the canvas"
+   ],
+   "correct": "An illusion made of touches of translucent and opaque white paint",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Mauritshuis found the pearl is an illusion of white paint touches with no contour. There is also no hook to hang it from her ear.",
+   "source": {
+    "url": "https://www.mauritshuis.nl/en/our-collection/restoration-and-research/closer-to-vermeer-and-the-girl",
+    "title": "Girl with the pearl earring - Mauritshuis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Until the mid-1990s, by what title was Vermeer's Girl with a Pearl Earring usually known?",
+   "answers": [
+    "Girl in a Blue Hood",
+    "Girl with the Turban",
+    "Young Woman with a Veil",
+    "Portrait of a Delft Girl"
+   ],
+   "correct": "Girl with the Turban",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Artnet notes the earring was not the focus of the painting's title until the mid-1990s. Before that it was usually called Girl with the Turban.",
+   "source": {
+    "url": "https://news.artnet.com/art-world/vermeers-iconic-girl-with-a-pearl-earring-2498802",
+    "title": "The Secrets of Vermeer's Iconic 'Girl With a Pearl Earring' - Artnet News"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "When Girl with a Pearl Earring last came up at auction, in 1881, for how much did it sell?",
+   "answers": [
+    "2,300 guilders",
+    "230 guilders",
+    "2 guilders 30 cents",
+    "23 guilders"
+   ],
+   "correct": "2 guilders 30 cents",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "It sold for just 2 guilders and 30 cents in 1881, because it was not yet recognised as a Vermeer.",
+   "source": {
+    "url": "https://news.artnet.com/art-world/vermeers-iconic-girl-with-a-pearl-earring-2498802",
+    "title": "The Secrets of Vermeer's Iconic 'Girl With a Pearl Earring' - Artnet News"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Dutch Golden Age terminology, what type of picture is Vermeer's Girl with a Pearl Earring classed as?",
+   "answers": [
+    "Pronkstilleven",
+    "Schutterstuk",
+    "Kermis",
+    "Tronie"
+   ],
+   "correct": "Tronie",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Wikipedia classifies Girl with a Pearl Earring as a tronie, a type of Dutch picture of a face or character rather than a standard commissioned portrait. The other terms name still-life, militia-group and peasant-fair genres.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Girl_with_a_Pearl_Earring",
+    "title": "Girl with a Pearl Earring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name is given to Caravaggio's dramatic use of chiaroscuro, with an abrupt shift from light to dark and little in between?",
+   "answers": [
+    "Sfumato",
+    "Grisaille",
+    "Cangiante",
+    "Tenebrism"
+   ],
+   "correct": "Tenebrism",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Caravaggio's dramatic chiaroscuro, with little intermediate value between light and dark, came to be known as tenebrism.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Caravaggio",
+    "title": "Caravaggio"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Roman church's Contarelli Chapel does Caravaggio's The Calling of Saint Matthew hang?",
+   "answers": [
+    "Santa Maria del Popolo",
+    "Sant'Agostino",
+    "San Luigi dei Francesi",
+    "Santa Maria della Vittoria"
+   ],
+   "correct": "San Luigi dei Francesi",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Calling of Saint Matthew is in the Contarelli Chapel of San Luigi dei Francesi in Rome. Santa Maria del Popolo has other Caravaggios but not this one.",
+   "source": {
+    "url": "https://uen.pressbooks.pub/arth2720/chapter/caravaggio-calling-of-st-matthew/",
+    "title": "Caravaggio Calling of St. Matthew"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Mannerist painter had already frescoed the ceiling of the Contarelli Chapel before Caravaggio was given the job of decorating its walls?",
+   "answers": [
+    "Federico Zuccari",
+    "Cavaliere d'Arpino",
+    "Cigoli",
+    "Giovanni Baglione"
+   ],
+   "correct": "Cavaliere d'Arpino",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Giuseppe Cesari, known as Cavaliere d'Arpino, decorated the ceiling but was too busy with papal work to paint the walls. Cardinal Del Monte then intervened to secure the job for Caravaggio.",
+   "answerKind": "person",
+   "source": {
+    "url": "http://www.visual-arts-cork.com/famous-paintings/calling-of-saint-matthew.htm",
+    "title": "The Calling of Saint Matthew, Caravaggio: Analysis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which critic coined the term Impressionism in a satirical 1874 review in the newspaper Le Charivari, prompted by Monet's Impression, Sunrise?",
+   "answers": [
+    "Émile Zola",
+    "Albert Wolff",
+    "Charles Blanc",
+    "Louis Leroy"
+   ],
+   "correct": "Louis Leroy",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Louis Leroy mockingly dubbed the show The Exhibition of the Impressionists. The artists then adopted the name.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Impression-Sunrise",
+    "title": "Impression, Sunrise - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who compiled the catalogue for the 1874 exhibition, asked Monet for a title for his harbour picture, and added the word Sunrise?",
+   "answers": [
+    "Eugène Manet, brother of Édouard",
+    "Edmond Renoir, brother of Auguste",
+    "Achille Degas, brother of Edgar",
+    "Martial Caillebotte, brother of Gustave"
+   ],
+   "correct": "Edmond Renoir, brother of Auguste",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Edmond Renoir was compiling the catalogue. Monet told him to put Impression, and Edmond added Sunrise.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.coolstoriesabout.art/p/impression-sunrise-how-monet-named",
+    "title": "Impression, Sunrise: How Monet Named Impressionism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Paris museum houses Monet's Impression, Sunrise?",
+   "answers": [
+    "Musée d'Orsay",
+    "Musée de l'Orangerie",
+    "Musée Marmottan Monet",
+    "Petit Palais"
+   ],
+   "correct": "Musée Marmottan Monet",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Impression, Sunrise (1872) is housed at the Musée Marmottan Monet in Paris.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Impressionism",
+    "title": "Impressionism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1874 show where Impression, Sunrise hung was held in the former studio of which photographer?",
+   "answers": [
+    "Étienne Carjat",
+    "Gustave Le Gray",
+    "André-Adolphe-Eugène Disdéri",
+    "Nadar"
+   ],
+   "correct": "Nadar",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The artists put on the show themselves because the official Salon kept rejecting them. It was held in Nadar's former studio.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.coolstoriesabout.art/p/impression-sunrise-how-monet-named",
+    "title": "Impression, Sunrise: How Monet Named Impressionism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Under what title did Manet show his Déjeuner sur l'herbe at the 1863 Salon des Refusés?",
+   "answers": [
+    "Le Bain",
+    "La Partie carrée",
+    "Le Pique-nique",
+    "La Baignade"
+   ],
+   "correct": "Le Bain",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Musée d'Orsay says Manet exhibited the rejected painting as Le Bain at the Salon des Refusés. There it became the principal attraction, causing both laughter and scandal.",
+   "source": {
+    "url": "https://www.musee-orsay.fr/en/artworks/le-dejeuner-sur-lherbe-904",
+    "title": "Le Déjeuner sur l'herbe - Edouard Manet - Musée d'Orsay"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Manet took the composition of the central group in Le Déjeuner sur l'herbe from an engraving by whom, after Raphael's Judgement of Paris?",
+   "answers": [
+    "Albrecht Dürer",
+    "Hendrick Goltzius",
+    "Giorgio Ghisi",
+    "Marcantonio Raimondi"
+   ],
+   "correct": "Marcantonio Raimondi",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Google Arts & Culture notes Manet took inspiration for the central group from Raimondi's engraving after Raphael's Judgement of Paris. He borrowed the subject from the Concert champêtre.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://artsandculture.google.com/asset/luncheon-on-the-grass/twELHYoc3ID_VA?hl=en",
+    "title": "Luncheon on the Grass - Edouard Manet - Google Arts & Culture"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American-born painter showed his Symphony in White, No. 1 at the 1863 Salon des Refusés alongside Manet's Déjeuner sur l'herbe?",
+   "answers": [
+    "Winslow Homer",
+    "Thomas Eakins",
+    "James McNeill Whistler",
+    "John Singer Sargent"
+   ],
+   "correct": "James McNeill Whistler",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Wikipedia lists Whistler's Symphony in White, No. 1 among the famous paintings ridiculed at the 1863 Salon des Refusés.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Salon_des_Refus%C3%A9s",
+    "title": "Salon des Refusés"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Jan van Eyck was court painter to which Burgundian duke, who sent him to portray Giovanni Arnolfini?",
+   "answers": [
+    "Charles the Bold",
+    "John the Fearless",
+    "Philip the Good",
+    "Maximilian of Austria"
+   ],
+   "correct": "Philip the Good",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Wikipedia says Philip the Good, a friend of Arnolfini, sent his court painter Jan van Eyck to portray him.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Arnolfini_Portrait",
+    "title": "Arnolfini Portrait"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Jan van Eyck's personal motto, a pun on his own name, painted on the frames of several of his works?",
+   "answers": [
+    "Als Ich Mach",
+    "Wat Ich Sach",
+    "Als Ich Can",
+    "Soo Ich Weet"
+   ],
+   "correct": "Als Ich Can",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Als Ich Can, meaning 'as I/Eyck can', was a common autograph for Van Eyck. It appears on the original frame of his Portrait of a Man.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Portrait_of_a_Man_(Self_Portrait%3F)",
+    "title": "Portrait of a Man (Self Portrait?)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the exterior of Bosch's Garden of Earthly Delights show when the triptych is closed?",
+   "answers": [
+    "The Last Judgment, in grisaille",
+    "The Third Day of Creation, in grisaille",
+    "The Great Flood, in grisaille",
+    "The Seven Deadly Sins, in grisaille"
+   ],
+   "correct": "The Third Day of Creation, in grisaille",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Prado says the outer faces show, in grisaille, the Third Day of Creation, when the waters were separated from the earth.",
+   "source": {
+    "url": "https://www.museodelprado.es/en/the-collection/art-work/the-garden-of-earthly-delights-triptych/02388242-6d6a-4e9e-a992-e1311eab3609",
+    "title": "The Garden of Earthly Delights Triptych - Museo Nacional del Prado"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the Prado, for which palace was Bosch's Garden of Earthly Delights likely intended by the man who commissioned it?",
+   "answers": [
+    "The Prinsenhof in Delft",
+    "The Coudenberg Palace",
+    "The Gravensteen in Ghent",
+    "The Palace of Binche"
+   ],
+   "correct": "The Coudenberg Palace",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Prado concludes that Engelbert commissioned the triptych in the 1490s and probably intended it for the Coudenberg Palace.",
+   "source": {
+    "url": "https://www.museodelprado.es/en/the-collection/art-work/the-garden-of-earthly-delights-triptych/02388242-6d6a-4e9e-a992-e1311eab3609",
+    "title": "The Garden of Earthly Delights Triptych - Museo Nacional del Prado"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Of which religious fraternal group was Hieronymus Bosch a member?",
+   "answers": [
+    "The Brotherhood of Saint Anthony",
+    "The Order of the Golden Fleece",
+    "The Guild of Saint Luke",
+    "The Brotherhood of Our Lady"
+   ],
+   "correct": "The Brotherhood of Our Lady",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Britannica notes Bosch belonged to the Brotherhood of Our Lady. It suggests this helps explain the painting's focus on sin.",
+   "source": {
+    "url": "https://www.britannica.com/video/Hieronymus-Bosch-The-Garden-of-Earthly-Delights/-282560",
+    "title": "Hieronymus Bosch's Triptych Explained - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Dutch artist co-founded the De Stijl movement with Piet Mondrian in 1917?",
+   "answers": [
+    "Kees van Dongen",
+    "Jan Toorop",
+    "Willem de Kooning",
+    "Theo van Doesburg"
+   ],
+   "correct": "Theo van Doesburg",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Britannica says Neoplasticism, also known as De Stijl, was founded in 1917 by Dutch artists including Mondrian and Theo van Doesburg.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/art/Neoplasticism",
+    "title": "Neoplasticism - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name is given to Theo van Doesburg's theory that loosened the strict framework of Mondrian's Neoplasticism?",
+   "answers": [
+    "Rayonism",
+    "Elementarism",
+    "Orphism",
+    "Purism"
+   ],
+   "correct": "Elementarism",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Elementarism loosened Neoplasticism's strict rules by adding further elements, and it led to a rift between Van Doesburg and Mondrian.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Elementarism",
+    "title": "Elementarism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which architect of the De Stijl movement designed the Red and Blue Chair?",
+   "answers": [
+    "Hendrik Berlage",
+    "Willem Dudok",
+    "Michel de Klerk",
+    "Gerrit Rietveld"
+   ],
+   "correct": "Gerrit Rietveld",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Gerrit Rietveld, a leading De Stijl architect, translated the movement's rectilinear simplicity into functional design with his Red and Blue Chair.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://artmiamimagazine.com/neoplasticism-and-de-stijl-2025/",
+    "title": "Neoplasticism and De Stijl 2025 - Art Miami Magazine"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which December 1915 Petrograd exhibition did Malevich first show his Black Square?",
+   "answers": [
+    "Tramway V exhibition",
+    "Donkey's Tail exhibition",
+    "Jack of Diamonds exhibition",
+    "Last Futurist Exhibition 0.10"
+   ],
+   "correct": "Last Futurist Exhibition 0.10",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Tate says Malevich unveiled Black Square at The Last Exhibition of Futurist Painting 0.10, held in December 1915. It was hung high across a corner of the room.",
+   "source": {
+    "url": "https://www.tate.org.uk/art/artists/kazimir-malevich-1561/five-ways-look-malevichs-black-square",
+    "title": "Five ways to look at Malevich's Black Square - Tate"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At the 1915 show, Malevich hung Black Square in a corner that in Russian Orthodox homes is traditionally reserved for what?",
+   "answers": [
+    "The family samovar",
+    "The main icon",
+    "The household stove",
+    "A portrait of the tsar"
+   ],
+   "correct": "The main icon",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Black Square was placed in the red or beautiful corner, where a Russian Orthodox household hung its main icon. Malevich himself called the work a bare icon without a frame.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Suprematism",
+    "title": "Suprematism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What do X-rays reveal beneath the black paint of Malevich's Black Square?",
+   "answers": [
+    "A Cubist portrait of a seated woman",
+    "A landscape in a Fauvist palette",
+    "A figurative icon of the Virgin Mary",
+    "A multicoloured Suprematist composition"
+   ],
+   "correct": "A multicoloured Suprematist composition",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Tate notes that although Malevich declared Black Square the first Suprematist painting, X-rays show a multicoloured Suprematist composition underneath.",
+   "source": {
+    "url": "https://www.tate.org.uk/art/artists/kazimir-malevich-1561/five-ways-look-malevichs-black-square",
+    "title": "Five ways to look at Malevich's Black Square - Tate"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Goya's The Third of May 1808 was commissioned with a companion picture of the previous day's uprising. What is that companion also called?",
+   "answers": [
+    "The Surrender of Madrid",
+    "The Siege of Saragossa",
+    "The Charge of the Mamelukes",
+    "The Flight of the Royal Family"
+   ],
+   "correct": "The Charge of the Mamelukes",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The Second of May 1808, also called The Charge of the Mamelukes, was commissioned as the pendant to The Third of May.",
+   "source": {
+    "url": "https://www.artchive.com/artwork/the-third-of-may-1808-by-francisco-goya/",
+    "title": "The Third of May 1808 by Francisco Goya - Artchive"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What detail on the main victim's right hand in Goya's The Third of May 1808 echoes the Crucifixion?",
+   "answers": [
+    "A rosary wound around the fingers",
+    "A signet ring bearing a cross",
+    "Wounds resembling stigmata",
+    "A bandage soaked in blood"
+   ],
+   "correct": "Wounds resembling stigmata",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "Close inspection of the victim's right hand shows stigmata, referencing the marks made on Christ's body during the Crucifixion.",
+   "source": {
+    "url": "https://uen.pressbooks.pub/arth2720/chapter/francisco-goya-the-third-of-may-1808/",
+    "title": "Francisco Goya, The Third of May, 1808"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French marshal ordered the shooting of the Madrid ringleaders that Goya depicts in The Third of May 1808?",
+   "answers": [
+    "Michel Ney",
+    "Jean Lannes",
+    "Joachim Murat",
+    "Louis-Nicolas Davout"
+   ],
+   "correct": "Joachim Murat",
+   "difficulty": "hard",
+   "category": "Art",
+   "explain": "The picture shows the aftermath of the Madrid uprising, when the French commander Marshal Murat ordered the ringleaders to be shot.",
+   "answerKind": "person",
+   "source": {
+    "url": "http://www.visual-arts-cork.com/paintings-analysis/third-of-may-goya.htm",
+    "title": "The Third of May 1808, Goya: Analysis"
+   },
+   "ai_written": true
+  }
+ ]
+}

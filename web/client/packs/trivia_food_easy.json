@@ -1,0 +1,321 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Food trivia (easy)",
+ "description": "17 easy questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which Italian city is the birthplace of the Margherita pizza?",
+   "answers": [
+    "Naples",
+    "Rome",
+    "Florence",
+    "Milan"
+   ],
+   "correct": "Naples",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Pizza Margherita comes from Naples, the city where modern pizza developed.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pizza_Margherita",
+    "title": "Pizza Margherita"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Pizza Margherita is traditionally said to be named after which royal?",
+   "answers": [
+    "Queen Margherita of Savoy",
+    "Queen Victoria of Britain",
+    "Empress Sisi of Austria",
+    "Queen Isabella of Spain"
+   ],
+   "correct": "Queen Margherita of Savoy",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "The pizza was named for Queen Margherita of Savoy, who visited Naples in 1889.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.flavoursholidays.co.uk/blog/happy-birthday-pizza-margherita/",
+    "title": "The History & Evolution of Pizza Margherita"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which fruit is the main ingredient of guacamole?",
+   "answers": [
+    "Avocado",
+    "Mango",
+    "Papaya",
+    "Cucumber"
+   ],
+   "correct": "Avocado",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Guacamole is a dip or spread made of peeled, mashed ripe avocados plus other ingredients.",
+   "source": {
+    "url": "https://www.britannica.com/topic/guacamole",
+    "title": "Guacamole"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why is lime juice often added to guacamole?",
+   "answers": [
+    "To stop the avocado browning",
+    "To thicken the dip's texture",
+    "To keep the dip chilled",
+    "To turn the dip bright green"
+   ],
+   "correct": "To stop the avocado browning",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Lime juice slows oxidation, which is what makes cut avocado turn brown.",
+   "source": {
+    "url": "https://www.britannica.com/topic/guacamole",
+    "title": "Guacamole"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Guacamole was already part of the cuisine of which civilization when the Spanish arrived in the 16th century?",
+   "answers": [
+    "The Aztecs",
+    "The Incas",
+    "The Romans",
+    "The Vikings"
+   ],
+   "correct": "The Aztecs",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "By the time of the Spanish conquest, guacamole was an established part of Aztec cuisine.",
+   "source": {
+    "url": "https://www.britannica.com/topic/guacamole",
+    "title": "Guacamole"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which legume is the main ingredient of hummus?",
+   "answers": [
+    "Chickpeas",
+    "Lentils",
+    "Black beans",
+    "Green peas"
+   ],
+   "correct": "Chickpeas",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Hummus is made from cooked, mashed chickpeas blended with tahini, lemon juice and garlic.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Hummus",
+    "title": "Hummus"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Tahini, a key ingredient in hummus, is a paste made from which seeds?",
+   "answers": [
+    "Sesame seeds",
+    "Sunflower seeds",
+    "Pumpkin seeds",
+    "Poppy seeds"
+   ],
+   "correct": "Sesame seeds",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Tahini is a sesame paste, which is why sesame is a declared allergen in hummus.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Tahini",
+    "title": "Tahini"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Tofu is made by curdling milk made from which bean?",
+   "answers": [
+    "Soybeans",
+    "Kidney beans",
+    "Fava beans",
+    "Lima beans"
+   ],
+   "correct": "Soybeans",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Tofu is made by coagulating soy milk, which is extracted from ground soybeans.",
+   "source": {
+    "url": "https://www.chopstickchronicles.com/how-to-make-tofu/",
+    "title": "How to Make Tofu - Chopstick Chronicles"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Tofu is also commonly known by which other name?",
+   "answers": [
+    "Bean curd",
+    "Rice paste",
+    "Wheat gluten",
+    "Seed butter"
+   ],
+   "correct": "Bean curd",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Tofu is also called bean curd because it is made from coagulated soy milk.",
+   "source": {
+    "url": "https://yunomi.life/blogs/recipes/how-to-make-tofu-from-soy-milk-1",
+    "title": "Easy Recipe: Make Tofu from Soy Milk at Home"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Spanish region does the rice dish paella originate?",
+   "answers": [
+    "Valencia",
+    "Andalusia",
+    "Catalonia",
+    "Galicia"
+   ],
+   "correct": "Valencia",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Paella comes from the Valencia region, where it began as a lunch for farm workers.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Paella",
+    "title": "Paella"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which expensive spice gives paella its yellow color?",
+   "answers": [
+    "Saffron",
+    "Paprika",
+    "Turmeric",
+    "Cumin"
+   ],
+   "correct": "Saffron",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Paella is characterized by saffron, which gives the rice its yellow color and distinctive flavor.",
+   "source": {
+    "url": "https://www.linguaschools.com/blog/2015/09/22/paella/",
+    "title": "Paella, the traditional Spanish dish from Valencia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The dish paella takes its name from the word for which piece of cookware?",
+   "answers": [
+    "A wide, shallow pan",
+    "A deep clay pot",
+    "A long iron skewer",
+    "A round stone oven"
+   ],
+   "correct": "A wide, shallow pan",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "The dish is named after the wide, shallow pan traditionally used to cook it over an open fire.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Paella",
+    "title": "Paella"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Kimchi is a staple dish of the cuisine of which country?",
+   "answers": [
+    "Korea",
+    "Japan",
+    "Thailand",
+    "Vietnam"
+   ],
+   "correct": "Korea",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Kimchi is a traditional Korean dish of fermented vegetables, most often cabbage.",
+   "source": {
+    "url": "https://www.heartfoundation.org.nz/wellbeing/healthy-recipes/kimchi-fermented-cabbage",
+    "title": "What is Kimchi & How Do You Make?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which preparation process turns cabbage into kimchi?",
+   "answers": [
+    "Fermentation",
+    "Deep frying",
+    "Smoking",
+    "Roasting"
+   ],
+   "correct": "Fermentation",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Kimchi is made by fermenting salted and seasoned cabbage, which gives it its sour tang.",
+   "source": {
+    "url": "https://www.heartfoundation.org.nz/wellbeing/healthy-recipes/kimchi-fermented-cabbage",
+    "title": "What is Kimchi & How Do You Make?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Italian city is the original home of pesto?",
+   "answers": [
+    "Genoa",
+    "Venice",
+    "Bologna",
+    "Turin"
+   ],
+   "correct": "Genoa",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Pesto originated in the Ligurian city of Genoa and is used to dress pasta.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pesto",
+    "title": "Pesto"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which herb is the main ingredient in classic Genovese pesto?",
+   "answers": [
+    "Basil",
+    "Parsley",
+    "Oregano",
+    "Rosemary"
+   ],
+   "correct": "Basil",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Classic pesto genovese is built on basil, blended with olive oil, cheese, pine nuts and garlic.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pesto",
+    "title": "Pesto"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which nut is traditionally used in authentic Genovese pesto?",
+   "answers": [
+    "Pine nuts",
+    "Peanuts",
+    "Cashews",
+    "Hazelnuts"
+   ],
+   "correct": "Pine nuts",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Pine nuts are the traditional nut in pesto genovese. Other nuts are mainly used outside Italy.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pesto",
+    "title": "Pesto"
+   },
+   "ai_written": true
+  }
+ ]
+}

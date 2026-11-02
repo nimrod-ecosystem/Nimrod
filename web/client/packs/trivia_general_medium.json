@@ -1,0 +1,896 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "General trivia (medium)",
+ "description": "50 medium questions about a broad mix of everyday knowledge that fits none of the other categories. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "On the Mohs scale of mineral hardness, which mineral is the softest, rated 1?",
+   "answers": [
+    "Gypsum",
+    "Talc",
+    "Calcite",
+    "Fluorite"
+   ],
+   "correct": "Talc",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The Mohs scale runs from 1 (talc) to 10 (diamond), and talc is the softest of the ten reference minerals.",
+   "source": {
+    "url": "https://www.britannica.com/science/Mohs-hardness",
+    "title": "Mohs hardness | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mineral is the reference mineral for hardness 4 on the Mohs scale?",
+   "answers": [
+    "Calcite",
+    "Apatite",
+    "Gypsum",
+    "Fluorite"
+   ],
+   "correct": "Fluorite",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The Mohs reference minerals in order are talc, gypsum, calcite, fluorite, apatite, feldspar, quartz, topaz, corundum and diamond, so fluorite is 4.",
+   "source": {
+    "url": "https://www.gemsociety.org/article/select-gems-ordered-mohs-hardness/",
+    "title": "The Mohs Hardness Scale And Chart For Select Gems"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mineral is the reference point for hardness 7 on the Mohs scale?",
+   "answers": [
+    "Topaz",
+    "Feldspar",
+    "Corundum",
+    "Quartz"
+   ],
+   "correct": "Quartz",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Quartz is the Mohs reference mineral for 7, between feldspar (6) and topaz (8).",
+   "source": {
+    "url": "https://www.gemsociety.org/article/select-gems-ordered-mohs-hardness/",
+    "title": "The Mohs Hardness Scale And Chart For Select Gems"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the traditional list of wedding anniversary gifts, which material marks the 15th anniversary?",
+   "answers": [
+    "China",
+    "Lace",
+    "Crystal",
+    "Ivory"
+   ],
+   "correct": "Crystal",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Traditional lists give crystal for the 15th year, with lace at 13, ivory at 14 and china at 20.",
+   "source": {
+    "url": "https://www.rosesarered.co.nz/wedding-anniversaries",
+    "title": "Traditional Wedding Anniversary Gifts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gemstone is traditionally associated with a 40th wedding anniversary?",
+   "answers": [
+    "Pearl",
+    "Sapphire",
+    "Ruby",
+    "Emerald"
+   ],
+   "correct": "Ruby",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Traditional lists assign ruby to the 40th anniversary, after pearl (30th) and before sapphire (45th).",
+   "source": {
+    "url": "https://www.rosesarered.co.nz/wedding-anniversaries",
+    "title": "Traditional Wedding Anniversary Gifts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gemstone is the traditional gift for a 60th wedding anniversary?",
+   "answers": [
+    "Gold",
+    "Emerald",
+    "Pearl",
+    "Diamond"
+   ],
+   "correct": "Diamond",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The traditional 60th anniversary gift is diamond, which is why the milestone is called the diamond anniversary.",
+   "source": {
+    "url": "https://www.rosesarered.co.nz/wedding-anniversaries",
+    "title": "Traditional Wedding Anniversary Gifts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gemstone is the standard birthstone for September?",
+   "answers": [
+    "Opal",
+    "Ruby",
+    "Sapphire",
+    "Emerald"
+   ],
+   "correct": "Sapphire",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Sapphire is the standard birthstone for September; opal is October's, ruby is July's and emerald is May's.",
+   "source": {
+    "url": "https://geology.com/gemstones/birthstones/",
+    "title": "Birthstones by Month: Chart and Photos"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gemstone is the usual birthstone for February?",
+   "answers": [
+    "Garnet",
+    "Aquamarine",
+    "Peridot",
+    "Amethyst"
+   ],
+   "correct": "Amethyst",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Amethyst, a purple quartz, is the birthstone for February. Garnet is January's and aquamarine is March's.",
+   "source": {
+    "url": "https://geology.com/gemstones/birthstones/",
+    "title": "Birthstones by Month: Chart and Photos"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the US National Association of Jewelers meet in Kansas City and officially adopt a standard list of birthstones?",
+   "answers": [
+    "1895",
+    "1912",
+    "1937",
+    "1952"
+   ],
+   "correct": "1912",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The association adopted an official list in August 1912. Later updates, such as the 1952 additions, built on that list.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Birthstone",
+    "title": "Birthstone - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the NATO phonetic alphabet, which code word stands for the letter M?",
+   "answers": [
+    "Madrid",
+    "Mike",
+    "Mary",
+    "Metro"
+   ],
+   "correct": "Mike",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The 26 NATO code words run Alfa, Bravo, Charlie and so on, and the word for M is Mike.",
+   "source": {
+    "url": "https://mi135.cap.gov/-training/phonetic-alphabet",
+    "title": "Phonetic Alphabet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the NATO phonetic alphabet technically classed as, since it is not used to transcribe speech sounds?",
+   "answers": [
+    "A spelling alphabet",
+    "A syllabary",
+    "A cipher code",
+    "A phonemic script"
+   ],
+   "correct": "A spelling alphabet",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "It gives clear code words for letters, so it is a spelling alphabet. It is not a phonetic transcription system like the International Phonetic Alphabet.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/NATO_phonetic_alphabet",
+    "title": "NATO phonetic alphabet - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the modified code words used in the NATO phonetic alphabet become the international standard, once ICAO accepted them?",
+   "answers": [
+    "1941",
+    "1949",
+    "1956",
+    "1963"
+   ],
+   "correct": "1956",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "NATO modified the ICAO code words in 1956, and the set became the international standard when ICAO accepted it that year.",
+   "source": {
+    "url": "https://graphsearch.epfl.ch/en/concept/59045",
+    "title": "NATO phonetic alphabet - EPFL Graph Search"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Dewey Decimal Classification, which hundreds range is devoted to Literature?",
+   "answers": [
+    "400s",
+    "700s",
+    "800s",
+    "900s"
+   ],
+   "correct": "800s",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The ten main classes include 400 Language, 700 Arts & recreation, 800 Literature and 900 History & geography.",
+   "source": {
+    "url": "https://www.oclc.org/content/dam/oclc/dewey/versions/print/intro.pdf",
+    "title": "Introduction to the Dewey Decimal Classification (OCLC)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year did Melvil Dewey develop the Dewey Decimal Classification library system?",
+   "answers": [
+    "1851",
+    "1876",
+    "1894",
+    "1923"
+   ],
+   "correct": "1876",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Melvil Dewey developed the system in 1876. It organizes library materials by subject using a hierarchical decimal numbering.",
+   "source": {
+    "url": "https://kohasupport.com/knowledge-base/what-is-dewey-decimal/",
+    "title": "What Is the Dewey Decimal Classification System?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who created the Olympic rings symbol?",
+   "answers": [
+    "Avery Brundage",
+    "Demetrios Vikelas",
+    "Pierre de Coubertin",
+    "Henri de Baillet-Latour"
+   ],
+   "correct": "Pierre de Coubertin",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Pierre de Coubertin, founder of the modern Olympic movement, created the five interlaced rings symbol.",
+   "source": {
+    "url": "https://www.olympics.com/ioc/olympic-rings",
+    "title": "Olympic rings - Symbol of the Olympic Movement"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the Olympic Charter, what do the five interlaced Olympic rings represent?",
+   "answers": [
+    "The union of the five continents",
+    "The five founding host cities",
+    "The five original Olympic sports",
+    "The five founding nations"
+   ],
+   "correct": "The union of the five continents",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The rings stand for the union of the five continents and the meeting of athletes from around the world at the Games.",
+   "source": {
+    "url": "https://www.olympics.com/ioc/olympic-rings",
+    "title": "Olympic rings - Symbol of the Olympic Movement"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year were the Olympic rings first publicly presented?",
+   "answers": [
+    "1896",
+    "1900",
+    "1913",
+    "1924"
+   ],
+   "correct": "1913",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The rings were publicly presented for the first time in 1913, though they only debuted at a Games in 1920.",
+   "source": {
+    "url": "https://www.olympics.com/ioc/olympic-rings",
+    "title": "Olympic rings - Symbol of the Olympic Movement"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which city's Summer Olympics did the Olympic rings and flag officially debut in 1920?",
+   "answers": [
+    "Stockholm",
+    "Antwerp",
+    "Paris",
+    "Amsterdam"
+   ],
+   "correct": "Antwerp",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The symbol and flag officially debuted at the 1920 Summer Olympics in Antwerp, Belgium, after World War I delayed earlier plans.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Olympic_symbols",
+    "title": "Olympic symbols - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Royal Navy officer developed the wind force scale that runs from Force 0 (calm) to Force 12?",
+   "answers": [
+    "James Cook",
+    "Robert FitzRoy",
+    "Horatio Nelson",
+    "Francis Beaufort"
+   ],
+   "correct": "Francis Beaufort",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Sir Francis Beaufort developed the scale in the early 1800s while in the Royal Navy.",
+   "source": {
+    "url": "https://www.spc.noaa.gov/faq/tornado/beaufort.html",
+    "title": "NOAA Beaufort Wind Scale - Storm Prediction Center"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is Force 12, the top of the standard 0–12 Beaufort scale, called?",
+   "answers": [
+    "Storm",
+    "Violent storm",
+    "Whole gale",
+    "Hurricane"
+   ],
+   "correct": "Hurricane",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Force 12 is hurricane-force wind. After that, the Saffir-Simpson scale ranks storms by category.",
+   "source": {
+    "url": "https://www.farmersalmanac.com/beaufort-wind-scale",
+    "title": "Beaufort Wind Scale: All 13 Forces from Calm to Hurricane, Explained"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What did Beaufort's original wind scale describe, rather than a measured wind speed?",
+   "answers": [
+    "The effect of the wind on a ship's sails",
+    "The reading on a ship's barometer",
+    "The height of the clouds overhead",
+    "The saltiness of the sea spray"
+   ],
+   "correct": "The effect of the wind on a ship's sails",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The original scale described the wind's effect on a ship's sails, not its speed. Speed equivalents were agreed later.",
+   "source": {
+    "url": "https://www.noaa.gov/jetstream/ocean/waves/jetstream-max-wind-and-sea-scales",
+    "title": "JetStream Max: Wind and Sea Scales - NOAA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ISO 216 paper size measures 210 × 297 mm?",
+   "answers": [
+    "A3",
+    "A4",
+    "A5",
+    "B4"
+   ],
+   "correct": "A4",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "A4 is 210 × 297 mm and is the most commonly available paper size worldwide.",
+   "source": {
+    "url": "https://papersizes.io/a",
+    "title": "A Paper Sizes"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The ISO A-series of paper sizes is built on a base sheet, A0, with what area?",
+   "answers": [
+    "One square foot",
+    "Half a square metre",
+    "One square metre",
+    "Two square metres"
+   ],
+   "correct": "One square metre",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "A0 is defined as one square metre, and each smaller size in the series is exactly half the area of the previous one.",
+   "source": {
+    "url": "https://www.engineeringtoolbox.com/drawings-paper-sheets-sizes-d_349.html",
+    "title": "Paper Drafting Sizes - ISO 216 series A, B and C"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "All ISO paper sizes share which width-to-length ratio?",
+   "answers": [
+    "1 : √2",
+    "1 : 2",
+    "3 : 4",
+    "2 : 3"
+   ],
+   "correct": "1 : √2",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The ratio of 1 to the square root of 2 means a sheet folded in half keeps the same proportions.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Paper_size",
+    "title": "Paper size - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The international ISO 216 paper size standard is based on which earlier national standard?",
+   "answers": [
+    "ANSI Y14.1",
+    "BS 4000",
+    "JIS P 0138",
+    "DIN 476"
+   ],
+   "correct": "DIN 476",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "ISO 216 is based on the German DIN 476 standard, which is why A4 is still called DIN A4 in Germany and Austria.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Paper_size",
+    "title": "Paper size - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country was the Rubik's Cube invented?",
+   "answers": [
+    "Austria",
+    "Czechoslovakia",
+    "Romania",
+    "Hungary"
+   ],
+   "correct": "Hungary",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Ernő Rubik, a Hungarian sculptor and professor of architecture, invented the cube in 1974.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rubik's_Cube",
+    "title": "Rubik's Cube - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the Rubik's Cube originally called before it was renamed for worldwide sale?",
+   "answers": [
+    "Magic Cube",
+    "Puzzle Block",
+    "Colour Cube",
+    "Twist Box"
+   ],
+   "correct": "Magic Cube",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Rubik's puzzle was first called the Magic Cube (bűvös kocka in Hungarian). It was renamed Rubik's Cube for international release.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rubik's_Cube",
+    "title": "Rubik's Cube - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year did Ideal Toy begin selling the puzzle worldwide under the name Rubik's Cube?",
+   "answers": [
+    "1974",
+    "1977",
+    "1980",
+    "1984"
+   ],
+   "correct": "1980",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Ideal Toy renamed the puzzle and put it in stores in 1980, after Rubik invented it in 1974.",
+   "source": {
+    "url": "https://www.museumofplay.org/toys/rubiks-cube/",
+    "title": "Rubik's Cube - The Strong National Museum of Play"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Lizzie Magie's original aim in designing The Landlord's Game, the forerunner of Monopoly?",
+   "answers": [
+    "To teach children simple bookkeeping",
+    "To promote tourism in Atlantic City",
+    "To show the harm caused by land monopolies",
+    "To raise funds for Quaker charities"
+   ],
+   "correct": "To show the harm caused by land monopolies",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Magie wanted to publicize Henry George's reforms, which held that land monopolies were a root cause of inequality.",
+   "source": {
+    "url": "https://americanhistory.si.edu/explore/stories/playing-monopoly-and-its-discontents-its-80th-anniversary",
+    "title": "Playing Monopoly (and its discontents) on its 80th anniversary - Smithsonian"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "To which games company did Charles Darrow sell his rights to Monopoly in 1935?",
+   "answers": [
+    "Milton Bradley",
+    "Selchow & Righter",
+    "Parker Brothers",
+    "Ideal Toy"
+   ],
+   "correct": "Parker Brothers",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Darrow sold the rights to Parker Brothers in March 1935, and the company began selling the game almost immediately.",
+   "source": {
+    "url": "https://americanhistory.si.edu/explore/stories/playing-monopoly-and-its-discontents-its-80th-anniversary",
+    "title": "Playing Monopoly (and its discontents) on its 80th anniversary - Smithsonian"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the name of the board game Lizzie Magie patented in 1904 that later inspired Monopoly?",
+   "answers": [
+    "The Tenant's Game",
+    "The Land Baron",
+    "The Property Race",
+    "The Landlord's Game"
+   ],
+   "correct": "The Landlord's Game",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Magie's patented game, The Landlord's Game, was the basis for the version Charles Darrow later sold as Monopoly.",
+   "source": {
+    "url": "https://guides.loc.gov/this-month-in-business-history/december/game-of-monopoly-patent",
+    "title": "The Game of Monopoly is Patented - Library of Congress"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year did Louis Braille develop his six-dot reading system for blind people?",
+   "answers": [
+    "1809",
+    "1824",
+    "1837",
+    "1852"
+   ],
+   "correct": "1824",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Braille developed his six-dot cell in 1824 as a teenager at the school for the blind in Paris.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Braille-writing-system",
+    "title": "Braille | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many different characters can the six-dot Braille cell form, not counting a blank cell?",
+   "answers": [
+    "36",
+    "48",
+    "63",
+    "100"
+   ],
+   "correct": "63",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Each of the six dots is raised or not, giving 63 patterns once the all-blank cell is excluded.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Braille-writing-system",
+    "title": "Braille | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Braille's system grew out of a twelve-dot military code for reading in the dark. What was that code called?",
+   "answers": [
+    "Night writing",
+    "Dot semaphore",
+    "Signal script",
+    "Barbier cipher"
+   ],
+   "correct": "Night writing",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Soldiers used the twelve-dot night writing code to communicate after dark, and Braille simplified it to a six-dot cell.",
+   "source": {
+    "url": "https://www.acb.org/history-of-braille",
+    "title": "Description and History of Braille - American Council of the Blind"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At what age was Louis Braille blinded?",
+   "answers": [
+    "One",
+    "Three",
+    "Six",
+    "Nine"
+   ],
+   "correct": "Three",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Braille lost his sight in an accident at the age of three and went on to invent the tactile system that bears his name.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Braille-writing-system",
+    "title": "Braille | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these century years was NOT a leap year in the Gregorian calendar?",
+   "answers": [
+    "1600",
+    "1900",
+    "2000",
+    "2400"
+   ],
+   "correct": "1900",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Century years must be divisible by 400 to be leap years, so 1900 was not one, while 1600, 2000 and 2400 are.",
+   "source": {
+    "url": "https://aa.usno.navy.mil/faq/leap_years",
+    "title": "Leap Years - U.S. Naval Observatory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many leap years occur in each 400-year cycle of the Gregorian calendar?",
+   "answers": [
+    "96",
+    "97",
+    "99",
+    "100"
+   ],
+   "correct": "97",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The Gregorian rule introduces 97 leap days every 400 years, not the 100 a simple every-fourth-year rule would give.",
+   "source": {
+    "url": "https://aa.usno.navy.mil/faq/leap_years",
+    "title": "Leap Years - U.S. Naval Observatory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the average length of a year in the Gregorian calendar?",
+   "answers": [
+    "365.25 days",
+    "365.5 days",
+    "364.75 days",
+    "365.2425 days"
+   ],
+   "correct": "365.2425 days",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Because 97 leap days fall in every 400 years, the average Gregorian year is 365.2425 days, close to the tropical year.",
+   "source": {
+    "url": "https://aa.usno.navy.mil/faq/leap_years",
+    "title": "Leap Years - U.S. Naval Observatory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A marathon is 26 miles plus how many yards?",
+   "answers": [
+    "195",
+    "285",
+    "385",
+    "485"
+   ],
+   "correct": "385",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The standard marathon is 26 miles 385 yards (42.195 km), a distance that comes from the 1908 London Olympic course.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Athletics_at_the_1908_Summer_Olympics_%E2%80%93_Men%27s_marathon",
+    "title": "Athletics at the 1908 Summer Olympics – Men's marathon - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The modern standard marathon distance traces back to the Olympic Games held in which city and year?",
+   "answers": [
+    "Athens, 1896",
+    "Paris, 1900",
+    "London, 1908",
+    "Stockholm, 1912"
+   ],
+   "correct": "London, 1908",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The 1908 London Olympic marathon was the first run over 26 miles 385 yards, which became the standard distance.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Athletics_at_the_1908_Summer_Olympics_%E2%80%93_Men%27s_marathon",
+    "title": "Athletics at the 1908 Summer Olympics – Men's marathon - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1908 Olympic marathon started at which royal residence?",
+   "answers": [
+    "Balmoral Castle",
+    "Windsor Castle",
+    "Hampton Court",
+    "Buckingham Palace"
+   ],
+   "correct": "Windsor Castle",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The British Olympic Committee started the 1908 race at Windsor Castle and finished it in front of the royal box at the stadium in London.",
+   "source": {
+    "url": "https://www.britannica.com/sports/marathon-race",
+    "title": "Marathon | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to legend, the Greek soldier who ran from Marathon to Athens in 490 BCE brought news of victory over whom?",
+   "answers": [
+    "The Spartans",
+    "The Persians",
+    "The Macedonians",
+    "The Trojans"
+   ],
+   "correct": "The Persians",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The legend says the soldier ran to announce the Athenian victory over the Persians, and the marathon race commemorates it.",
+   "source": {
+    "url": "https://www.britannica.com/sports/marathon-race",
+    "title": "Marathon | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was the marathon added to the women's Olympic program?",
+   "answers": [
+    "1964",
+    "1972",
+    "1984",
+    "1992"
+   ],
+   "correct": "1984",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Women's marathon running joined the Olympic program in 1984. The men's race dates from the first modern Games in 1896.",
+   "source": {
+    "url": "https://www.britannica.com/sports/marathon-race",
+    "title": "Marathon | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the Scoville scale measure the concentration of?",
+   "answers": [
+    "Piperine",
+    "Allicin",
+    "Lycopene",
+    "Capsaicin"
+   ],
+   "correct": "Capsaicin",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Scoville heat units measure capsaicin and related capsaicinoids, the compounds that make chili peppers hot.",
+   "source": {
+    "url": "https://www.chilipeppermadness.com/frequently-asked-questions/the-scoville-scale/",
+    "title": "The Scoville Scale: Complete Pepper Heat Chart - Chili Pepper Madness"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these chili peppers typically rates hottest on the Scoville scale?",
+   "answers": [
+    "Jalapeño",
+    "Serrano",
+    "Guajillo",
+    "Habanero"
+   ],
+   "correct": "Habanero",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Habaneros typically score 100,000–350,000 SHU. Serranos reach about 10,000–25,000, and jalapeños and guajillos about 2,500–10,000.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Scoville_scale",
+    "title": "Scoville scale - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American inventor patented an early typewriter in 1868 and is credited with the QWERTY layout?",
+   "answers": [
+    "Thomas Edison",
+    "Samuel Morse",
+    "Elias Howe",
+    "Christopher Latham Sholes"
+   ],
+   "correct": "Christopher Latham Sholes",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "Christopher Latham Sholes invented the typewriter whose keyboard evolved into QWERTY, and E. Remington and Sons later popularized it.",
+   "source": {
+    "url": "https://historyfacts.com/science-industry/article/where-did-the-qwerty-keyboard-layout-come-from/",
+    "title": "Where Did the QWERTY Keyboard Layout Come From?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How did the QWERTY keyboard layout get its name?",
+   "answers": [
+    "From its inventors' initials",
+    "From the first six letters on the top letter row",
+    "From a Latin word for typing",
+    "From the first letters of the alphabet reversed"
+   ],
+   "correct": "From the first six letters on the top letter row",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "QWERTY is named after the first six letter keys at the top left of a standard English-language keyboard.",
+   "source": {
+    "url": "https://study.com/academy/lesson/what-is-a-qwerty-keyboard-definition-layout-quiz.html",
+    "title": "QWERTY Keyboard Meaning, History & Layout - Study.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which alternative keyboard layout, designed in the 1930s, was meant to be faster and more comfortable than QWERTY?",
+   "answers": [
+    "Colemak",
+    "Dvorak",
+    "AZERTY",
+    "Maltron"
+   ],
+   "correct": "Dvorak",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "The Dvorak layout, designed in the 1930s, was meant to be more efficient than QWERTY, but QWERTY stayed the global standard.",
+   "source": {
+    "url": "https://historyfacts.com/science-industry/article/where-did-the-qwerty-keyboard-layout-come-from/",
+    "title": "Where Did the QWERTY Keyboard Layout Come From?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which variant of the QWERTY layout is used in German-speaking countries?",
+   "answers": [
+    "AZERTY",
+    "QWERTZ",
+    "QZERTY",
+    "Dvorak"
+   ],
+   "correct": "QWERTZ",
+   "difficulty": "medium",
+   "category": "General",
+   "explain": "German-speaking countries adjust the layout to QWERTZ, which swaps the positions of Y and Z.",
+   "source": {
+    "url": "https://study.com/academy/lesson/what-is-a-qwerty-keyboard-definition-layout-quiz.html",
+    "title": "QWERTY Keyboard Meaning, History & Layout - Study.com"
+   },
+   "ai_written": true
+  }
+ ]
+}

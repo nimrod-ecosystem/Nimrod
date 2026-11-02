@@ -1,0 +1,922 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Music trivia (easy)",
+ "description": "50 easy questions about composers, instruments, genres, famous songs and musicians (no lyrics quoted). Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which composer wrote the famous Fifth Symphony, first performed in 1808?",
+   "answers": [
+    "Ludwig van Beethoven",
+    "Johannes Brahms",
+    "Franz Joseph Haydn",
+    "Franz Schubert"
+   ],
+   "correct": "Ludwig van Beethoven",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Beethoven's Third and Fifth Symphonies premiered in 1805 and 1808, and the Fifth is among his best-known works.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Ludwig_van_Beethoven",
+    "title": "Ludwig van Beethoven - Wikipedia"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The melody of \"Ode to Joy\" is used as the official anthem of which organization?",
+   "answers": [
+    "The European Union",
+    "The United Nations",
+    "The Commonwealth",
+    "The Olympic Movement"
+   ],
+   "correct": "The European Union",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Beethoven's melody, without the words, was adopted in 1985 as the anthem of the European Community, which became the European Union.",
+   "source": {
+    "url": "https://www.classicfm.com/composers/beethoven/ode-to-joy-lyrics-german-english/",
+    "title": "What are the lyrics to 'Ode to Joy' from Beethoven's Symphony No.9? - Classic FM"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What health problem gradually affected Beethoven while he was composing?",
+   "answers": [
+    "He gradually lost his hearing",
+    "He gradually lost his sight",
+    "He lost the use of his hands",
+    "He lost the ability to speak"
+   ],
+   "correct": "He gradually lost his hearing",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Beethoven's first symptoms of hearing loss appeared before 1800, and his deafness became total by 1819 according to Britannica.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Ludwig-van-Beethoven",
+    "title": "Ludwig van Beethoven - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Moonlight Sonata is a famous piece written for which instrument?",
+   "answers": [
+    "Piano",
+    "Violin",
+    "Harp",
+    "Organ"
+   ],
+   "correct": "Piano",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The Moonlight Sonata is Beethoven's Piano Sonata No. 14, one of his most popular works.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Ludwig_van_Beethoven",
+    "title": "Ludwig van Beethoven - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The \"Ode to Joy\" is the choral finale of which Beethoven symphony?",
+   "answers": [
+    "The Ninth Symphony",
+    "The First Symphony",
+    "The Third Symphony",
+    "The Fifth Symphony"
+   ],
+   "correct": "The Ninth Symphony",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The fourth movement of Beethoven's Symphony No. 9 is commonly known as the Ode to Joy and adds vocal soloists and a chorus.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Symphony_No._9_(Beethoven)",
+    "title": "Symphony No. 9 (Beethoven) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which composer wrote the opera The Magic Flute?",
+   "answers": [
+    "Wolfgang Amadeus Mozart",
+    "Giuseppe Verdi",
+    "Richard Wagner",
+    "Giacomo Puccini"
+   ],
+   "correct": "Wolfgang Amadeus Mozart",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The Magic Flute was Mozart's last opera, with a German libretto by Emanuel Schikaneder, and premiered in 1791.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Magic-Flute",
+    "title": "The Magic Flute - Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In which city was Wolfgang Amadeus Mozart born in 1756?",
+   "answers": [
+    "Salzburg",
+    "Vienna",
+    "Prague",
+    "Munich"
+   ],
+   "correct": "Salzburg",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Mozart was born in Salzburg and later spent his last years in Vienna.",
+   "source": {
+    "url": "https://www.classicfm.com/composers/mozart/",
+    "title": "Wolfgang Amadeus Mozart (1756–1791) - Classic FM"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the German title \"Eine kleine Nachtmusik\" mean in English?",
+   "answers": [
+    "A little night music",
+    "A small evening prayer",
+    "One short moonlit dance",
+    "The quiet midnight hour"
+   ],
+   "correct": "A little night music",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The German subtitle literally means \"a little night music\", and the 1787 work is one of Mozart's most famous.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Eine_kleine_Nachtmusik",
+    "title": "Eine kleine Nachtmusik - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how old was Mozart when he died in 1791?",
+   "answers": [
+    "35",
+    "45",
+    "55",
+    "65"
+   ],
+   "correct": "35",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Mozart died in Vienna in December 1791, aged 35, only a few months after The Magic Flute premiered.",
+   "source": {
+    "url": "https://www.eno.org/operas/the-magic-flute/",
+    "title": "The Magic Flute: Synopsis, Songs & More - English National Opera"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Italian composer wrote The Four Seasons, a set of four violin concertos?",
+   "answers": [
+    "Antonio Vivaldi",
+    "Giacomo Puccini",
+    "Gioachino Rossini",
+    "Giuseppe Verdi"
+   ],
+   "correct": "Antonio Vivaldi",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The Four Seasons is the best-known work of the Italian composer Antonio Vivaldi, published in 1725.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Four-Seasons-by-Vivaldi",
+    "title": "The Four Seasons - Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Four Seasons is among the most popular works of which musical era?",
+   "answers": [
+    "Baroque",
+    "Romantic",
+    "Classical",
+    "Renaissance"
+   ],
+   "correct": "Baroque",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Vivaldi's Four Seasons concertos are described as some of the most popular and recognized pieces of Baroque music.",
+   "source": {
+    "url": "https://www.udiscovermusic.com/classical-features/vivaldi-four-seasons/",
+    "title": "'The Four Seasons': A Guide To Vivaldi's Radical Violin Concertos"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which composer wrote the music for the ballet The Nutcracker?",
+   "answers": [
+    "Pyotr Ilyich Tchaikovsky",
+    "Igor Stravinsky",
+    "Sergei Prokofiev",
+    "Johannes Brahms"
+   ],
+   "correct": "Pyotr Ilyich Tchaikovsky",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Tchaikovsky composed the Nutcracker score in 1891–1892, and he also wrote Swan Lake and The Sleeping Beauty.",
+   "source": {
+    "url": "https://www.sfballet.org/backstage/who-is-tchaikovsky/",
+    "title": "Who is Tchaikovsky - San Francisco Ballet"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The ballet The Nutcracker is traditionally associated with which holiday?",
+   "answers": [
+    "Christmas",
+    "Easter",
+    "Halloween",
+    "Thanksgiving"
+   ],
+   "correct": "Christmas",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The Nutcracker premiered in St. Petersburg in 1892 as a Christmas ballet and is still a seasonal favorite.",
+   "source": {
+    "url": "https://study.com/learn/lesson/the-nutcracker-ballet-music-summary.html",
+    "title": "The Nutcracker by Pyotr Ilych Tchaikovsky | Music & Characters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Tchaikovsky, the composer of Swan Lake, came from which country?",
+   "answers": [
+    "Russia",
+    "Poland",
+    "Germany",
+    "France"
+   ],
+   "correct": "Russia",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Pyotr Ilyich Tchaikovsky was a Russian composer, best remembered for his ballet scores.",
+   "source": {
+    "url": "https://www.sfballet.org/backstage/who-is-tchaikovsky/",
+    "title": "Who is Tchaikovsky - San Francisco Ballet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Swan Lake, The Sleeping Beauty and The Nutcracker are famous examples of which art form?",
+   "answers": [
+    "Ballet",
+    "Opera",
+    "Oratorio",
+    "Operetta"
+   ],
+   "correct": "Ballet",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "These are Tchaikovsky's three celebrated ballet scores, among the most famous ever written for dance.",
+   "source": {
+    "url": "https://www.sfballet.org/backstage/who-is-tchaikovsky/",
+    "title": "Who is Tchaikovsky - San Francisco Ballet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many keys does a standard modern piano have?",
+   "answers": [
+    "88",
+    "76",
+    "64",
+    "100"
+   ],
+   "correct": "88",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "A standard piano has 88 keys, made up of 52 white and 36 black ones.",
+   "source": {
+    "url": "https://www.classicfm.com/discover-music/instruments/piano/why-88-keys/",
+    "title": "Why does a piano have 88 keys? - Classic FM"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Traditionally, the white keys on a piano were covered with which material?",
+   "answers": [
+    "Ivory",
+    "Marble",
+    "Pearl",
+    "Slate"
+   ],
+   "correct": "Ivory",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Because white keys were traditionally covered in ivory, they are often called the \"ivories\".",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Musical_keyboard",
+    "title": "Musical keyboard - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A standard string quartet has two violins, a viola and which other instrument?",
+   "answers": [
+    "A cello",
+    "A harp",
+    "A double bass",
+    "A flute"
+   ],
+   "correct": "A cello",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The string quartet is made up of two violins, one viola and one cello.",
+   "source": {
+    "url": "https://musicbits.co.uk/blogs/news/introducing-the-violin-family",
+    "title": "Introducing The Violin Family - MusicBits"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which instrument is the largest member of the orchestral string family?",
+   "answers": [
+    "The double bass",
+    "The cello",
+    "The viola",
+    "The violin"
+   ],
+   "correct": "The double bass",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The double bass is the giant of the string family, at over 6 feet long.",
+   "source": {
+    "url": "https://www.allnewton.org/instrument-families/string-family",
+    "title": "The String Family - All Newton Music School"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which instrument is the smallest and highest-sounding in the orchestra's string family?",
+   "answers": [
+    "The violin",
+    "The viola",
+    "The cello",
+    "The double bass"
+   ],
+   "correct": "The violin",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The violin is the smallest member of the string family and makes the highest sounds.",
+   "source": {
+    "url": "https://www.allnewton.org/instrument-families/string-family",
+    "title": "The String Family - All Newton Music School"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many strings does a standard violin have?",
+   "answers": [
+    "Four strings",
+    "Three strings",
+    "Six strings",
+    "Eight strings"
+   ],
+   "correct": "Four strings",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "A violin has four strings, typically tuned to G, D, A and E.",
+   "source": {
+    "url": "https://amorimfineviolins.com/our-blog/an-in-depth-guide-on-the-violin-family/",
+    "title": "An In-Depth Guide on The Violin Family - Amorim Fine Violins"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which instrument did Adolphe Sax invent in the 1840s?",
+   "answers": [
+    "The saxophone",
+    "The clarinet",
+    "The trombone",
+    "The accordion"
+   ],
+   "correct": "The saxophone",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The Belgian instrument maker Adolphe Sax invented the saxophone, which was patented in Paris in 1846.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Antoine-Joseph-Sax",
+    "title": "Adolphe Sax - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Although it is made of brass, the saxophone is classified as part of which instrument family?",
+   "answers": [
+    "The woodwind family",
+    "The brass family",
+    "The string family",
+    "The percussion family"
+   ],
+   "correct": "The woodwind family",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The saxophone makes sound with a reed, like the clarinet, so it is classed as a woodwind.",
+   "source": {
+    "url": "https://www.yamaha.com/en/musical_instrument_guide/saxophone/structure",
+    "title": "The Origins of the Saxophone - Yamaha"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which small instrument plays the highest notes in the orchestra?",
+   "answers": [
+    "The piccolo",
+    "The oboe",
+    "The clarinet",
+    "The trumpet"
+   ],
+   "correct": "The piccolo",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The piccolo is a smaller version of the flute and plays the highest sounds in the orchestra.",
+   "source": {
+    "url": "https://study.com/learn/lesson/orchestra-sections-layout.html",
+    "title": "Orchestra Definition, Parts & Layout - Study.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which instrument has the lowest sound in the standard orchestral brass section?",
+   "answers": [
+    "The tuba",
+    "The trumpet",
+    "The French horn",
+    "The trombone"
+   ],
+   "correct": "The tuba",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The tuba is the lowest-sounding instrument in the orchestra's brass section.",
+   "source": {
+    "url": "https://hellomusictheory.com/learn/orchestral-instruments/",
+    "title": "What Instruments Are In An Orchestra? - Hello Music Theory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The large orchestral drums called timpani are also known as what?",
+   "answers": [
+    "Kettledrums",
+    "Bongo drums",
+    "Snare drums",
+    "Steel drums"
+   ],
+   "correct": "Kettledrums",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Timpani are also called kettle drums and can be tuned to specific notes.",
+   "source": {
+    "url": "https://hellomusictheory.com/learn/orchestral-instruments/",
+    "title": "What Instruments Are In An Orchestra? - Hello Music Theory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Strings, woodwinds and brass make up an orchestra along with which fourth main section?",
+   "answers": [
+    "Percussion",
+    "Vocalists",
+    "Synthesizers",
+    "Accordions"
+   ],
+   "correct": "Percussion",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The four main sections of a modern symphony orchestra are strings, woodwinds, brass and percussion.",
+   "source": {
+    "url": "https://study.com/learn/lesson/orchestra-sections-layout.html",
+    "title": "Orchestra Definition, Parts & Layout - Study.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the person who leads an orchestra and keeps the musicians together?",
+   "answers": [
+    "The conductor",
+    "The librettist",
+    "The choreographer",
+    "The lyricist"
+   ],
+   "correct": "The conductor",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The conductor leads the musicians and maintains the rhythm of the musical score.",
+   "source": {
+    "url": "https://study.com/learn/lesson/orchestra-sections-layout.html",
+    "title": "Orchestra Definition, Parts & Layout - Study.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which section of an orchestra has the most players?",
+   "answers": [
+    "The strings",
+    "The brass",
+    "The woodwinds",
+    "The percussion"
+   ],
+   "correct": "The strings",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The string family is the largest instrumental family in the orchestra in terms of players.",
+   "source": {
+    "url": "https://www.music-workshop.co.uk/resources/blog/string-family/",
+    "title": "String Family - Music Workshop"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these instruments belongs to the orchestra's brass section?",
+   "answers": [
+    "The trombone",
+    "The oboe",
+    "The cello",
+    "The timpani"
+   ],
+   "correct": "The trombone",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The orchestral brass section normally includes horns, trumpets, trombones and tuba.",
+   "source": {
+    "url": "https://classicalaurum.com/how-orchestras-are-structured/",
+    "title": "How Orchestras Are Structured: Sections, Roles and Conductors"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these instruments belongs to the orchestra's woodwind section?",
+   "answers": [
+    "The clarinet",
+    "The tuba",
+    "The viola",
+    "The cymbals"
+   ],
+   "correct": "The clarinet",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The woodwind section includes instruments such as the flute, oboe and clarinet.",
+   "source": {
+    "url": "https://study.com/learn/lesson/orchestra-sections-layout.html",
+    "title": "Orchestra Definition, Parts & Layout - Study.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which English city did the Beatles form?",
+   "answers": [
+    "Liverpool",
+    "Manchester",
+    "London",
+    "Birmingham"
+   ],
+   "correct": "Liverpool",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Lennon and McCartney first performed together in Liverpool in 1957, and all four Beatles were born there.",
+   "source": {
+    "url": "https://www.britannica.com/topic/the-Beatles",
+    "title": "The Beatles - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the drummer in the Beatles' best-known lineup?",
+   "answers": [
+    "Ringo Starr",
+    "Charlie Watts",
+    "Keith Moon",
+    "John Bonham"
+   ],
+   "correct": "Ringo Starr",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The Beatles' final members were Lennon, McCartney, Harrison and drummer Ringo Starr.",
+   "source": {
+    "url": "https://www.britannica.com/topic/the-Beatles",
+    "title": "The Beatles - Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which two Beatles were the band's main songwriters?",
+   "answers": [
+    "Lennon and McCartney",
+    "Harrison and Starr",
+    "Lennon and Harrison",
+    "McCartney and Starr"
+   ],
+   "correct": "Lennon and McCartney",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The band's main songwriters were John Lennon and Paul McCartney.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/The_Beatles",
+    "title": "The Beatles - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Beatle played lead guitar in the band?",
+   "answers": [
+    "George Harrison",
+    "John Lennon",
+    "Paul McCartney",
+    "Ringo Starr"
+   ],
+   "correct": "George Harrison",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "George Harrison was the Beatles' lead guitarist, while Lennon sang and played rhythm guitar and McCartney played bass.",
+   "source": {
+    "url": "https://www.britannica.com/topic/the-Beatles",
+    "title": "The Beatles - Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which singer is known as \"the King of Rock and Roll\"?",
+   "answers": [
+    "Elvis Presley",
+    "Johnny Cash",
+    "Frank Sinatra",
+    "Buddy Holly"
+   ],
+   "correct": "Elvis Presley",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Elvis Presley is widely known as \"the King of Rock 'n' Roll\" and was one of rock music's dominant performers from the mid-1950s.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Elvis-Presley",
+    "title": "Elvis Presley - Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Graceland, the home of Elvis Presley, is located in which city?",
+   "answers": [
+    "Memphis",
+    "Nashville",
+    "Tupelo",
+    "Atlanta"
+   ],
+   "correct": "Memphis",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Graceland is Elvis Presley's estate in Memphis, Tennessee, where he lived from 1957 until his death in 1977.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Elvis-Presley",
+    "title": "Elvis Presley - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these films starred Elvis Presley?",
+   "answers": [
+    "Jailhouse Rock",
+    "Purple Rain",
+    "Grease",
+    "Footloose"
+   ],
+   "correct": "Jailhouse Rock",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Jailhouse Rock (1957) is one of Presley's most famous films, along with Blue Hawaii and Viva Las Vegas.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Elvis_Presley",
+    "title": "Elvis Presley - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the famous \"Thriller\" music video, Michael Jackson dances with a horde of what?",
+   "answers": [
+    "Zombies",
+    "Vampires",
+    "Ghosts",
+    "Skeletons"
+   ],
+   "correct": "Zombies",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The John Landis-directed video shows Jackson dancing with a horde of zombies.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Thriller_(song)",
+    "title": "Thriller (song) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which dance step did Michael Jackson popularize?",
+   "answers": [
+    "The moonwalk",
+    "The twist",
+    "The macarena",
+    "The waltz"
+   ],
+   "correct": "The moonwalk",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Michael Jackson popularized a dance step called the moonwalk.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Michael-Jackson/487595",
+    "title": "Michael Jackson - Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which nickname is Michael Jackson best known by?",
+   "answers": [
+    "The King of Pop",
+    "The King of Soul",
+    "The King of Swing",
+    "The King of Blues"
+   ],
+   "correct": "The King of Pop",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Michael Jackson is widely called the \"King of Pop\".",
+   "source": {
+    "url": "https://www.theroot.com/the-tea-behind-michael-jacksons-thriller-the-biggest-1851762787",
+    "title": "The Story Behind Michael Jackson's Thriller Album - The Root"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the chief songwriter and lead vocalist behind \"Bohemian Rhapsody\"?",
+   "answers": [
+    "Freddie Mercury",
+    "Elton John",
+    "David Bowie",
+    "Rod Stewart"
+   ],
+   "correct": "Freddie Mercury",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Freddie Mercury wrote the mock-operatic \"Bohemian Rhapsody\" and sang it as Queen's front man.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Bohemian-Rhapsody",
+    "title": "Bohemian Rhapsody - Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which British rock band recorded \"We Will Rock You\" and \"Another One Bites the Dust\"?",
+   "answers": [
+    "Queen",
+    "The Rolling Stones",
+    "Led Zeppelin",
+    "Pink Floyd"
+   ],
+   "correct": "Queen",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Both songs are among the best-known hits of Queen, whose chief songwriter and singer was Freddie Mercury.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Freddie-Mercury",
+    "title": "Freddie Mercury - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which instrument is jazz legend Louis Armstrong best known for playing?",
+   "answers": [
+    "The trumpet",
+    "The saxophone",
+    "The clarinet",
+    "The trombone"
+   ],
+   "correct": "The trumpet",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Louis Armstrong began on the cornet and became the leading trumpeter and one of the most influential artists in jazz history.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Louis-Armstrong/352783",
+    "title": "Louis Armstrong - Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American city is widely recognized as the birthplace of jazz?",
+   "answers": [
+    "New Orleans",
+    "Chicago",
+    "Detroit",
+    "Seattle"
+   ],
+   "correct": "New Orleans",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Jazz emerged in the cultural life of New Orleans, Louisiana, and was strongly influenced by the blues.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/music/music-united-states/",
+    "title": "Music of the United States - EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which New York City borough was hip-hop born in the 1970s?",
+   "answers": [
+    "The Bronx",
+    "Staten Island",
+    "Queens",
+    "Brooklyn"
+   ],
+   "correct": "The Bronx",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Hip-hop is recognized to have originated and evolved first in the Bronx in the early 1970s.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/music/music-united-states/",
+    "title": "Music of the United States - EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What term describes the rhythmic speaking style over music that is common in hip-hop?",
+   "answers": [
+    "Rap",
+    "Scat",
+    "Yodel",
+    "Crooning"
+   ],
+   "correct": "Rap",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "This syncopated speaking style over music is known as rap, though it is not always present in hip-hop.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/music/music-united-states/",
+    "title": "Music of the United States - EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Tennessee city is the center of the country music industry?",
+   "answers": [
+    "Nashville",
+    "Memphis",
+    "Knoxville",
+    "Chattanooga"
+   ],
+   "correct": "Nashville",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "As country music grew popular, much of its music industry became concentrated in Nashville.",
+   "source": {
+    "url": "https://worldmusiccentral.org/world-music-resources/musician-biographies/american-music/",
+    "title": "American Music - World Music Central"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which part of the United States did the blues originate?",
+   "answers": [
+    "The Deep South",
+    "The Pacific Coast",
+    "New England",
+    "The Great Plains"
+   ],
+   "correct": "The Deep South",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "The blues is a type of folk song from the Southern United States, and its original form is known as Delta blues.",
+   "source": {
+    "url": "https://worldmusiccentral.org/world-music-resources/musician-biographies/american-music/",
+    "title": "American Music - World Music Central"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which style of jazz, also known as big band music, swept the United States in the 1930s?",
+   "answers": [
+    "Swing",
+    "Bebop",
+    "Ragtime",
+    "Fusion"
+   ],
+   "correct": "Swing",
+   "difficulty": "easy",
+   "category": "Music",
+   "explain": "Swing, or big band music, was the new form of jazz that swept the country during the 1930s.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/music/music-united-states/",
+    "title": "Music of the United States - EBSCO Research Starters"
+   },
+   "ai_written": true
+  }
+ ]
+}

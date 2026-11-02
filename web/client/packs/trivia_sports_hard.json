@@ -1,0 +1,932 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Sports trivia (hard)",
+ "description": "50 hard questions about rules, famous athletes, events and records that no longer change. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "By how many centimetres did Bob Beamon's 8.90 m jump at the 1968 Mexico City Olympics beat the previous long jump world record?",
+   "answers": [
+    "15 cm",
+    "35 cm",
+    "55 cm",
+    "75 cm"
+   ],
+   "correct": "55 cm",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Beamon's leap beat the old mark by 55 cm, a huge margin in a record that had typically moved only a few centimetres at a time.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Bob-Beamon",
+    "title": "Bob Beamon | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Whose 1991 jump finally surpassed Bob Beamon's long jump world record after it had stood for 23 years?",
+   "answers": [
+    "Carl Lewis",
+    "Larry Myricks",
+    "Ralph Boston",
+    "Mike Powell"
+   ],
+   "correct": "Mike Powell",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Mike Powell of the United States jumped 8.95 m in 1991 to beat Beamon's 8.90 m.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Bob-Beamon",
+    "title": "Bob Beamon | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Pennsylvania town did Wilt Chamberlain score 100 points for the Philadelphia Warriors in 1962?",
+   "answers": [
+    "Scranton",
+    "Allentown",
+    "Hershey",
+    "Harrisburg"
+   ],
+   "correct": "Hershey",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "The Warriors played some \"home\" games in Hershey, and Chamberlain's 100-point game against the Knicks was played there on March 2, 1962.",
+   "source": {
+    "url": "https://www.nba.com/history/top-moments/1962-wilt-chamberlain-100-points",
+    "title": "1962: Wilt Chamberlain scores 100 points | NBA.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In his 100-point game, Wilt Chamberlain made how many of his 32 free-throw attempts?",
+   "answers": [
+    "22",
+    "25",
+    "28",
+    "31"
+   ],
+   "correct": "28",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Chamberlain made 28 of 32 free throws, a notable result for a player known as a poor free-throw shooter.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/wilt-chamberlain-scores-100-points-one-game/",
+    "title": "Wilt Chamberlain Scores 100 Points in One Game | EBSCO"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Wilt Chamberlain's per-game scoring average in the 1961-62 NBA season, the year of his 100-point game?",
+   "answers": [
+    "44.8",
+    "47.6",
+    "53.2",
+    "50.4"
+   ],
+   "correct": "50.4",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Chamberlain averaged 50.4 points per game in 1961-62, breaking his own record of 38.4 from the season before.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/march-2/wilt-chamberlain-scores-100-points",
+    "title": "Wilt Chamberlain scores 100 points | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Warriors publicist scribbled \"100\" on a sheet of paper for Chamberlain to hold up for the famous post-game photo?",
+   "answers": [
+    "Eddie Gottlieb",
+    "Harvey Pollack",
+    "Al Attles",
+    "Joe Ruklick"
+   ],
+   "correct": "Harvey Pollack",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "PR man Harvey Pollack wrote \"100\" on a piece of paper in the locker room, producing one of sport's most iconic photographs.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.nba.com/history/top-moments/1962-wilt-chamberlain-100-points",
+    "title": "1962: Wilt Chamberlain scores 100 points | NBA.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the catcher on the receiving end of Don Larsen's perfect game in the 1956 World Series?",
+   "answers": [
+    "Elston Howard",
+    "Roy Campanella",
+    "Bill Dickey",
+    "Yogi Berra"
+   ],
+   "correct": "Yogi Berra",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Yogi Berra caught the game and famously leapt into Larsen's arms after the final out; his mitt is held by the Baseball Hall of Fame.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://baseballhall.org/discover/inside-pitch/larsen-perfect-game",
+    "title": "Don Larsen defined World Series perfection | Baseball Hall of Fame"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Brooklyn Dodgers batter struck out on a 1-2 pitch to complete Don Larsen's perfect game?",
+   "answers": [
+    "Gil Hodges",
+    "Dale Mitchell",
+    "Jackie Robinson",
+    "Pee Wee Reese"
+   ],
+   "correct": "Dale Mitchell",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Dale Mitchell was the 27th batter Larsen retired, ending the game with a called strikeout.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/october-8/don-larsen-world-series-perfect-games-no-hitters",
+    "title": "Don Larsen pitches only World Series perfect game | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many pitches did Don Larsen throw in his 1956 World Series perfect game?",
+   "answers": [
+    "87",
+    "92",
+    "97",
+    "104"
+   ],
+   "correct": "97",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Larsen needed only 97 pitches to retire all 27 Dodgers batters.",
+   "source": {
+    "url": "https://baseballhall.org/discover/inside-pitch/larsen-perfect-game",
+    "title": "Don Larsen defined World Series perfection | Baseball Hall of Fame"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Dodgers pitcher took the loss opposite Don Larsen in Game 5 of the 1956 World Series?",
+   "answers": [
+    "Don Newcombe",
+    "Carl Erskine",
+    "Sal Maglie",
+    "Clem Labine"
+   ],
+   "correct": "Sal Maglie",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Sal Maglie pitched well, allowing five hits, but the Yankees won 2-0 behind Larsen's perfect game.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Don_Larsen%27s_perfect_game",
+    "title": "Don Larsen's perfect game | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which English leg-spinner bowled Don Bradman for a duck in his final Test innings in 1948?",
+   "answers": [
+    "Jim Laker",
+    "Eric Hollies",
+    "Alec Bedser",
+    "Doug Wright"
+   ],
+   "correct": "Eric Hollies",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Eric Hollies bowled Bradman with a googly at The Oval, leaving his Test average at 99.94.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://thecricscope.com/cricket-statistics/don-bradman-bio-records/",
+    "title": "Sir Don Bradman: Bio, 99.94 Average, Records & Legacy | Cricscope"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many runs did Don Bradman need in his last Test innings to finish with a career average of exactly 100?",
+   "answers": [
+    "two",
+    "six",
+    "four",
+    "ten"
+   ],
+   "correct": "four",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Bradman needed just four runs but was dismissed for nought, finishing on 99.94.",
+   "source": {
+    "url": "https://www.cricinfo.com/story/god-s-own-blob-365157",
+    "title": "God's own blob | ESPNcricinfo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which English ground did Don Bradman play his final Test innings in 1948?",
+   "answers": [
+    "Lord's",
+    "Headingley",
+    "Old Trafford",
+    "The Oval"
+   ],
+   "correct": "The Oval",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "His famous duck came at The Oval in 1948, in what turned out to be his last Test innings.",
+   "source": {
+    "url": "https://www.cricinfo.com/story/god-s-own-blob-365157",
+    "title": "God's own blob | ESPNcricinfo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which apparatus did Nadia Comăneci score the first perfect 10 in Olympic gymnastics history?",
+   "answers": [
+    "Balance beam",
+    "Floor exercise",
+    "Vault",
+    "Uneven bars"
+   ],
+   "correct": "Uneven bars",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Her first 10 came on the uneven bars on 18 July 1976 in Montreal.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Perfect_10_(gymnastics)",
+    "title": "Perfect 10 (gymnastics) | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What score did the Montreal 1976 scoreboard display for Comăneci's first perfect 10, because it could show only three digits?",
+   "answers": [
+    "9.99",
+    "1.00",
+    "0.10",
+    "10.00"
+   ],
+   "correct": "1.00",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "The scoreboard had been built on the assumption that a 10 was impossible, so it showed 1.00.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Nadia-Comaneci",
+    "title": "Nadia Comăneci | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many perfect scores of 10.0 did Nadia Comăneci earn at the 1976 Montreal Olympics?",
+   "answers": [
+    "five",
+    "six",
+    "nine",
+    "seven"
+   ],
+   "correct": "seven",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "She received seven perfect 10s in Montreal, on the way to three gold medals.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Nadia-Comaneci",
+    "title": "Nadia Comăneci | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which company, the Olympic timekeeper, built the electronic scoreboard that could not display a 10.00 in Montreal in 1976?",
+   "answers": [
+    "Seiko",
+    "Longines",
+    "Omega",
+    "Rolex"
+   ],
+   "correct": "Omega",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Omega asked the IOC how many digits to allow and was told three would be enough, since a 10.00 was thought impossible.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Perfect_10_(gymnastics)",
+    "title": "Perfect 10 (gymnastics) | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Czechoslovak gymnast was first to score perfect 10s at a major post-1952 competition, at the 1967 European Championships?",
+   "answers": [
+    "Olga Korbut",
+    "Věra Čáslavská",
+    "Ludmilla Tourischeva",
+    "Nellie Kim"
+   ],
+   "correct": "Věra Čáslavská",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Čáslavská earned two perfect 10s at the 1967 European Championships, nine years before Comăneci's Olympic 10.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Perfect_10_(gymnastics)",
+    "title": "Perfect 10 (gymnastics) | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "From which royal residence did the 1908 London Olympic marathon start, helping to fix the race at 26 miles 385 yards?",
+   "answers": [
+    "Hampton Court Palace",
+    "Kensington Palace",
+    "Buckingham Palace",
+    "Windsor Castle"
+   ],
+   "correct": "Windsor Castle",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "The race ran from Windsor Castle to the stadium at White City, and the finish in front of the royal box produced the odd distance.",
+   "source": {
+    "url": "https://aims-worldrunning.org/articles/678.html",
+    "title": "Going the distance | AIMS"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how long was the marathon at the first modern Olympics in Athens in 1896?",
+   "answers": [
+    "about 30 km",
+    "about 40 km",
+    "exactly 42.195 km",
+    "about 50 km"
+   ],
+   "correct": "about 40 km",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "The 1896 race was based on the legendary run from Marathon to Athens of about 40 km (25 miles). The 42.195 km standard came later.",
+   "source": {
+    "url": "https://www.britannica.com/sports/marathon-race",
+    "title": "Marathon | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was the marathon added to the women's Olympic programme?",
+   "answers": [
+    "1972",
+    "1976",
+    "1992",
+    "1984"
+   ],
+   "correct": "1984",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "The women's Olympic marathon debuted at the 1984 Games.",
+   "source": {
+    "url": "https://www.britannica.com/sports/marathon-race",
+    "title": "Marathon | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Roger Bannister's time when he ran the first sub-four-minute mile at Oxford in 1954?",
+   "answers": [
+    "3:58.4",
+    "3:59.4",
+    "4:00.4",
+    "4:01.4"
+   ],
+   "correct": "3:59.4",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Bannister ran 3 minutes 59.4 seconds at Iffley Road on 6 May 1954. The previous record was 4:01.4.",
+   "source": {
+    "url": "https://www.oxonblueplaques.org.uk/plaques/subfour.html",
+    "title": "Sub-four minute mile plaque | Oxfordshire Blue Plaques Board"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two friends paced Roger Bannister in his 1954 sub-four-minute mile?",
+   "answers": [
+    "Gordon Pirie and Chris Chataway",
+    "Chris Chataway and Chris Brasher",
+    "John Disley and Chris Brasher",
+    "Derek Ibbotson and Brian Hewson"
+   ],
+   "correct": "Chris Chataway and Chris Brasher",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Chris Chataway and Chris Brasher set the pace for Bannister at the Iffley Road track.",
+   "source": {
+    "url": "https://www.oxonblueplaques.org.uk/plaques/subfour.html",
+    "title": "Sub-four minute mile plaque | Oxfordshire Blue Plaques Board"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Australian runner bettered Bannister's mile record the following month, in June 1954?",
+   "answers": [
+    "Ron Clarke",
+    "Herb Elliott",
+    "John Landy",
+    "Murray Halberg"
+   ],
+   "correct": "John Landy",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "John Landy ran 3:57.9 weeks after Bannister's run, and later lost to him in the \"Miracle Mile\" at the Empire Games.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.guinnessworldrecords.com/records/hall-of-fame/first-sub-four-minute-mile",
+    "title": "Roger Bannister: First sub-four-minute mile | Guinness World Records"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many players made up each team in the first basketball game, played in 1891?",
+   "answers": [
+    "five",
+    "seven",
+    "nine",
+    "eleven"
+   ],
+   "correct": "nine",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Eighteen students were split into two teams of nine for James Naismith's first game.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/december-21/basketball-invention-james-naismith",
+    "title": "First basketball game played | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which university did James Naismith become the first men's basketball coach, serving from 1898 to 1907?",
+   "answers": [
+    "McGill University",
+    "University of Kansas",
+    "Springfield College",
+    "University of Illinois"
+   ],
+   "correct": "University of Kansas",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Naismith coached the Kansas Jayhawks from 1898 to 1907 and became the program's first coach.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/december-21/basketball-invention-james-naismith",
+    "title": "First basketball game played | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Naismith's original game, what restarted play after each made basket?",
+   "answers": [
+    "A jump ball",
+    "An inbound pass by the other team",
+    "A free throw",
+    "A switch of ends"
+   ],
+   "correct": "A jump ball",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Because the baskets had no openings, a jump ball was held after every made basket.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/december-21/basketball-invention-james-naismith",
+    "title": "First basketball game played | HISTORY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Joe DiMaggio's 56-game hitting streak passed the previous record, set in the 1890s by which player?",
+   "answers": [
+    "Ty Cobb",
+    "George Sisler",
+    "Honus Wagner",
+    "Willie Keeler"
+   ],
+   "correct": "Willie Keeler",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "DiMaggio broke Willie Keeler's long-standing record of 44 or 45 straight games with a hit.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://baseballhall.org/discover/inside-pitch/dimaggio-breaks-keelers-hit-streak-record",
+    "title": "DiMaggio breaks Keeler's mark | Baseball Hall of Fame"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Cleveland Indians third baseman made two fine plays to rob DiMaggio of hits on the day his streak ended in 1941?",
+   "answers": [
+    "Lou Boudreau",
+    "Jeff Heath",
+    "Joe Gordon",
+    "Ken Keltner"
+   ],
+   "correct": "Ken Keltner",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Ken Keltner twice robbed DiMaggio on July 17, 1941, and the streak ended at 56 games.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.mlb.com/yankees/history/timeline-1940s",
+    "title": "Timeline - 1940s | MLB.com Yankees"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Joe DiMaggio's batting average during his 56-game hitting streak?",
+   "answers": [
+    "0.371",
+    "0.408",
+    "0.445",
+    "0.389"
+   ],
+   "correct": "0.408",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "DiMaggio hit .408 during the streak, with 15 home runs and 55 RBI, and struck out only seven times.",
+   "source": {
+    "url": "https://baseballhall.org/discover/inside-pitch/dimaggio-begins-hitting-streak-with-single",
+    "title": "DiMaggio singles to start hitting streak | Baseball Hall of Fame"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who rode Secretariat to his 31-length win in the 1973 Belmont Stakes?",
+   "answers": [
+    "Eddie Arcaro",
+    "Bill Shoemaker",
+    "Laffit Pincay Jr.",
+    "Ron Turcotte"
+   ],
+   "correct": "Ron Turcotte",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Ron Turcotte was Secretariat's jockey for the 1973 Triple Crown.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/animal/Secretariat-racehorse",
+    "title": "Secretariat (horse) | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which horse had been the previous Triple Crown winner before Secretariat's sweep in 1973?",
+   "answers": [
+    "Assault",
+    "Citation",
+    "Count Fleet",
+    "Whirlaway"
+   ],
+   "correct": "Citation",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Citation won the Triple Crown in 1948, so Secretariat was the first winner in 25 years.",
+   "source": {
+    "url": "https://assets.espn.com/sportscentury/features/00016464.html",
+    "title": "Secretariat named 35th-greatest athlete of the century | ESPN"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which rival, ridden by Laffit Pincay Jr., finished last in Secretariat's 1973 Belmont Stakes?",
+   "answers": [
+    "Twice a Prince",
+    "My Gallant",
+    "Riva Ridge",
+    "Sham"
+   ],
+   "correct": "Sham",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Sham, the second favourite, suffered a leg injury and finished last, more than 45 lengths behind Secretariat.",
+   "source": {
+    "url": "https://www.bloodhorse.com/horse-racing/articles/269243/rivals-had-a-different-view-of-secretariats-belmont",
+    "title": "Rivals Had a Different View of Secretariat's Belmont | BloodHorse"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What prompted Abebe Bikila to run the 1960 Olympic marathon in Rome barefoot?",
+   "answers": [
+    "His sponsor's shoes were lost in transit",
+    "Shoes he bought in Rome gave him blisters",
+    "A religious vow made before the Games",
+    "Officials rejected his team's footwear"
+   ],
+   "correct": "Shoes he bought in Rome gave him blisters",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "The shoes Bikila bought in Rome did not fit and caused blisters, so he ran barefoot as he had in training.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Abebe_Bikila",
+    "title": "Abebe Bikila | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Moroccan runner took silver behind barefoot Abebe Bikila in the 1960 Olympic marathon?",
+   "answers": [
+    "Alain Mimoun",
+    "Rhadi Ben Abdesselam",
+    "Barry Magee",
+    "Mohammed Gammoudi"
+   ],
+   "correct": "Rhadi Ben Abdesselam",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Rhadi Ben Abdesselam ran with Bikila at a blazing pace for the first 20 km and took silver.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rhadi_Ben_Abdesselam",
+    "title": "Rhadi Ben Abdesselam | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Abebe Bikila was born on the same day as which Olympic event?",
+   "answers": [
+    "1928 Amsterdam marathon",
+    "1932 Los Angeles marathon",
+    "1936 Berlin marathon",
+    "1924 Paris marathon"
+   ],
+   "correct": "1932 Los Angeles marathon",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Bikila was born on August 7, 1932, the day of the Los Angeles Olympic marathon.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Abebe_Bikila",
+    "title": "Abebe Bikila | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which British favourite did Emil Zátopek famously ask whether the pace was too fast during the 1952 Olympic marathon?",
+   "answers": [
+    "Reinaldo Gorno",
+    "Jim Peters",
+    "Gustaf Jansson",
+    "Alain Mimoun"
+   ],
+   "correct": "Jim Peters",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Zátopek asked Jim Peters about the pace, was told it was not fast enough, then accelerated into the lead and won.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Athletics_at_the_1952_Summer_Olympics_%E2%80%93_Men%27s_marathon",
+    "title": "Athletics at the 1952 Summer Olympics – Men's marathon | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Frenchman won silver behind Emil Zátopek in both the 5,000 m and 10,000 m at the 1952 Olympics?",
+   "answers": [
+    "Gordon Pirie",
+    "Herbert Schade",
+    "Vladimir Kuts",
+    "Alain Mimoun"
+   ],
+   "correct": "Alain Mimoun",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Alain Mimoun of France was second to Zátopek in both track finals in Helsinki.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Athletics_at_the_1952_Summer_Olympics",
+    "title": "Athletics at the 1952 Summer Olympics | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On the afternoon Emil Zátopek won the 5,000 m in 1952, his wife Dana won Olympic gold in which event?",
+   "answers": [
+    "Discus throw",
+    "Long jump",
+    "Shot put",
+    "Javelin throw"
+   ],
+   "correct": "Javelin throw",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Dana Zátopková won the javelin the same afternoon, giving the couple two golds in one day.",
+   "source": {
+    "url": "https://www.encyclopedia.com/sports/sports-fitness-recreation-and-leisure-magazines/zatopek-emil",
+    "title": "Zátopek, Emil | Encyclopedia.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Pelé scored his first World Cup goal in the 1958 quarter-final against which team?",
+   "answers": [
+    "France",
+    "Wales",
+    "Soviet Union",
+    "Northern Ireland"
+   ],
+   "correct": "Wales",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Pelé scored the only goal against Wales, making him the youngest goalscorer in World Cup history.",
+   "source": {
+    "url": "https://www.espn.com/soccer/story/_/id/37372544/pele-brazil-vs-sweden1958",
+    "title": "World Cup's Greatest Goals: Pele (1958, Brazil vs. Sweden) | ESPN"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who scored a record 13 goals at the 1958 World Cup in Sweden?",
+   "answers": [
+    "Gerd Müller",
+    "Eusébio",
+    "Just Fontaine",
+    "Sándor Kocsis"
+   ],
+   "correct": "Just Fontaine",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Just Fontaine of France was the top scorer at the 1958 World Cup with 13 goals.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/1958_FIFA_World_Cup",
+    "title": "1958 FIFA World Cup | Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which years did Pelé win his three men's World Cups?",
+   "answers": [
+    "1958, 1966, 1970",
+    "1962, 1966, 1970",
+    "1958, 1962, 1970",
+    "1954, 1958, 1962"
+   ],
+   "correct": "1958, 1962, 1970",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Pelé won the World Cup with Brazil in 1958, 1962 and 1970, and remains the only player to win three.",
+   "source": {
+    "url": "https://footballopedia.com/players/pele/",
+    "title": "Pelé (1940–2022): Complete Biography | Footballopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1958 World Cup produced the tournament's first 0-0 match, played between which two teams?",
+   "answers": [
+    "Brazil and England",
+    "Brazil and the Soviet Union",
+    "England and the Soviet Union",
+    "Sweden and Wales"
+   ],
+   "correct": "Brazil and England",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "The goalless draw between Brazil and England was the first 0-0 in World Cup finals history.",
+   "source": {
+    "url": "https://www.footballhistory.org/world-cup/1958-sweden.html",
+    "title": "Football World Cup 1958 in Sweden | FootballHistory.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What distance, an Olympic record, did Jesse Owens jump to win the long jump gold in Berlin in 1936?",
+   "answers": [
+    "7.94 m",
+    "8.21 m",
+    "8.35 m",
+    "8.06 m"
+   ],
+   "correct": "8.06 m",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Owens won with an Olympic record 8.06 m on his sixth jump, ahead of Luz Long's 7.87 m.",
+   "source": {
+    "url": "https://sportscollectorsdigest.com/news/carl-luz-long-olympic-silver-medal-jesse-owens-1936-berlin-olympics",
+    "title": "Historic 1936 Olympic medal won by Jesse Owens friend Carl \"Luz\" Long up for bid | Sports Collectors Digest"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which German long jumper advised Jesse Owens on his run-up after two fouls in qualifying, then took silver?",
+   "answers": [
+    "Hans Woellke",
+    "Luz Long",
+    "Gerhard Stöck",
+    "Karl Hein"
+   ],
+   "correct": "Luz Long",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Luz Long suggested Owens mark a take-off point behind the board. Owens qualified and won gold, with Long second.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.cbssports.com/olympics/news/luz-longs-silver-medal-from-1936-berlin-olympics-long-jump-duel-with-jesse-owens-up-for-auction",
+    "title": "Luz Long's silver medal from 1936 Berlin Olympics long jump duel with Jesse Owens | CBS Sports"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 4x100 m relay team that Jesse Owens joined in 1936 set a world record that stood for how long?",
+   "answers": [
+    "10 years",
+    "30 years",
+    "20 years",
+    "5 years"
+   ],
+   "correct": "20 years",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Owens was a late addition to the US relay team, which set a world record that stood for 20 years.",
+   "source": {
+    "url": "https://usopm.org/jesse-owens/",
+    "title": "Jesse Owens | U.S. Olympic & Paralympic Museum"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who did Rod Laver beat in the 1969 US Open final to complete his second calendar-year Grand Slam?",
+   "answers": [
+    "Ken Rosewall",
+    "John Newcombe",
+    "Roy Emerson",
+    "Tony Roche"
+   ],
+   "correct": "Tony Roche",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Laver beat fellow Australian Tony Roche 7-9, 6-1, 6-2, 6-2 to win all four majors in 1969.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.tennismajors.com/us-open-news/september-9-1969-the-day-rod-laver-completed-his-second-grand-slam-487356.html",
+    "title": "September 9, 1969: The day Laver won the calendar Grand Slam again | Tennis Majors"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who, in 1938, became the first man to win all four major singles titles in a single year, before Rod Laver did so?",
+   "answers": [
+    "Fred Perry",
+    "Bill Tilden",
+    "Jack Kramer",
+    "Don Budge"
+   ],
+   "correct": "Don Budge",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Don Budge won the Grand Slam in 1938. Laver was the second man to do it (1962) and the first to repeat it (1969).",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Rod-Laver",
+    "title": "Rod Laver | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Rod Laver win his first calendar-year Grand Slam, as an amateur?",
+   "answers": [
+    "1959",
+    "1965",
+    "1962",
+    "1968"
+   ],
+   "correct": "1962",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Laver won all four majors in 1962 as an amateur and repeated the feat in 1969 as a professional.",
+   "source": {
+    "url": "https://www.tennismajors.com/us-open-news/september-9-1969-the-day-rod-laver-completed-his-second-grand-slam-487356.html",
+    "title": "September 9, 1969: The day Laver won the calendar Grand Slam again | Tennis Majors"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many Grand Slam singles titles did Rod Laver win in his career?",
+   "answers": [
+    "9",
+    "14",
+    "11",
+    "17"
+   ],
+   "correct": "11",
+   "difficulty": "hard",
+   "category": "Sports",
+   "explain": "Laver won 11 Grand Slam singles titles, plus six in men's doubles and three in mixed doubles.",
+   "source": {
+    "url": "https://www.tennismajors.com/atp/august-9-1938-the-day-rod-laver-was-born-tennis-majors-279971.html",
+    "title": "August 9, 1938: The day Rod Laver was born | Tennis Majors"
+   },
+   "ai_written": true
+  }
+ ]
+}

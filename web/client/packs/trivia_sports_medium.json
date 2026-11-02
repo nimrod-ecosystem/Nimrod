@@ -1,0 +1,937 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Sports trivia (medium)",
+ "description": "50 medium questions about rules, famous athletes, events and records that no longer change. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "The standard marathon distance of 42.195 km traces back to the Olympic Games held in which city?",
+   "answers": [
+    "Stockholm",
+    "London",
+    "Paris",
+    "Athens"
+   ],
+   "correct": "London",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The 1908 London Olympic marathon was run over 26 miles 385 yards (42.195 km). That distance became the official standard in 1921.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Athletics_at_the_1908_Summer_Olympics_%E2%80%93_Men%27s_marathon",
+    "title": "Athletics at the 1908 Summer Olympics – Men's marathon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did women first compete in an Olympic marathon?",
+   "answers": [
+    "1972",
+    "1976",
+    "1984",
+    "1992"
+   ],
+   "correct": "1984",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The women's Olympic marathon made its debut at the 1984 Games in Los Angeles.",
+   "source": {
+    "url": "https://www.olympedia.org/definitions/132",
+    "title": "Marathon - Olympedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Ethiopian runner won the Olympic marathon in both 1960 and 1964?",
+   "answers": [
+    "Emil Zátopek",
+    "Frank Shorter",
+    "Abebe Bikila",
+    "Spyridon Louis"
+   ],
+   "correct": "Abebe Bikila",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Abebe Bikila won the Olympic marathon in 1960 and again in 1964, the first man to win it twice.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.olympedia.org/definitions/132",
+    "title": "Marathon - Olympedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which friend of Pierre de Coubertin suggested adding a marathon to the first modern Olympics?",
+   "answers": [
+    "Michel Bréal",
+    "William Penny Brookes",
+    "Henri Didon",
+    "Carl Diem"
+   ],
+   "correct": "Michel Bréal",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Michel Bréal proposed the race to Coubertin, basing it on the legend of a messenger running from the Battle of Marathon to Athens.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.olympedia.org/definitions/132",
+    "title": "Marathon - Olympedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which Oxford track did Roger Bannister run the first sub-four-minute mile in 1954?",
+   "answers": [
+    "Motspur Park",
+    "White City",
+    "Craven Cottage",
+    "Iffley Road"
+   ],
+   "correct": "Iffley Road",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Bannister ran his record mile at Oxford University's Iffley Road track on 6 May 1954. The track has since been renamed in his honour.",
+   "source": {
+    "url": "https://www.guinnessworldrecords.com/records/hall-of-fame/first-sub-four-minute-mile",
+    "title": "Roger Bannister: First sub-four-minute mile"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Roger Bannister's time when he first broke four minutes for the mile in 1954?",
+   "answers": [
+    "3:57.9",
+    "3:58.8",
+    "4:00.2",
+    "3:59.4"
+   ],
+   "correct": "3:59.4",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Bannister was timed at 3 minutes 59.4 seconds on 6 May 1954. Landy's 3:57.9 came a few weeks later.",
+   "source": {
+    "url": "https://run.outsideonline.com/road/road-racing/brief-history-sub-4-minute-mile/",
+    "title": "A Brief History of the Sub-4-Minute Mile"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Australian miler broke four minutes weeks after Bannister and later lost to him in the 1954 \"Miracle Mile\" at Vancouver?",
+   "answers": [
+    "Herb Elliott",
+    "John Landy",
+    "Wes Santee",
+    "Gunder Hägg"
+   ],
+   "correct": "John Landy",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "John Landy ran 3:58 in Finland in June 1954. Bannister then beat him at the Empire Games in Vancouver, where both men went under four minutes.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://run.outsideonline.com/road/road-racing/brief-history-sub-4-minute-mile/",
+    "title": "A Brief History of the Sub-4-Minute Mile"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which runner set the pace for the first two laps of Bannister's record mile?",
+   "answers": [
+    "Harold Abrahams",
+    "Chris Chataway",
+    "Sebastian Coe",
+    "Chris Brasher"
+   ],
+   "correct": "Chris Brasher",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Chris Brasher led the first two laps, reaching halfway in 1:58. Chris Chataway then took over before Bannister sprinted past him.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.historytoday.com/archive/first-sub-four-minute-mile",
+    "title": "The First Sub-Four-Minute Mile"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American matched Jesse Owens's four track-and-field gold medals at a single Olympics in 1984?",
+   "answers": [
+    "Carl Lewis",
+    "Edwin Moses",
+    "Michael Johnson",
+    "Maurice Greene"
+   ],
+   "correct": "Carl Lewis",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Owens's four-gold haul at Berlin 1936 stood alone until Carl Lewis matched it at Los Angeles in 1984.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/articles/jesse-owens-adolf-hitler-1936-olympics",
+    "title": "How Jesse Owens Foiled Hitler's Plans for the 1936 Olympics"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Jesse Owens's 200 m silver medallist in 1936, Mack Robinson, was the older brother of which future baseball star?",
+   "answers": [
+    "Roy Campanella",
+    "Satchel Paige",
+    "Larry Doby",
+    "Jackie Robinson"
+   ],
+   "correct": "Jackie Robinson",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Mack Robinson finished second to Owens in the 200 m. His younger brother Jackie later broke baseball's colour barrier.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://usopm.org/virtual-exhibit-jesse-owens-incredible-performance-at-berlin-1936/",
+    "title": "Virtual Exhibit: Jesse Owens' incredible performance at Berlin 1936"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which German long jumper advised Jesse Owens during qualifying in 1936 and went on to win silver behind him?",
+   "answers": [
+    "Gerhard Stöck",
+    "Rudolf Harbig",
+    "Hans Woellke",
+    "Luz Long"
+   ],
+   "correct": "Luz Long",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Luz Long's advice helped Owens qualify for the long jump final. Owens took gold and Long took silver.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.cnn.com/2024/07/04/sport/jesse-owens-grandson-1936-olympics-berlin-spt-intl",
+    "title": "Jesse Owens' achievements at 1936 Olympics were 'thumb in the eye' to Adolf Hitler, says US athlete's grandson"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What score did the scoreboard show after Nadia Comăneci's first perfect routine at Montreal 1976?",
+   "answers": [
+    "0.10",
+    "1.00",
+    "9.90",
+    "100"
+   ],
+   "correct": "1.00",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The scoreboard could not display a 10.00, so her perfect 10 appeared as 1.00.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Nadia-Comaneci",
+    "title": "Nadia Comaneci | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which apparatus did Nadia Comăneci score her first perfect 10 in 1976?",
+   "answers": [
+    "Balance beam",
+    "Floor exercise",
+    "Uneven bars",
+    "Vault"
+   ],
+   "correct": "Uneven bars",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Her first 10.0 came on the uneven parallel bars on 18 July 1976.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Nadia-Comaneci",
+    "title": "Nadia Comaneci | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many perfect 10.0 scores did Nadia Comăneci receive at the 1976 Montreal Olympics?",
+   "answers": [
+    "Three",
+    "Five",
+    "Ten",
+    "Seven"
+   ],
+   "correct": "Seven",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "She received seven perfect scores in Montreal and won three gold medals.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Nadia-Comaneci",
+    "title": "Nadia Comaneci | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which official timing company asked how many digits the Montreal 1976 gymnastics scoreboard needed, and was told three would do?",
+   "answers": [
+    "Rolex",
+    "Omega",
+    "Longines",
+    "TAG Heuer"
+   ],
+   "correct": "Omega",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Omega, the Olympic timers, were told a 10.00 would not be possible, so the board showed only three digits.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Perfect_10_(gymnastics)",
+    "title": "Perfect 10 (gymnastics)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "By roughly how much did Bob Beamon beat the previous long jump world record at the 1968 Olympics?",
+   "answers": [
+    "15 cm",
+    "35 cm",
+    "55 cm",
+    "85 cm"
+   ],
+   "correct": "55 cm",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "His 8.90 m jump bettered the existing world record by 55 cm. No earlier single jump had improved it by more than 15 cm.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bob_Beamon",
+    "title": "Bob Beamon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American broke Bob Beamon's long jump world record at the 1991 World Championships in Tokyo?",
+   "answers": [
+    "Carl Lewis",
+    "Larry Myricks",
+    "Mike Powell",
+    "Dwight Phillips"
+   ],
+   "correct": "Mike Powell",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Mike Powell jumped 8.95 m in Tokyo in 1991, ending Beamon's world record.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Bob-Beamon-Beyond-Imagination-1936057",
+    "title": "Bob Beamon: Beyond Imagination | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For how many years did Bob Beamon's 1968 long jump stand as the world record?",
+   "answers": [
+    "11",
+    "17",
+    "23",
+    "31"
+   ],
+   "correct": "23",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "It lasted 23 years, from 1968 until Mike Powell's jump in 1991.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Bob-Beamon-Beyond-Imagination-1936057",
+    "title": "Bob Beamon: Beyond Imagination | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which team did Wilt Chamberlain score 100 points against on 2 March 1962?",
+   "answers": [
+    "Boston Celtics",
+    "Chicago Zephyrs",
+    "Los Angeles Lakers",
+    "New York Knicks"
+   ],
+   "correct": "New York Knicks",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Chamberlain scored 100 for the Philadelphia Warriors in a 169–147 win over the New York Knicks.",
+   "source": {
+    "url": "https://www.nba.com/history/top-moments/1962-wilt-chamberlain-100-points",
+    "title": "1962 Wilt Chamberlain 100 points | NBA.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Pennsylvania town was Wilt Chamberlain's 100-point game played?",
+   "answers": [
+    "Scranton",
+    "Hershey",
+    "Allentown",
+    "Harrisburg"
+   ],
+   "correct": "Hershey",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The game was played at the Hershey Sports Arena in front of about 4,000 fans.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/march-2/wilt-chamberlain-scores-100-points",
+    "title": "Wilt Chamberlain scores 100 points"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Wilt Chamberlain's scoring average for the 1961–62 season, the year of his 100-point game?",
+   "answers": [
+    "38.4 points",
+    "44.8 points",
+    "50.4 points",
+    "55.2 points"
+   ],
+   "correct": "50.4 points",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Chamberlain averaged 50.4 points per game that season, up from 38.4 the year before.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/march-2/wilt-chamberlain-scores-100-points",
+    "title": "Wilt Chamberlain scores 100 points"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Before his 100-point night, what was the overall NBA single-game scoring record, set by Chamberlain himself earlier in 1961–62?",
+   "answers": [
+    "62 points",
+    "71 points",
+    "85 points",
+    "78 points"
+   ],
+   "correct": "78 points",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Chamberlain's 78-point game earlier that season was the previous overall record, which his 100 then replaced.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/march-2/wilt-chamberlain-scores-100-points",
+    "title": "Wilt Chamberlain scores 100 points"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many runs did Don Bradman need in his final Test innings to finish with a career batting average of exactly 100?",
+   "answers": [
+    "Two",
+    "Four",
+    "Six",
+    "Ten"
+   ],
+   "correct": "Four",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Bradman needed just four runs but was dismissed for a duck. That left him on 99.94.",
+   "source": {
+    "url": "https://www.cricinfo.com/story/god-s-own-blob-365157",
+    "title": "God's own blob | ESPNcricinfo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which England leg-spinner bowled Don Bradman for a duck in his final Test innings in 1948?",
+   "answers": [
+    "Jim Laker",
+    "Alec Bedser",
+    "Fred Trueman",
+    "Eric Hollies"
+   ],
+   "correct": "Eric Hollies",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Eric Hollies bowled Bradman with a googly for 0, leaving his career average at 99.94.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://dlab.epfl.ch/wikispeedia/wpcd/wp/d/Donald_Bradman.htm",
+    "title": "Donald Bradman"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which ground did Don Bradman play his famous final Test innings in 1948?",
+   "answers": [
+    "Lord's",
+    "Headingley",
+    "Old Trafford",
+    "The Oval"
+   ],
+   "correct": "The Oval",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "His duck came at The Oval in London in the 1948 Ashes series.",
+   "source": {
+    "url": "https://www.cricinfo.com/story/god-s-own-blob-365157",
+    "title": "God's own blob | ESPNcricinfo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For how many consecutive games did Joe DiMaggio hit safely in 1941?",
+   "answers": [
+    "44",
+    "49",
+    "56",
+    "61"
+   ],
+   "correct": "56",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "DiMaggio hit in 56 straight games from 15 May to 16 July 1941, still the longest streak in Major League history.",
+   "source": {
+    "url": "https://www.mlb.com/news/longest-hitting-streaks-in-mlb-history",
+    "title": "Longest hitting streaks in MLB history"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Against which team was Joe DiMaggio's 56-game hitting streak snapped on 17 July 1941?",
+   "answers": [
+    "Boston Red Sox",
+    "Detroit Tigers",
+    "St. Louis Browns",
+    "Cleveland Indians"
+   ],
+   "correct": "Cleveland Indians",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "DiMaggio went hitless in Cleveland, where third baseman Ken Keltner twice robbed him of hits.",
+   "source": {
+    "url": "https://www.mlb.com/yankees/history/timeline-1940s",
+    "title": "Timeline - 1940s | New York Yankees"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Cincinnati Reds player hit safely in 44 straight games in 1978?",
+   "answers": [
+    "Johnny Bench",
+    "Pete Rose",
+    "Joe Morgan",
+    "Tony Pérez"
+   ],
+   "correct": "Pete Rose",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Pete Rose's 44-game streak in 1978 is the third-longest in MLB history.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.mlb.com/news/longest-hitting-streaks-in-mlb-history",
+    "title": "Longest hitting streaks in MLB history"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Yankees catcher leapt into Don Larsen's arms after his perfect game in the 1956 World Series?",
+   "answers": [
+    "Elston Howard",
+    "Bill Dickey",
+    "Thurman Munson",
+    "Yogi Berra"
+   ],
+   "correct": "Yogi Berra",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Yogi Berra caught Larsen's perfect game and famously jumped into his arms after the final out.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/october-8/don-larsen-world-series-perfect-games-no-hitters",
+    "title": "New York Yankees' Don Larsen pitches only World Series perfect game"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which team did Don Larsen's Yankees face when he pitched his World Series perfect game in 1956?",
+   "answers": [
+    "Brooklyn Dodgers",
+    "Milwaukee Braves",
+    "Cleveland Indians",
+    "Boston Red Sox"
+   ],
+   "correct": "Brooklyn Dodgers",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Larsen retired all 27 Brooklyn Dodgers he faced in Game 5 at Yankee Stadium.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Don_Larsen's_perfect_game",
+    "title": "Don Larsen's perfect game"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Whom did Don Larsen strike out for the final out of his 1956 World Series perfect game?",
+   "answers": [
+    "Pee Wee Reese",
+    "Duke Snider",
+    "Dale Mitchell",
+    "Gil Hodges"
+   ],
+   "correct": "Dale Mitchell",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Larsen struck out Dale Mitchell on a 1–2 pitch to complete the perfect game.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/october-8/don-larsen-world-series-perfect-games-no-hitters",
+    "title": "New York Yankees' Don Larsen pitches only World Series perfect game"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city did Muhammad Ali beat George Foreman in the 1974 \"Rumble in the Jungle\"?",
+   "answers": [
+    "Lagos",
+    "Accra",
+    "Nairobi",
+    "Kinshasa"
+   ],
+   "correct": "Kinshasa",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The fight took place in Kinshasa, then in Zaire and now in the Democratic Republic of the Congo.",
+   "source": {
+    "url": "https://www.britannica.com/sports/Rumble-in-the-Jungle",
+    "title": "Rumble in the Jungle | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which strategy did Muhammad Ali use against George Foreman by leaning on the ropes and letting him tire himself out?",
+   "answers": [
+    "Peek-a-boo",
+    "Philly shell",
+    "Rope-a-dope",
+    "Bob and weave"
+   ],
+   "correct": "Rope-a-dope",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Ali's rope-a-dope had him lean against the ropes and absorb punches while Foreman wore himself out.",
+   "source": {
+    "url": "https://www.britannica.com/sports/Rumble-in-the-Jungle",
+    "title": "Rumble in the Jungle | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which round did Muhammad Ali knock out George Foreman in the Rumble in the Jungle?",
+   "answers": [
+    "Fifth",
+    "Eighth",
+    "Tenth",
+    "Twelfth"
+   ],
+   "correct": "Eighth",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Ali knocked Foreman out in the eighth round to regain the heavyweight title.",
+   "source": {
+    "url": "https://www.britannica.com/sports/Rumble-in-the-Jungle",
+    "title": "Rumble in the Jungle | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which promoter, then new to boxing, arranged the Ali–Foreman fight in Zaire?",
+   "answers": [
+    "Bob Arum",
+    "Don King",
+    "Frank Warren",
+    "Mickey Duff"
+   ],
+   "correct": "Don King",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Don King, an ex-convict new to promoting, arranged the bout and secured record $5 million purses for both fighters.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/rumble-jungle/",
+    "title": "Rumble in the Jungle | EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the final score of the \"Miracle on Ice\" game between the United States and the Soviet Union in 1980?",
+   "answers": [
+    "3–2",
+    "4–2",
+    "5–4",
+    "4–3"
+   ],
+   "correct": "4–3",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The underdog US team beat the four-time defending champion Soviets 4–3 at Lake Placid on 22 February 1980.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Miracle_on_Ice",
+    "title": "Miracle on Ice"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who coached the US men's ice hockey team that won gold at the 1980 Winter Olympics?",
+   "answers": [
+    "Scotty Bowman",
+    "Bob Johnson",
+    "Herb Brooks",
+    "Al Arbour"
+   ],
+   "correct": "Herb Brooks",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Herb Brooks coached the team of college players that beat the Soviets and went on to win gold.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/articles/miracle-on-ice-hockey-olympic-game",
+    "title": "When the US Olympic Hockey Team Stunned the World"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which team did the US beat in 1980 to secure the gold medal, two days after the Miracle on Ice?",
+   "answers": [
+    "Sweden",
+    "Czechoslovakia",
+    "Finland",
+    "West Germany"
+   ],
+   "correct": "Finland",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The US needed to beat Finland after the Soviet game. They came from behind to win 4–2 and take gold.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Miracle-on-Ice",
+    "title": "Miracle on Ice | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which sports announcer's famous call gave the \"Miracle on Ice\" its name?",
+   "answers": [
+    "Howard Cosell",
+    "Keith Jackson",
+    "Jim McKay",
+    "Al Michaels"
+   ],
+   "correct": "Al Michaels",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The name \"Miracle on Ice\" comes from a famous call by Al Michaels.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Miracle-on-Ice",
+    "title": "Miracle on Ice | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which England goalkeeper was beaten by Maradona's \"Hand of God\" goal at the 1986 World Cup?",
+   "answers": [
+    "Gordon Banks",
+    "Peter Shilton",
+    "Ray Clemence",
+    "David Seaman"
+   ],
+   "correct": "Peter Shilton",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Maradona outjumped Peter Shilton and punched the ball into the net in the quarter-final. Argentina won 2–1.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/sports/Famous-FIFA-World-Cup-Goals-Hand-of-God",
+    "title": "Famous FIFA World Cup Goals: 'Hand of God' | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which team did Argentina beat in the 1986 World Cup final, after Maradona's goals against England?",
+   "answers": [
+    "Belgium",
+    "France",
+    "Italy",
+    "West Germany"
+   ],
+   "correct": "West Germany",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Argentina beat West Germany 3–2 in the final to win the 1986 World Cup.",
+   "source": {
+    "url": "https://www.uefa.com/uefaeuro/history/news/0253-0d818e7ae229-235c7915f403-1000--30-years-on-maradona-s-hand-of-god",
+    "title": "30 years on: Maradona's 'hand of God' | UEFA.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who won the first Olympic marathon at the 1896 Athens Games?",
+   "answers": [
+    "Dorando Pietri",
+    "Johnny Hayes",
+    "Spyridon Louis",
+    "Edwin Flack"
+   ],
+   "correct": "Spyridon Louis",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Greek runner Spyridon Louis won the first Olympic marathon in 1896, to great national celebration.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/april-6/first-modern-olympic-games",
+    "title": "First modern Olympic Games"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was elected the first president of the International Olympic Committee after the 1894 congress?",
+   "answers": [
+    "Pierre de Coubertin",
+    "Avery Brundage",
+    "Demetrius Vikelas",
+    "Lord Killanin"
+   ],
+   "correct": "Demetrius Vikelas",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The Greek Demetrius Vikelas was elected the IOC's first president. Coubertin succeeded him after the 1896 Games.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/1896_Summer_Olympics",
+    "title": "1896 Summer Olympics - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Roman emperor banned the ancient Olympic Games, roughly 1,500 years before they were revived in 1896?",
+   "answers": [
+    "Nero",
+    "Constantine",
+    "Augustus",
+    "Theodosius I"
+   ],
+   "correct": "Theodosius I",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Emperor Theodosius I banned the ancient Games, and they were reborn in Athens in 1896.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/april-6/first-modern-olympic-games",
+    "title": "First modern Olympic Games"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which two years did Rod Laver win all four major tennis singles titles in one calendar year?",
+   "answers": [
+    "1960 and 1966",
+    "1962 and 1969",
+    "1964 and 1971",
+    "1959 and 1965"
+   ],
+   "correct": "1962 and 1969",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Laver completed the calendar-year Grand Slam in 1962 as an amateur and again in 1969.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Rod-Laver",
+    "title": "Rod Laver | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Rod Laver was the second man to win a calendar-year Grand Slam. Who was the first, in 1938?",
+   "answers": [
+    "Fred Perry",
+    "Don Budge",
+    "Jack Kramer",
+    "Ken Rosewall"
+   ],
+   "correct": "Don Budge",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Don Budge won all four majors in 1938, before Laver became the second man to do so in 1962.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Rod-Laver",
+    "title": "Rod Laver | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Whom did Rod Laver beat in the 1969 US Open final to complete his second calendar-year Grand Slam?",
+   "answers": [
+    "John Newcombe",
+    "Ken Rosewall",
+    "Arthur Ashe",
+    "Tony Roche"
+   ],
+   "correct": "Tony Roche",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Laver beat fellow Australian Tony Roche in four sets in the final on 9 September 1969.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.tennismajors.com/us-open-news/september-9-1969-the-day-rod-laver-completed-his-second-grand-slam-487356.html",
+    "title": "The day Laver won the calendar Grand Slam AGAIN!! - Tennis Majors"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Whom did Steffi Graf beat in the 1988 Olympic final in Seoul to complete her \"Golden Slam\"?",
+   "answers": [
+    "Martina Navratilova",
+    "Chris Evert",
+    "Natasha Zvereva",
+    "Gabriela Sabatini"
+   ],
+   "correct": "Gabriela Sabatini",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Graf beat Argentina's Gabriela Sabatini 6–3, 6–3 for Olympic gold.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.olympics.com/en/athletes/steffi-graf",
+    "title": "Steffi GRAF - Olympics.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which achievement did Steffi Graf add to winning all four majors in 1988 to complete the \"Golden Slam\"?",
+   "answers": [
+    "A year-end tour title",
+    "An Olympic gold medal",
+    "A Fed Cup victory",
+    "A year-long No. 1 ranking"
+   ],
+   "correct": "An Olympic gold medal",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "The Golden Slam means winning all four majors and Olympic singles gold in the same year. Graf was the first to do it, in 1988.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Steffi_Graf",
+    "title": "Steffi Graf"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Whom did Steffi Graf beat 6–0, 6–0 in the 1988 French Open final?",
+   "answers": [
+    "Zina Garrison",
+    "Pam Shriver",
+    "Arantxa Sánchez Vicario",
+    "Natasha Zvereva"
+   ],
+   "correct": "Natasha Zvereva",
+   "difficulty": "medium",
+   "category": "Sports",
+   "explain": "Graf beat Natasha Zvereva 6–0, 6–0 in the final at Roland Garros in 1988.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/1988_French_Open_%E2%80%93_Women%27s_singles",
+    "title": "1988 French Open – Women's singles"
+   },
+   "ai_written": true
+  }
+ ]
+}

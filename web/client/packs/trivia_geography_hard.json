@@ -1,0 +1,916 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Geography trivia (hard)",
+ "description": "50 hard questions about countries, capitals, rivers, mountains, landmarks, maps. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which pair of countries are the world's only two doubly landlocked states, meaning every one of their neighbours is itself landlocked?",
+   "answers": [
+    "Liechtenstein and Uzbekistan",
+    "Austria and Switzerland",
+    "Bolivia and Paraguay",
+    "Kazakhstan and Mongolia"
+   ],
+   "correct": "Liechtenstein and Uzbekistan",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Liechtenstein is bordered only by landlocked Austria and Switzerland. Uzbekistan is bordered only by five landlocked Central Asian states.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Landlocked_country",
+    "title": "Landlocked country"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which landlocked country is the only one in Southeast Asia?",
+   "answers": [
+    "Cambodia",
+    "Laos",
+    "Brunei",
+    "Timor-Leste"
+   ],
+   "correct": "Laos",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Laos has no coastline. Cambodia, Brunei and Timor-Leste all border the sea.",
+   "source": {
+    "url": "https://www.geographygames.net/geography-facts/landlocked-countries",
+    "title": "All 44 Landlocked Countries: Full List by Continent"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country lost its coastline when Montenegro left their union in 2006?",
+   "answers": [
+    "Croatia",
+    "Albania",
+    "Serbia",
+    "Bosnia and Herzegovina"
+   ],
+   "correct": "Serbia",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Serbia became landlocked when Montenegro, which held the Adriatic coast, became independent in 2006.",
+   "source": {
+    "url": "https://www.geographygames.net/geography-facts/landlocked-countries",
+    "title": "All 44 Landlocked Countries: Full List by Continent"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two South American countries are the only landlocked ones on the continent?",
+   "answers": [
+    "Bolivia and Peru",
+    "Paraguay and Uruguay",
+    "Bolivia and Paraguay",
+    "Ecuador and Bolivia"
+   ],
+   "correct": "Bolivia and Paraguay",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Bolivia and Paraguay are the only landlocked countries in the Western Hemisphere. Every other South American country has a coast.",
+   "source": {
+    "url": "https://www.latestpandemicnews.com/landlocked-countries-list/",
+    "title": "Landlocked Countries: Full List and Key Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the largest landlocked country in the world by area?",
+   "answers": [
+    "Mongolia",
+    "Chad",
+    "Ethiopia",
+    "Kazakhstan"
+   ],
+   "correct": "Kazakhstan",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Kazakhstan covers about 2.7 million square kilometres, which makes it the largest landlocked country on Earth.",
+   "source": {
+    "url": "https://geographyworlds.com/blog/landlocked-countries-complete-list",
+    "title": "Landlocked Countries: Complete List of All 44 Nations"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to UNESCO, roughly what share of the world's unfrozen freshwater reserve is held by Lake Baikal?",
+   "answers": [
+    "About 5%",
+    "About 20%",
+    "About 10%",
+    "About 40%"
+   ],
+   "correct": "About 20%",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "UNESCO says Lake Baikal contains about 20% of the world's total unfrozen freshwater reserve.",
+   "source": {
+    "url": "https://whc.unesco.org/en/list/754/",
+    "title": "Lake Baikal - UNESCO World Heritage Centre"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "More than 300 rivers and streams feed Lake Baikal, but it drains through only one river. Which one?",
+   "answers": [
+    "Selenga",
+    "Lena",
+    "Angara",
+    "Ob"
+   ],
+   "correct": "Angara",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Angara is Baikal's only outlet. The Selenga is the lake's biggest inflow, not its outlet.",
+   "source": {
+    "url": "https://a-z-animals.com/blog/how-deep-is-lake-baikal-5-facts-on-this-incredible-lake/",
+    "title": "How Deep is Lake Baikal? 5 Facts on this Incredible Lake"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the local name for the freshwater seal found only in Lake Baikal?",
+   "answers": [
+    "Morzh",
+    "Lakhtak",
+    "Kotik",
+    "Nerpa"
+   ],
+   "correct": "Nerpa",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Baikal seal, also called the nerpa, is one of the lake's most famous endemic animals.",
+   "source": {
+    "url": "https://www.britannica.com/video/Lake-Baikal-Overview-Russia-Siberia-world/-226690",
+    "title": "Lake Baikal - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these capital cities does the Danube River flow through?",
+   "answers": [
+    "Zagreb",
+    "Prague",
+    "Ljubljana",
+    "Bratislava"
+   ],
+   "correct": "Bratislava",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Danube passes through four capitals: Vienna, Bratislava, Budapest and Belgrade. Zagreb lies on the Sava, not the Danube.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/environmental-sciences/danube-river/",
+    "title": "Danube River - EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Danube is the second-longest river in Europe. Which river is longer?",
+   "answers": [
+    "Volga",
+    "Dnieper",
+    "Rhine",
+    "Don"
+   ],
+   "correct": "Volga",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Volga in Russia is the longest river in Europe, and the Danube comes second.",
+   "source": {
+    "url": "https://www.britannica.com/place/Danube-River",
+    "title": "Danube River - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Danube's headwaters begin where which two streams join in southwestern Germany?",
+   "answers": [
+    "The Iller and the Lech",
+    "The Brigach and the Breg",
+    "The Inn and the Isar",
+    "The Neckar and the Altmühl"
+   ],
+   "correct": "The Brigach and the Breg",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Danube begins at the confluence of the Brigach and Breg streams near Donaueschingen in the Black Forest.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/environmental-sciences/danube-river/",
+    "title": "Danube River - EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these countries is one of the ten that the Danube passes through on its way to the Black Sea?",
+   "answers": [
+    "Czechia",
+    "Moldova",
+    "Slovenia",
+    "Poland"
+   ],
+   "correct": "Moldova",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Britannica lists the ten Danube countries as Germany, Austria, Slovakia, Hungary, Croatia, Serbia, Bulgaria, Romania, Moldova and Ukraine.",
+   "source": {
+    "url": "https://www.britannica.com/place/Danube-River",
+    "title": "Danube River - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Burkina Faso?",
+   "answers": [
+    "Bobo-Dioulasso",
+    "Bamako",
+    "Niamey",
+    "Ouagadougou"
+   ],
+   "correct": "Ouagadougou",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Ouagadougou is the capital and largest city of Burkina Faso. Bobo-Dioulasso is a major town but not the capital.",
+   "source": {
+    "url": "https://www.britannica.com/place/Burkina-Faso",
+    "title": "Burkina Faso - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which president renamed Upper Volta as Burkina Faso in 1984?",
+   "answers": [
+    "Blaise Compaoré",
+    "Thomas Sankara",
+    "Sangoulé Lamizana",
+    "Maurice Yaméogo"
+   ],
+   "correct": "Thomas Sankara",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The country was renamed Burkina Faso on 4 August 1984 under President Thomas Sankara.",
+   "source": {
+    "url": "https://achpr.au.int/index.php/en/member-states/burkina-faso",
+    "title": "People's Republic of Burkina Faso - African Commission on Human and Peoples' Rights"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which Polish explorer named Australia's Mount Kosciuszko in 1840 after a Polish national hero?",
+   "answers": [
+    "Ludwig Leichhardt",
+    "Thomas Mitchell",
+    "Paul Strzelecki",
+    "Charles Sturt"
+   ],
+   "correct": "Paul Strzelecki",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Paul Strzelecki named the mountain in 1840 after Tadeusz Kosciuszko.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/mount-kosciuszko/",
+    "title": "Mount Kosciuszko - National Geographic Education"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Some Seven Summits lists replace Mount Kosciuszko with a much higher peak in Indonesia. Which peak is it?",
+   "answers": [
+    "Mount Kerinci",
+    "Puncak Jaya",
+    "Mount Rinjani",
+    "Mount Semeru"
+   ],
+   "correct": "Puncak Jaya",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Puncak Jaya (Carstensz Pyramid) is about 4,884 m. It is used in lists that define the continent as Oceania rather than mainland Australia.",
+   "source": {
+    "url": "https://www.theuiaa.org/mountain-medicine/mount-kosciuszko/",
+    "title": "A Climb of Mount Kosciuszko - UIAA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which neighbouring peak, only 19 m lower than Kosciuszko, is the second-highest on mainland Australia?",
+   "answers": [
+    "Mount Twynam",
+    "Mount Bogong",
+    "Mount Townsend",
+    "Mount Feathertop"
+   ],
+   "correct": "Mount Townsend",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Mount Townsend is the second-highest peak of mainland Australia, about 3.7 km north of Kosciuszko. Mount Twynam is third.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Mount_Townsend_(Snowy_Mountains)",
+    "title": "Mount Townsend (Snowy Mountains)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two seas does the Strait of Malacca connect?",
+   "answers": [
+    "Bay of Bengal and Timor Sea",
+    "Arabian Sea and Celebes Sea",
+    "Andaman Sea and South China Sea",
+    "Gulf of Thailand and Banda Sea"
+   ],
+   "correct": "Andaman Sea and South China Sea",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The strait runs between Sumatra and the Malay Peninsula. It links the Andaman Sea (Indian Ocean) with the South China Sea (Pacific Ocean).",
+   "source": {
+    "url": "https://www.britannica.com/place/Strait-of-Malacca",
+    "title": "Strait of Malacca - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In shipping, which term describes the largest vessel size able to pass through the Strait of Malacca?",
+   "answers": [
+    "Panamax",
+    "Suezmax",
+    "Chinamax",
+    "Malaccamax"
+   ],
+   "correct": "Malaccamax",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Malaccamax is the maximum size of ship that can transit the Strait of Malacca. Larger ships must use deeper straits such as Lombok or Makassar.",
+   "source": {
+    "url": "https://www.worldatlas.com/articles/where-is-the-strait-of-malacca.html",
+    "title": "Where Is the Strait of Malacca? - WorldAtlas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Besides being the driest non-polar desert, the Atacama is the largest desert of which type on Earth?",
+   "answers": [
+    "Sand-sea desert",
+    "Monsoon desert",
+    "Fog desert",
+    "Polar desert"
+   ],
+   "correct": "Fog desert",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Atacama is the world's largest fog desert, so some of its moisture comes from fog.",
+   "source": {
+    "url": "https://news.asu.edu/20221031-edge-habitability-tracking-water-worlds-driest-desert",
+    "title": "The edge of habitability: Tracking water in the world's driest desert - ASU News"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which cold ocean current helps suppress rainfall over the Atacama Desert?",
+   "answers": [
+    "Benguela Current",
+    "Canary Current",
+    "Labrador Current",
+    "Humboldt Current"
+   ],
+   "correct": "Humboldt Current",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The cold Humboldt Current chills coastal air and creates a temperature inversion that suppresses rain. The ocean yields only fog.",
+   "source": {
+    "url": "https://modeldiplomat.com/learn/glossary/atacama-desert",
+    "title": "Atacama Desert Definition and Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country has the highest lowest point of any nation, at about 1,400 m above sea level?",
+   "answers": [
+    "Bhutan",
+    "Lesotho",
+    "Nepal",
+    "Kyrgyzstan"
+   ],
+   "correct": "Lesotho",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Lesotho's lowest point, where the Makhaleng meets the Orange (Senqu) River, is 1,400 m. That is the highest lowest point of any country.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Geography_of_Lesotho",
+    "title": "Geography of Lesotho"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of Lesotho's highest peak, at 3,482 m?",
+   "answers": [
+    "Mafadi",
+    "Thabana Ntlenyana",
+    "Champagne Castle",
+    "Njesuthi"
+   ],
+   "correct": "Thabana Ntlenyana",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Thabana Ntlenyana is Lesotho's highest point and the highest peak in southern Africa. Mafadi, the highest point in South Africa, is lower.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Geography_of_Lesotho",
+    "title": "Geography of Lesotho"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Maloti Mountains of Lesotho are known by what name on the South African side of the border?",
+   "answers": [
+    "Cederberg",
+    "Magaliesberg",
+    "Drakensberg",
+    "Swartberg"
+   ],
+   "correct": "Drakensberg",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Maloti range in Lesotho's highlands is called the Drakensberg in South Africa.",
+   "source": {
+    "url": "https://www.newworldencyclopedia.org/entry/Lesotho",
+    "title": "Lesotho - New World Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Astana called when it officially became Kazakhstan's capital in December 1997?",
+   "answers": [
+    "Akmola",
+    "Tselinograd",
+    "Verny",
+    "Semipalatinsk"
+   ],
+   "correct": "Akmola",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "A decree of 20 October 1997 declared Akmola the capital, effective 10 December 1997. It was renamed Astana in May 1998.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Capital_relocation_in_Kazakhstan",
+    "title": "Capital relocation in Kazakhstan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which city served as the first capital of the Kazakh republic in 1920, before Kyzylorda took over in 1925?",
+   "answers": [
+    "Semipalatinsk",
+    "Petropavlovsk",
+    "Aktobe",
+    "Orenburg"
+   ],
+   "correct": "Orenburg",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Orenburg, now in Russia, was the first capital in 1920. The capital moved to Kyzylorda in 1925 and later to Alma-Ata in 1929.",
+   "source": {
+    "url": "https://www.advantour.com/kazakhstan/astana/history.htm",
+    "title": "Astana History - Advantour"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On the banks of which river is Astana situated?",
+   "answers": [
+    "Irtysh (Ertis)",
+    "Syr Darya (Syrdariya)",
+    "Ishim (Esil)",
+    "Ili (Ile)"
+   ],
+   "correct": "Ishim (Esil)",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Astana lies on the Ishim River, which is called the Esil in Kazakh.",
+   "source": {
+    "url": "https://2025.ifla.org/astana-city-names/",
+    "title": "Astana, a city by many names - IFLA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the Mekong River's stretch within China?",
+   "answers": [
+    "Nujiang",
+    "Jinsha",
+    "Yarlung Tsangpo",
+    "Lancang"
+   ],
+   "correct": "Lancang",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Lancang is the part of the Mekong that flows through China. The Nujiang and Jinsha are different rivers.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Lancang%E2%80%93Mekong_Cooperation",
+    "title": "Lancang-Mekong Cooperation"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these countries is NOT one of the six that the Mekong River flows through?",
+   "answers": [
+    "Myanmar",
+    "Malaysia",
+    "Cambodia",
+    "Thailand"
+   ],
+   "correct": "Malaysia",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Mekong flows through China, Myanmar, Laos, Thailand, Cambodia and Vietnam. It does not reach Malaysia.",
+   "source": {
+    "url": "https://atlas.co/explore/rivers/mekong-river/",
+    "title": "Mekong River Map - Atlas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which capital city is the Mekong joined by the Tonle Sap river system?",
+   "answers": [
+    "Vientiane",
+    "Luang Prabang",
+    "Phnom Penh",
+    "Can Tho"
+   ],
+   "correct": "Phnom Penh",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "In Cambodia the Mekong is joined by the Tonle Sap at Phnom Penh. The Bassac River then branches off the Mekong's west bank.",
+   "source": {
+    "url": "https://www.worldatlas.com/rivers/mekong-river.html",
+    "title": "Mekong River - WorldAtlas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which salty lake in Djibouti is the lowest point in Africa, at roughly 150 m below sea level?",
+   "answers": [
+    "Lake Abbe",
+    "Lake Turkana",
+    "Lake Assal",
+    "Lake Natron"
+   ],
+   "correct": "Lake Assal",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Lake Assal in the Afar Depression is the lowest land in Africa, about 155 m below sea level. Only the Dead Sea, and by some rankings the Sea of Galilee, lie lower.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_places_on_land_with_elevations_below_sea_level",
+    "title": "List of places on land with elevations below sea level"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which national capital is the lowest-lying in the world, at about 28 m below sea level?",
+   "answers": [
+    "Amsterdam",
+    "Tbilisi",
+    "Baku",
+    "Ashgabat"
+   ],
+   "correct": "Baku",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Baku, Azerbaijan, sits in the Caspian Depression at about 28 m below sea level.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_places_on_land_with_elevations_below_sea_level",
+    "title": "List of places on land with elevations below sea level"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which site in Death Valley, about 86 m below sea level, is the lowest point in North America?",
+   "answers": [
+    "Zabriskie Point",
+    "Badwater Basin",
+    "Dante's View",
+    "Mesquite Flat Dunes"
+   ],
+   "correct": "Badwater Basin",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Badwater Basin in Death Valley National Park, California, is the lowest point in North America.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_places_on_land_with_elevations_below_sea_level",
+    "title": "List of places on land with elevations below sea level"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Antarctic glacier hides a canyon whose bedrock lies about 3,500 m below sea level, the lowest known natural point on land?",
+   "answers": [
+    "Lambert Glacier",
+    "Beardmore Glacier",
+    "Thwaites Glacier",
+    "Denman Glacier"
+   ],
+   "correct": "Denman Glacier",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The canyon under Denman Glacier has bedrock at about −3,500 m, which makes it the lowest natural point on land.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_places_on_land_with_elevations_below_sea_level",
+    "title": "List of places on land with elevations below sea level"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Dead Sea Depression lies in a valley on the transform boundary between which two tectonic plates?",
+   "answers": [
+    "Eurasian and Indian",
+    "African and Arabian",
+    "Anatolian and Eurasian",
+    "Arabian and Indian"
+   ],
+   "correct": "African and Arabian",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Dead Sea sits in a deep valley on the transform boundary between the African and Arabian plates. Shear faulting formed the depression.",
+   "source": {
+    "url": "https://geology.com/below-sea-level/",
+    "title": "Lowest Land Points Below Sea Level Map - Geology.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mountain in Russia's Caucasus is generally given as the highest point in Europe?",
+   "answers": [
+    "Mont Blanc",
+    "Dykh-Tau",
+    "Mount Kazbek",
+    "Mount Elbrus"
+   ],
+   "correct": "Mount Elbrus",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Mount Elbrus in Russia, at 5,642 m, is listed as the highest point of Europe. Dykh-Tau is the next highest in the Caucasus.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_elevation_extremes_by_region",
+    "title": "List of elevation extremes by region"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Madagascar is the world's fourth-largest island. Which island ranks third?",
+   "answers": [
+    "Baffin Island",
+    "Borneo",
+    "Sumatra",
+    "Honshu"
+   ],
+   "correct": "Borneo",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Madagascar ranks fourth, after Greenland, New Guinea and Borneo.",
+   "source": {
+    "url": "https://www.britannica.com/place/Madagascar",
+    "title": "Madagascar - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of Madagascar's highest peak, in the Tsaratanana Massif?",
+   "answers": [
+    "Pic Boby",
+    "Tsiafajavona",
+    "Maromokotro",
+    "Mount Ambre"
+   ],
+   "correct": "Maromokotro",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Maromokotro rises to 2,876 m in the northern Tsaratanana Massif and is the island's highest point.",
+   "source": {
+    "url": "https://www.britannica.com/place/Madagascar",
+    "title": "Madagascar - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Around 88 million years ago, Madagascar split from which landmass, leaving its plants and animals to evolve in isolation?",
+   "answers": [
+    "Australia",
+    "Antarctica",
+    "Arabia",
+    "India"
+   ],
+   "correct": "India",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Madagascar separated from India about 88 million years ago. Since then its wildlife has evolved in relative isolation.",
+   "source": {
+    "url": "https://sahistory.org.za/place/madagascar",
+    "title": "Madagascar - South African History Online"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Although Madagascar lies about 400 km off Africa, its people are primarily related to those of which region?",
+   "answers": [
+    "Southern India",
+    "Arabia",
+    "Polynesia",
+    "Indonesia"
+   ],
+   "correct": "Indonesia",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Britannica notes that Madagascar's population is mainly related to the peoples of Indonesia, more than 3,000 miles to the east, not to African peoples.",
+   "source": {
+    "url": "https://www.britannica.com/place/Madagascar",
+    "title": "Madagascar - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which city does Bolivia's constitution name as the national capital?",
+   "answers": [
+    "La Paz",
+    "Sucre",
+    "Santa Cruz",
+    "Cochabamba"
+   ],
+   "correct": "Sucre",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The constitution names Sucre as the capital. La Paz is the seat of government, where the executive and legislature sit.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Constitution_of_Bolivia",
+    "title": "Constitution of Bolivia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "La Paz became Bolivia's seat of government after which 1898–1899 conflict?",
+   "answers": [
+    "War of the Pacific",
+    "Chaco War",
+    "Acre War",
+    "Federal War"
+   ],
+   "correct": "Federal War",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Liberals based in La Paz defeated conservatives based in Sucre in the Federal War. La Paz became the seat of government and Sucre kept its constitutional status.",
+   "source": {
+    "url": "https://www.bolivianlife.com/travel-tips/why-bolivia-has-two-capitals-sucre-vs-la-paz-explained/",
+    "title": "Why Bolivia Has Two Capitals: Sucre vs La Paz Explained"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Lake Titicaca has more than 25 tributaries but only one outlet. What is it called?",
+   "answers": [
+    "Río Ramis",
+    "Río Desaguadero",
+    "Río Ilave",
+    "Río Coata"
+   ],
+   "correct": "Río Desaguadero",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Río Desaguadero is the lake's single outflow and runs south toward Lake Poopó. The Ramis, Ilave and Coata flow into the lake.",
+   "source": {
+    "url": "https://www.lakepedia.com/lake/titicaca.html",
+    "title": "Lake Titicaca - Facts, Map, Activities - Lakepedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At roughly what elevation above sea level does Lake Titicaca, the world's highest navigable lake, sit?",
+   "answers": [
+    "About 1,900 metres",
+    "About 2,600 metres",
+    "About 5,100 metres",
+    "About 3,800 metres"
+   ],
+   "correct": "About 3,800 metres",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Lake Titicaca on the Peru–Bolivia border sits at about 3,812 m (12,507 ft) above sea level.",
+   "source": {
+    "url": "https://www.explorandes.com/blog/lake-titicaca",
+    "title": "Lake Titicaca: Altitude, Map & Facts - Explorandes"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which peak is the highest in the Americas and in the entire Southern Hemisphere?",
+   "answers": [
+    "Denali",
+    "Huascarán",
+    "Aconcagua",
+    "Ojos del Salado"
+   ],
+   "correct": "Aconcagua",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Aconcagua in Argentina is the highest summit of the Andes, South America, the Americas and the Southern Hemisphere.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Extreme_points_of_South_America",
+    "title": "Extreme points of South America"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greenland mountain, at 3,694 m, is the highest summit of the entire Arctic?",
+   "answers": [
+    "Newtontoppen",
+    "Gunnbjørn Fjeld",
+    "Hvannadalshnúkur",
+    "Mount Barbeau"
+   ],
+   "correct": "Gunnbjørn Fjeld",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Gunnbjørn Fjeld is the highest island summit of the Americas and the highest summit of the Arctic.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Extreme_points_of_North_America",
+    "title": "Extreme points of North America"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the highest mountain in Antarctica?",
+   "answers": [
+    "Mount Erebus",
+    "Mount Kirkpatrick",
+    "Mount Sidley",
+    "Mount Vinson"
+   ],
+   "correct": "Mount Vinson",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Mount Vinson is the highest point of Antarctica. Erebus is a well-known volcano but is much lower.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_elevation_extremes_by_region",
+    "title": "List of elevation extremes by region"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these countries does NOT border Uzbekistan?",
+   "answers": [
+    "Kyrgyzstan",
+    "Tajikistan",
+    "Iran",
+    "Turkmenistan"
+   ],
+   "correct": "Iran",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Uzbekistan borders Turkmenistan, Afghanistan, Tajikistan, Kazakhstan and Kyrgyzstan. Iran does not touch it.",
+   "source": {
+    "url": "https://www.worldatlas.com/articles/doubly-landlocked-countries.html",
+    "title": "The World's Two Double Landlocked Countries - WorldAtlas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Almaty grew up around a Russian fort. What was the town called before it became Alma-Ata?",
+   "answers": [
+    "Akmolinsk",
+    "Semipalatinsk",
+    "Petropavlovsk",
+    "Verny"
+   ],
+   "correct": "Verny",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "Russia built Fort Zailiyskoe in 1854 and renamed it Vernoe. The town around it became Verny, and was renamed Alma-Ata in 1921.",
+   "source": {
+    "url": "https://geohistory.today/kazakhstan_capital/",
+    "title": "Kazakhstan's Capitals: Two Cities of History and Modern Business"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the Dead Sea's main tributary?",
+   "answers": [
+    "Yarmouk River",
+    "Litani River",
+    "Jordan River",
+    "Orontes River"
+   ],
+   "correct": "Jordan River",
+   "difficulty": "hard",
+   "category": "Geography",
+   "explain": "The Dead Sea lies in the Jordan Rift Valley, and the Jordan River is its main tributary. The sea has no outlet.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Dead_Sea",
+    "title": "Dead Sea"
+   },
+   "ai_written": true
+  }
+ ]
+}

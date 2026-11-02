@@ -1,0 +1,429 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Nature trivia (medium)",
+ "description": "23 medium questions about animals, plants, weather, ecosystems. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which metal in the oxygen-carrying protein haemocyanin gives octopus blood its blue colour?",
+   "answers": [
+    "Iron",
+    "Copper",
+    "Zinc",
+    "Cobalt"
+   ],
+   "correct": "Copper",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Octopus haemocyanin uses copper to carry oxygen, whereas human haemoglobin uses iron. The copper-based protein is also efficient in cold, low-oxygen water.",
+   "source": {
+    "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "title": "Octopuses keep surprising us - here are eight examples how"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the job of two of an octopus's three hearts?",
+   "answers": [
+    "Pumping blood to the arms only",
+    "Pumping ink into the siphon",
+    "Pumping blood past the gills",
+    "Pumping water through the mantle"
+   ],
+   "correct": "Pumping blood past the gills",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Two branchial hearts push blood past the gills to pick up oxygen. The third heart circulates blood around the rest of the body.",
+   "source": {
+    "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "title": "Octopuses keep surprising us - here are eight examples how"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to NOAA, blue whales are found in all oceans except which one?",
+   "answers": [
+    "Indian Ocean",
+    "Southern Ocean",
+    "Atlantic Ocean",
+    "Arctic Ocean"
+   ],
+   "correct": "Arctic Ocean",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "NOAA states that blue whales occur in all oceans except the Arctic. Their distribution mostly follows where krill are concentrated.",
+   "source": {
+    "url": "https://www.fisheries.noaa.gov/species/blue-whale",
+    "title": "Blue Whale | NOAA Fisheries"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A blue whale's tongue alone can weigh about as much as which land animal?",
+   "answers": [
+    "A grizzly bear",
+    "A giraffe",
+    "A horse",
+    "An elephant"
+   ],
+   "correct": "An elephant",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "National Geographic notes that a blue whale's tongue alone can weigh as much as an elephant. The whale uses it to force water out through its baleen plates.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/animals/mammals/facts/blue-whale",
+    "title": "Blue whale, facts and photos"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "When water runs out, a tardigrade curls into a dried-up ball known by what name?",
+   "answers": [
+    "A tun",
+    "A cyst",
+    "A pupa",
+    "A spore"
+   ],
+   "correct": "A tun",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "In a state called cryptobiosis, a tardigrade curls into a dried ball called a tun and can revive when water returns.",
+   "source": {
+    "url": "https://serc.carleton.edu/microbelife/topics/tardigrade/index.html",
+    "title": "Tardigrades (Water Bears) - Carleton College SERC"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Although it can grow as tall as many trees, bamboo is botanically a type of what?",
+   "answers": [
+    "A palm",
+    "A shrub",
+    "A grass",
+    "A fern"
+   ],
+   "correct": "A grass",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Bamboo is not technically a tree. It belongs to the grass family and is often called the fastest-growing grass.",
+   "source": {
+    "url": "https://onetreeplanted.org/blogs/stories/bamboo",
+    "title": "8 Amazing Bamboo Facts - One Tree Planted"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What must happen before a Venus flytrap snaps its trap shut?",
+   "answers": [
+    "Sweet nectar fills the trap to the brim",
+    "Its trigger hairs are touched twice in quick succession",
+    "Sunlight strikes the red lining for a full minute",
+    "The trap senses body heat from nearby prey"
+   ],
+   "correct": "Its trigger hairs are touched twice in quick succession",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The trap closes when an insect trips its trigger hairs twice within a short time. This avoids wasting energy on false alarms such as raindrops.",
+   "source": {
+    "url": "https://www.kew.org/read-and-watch/venus-flytrap-creepy-carnivorous-plant",
+    "title": "How does the Venus flytrap work? - Royal Botanic Gardens, Kew"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which conifer is the tallest tree species on Earth?",
+   "answers": [
+    "Giant sequoia",
+    "Douglas fir",
+    "Coast redwood",
+    "Sitka spruce"
+   ],
+   "correct": "Coast redwood",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Britannica describes the coast redwood (Sequoia sempervirens) as the tallest of all living trees. The giant sequoia is bulkier but not as tall.",
+   "source": {
+    "url": "https://www.britannica.com/plant/coast-redwood",
+    "title": "Coast redwood | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Coast redwoods are native to a narrow strip of the Pacific coast defined by what feature?",
+   "answers": [
+    "A monsoon rain belt",
+    "A coastal fog belt",
+    "A permanent snow line",
+    "A dry desert margin"
+   ],
+   "correct": "A coastal fog belt",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Britannica says coast redwoods are endemic to the fog belt of the coastal range, from southwestern Oregon to central California.",
+   "source": {
+    "url": "https://www.britannica.com/plant/coast-redwood",
+    "title": "Coast redwood | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "During coral bleaching, corals expel which microscopic partners that normally supply much of their food?",
+   "answers": [
+    "Cleaner shrimp",
+    "Stinging tentacles",
+    "Symbiotic algae",
+    "Calcium skeletons"
+   ],
+   "correct": "Symbiotic algae",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "High water temperatures make corals lose their zooxanthellae, the algae that produce the food corals need. The tissue then turns nearly transparent, showing the white skeleton.",
+   "source": {
+    "url": "https://ocean.si.edu/ocean-life/invertebrates/corals-and-coral-reefs",
+    "title": "Corals and Coral Reefs - Smithsonian Ocean Portal"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Coral polyps build reefs by secreting skeletons made of which compound?",
+   "answers": [
+    "Calcium carbonate",
+    "Silicon dioxide",
+    "Sodium chloride",
+    "Magnesium sulfate"
+   ],
+   "correct": "Calcium carbonate",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Polyps secrete calcium carbonate skeletons. Over time these accumulate into limestone reef structures such as the Great Barrier Reef.",
+   "source": {
+    "url": "https://www.britannica.com/place/How-do-coral-polyps-build-the-Great-Barrier-Reef",
+    "title": "How do coral polyps build the Great Barrier Reef? | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Corals are invertebrates in which animal group, a group characterised by stinging tentacles?",
+   "answers": [
+    "Porifera",
+    "Mollusca",
+    "Echinodermata",
+    "Cnidaria"
+   ],
+   "correct": "Cnidaria",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The Great Barrier Reef Foundation explains that corals belong to the Cnidaria, animals characterised by stinging tentacles.",
+   "source": {
+    "url": "https://www.barrierreef.org/news/explainers/what-is-coral",
+    "title": "What is coral? - Great Barrier Reef Foundation"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "An EF5 tornado on the Enhanced Fujita scale is rated by estimated winds above roughly what speed?",
+   "answers": [
+    "150 mph",
+    "200 mph",
+    "250 mph",
+    "300 mph"
+   ],
+   "correct": "200 mph",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The National Weather Service lists EF4 as 166–200 mph, so EF5 covers winds greater than 200 mph.",
+   "source": {
+    "url": "https://www.weather.gov/lzk/efscale.htm",
+    "title": "Enhanced Fujita Scale - National Weather Service"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which scientist introduced the original tornado damage scale in 1971, later replaced by an 'Enhanced' version?",
+   "answers": [
+    "Charles Richter",
+    "Francis Beaufort",
+    "Herbert Saffir",
+    "Ted Fujita"
+   ],
+   "correct": "Ted Fujita",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The Fujita scale was introduced in 1971 by Ted Fujita. The Enhanced Fujita scale later replaced it.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Enhanced_Fujita_scale",
+    "title": "Enhanced Fujita scale - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which type of forest in Mexico do eastern North American monarch butterflies roost for the winter?",
+   "answers": [
+    "Coast redwood groves",
+    "Tropical mangrove forests",
+    "Oyamel fir forests",
+    "Cypress swamps"
+   ],
+   "correct": "Oyamel fir forests",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Eastern monarchs overwinter in oyamel fir forests high in the mountains of central Mexico. The cool microclimate there helps them conserve energy.",
+   "source": {
+    "url": "https://www.fs.usda.gov/wildflowers/pollinators/Monarch_Butterfly/migration/index.shtml",
+    "title": "Monarch Butterfly Migration and Overwintering - USDA Forest Service"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Monarch caterpillars depend on which plant as their sole host plant?",
+   "answers": [
+    "Clover",
+    "Milkweed",
+    "Goldenrod",
+    "Stinging nettle"
+   ],
+   "correct": "Milkweed",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Monarchs lay their eggs on milkweed, the only plant their caterpillars feed on.",
+   "source": {
+    "url": "https://www.nathab.com/blog/monarch-butterfly-migration-mexicos-top-natural-wonder",
+    "title": "Monarch Butterfly Migration: Mexico's Top Natural Wonder"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which seabird makes the longest migration of any bird, flying from the Arctic to wintering grounds off Antarctica?",
+   "answers": [
+    "Arctic tern",
+    "Atlantic puffin",
+    "Northern gannet",
+    "Herring gull"
+   ],
+   "correct": "Arctic tern",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The Smithsonian notes that the Arctic tern has the longest migration of all birds, flying from near the North Pole to waters off Antarctica.",
+   "source": {
+    "url": "https://ocean.si.edu/ocean-life/seabirds/arctic-tern",
+    "title": "Arctic Tern - Smithsonian Ocean"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the honey bee waggle dance, what does the length of the waggle run communicate?",
+   "answers": [
+    "The age of the dancer",
+    "The temperature inside the hive",
+    "The distance to the food",
+    "The weather ahead"
+   ],
+   "correct": "The distance to the food",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "A longer waggle run means the food source is farther away. The angle of the run signals the direction.",
+   "source": {
+    "url": "https://www.planetbee.org/post/the-waggle-dance-bees-high-tech-navigation-system",
+    "title": "The Waggle Dance, Apis Mellifera's (Honey Bee's!) High-Tech Navigation System"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In a mycorrhizal partnership, what do plants give fungi in exchange for phosphorus and other soil nutrients?",
+   "answers": [
+    "Flower nectar",
+    "Pollen grains",
+    "Fallen leaf litter",
+    "Photosynthesized sugar"
+   ],
+   "correct": "Photosynthesized sugar",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The core exchange in mycorrhizal symbiosis is sugar made by the plant for phosphorus and other nutrients gathered by the fungus.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Mycorrhiza",
+    "title": "Mycorrhiza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Sea otters help kelp forests flourish by preying on which kelp-grazing animal?",
+   "answers": [
+    "Sea urchins",
+    "Moon jellyfish",
+    "Sea cucumbers",
+    "Sand dollars"
+   ],
+   "correct": "Sea urchins",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Sea otters are a keystone species. By eating sea urchins they reduce grazing pressure on kelp, so kelp forests thrive.",
+   "source": {
+    "url": "https://www.nps.gov/glba/blogs/a-keystone-species-the-sea-otter-colonizes-glacier-bay.htm",
+    "title": "A Keystone Species, the Sea Otter, Colonizes Glacier Bay - National Park Service"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which platypuses carry a venomous spur on each hind leg?",
+   "answers": [
+    "Only females",
+    "Only juveniles",
+    "Both sexes equally",
+    "Only males"
+   ],
+   "correct": "Only males",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Male platypuses have a hollow spur on each hind leg connected to a venom gland. It is likely used in fights between males.",
+   "source": {
+    "url": "https://wwf.org.au/blogs/9-interesting-platypus-facts",
+    "title": "10 Fascinating Platypus Facts That Will Surprise You - WWF Australia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Along with the platypus, which animals are the only living egg-laying mammals?",
+   "answers": [
+    "Pangolins",
+    "Echidnas",
+    "Armadillos",
+    "Aardvarks"
+   ],
+   "correct": "Echidnas",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The living monotremes are the platypus and four species of echidna.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Monotreme",
+    "title": "Monotreme - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the term for an axolotl keeping juvenile traits, such as feathery gills, throughout its life?",
+   "answers": [
+    "Estivation",
+    "Neoteny",
+    "Torpor",
+    "Aposematism"
+   ],
+   "correct": "Neoteny",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Axolotls stay 'young' for their whole lives, with feathery gills and a tail, a phenomenon called neoteny.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/animals/amphibians/facts/axolotl",
+    "title": "Axolotl | National Geographic"
+   },
+   "ai_written": true
+  }
+ ]
+}

@@ -1,0 +1,921 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Words trivia (easy)",
+ "description": "50 easy questions about word meanings, origins, spelling, idioms, grammar. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "The English word 'salary' comes from the Latin 'salarium', which is linked to the Latin word for what?",
+   "answers": [
+    "Gold",
+    "Salt",
+    "Grain",
+    "Labor"
+   ],
+   "correct": "Salt",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Salary' derives from Latin 'salarium', which is linked to 'sal', the Latin word for salt. Whether Roman soldiers were actually paid in salt is disputed.",
+   "source": {
+    "url": "https://phys.org/news/2026-09-pay-salary-roman-soldiers-paid.html",
+    "title": "Our pay is called a 'salary,' but were Roman soldiers really paid in salt?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the theatre, what do you wish a performer when you tell them to 'break a leg'?",
+   "answers": [
+    "Good luck",
+    "Good health",
+    "Good manners",
+    "Good riddance"
+   ],
+   "correct": "Good luck",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Break a leg' is an idiom meaning good luck, said to a performer before going on stage.",
+   "source": {
+    "url": "https://www.phrases.org.uk/meanings/break-a-leg.html",
+    "title": "Break A Leg - Meaning & Origin Of The Phrase"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the idiom 'it's raining cats and dogs' mean?",
+   "answers": [
+    "It is raining very lightly",
+    "It is about to stop raining",
+    "It is raining very heavily",
+    "It is raining during a storm"
+   ],
+   "correct": "It is raining very heavily",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The idiom describes extremely heavy rain. It has nothing to do with real animals falling from the sky.",
+   "source": {
+    "url": "https://grammarist.com/idiom/raining-cats-and-dogs/",
+    "title": "It's Raining Cats and Dogs"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If a task is described as 'a piece of cake', what does that mean?",
+   "answers": [
+    "It is very expensive",
+    "It is very dangerous",
+    "It is very easy",
+    "It is very sweet"
+   ],
+   "correct": "It is very easy",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'A piece of cake' is an idiom for something that is very easy to do.",
+   "source": {
+    "url": "https://www.remitly.com/blog/immigration/american-idioms/",
+    "title": "Crack the Code of American Idioms: A Guide for Immigrants"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does it mean to 'spill the beans'?",
+   "answers": [
+    "To reveal a secret",
+    "To make a big mess",
+    "To waste your money",
+    "To cook a meal"
+   ],
+   "correct": "To reveal a secret",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The idiom has nothing to do with real beans. It means to reveal secret information.",
+   "source": {
+    "url": "https://www.remitly.com/blog/immigration/american-idioms/",
+    "title": "Crack the Code of American Idioms: A Guide for Immigrants"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the idiom 'bite the bullet' mean?",
+   "answers": [
+    "Give up on a goal early",
+    "Argue loudly with someone",
+    "Run away from a danger",
+    "Face something unpleasant"
+   ],
+   "correct": "Face something unpleasant",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "To 'bite the bullet' is to decide to do something difficult or unpleasant that you have been putting off.",
+   "source": {
+    "url": "https://www.remitly.com/blog/immigration/american-idioms/",
+    "title": "Crack the Code of American Idioms: A Guide for Immigrants"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is an idiom?",
+   "answers": [
+    "A word that imitates a sound",
+    "A phrase that reads the same backward",
+    "A word that sounds like another word",
+    "A phrase whose meaning isn't clear from its words"
+   ],
+   "correct": "A phrase whose meaning isn't clear from its words",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "An idiom is a commonly known phrase whose meaning cannot be worked out from the ordinary meanings of its individual words.",
+   "source": {
+    "url": "https://www.remitly.com/blog/immigration/american-idioms/",
+    "title": "Crack the Code of American Idioms: A Guide for Immigrants"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the idiom 'break the ice' mean?",
+   "answers": [
+    "To end a friendship",
+    "To start a conversation",
+    "To cool a drink",
+    "To win an argument"
+   ],
+   "correct": "To start a conversation",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Break the ice' means to get a conversation going in an awkward or unfamiliar situation.",
+   "source": {
+    "url": "https://www.columbiawestcollege.edu/blog/american-english-idioms",
+    "title": "American English Idioms: Expressions Only Americans Use"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If someone 'hits the nail on the head', what have they done?",
+   "answers": [
+    "Made a costly mistake",
+    "Been exactly right",
+    "Finished a job early",
+    "Hurt themselves slightly"
+   ],
+   "correct": "Been exactly right",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Hit the nail on the head' means to be exactly right about something.",
+   "source": {
+    "url": "https://www.columbiawestcollege.edu/blog/american-english-idioms",
+    "title": "American English Idioms: Expressions Only Americans Use"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If you say you are 'under the weather', how are you feeling?",
+   "answers": [
+    "Very excited",
+    "Rather cold",
+    "Quite sick",
+    "Extremely angry"
+   ],
+   "correct": "Quite sick",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Under the weather' is an idiom meaning feeling sick or unwell.",
+   "source": {
+    "url": "https://www.columbiawestcollege.edu/blog/american-english-idioms",
+    "title": "American English Idioms: Expressions Only Americans Use"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If something 'costs an arm and a leg', what is true of it?",
+   "answers": [
+    "It is very expensive",
+    "It is very painful",
+    "It is very heavy",
+    "It is very old"
+   ],
+   "correct": "It is very expensive",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Cost an arm and a leg' is an idiom meaning something is very expensive.",
+   "source": {
+    "url": "https://www.columbiawestcollege.edu/blog/american-english-idioms",
+    "title": "American English Idioms: Expressions Only Americans Use"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The sandwich is said to be named after which English nobleman?",
+   "answers": [
+    "Arthur Wellesley, Duke of Wellington",
+    "Charles Grey, 2nd Earl Grey",
+    "John Montagu, 4th Earl of Sandwich",
+    "John Churchill, Duke of Marlborough"
+   ],
+   "correct": "John Montagu, 4th Earl of Sandwich",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The story goes that John Montagu, 4th Earl of Sandwich, was too busy to stop for dinner and asked for beef between slices of bread.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.csmonitor.com/Arts-Culture/In-a-Word/2020/0917/People-who-lent-their-names-to-words",
+    "title": "Are 'sandwich' and 'cardigan' named after real people? - CSMonitor.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word 'boycott' comes from the name of a land agent who was shunned by tenants in which country?",
+   "answers": [
+    "Scotland",
+    "Wales",
+    "Australia",
+    "Ireland"
+   ],
+   "correct": "Ireland",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The term comes from Captain Charles C. Boycott, a land agent who was ostracized by the Irish.",
+   "source": {
+    "url": "https://www.yourdictionary.com/articles/eponym-meaning-examples",
+    "title": "What Is an Eponym? Meaning and Popular Examples"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word 'pasteurize' is named after which French scientist?",
+   "answers": [
+    "Antoine Lavoisier",
+    "Louis Pasteur",
+    "Jean-Baptiste Lamarck",
+    "Pierre Curie"
+   ],
+   "correct": "Louis Pasteur",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Pasteurize' comes from Louis Pasteur, honored for his work in food safety.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.ethiostarlocalization.com/50-words-named-after-people-the-fascinating-world-of-eponyms/",
+    "title": "50 Words Named After People: The Fascinating World of Eponyms"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name 'America' honors which Italian mapmaker?",
+   "answers": [
+    "Marco Polo",
+    "Giovanni da Verrazzano",
+    "Christopher Columbus",
+    "Amerigo Vespucci"
+   ],
+   "correct": "Amerigo Vespucci",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "America is named after the Italian mapmaker Amerigo Vespucci.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://thewordpoint.com/blog/10-examples-of-eponyms-in-the-english-language",
+    "title": "What Is an Eponym? Meaning, Definition and 10 Examples"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The saxophone is named after which Belgian instrument maker?",
+   "answers": [
+    "Antonio Stradivari",
+    "Theobald Boehm",
+    "Adolphe Sax",
+    "Bartolomeo Cristofori"
+   ],
+   "correct": "Adolphe Sax",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The saxophone takes its name from Adolphe Sax, the Belgian instrument maker who invented it.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.ethiostarlocalization.com/50-words-named-after-people-the-fascinating-world-of-eponyms/",
+    "title": "50 Words Named After People: The Fascinating World of Eponyms"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word 'sideburns' comes from the surname of which American general?",
+   "answers": [
+    "Ulysses S. Grant",
+    "Robert E. Lee",
+    "William T. Sherman",
+    "Ambrose Burnside"
+   ],
+   "correct": "Ambrose Burnside",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Sideburns' is an eponym from Ambrose Burnside, known for his distinctive facial hair.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.yourdictionary.com/articles/eponym-meaning-examples",
+    "title": "What Is an Eponym? Meaning and Popular Examples"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who is the Caesar salad named after?",
+   "answers": [
+    "Julius Caesar, a Roman general",
+    "Augustus Caesar, a Roman emperor",
+    "Caesar Cardini, a restaurateur",
+    "César Ritz, a hotelier"
+   ],
+   "correct": "Caesar Cardini, a restaurateur",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The salad was created by restaurateur Caesar Cardini and bears his name. It has nothing to do with the Roman rulers.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://thewordpoint.com/blog/10-examples-of-eponyms-in-the-english-language",
+    "title": "What Is an Eponym? Meaning, Definition and 10 Examples"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The cardigan sweater is named after an earl who led which 1854 military action?",
+   "answers": [
+    "The Storming of the Bastille",
+    "The Charge of the Light Brigade",
+    "The Battle of Hastings",
+    "The Siege of Yorktown"
+   ],
+   "correct": "The Charge of the Light Brigade",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The garment is named after James Brudenell, 7th Earl of Cardigan, who led the Charge of the Light Brigade during the Crimean War.",
+   "source": {
+    "url": "https://www.csmonitor.com/Arts-Culture/In-a-Word/2020/0917/People-who-lent-their-names-to-words",
+    "title": "Are 'sandwich' and 'cardigan' named after real people? - CSMonitor.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The women's garment called 'bloomers' is named after which women's rights activist?",
+   "answers": [
+    "Susan B. Anthony",
+    "Amelia Bloomer",
+    "Elizabeth Cady Stanton",
+    "Sojourner Truth"
+   ],
+   "correct": "Amelia Bloomer",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "Bloomers take their name from the women's rights activist Amelia Bloomer.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.yourdictionary.com/articles/eponym-meaning-examples",
+    "title": "What Is an Eponym? Meaning and Popular Examples"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is a word that is named after a person, such as 'diesel', called?",
+   "answers": [
+    "An acronym",
+    "An eponym",
+    "A homonym",
+    "An oxymoron"
+   ],
+   "correct": "An eponym",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "An eponym is a word named after a person or place. 'Diesel' comes from Rudolf Diesel.",
+   "source": {
+    "url": "https://thewordpoint.com/blog/10-examples-of-eponyms-in-the-english-language",
+    "title": "What Is an Eponym? Meaning, Definition and 10 Examples"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which language did English borrow the word 'algebra' from?",
+   "answers": [
+    "Greek",
+    "Sanskrit",
+    "Arabic",
+    "Hebrew"
+   ],
+   "correct": "Arabic",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Algebra' comes from the Arabic 'al-jabr', meaning a reunion of broken parts.",
+   "source": {
+    "url": "https://learningenglish.voanews.com/a/english-words-borrowed-from-arabic/4256013.html",
+    "title": "English Words Borrowed From Arabic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In English words like 'alcohol' and 'algebra', the opening 'al-' comes from an Arabic word meaning what?",
+   "answers": [
+    "Water",
+    "And",
+    "Of",
+    "The"
+   ],
+   "correct": "The",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The 'al-' at the start of these loanwords is the Arabic definite article, meaning 'the'.",
+   "source": {
+    "url": "https://www.superprof.ca/blog/english-words-from-arabic/",
+    "title": "Arabic words in English - How They Came to Be"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which drink's English name traces back, via Turkish and Dutch, to the Arabic word 'qahwa'?",
+   "answers": [
+    "Tea",
+    "Cocoa",
+    "Coffee",
+    "Vodka"
+   ],
+   "correct": "Coffee",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Coffee' entered English via Dutch 'koffie', from Ottoman Turkish 'kahve', which came from Arabic 'qahwa'.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Arabic_coffee",
+    "title": "Arabic coffee"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The contraction 'they're' is short for which two words?",
+   "answers": [
+    "They were",
+    "They have",
+    "They are",
+    "There are"
+   ],
+   "correct": "They are",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The apostrophe in 'they're' shows it is two words joined: 'they' and 'are'.",
+   "source": {
+    "url": "https://www.dictionary.com/articles/their-vs-there-vs-theyre",
+    "title": "\"Their\" vs. \"There\" vs. \"They're\": What's the Difference?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which word correctly completes this sentence: 'The kids forgot ___ umbrellas at school'?",
+   "answers": [
+    "there",
+    "they're",
+    "theyre",
+    "their"
+   ],
+   "correct": "their",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Their' is the possessive form of 'they', meaning belonging to them.",
+   "source": {
+    "url": "https://www.grammarly.com/blog/commonly-confused-words/there-their-theyre/",
+    "title": "\"There\" vs. \"Their\" vs. \"They're\": What's the Difference?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which word correctly completes this sentence: '___ welcome to join us for dinner'?",
+   "answers": [
+    "Your",
+    "You're",
+    "Youre",
+    "Yore"
+   ],
+   "correct": "You're",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'You're' is a contraction of 'you are', and the sentence needs 'you are'.",
+   "source": {
+    "url": "https://www.goodreads.com/author_blog_posts/8055955-homophones-and-contractions-grammar-editing-tips",
+    "title": "Homophones and Contractions : Grammar & Editing Tips"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What are words that sound alike but differ in meaning, such as 'their' and 'there', called?",
+   "answers": [
+    "Synonyms",
+    "Antonyms",
+    "Acronyms",
+    "Homophones"
+   ],
+   "correct": "Homophones",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "Homophones are words with the same pronunciation but different meanings, and often different spellings.",
+   "source": {
+    "url": "https://languagetool.org/insights/post/there-their-theyre/",
+    "title": "Their vs There vs They're"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the Latin abbreviation 'e.g.' mean?",
+   "answers": [
+    "And so on",
+    "In summary",
+    "For example",
+    "Note well"
+   ],
+   "correct": "For example",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'E.g.' stands for the Latin 'exempli gratia', which means 'for example'.",
+   "source": {
+    "url": "https://writingcenter.unc.edu/tips-and-tools/latin-terms-and-abbreviations/",
+    "title": "Latin Terms and Abbreviations"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the Latin abbreviation 'i.e.' mean?",
+   "answers": [
+    "For example",
+    "That is",
+    "And so on",
+    "In summary"
+   ],
+   "correct": "That is",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'I.e.' is from the Latin 'id est', meaning 'that is'. It is used to clarify what was just said.",
+   "source": {
+    "url": "https://style.mla.org/eg-and-ie/",
+    "title": "E.g. and I.e.: Choosing the Right Abbreviation"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What figure of speech compares two things using the words 'like' or 'as'?",
+   "answers": [
+    "Hyperbole",
+    "Simile",
+    "Metaphor",
+    "Oxymoron"
+   ],
+   "correct": "Simile",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "A simile says one thing is 'like' or 'as' another. A metaphor says one thing simply is another.",
+   "source": {
+    "url": "https://www.britannica.com/dictionary/eb/qa/Similes-and-Metaphors",
+    "title": "Similes and Metaphors"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these words is a palindrome, reading the same backward as forward?",
+   "answers": [
+    "Racket",
+    "Carrot",
+    "Caramel",
+    "Racecar"
+   ],
+   "correct": "Racecar",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Racecar' is spelled the same in both directions, which makes it a palindrome.",
+   "source": {
+    "url": "https://www.masterclass.com/articles/palindromes-explained",
+    "title": "Palindromes Defined: 9 Types of Palindromes"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The famous palindrome 'A man, a plan, a canal' ends with the name of which country?",
+   "answers": [
+    "Egypt",
+    "Nicaragua",
+    "Colombia",
+    "Panama"
+   ],
+   "correct": "Panama",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The palindrome 'A man, a plan, a canal, Panama' refers to the building of the Panama Canal.",
+   "source": {
+    "url": "https://vocal.media/education/palindrome-zr5f06jx",
+    "title": "Palindrome"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is it called when you rearrange the letters of a word or phrase to spell a different one?",
+   "answers": [
+    "A palindrome",
+    "An anagram",
+    "An acronym",
+    "An idiom"
+   ],
+   "correct": "An anagram",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "Rearranging a word's letters to make another word or phrase is an anagram. A palindrome reads the same backward.",
+   "source": {
+    "url": "https://www.dictionary.com/e/palindromic-word/",
+    "title": "What Is the Longest Palindrome in English?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A word that imitates the sound it describes, like 'buzz' or 'clang', is an example of what?",
+   "answers": [
+    "Alliteration",
+    "Personification",
+    "Onomatopoeia",
+    "Assonance"
+   ],
+   "correct": "Onomatopoeia",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "Onomatopoeia is a figure of speech in which a word imitates the sound associated with an action or object.",
+   "source": {
+    "url": "https://www.poetryfoundation.org/education/glossary/onomatopoeia",
+    "title": "Onomatopoeia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Words like 'wow' and 'ugh', which express emotion rather than a specific sound, are usually classed as what?",
+   "answers": [
+    "Conjunctions",
+    "Prepositions",
+    "Interjections",
+    "Adverbs"
+   ],
+   "correct": "Interjections",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "Outbursts that express emotion rather than a specific sound are interjections or exclamations, not onomatopoeia.",
+   "source": {
+    "url": "https://www.rd.com/list/examples-of-onomatopoeia/",
+    "title": "50 Onomatopoeia Examples That You Never Thought of Before"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these phrases is a classic example of an oxymoron?",
+   "answers": [
+    "Giant whale",
+    "Quiet library",
+    "Bright sunlight",
+    "Jumbo shrimp"
+   ],
+   "correct": "Jumbo shrimp",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "An oxymoron pairs words that seem to have opposite meanings, and 'jumbo' (big) with 'shrimp' (small) is a standard example.",
+   "source": {
+    "url": "https://dictionary.cambridge.org/us/dictionary/english/oxymoron",
+    "title": "OXYMORON"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Pneumonoultramicroscopicsilicovolcanoconiosis, the longest word in major dictionaries, names a disease of which body part?",
+   "answers": [
+    "The kidneys",
+    "The lungs",
+    "The skin",
+    "The heart"
+   ],
+   "correct": "The lungs",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "It is defined as a lung disease caused by inhaling very fine silicate or quartz dust.",
+   "source": {
+    "url": "https://www.britannica.com/dictionary/eb/qa/The-Longest-Word-in-the-Dictionary",
+    "title": "The Longest Word in the Dictionary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Complete the spelling rhyme: 'I before E, except after ...'",
+   "answers": [
+    "G",
+    "T",
+    "S",
+    "C"
+   ],
+   "correct": "C",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The rhyme says 'i before e, except after c', which covers words like 'receive' and 'ceiling'.",
+   "source": {
+    "url": "https://www.merriam-webster.com/grammar/i-before-e-except-after-c",
+    "title": "I Before E Except After C: Is it a rule?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these words breaks the 'i before e' spelling rule?",
+   "answers": [
+    "Believe",
+    "Friend",
+    "Piece",
+    "Weird"
+   ],
+   "correct": "Weird",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Weird' has 'ei' even though there is no 'c' before it. Seize and height are other well-known exceptions.",
+   "source": {
+    "url": "https://www.merriam-webster.com/grammar/i-before-e-except-after-c",
+    "title": "I Before E Except After C: Is it a rule?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling?",
+   "answers": [
+    "Seperate",
+    "Separete",
+    "Separate",
+    "Seperete"
+   ],
+   "correct": "Separate",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The middle vowel is 'a', not 'e'. A common memory trick is that there is 'a rat' in sepARATe.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words-50",
+    "title": "Commonly Misspelled Words"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling?",
+   "answers": [
+    "Definately",
+    "Definitly",
+    "Defanitely",
+    "Definitely"
+   ],
+   "correct": "Definitely",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The word contains 'finite', so there is no 'a' in it.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words-50",
+    "title": "Commonly Misspelled Words"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling?",
+   "answers": [
+    "Accomodate",
+    "Acommodate",
+    "Accommodate",
+    "Acomodate"
+   ],
+   "correct": "Accommodate",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The word has a double 'c' and a double 'm'.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words-50",
+    "title": "Commonly Misspelled Words"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling?",
+   "answers": [
+    "Embarass",
+    "Embarras",
+    "Embarrase",
+    "Embarrass"
+   ],
+   "correct": "Embarrass",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The word has a double 'r' and a double 's'. It is one of the most commonly misspelled English words.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words-50",
+    "title": "Commonly Misspelled Words"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling?",
+   "answers": [
+    "Neccessary",
+    "Necessary",
+    "Necesary",
+    "Necessery"
+   ],
+   "correct": "Necessary",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The correct spelling has one 'c' and a double 's'.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words",
+    "title": "100 Commonly Misspelled Words in English [With Tricks]"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling of a day of the week?",
+   "answers": [
+    "Wensday",
+    "Wednesday",
+    "Wendsday",
+    "Wednsday"
+   ],
+   "correct": "Wednesday",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "It is spelled with a silent 'd' and the 'ne' in the middle: Wed-nes-day.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words",
+    "title": "100 Commonly Misspelled Words in English [With Tricks]"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling of a month?",
+   "answers": [
+    "Febuary",
+    "Februery",
+    "Febraury",
+    "February"
+   ],
+   "correct": "February",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The first 'r' is often dropped in speech but belongs in the spelling: Feb-ru-ary.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words",
+    "title": "100 Commonly Misspelled Words in English [With Tricks]"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling?",
+   "answers": [
+    "Rythm",
+    "Rhythem",
+    "Rhythm",
+    "Rhythym"
+   ],
+   "correct": "Rhythm",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The word is spelled with 'rh' at the start and 'th' in the middle.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words",
+    "title": "100 Commonly Misspelled Words in English [With Tricks]"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling?",
+   "answers": [
+    "Concensus",
+    "Consenses",
+    "Consensis",
+    "Consensus"
+   ],
+   "correct": "Consensus",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "'Concensus' is a common misspelling. The correct word is 'consensus', which is built on 'consent', not 'census'.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Commonly_misspelled_English_words",
+    "title": "Commonly misspelled English words"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is the correct spelling?",
+   "answers": [
+    "Restarant",
+    "Restraunt",
+    "Resturant",
+    "Restaurant"
+   ],
+   "correct": "Restaurant",
+   "difficulty": "easy",
+   "category": "Words",
+   "explain": "The word has 'au' in the middle: rest-au-rant.",
+   "source": {
+    "url": "https://www.lingua.edu/commonly-misspelled-words",
+    "title": "100 Commonly Misspelled Words in English [With Tricks]"
+   },
+   "ai_written": true
+  }
+ ]
+}

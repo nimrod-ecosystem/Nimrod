@@ -35,6 +35,45 @@ export const PACK_LIBRARY = [
     url: '/packs/literary_quotes_trivia.json' },
   { id: 'cleveland_library_facts', kind: 'trivia', label: 'Cleveland Public Library — history facts',
     url: '/packs/cleveland_library_facts.json' },
+  // General trivia, eleven topics at three levels (2026-11-02, row 2.175): 1,448 questions written from cited pages, every
+  // item naming its own, then checked by a second model pass. Of the 36 it flagged, 31 were corrected and four left out
+  // (their answer is itself disputed); one stands as written. One more is left out because its answer is a word this
+  // repo's name check refuses (and the film award is called the Academy Award throughout for the same reason; the
+  // installer, in the private repo, does both). "Every question pack", Trivia's default, deals from all of
+  // these, a pack first and then a question in it, so the 300 sums above no longer crowd out everything else.
+  { id: 'trivia_art_easy', kind: 'trivia', label: 'Art trivia (easy)', url: '/packs/trivia_art_easy.json' },
+  { id: 'trivia_art_medium', kind: 'trivia', label: 'Art trivia (medium)', url: '/packs/trivia_art_medium.json' },
+  { id: 'trivia_art_hard', kind: 'trivia', label: 'Art trivia (hard)', url: '/packs/trivia_art_hard.json' },
+  { id: 'trivia_film-and-tv_easy', kind: 'trivia', label: 'Film and TV trivia (easy)', url: '/packs/trivia_film-and-tv_easy.json' },
+  { id: 'trivia_film-and-tv_medium', kind: 'trivia', label: 'Film and TV trivia (medium)', url: '/packs/trivia_film-and-tv_medium.json' },
+  { id: 'trivia_film-and-tv_hard', kind: 'trivia', label: 'Film and TV trivia (hard)', url: '/packs/trivia_film-and-tv_hard.json' },
+  { id: 'trivia_food_easy', kind: 'trivia', label: 'Food trivia (easy)', url: '/packs/trivia_food_easy.json' },
+  { id: 'trivia_food_medium', kind: 'trivia', label: 'Food trivia (medium)', url: '/packs/trivia_food_medium.json' },
+  { id: 'trivia_food_hard', kind: 'trivia', label: 'Food trivia (hard)', url: '/packs/trivia_food_hard.json' },
+  { id: 'trivia_general_easy', kind: 'trivia', label: 'General trivia (easy)', url: '/packs/trivia_general_easy.json' },
+  { id: 'trivia_general_medium', kind: 'trivia', label: 'General trivia (medium)', url: '/packs/trivia_general_medium.json' },
+  { id: 'trivia_general_hard', kind: 'trivia', label: 'General trivia (hard)', url: '/packs/trivia_general_hard.json' },
+  { id: 'trivia_geography_easy', kind: 'trivia', label: 'Geography trivia (easy)', url: '/packs/trivia_geography_easy.json' },
+  { id: 'trivia_geography_medium', kind: 'trivia', label: 'Geography trivia (medium)', url: '/packs/trivia_geography_medium.json' },
+  { id: 'trivia_geography_hard', kind: 'trivia', label: 'Geography trivia (hard)', url: '/packs/trivia_geography_hard.json' },
+  { id: 'trivia_history_easy', kind: 'trivia', label: 'History trivia (easy)', url: '/packs/trivia_history_easy.json' },
+  { id: 'trivia_history_medium', kind: 'trivia', label: 'History trivia (medium)', url: '/packs/trivia_history_medium.json' },
+  { id: 'trivia_history_hard', kind: 'trivia', label: 'History trivia (hard)', url: '/packs/trivia_history_hard.json' },
+  { id: 'trivia_music_easy', kind: 'trivia', label: 'Music trivia (easy)', url: '/packs/trivia_music_easy.json' },
+  { id: 'trivia_music_medium', kind: 'trivia', label: 'Music trivia (medium)', url: '/packs/trivia_music_medium.json' },
+  { id: 'trivia_music_hard', kind: 'trivia', label: 'Music trivia (hard)', url: '/packs/trivia_music_hard.json' },
+  { id: 'trivia_nature_easy', kind: 'trivia', label: 'Nature trivia (easy)', url: '/packs/trivia_nature_easy.json' },
+  { id: 'trivia_nature_medium', kind: 'trivia', label: 'Nature trivia (medium)', url: '/packs/trivia_nature_medium.json' },
+  { id: 'trivia_nature_hard', kind: 'trivia', label: 'Nature trivia (hard)', url: '/packs/trivia_nature_hard.json' },
+  { id: 'trivia_science_easy', kind: 'trivia', label: 'Science trivia (easy)', url: '/packs/trivia_science_easy.json' },
+  { id: 'trivia_science_medium', kind: 'trivia', label: 'Science trivia (medium)', url: '/packs/trivia_science_medium.json' },
+  { id: 'trivia_science_hard', kind: 'trivia', label: 'Science trivia (hard)', url: '/packs/trivia_science_hard.json' },
+  { id: 'trivia_sports_easy', kind: 'trivia', label: 'Sports trivia (easy)', url: '/packs/trivia_sports_easy.json' },
+  { id: 'trivia_sports_medium', kind: 'trivia', label: 'Sports trivia (medium)', url: '/packs/trivia_sports_medium.json' },
+  { id: 'trivia_sports_hard', kind: 'trivia', label: 'Sports trivia (hard)', url: '/packs/trivia_sports_hard.json' },
+  { id: 'trivia_words_easy', kind: 'trivia', label: 'Words trivia (easy)', url: '/packs/trivia_words_easy.json' },
+  { id: 'trivia_words_medium', kind: 'trivia', label: 'Words trivia (medium)', url: '/packs/trivia_words_medium.json' },
+  { id: 'trivia_words_hard', kind: 'trivia', label: 'Words trivia (hard)', url: '/packs/trivia_words_hard.json' },
 ];
 
 // `listUserPacks()` reads localStorage fresh on every call — cheap, small, and it means a

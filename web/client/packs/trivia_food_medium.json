@@ -1,0 +1,520 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Food trivia (medium)",
+ "description": "28 medium questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which three vegetables make up the classic French flavor base called mirepoix?",
+   "answers": [
+    "Onions, carrots and celery",
+    "Onions, leeks and parsnips",
+    "Carrots, celery and tomatoes",
+    "Onions, carrots and bell peppers"
+   ],
+   "correct": "Onions, carrots and celery",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Mirepoix is a combination of onions, carrots and celery, used as a base for stocks, soups, stews and sauces.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Mirepoix_(cuisine)",
+    "title": "Mirepoix (cuisine)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Cajun and Louisiana Creole cooking, the \"holy trinity\" uses bell pepper in place of which vegetable from French mirepoix?",
+   "answers": [
+    "Onions",
+    "Celery",
+    "Carrots",
+    "Leeks"
+   ],
+   "correct": "Carrots",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The Cajun trinity is onions, bell peppers and celery. The carrots of traditional mirepoix were swapped for bell peppers, partly because of availability and cost.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Holy_trinity_(cooking)",
+    "title": "Holy trinity (cooking)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which part of the Crocus sativus flower is dried to make the spice saffron?",
+   "answers": [
+    "The flower's petals",
+    "The flower's stigmas",
+    "The underground corm",
+    "The flower's pollen"
+   ],
+   "correct": "The flower's stigmas",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Saffron is made from the dried, golden-colored stigmas of the autumn crocus. Each flower has three of them.",
+   "source": {
+    "url": "https://www.britannica.com/topic/saffron",
+    "title": "Saffron"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which compound gives saffron its rich golden color?",
+   "answers": [
+    "Curcumin",
+    "Lycopene",
+    "Crocin",
+    "Capsaicin"
+   ],
+   "correct": "Crocin",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Saffron contains a dye called crocin that gives food a rich golden color. Curcumin is the pigment in turmeric.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Saffron",
+    "title": "Saffron"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which rice variety do most paella cooks use?",
+   "answers": [
+    "Arborio",
+    "Basmati",
+    "Bomba",
+    "Carnaroli"
+   ],
+   "correct": "Bomba",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Most paella cooks use bomba rice. A cultivar called senia is also used in the Valencia region.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Paella",
+    "title": "Paella"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Spain, on which day of the week is paella traditionally included on restaurant menus?",
+   "answers": [
+    "Monday",
+    "Wednesday",
+    "Thursday",
+    "Sunday"
+   ],
+   "correct": "Thursday",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "In Spain, paella is traditionally included on restaurant menus on Thursdays.",
+   "source": {
+    "url": "https://www.wikiwand.com/en/Paella",
+    "title": "Paella - Wikiwand"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What happens to a roux's thickening power as it is cooked to a darker color?",
+   "answers": [
+    "It increases as the flavor deepens",
+    "It decreases as the flavor deepens",
+    "It stays the same at every color",
+    "It increases as the flavor fades"
+   ],
+   "correct": "It decreases as the flavor deepens",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The darker a roux gets, the less thickening power it has. A chocolate roux has about one-fourth the thickening power of a white roux by weight.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roux",
+    "title": "Roux"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A classic roux is made from what ratio of fat to flour by weight?",
+   "answers": [
+    "2 to 1",
+    "1 to 3",
+    "3 to 1",
+    "1 to 1"
+   ],
+   "correct": "1 to 1",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Roux is typically made from equal parts of flour and fat by weight, cooked together to thicken sauces.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roux",
+    "title": "Roux"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these classic French sauces is NOT made with a roux?",
+   "answers": [
+    "Béchamel",
+    "Velouté",
+    "Espagnole",
+    "Hollandaise"
+   ],
+   "correct": "Hollandaise",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Roux is used in béchamel, velouté and espagnole. Hollandaise is thickened by emulsifying egg yolks and butter instead.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roux",
+    "title": "Roux"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which royal chef established the original four French mother sauces a century before Auguste Escoffier revised the list?",
+   "answers": [
+    "Fernand Point",
+    "Paul Bocuse",
+    "Pellegrino Artusi",
+    "Marie-Antoine Carême"
+   ],
+   "correct": "Marie-Antoine Carême",
+   "answerKind": "person",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Carême enshrined the original four sauces (velouté, béchamel, allemande and espagnole). Escoffier later added hollandaise and tomato and reclassified allemande.",
+   "source": {
+    "url": "https://www.saveur.com/food/the-mothers-of-all-french-sauces/",
+    "title": "The Mothers of All French Sauces"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Béarnaise sauce, flavored with tarragon, shallot and white wine vinegar, is a derivative of which mother sauce?",
+   "answers": [
+    "Velouté",
+    "Hollandaise",
+    "Espagnole",
+    "Béchamel"
+   ],
+   "correct": "Hollandaise",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Béarnaise is made from hollandaise with tarragon, shallot and white wine vinegar added.",
+   "source": {
+    "url": "https://www.foodandbeverageserviceknowledge.com/what-are-the-5-mother-sauces-and-their-derivatives/",
+    "title": "What Are the 5 Mother Sauces? And Their Derivatives"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French mother sauce is made by adding milk to a white roux?",
+   "answers": [
+    "Espagnole",
+    "Velouté",
+    "Béchamel",
+    "Hollandaise"
+   ],
+   "correct": "Béchamel",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Béchamel is built on a blonde white roux with milk added. Velouté and the other mother sauces use stock.",
+   "source": {
+    "url": "https://guide.michelin.com/mo/en/article/dining-in/what-is-roux",
+    "title": "What is...roux? - Michelin Guide"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The browning reaction between amino acids and sugars that flavors seared meat and toast is named after which French chemist?",
+   "answers": [
+    "Louis-Camille Maillard",
+    "Louis Pasteur",
+    "Antoine Lavoisier",
+    "Marcellin Berthelot"
+   ],
+   "correct": "Louis-Camille Maillard",
+   "answerKind": "person",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The Maillard reaction is named after the French chemist Louis-Camille Maillard, who described it in the early 1900s.",
+   "source": {
+    "url": "https://extension.illinois.edu/blogs/simply-nutritious-quick-and-delicious/2021-11-19-maillard-reactions-change-tastes-your-food",
+    "title": "Maillard reactions change the tastes of your food"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ingredient, now standard in kimchi, was unknown in Korea until the early seventeenth century?",
+   "answers": [
+    "Garlic",
+    "Napa cabbage",
+    "Chili peppers",
+    "Ginger"
+   ],
+   "correct": "Chili peppers",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Chili peppers are a New World crop and were unknown in Korea until the early 1600s. Earlier kimchi was not spicy red.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Kimchi",
+    "title": "Kimchi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Kimchi was traditionally fermented and buried in the ground in ceramic pots known by what Korean name?",
+   "answers": [
+    "Kamado",
+    "Donabe",
+    "Onggi",
+    "Tandoor"
+   ],
+   "correct": "Onggi",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "In Korea, kimchi was fermented in traditional brown ceramic pots called onggi, often buried in the ground in winter.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Kimchi",
+    "title": "Kimchi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Gazpacho, a cold soup of raw blended vegetables, is most closely associated with which region of Spain?",
+   "answers": [
+    "Galicia",
+    "Catalonia",
+    "Andalusia",
+    "The Basque Country"
+   ],
+   "correct": "Andalusia",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Gazpacho, also called Andalusian gazpacho, is a cold soup from Andalusia in southern Spain.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Gazpacho",
+    "title": "Gazpacho"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Despite its name, what is gazpacho manchego?",
+   "answers": [
+    "A chilled almond soup",
+    "A cold tomato emulsion",
+    "A garlic bread soup",
+    "A hot meat stew"
+   ],
+   "correct": "A hot meat stew",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Gazpacho manchego is a meat stew served hot, not a variation on the cold vegetable soup.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Gazpacho",
+    "title": "Gazpacho"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which nut forms the base of ajoblanco, the Andalusian \"white gazpacho\"?",
+   "answers": [
+    "Walnuts",
+    "Almonds",
+    "Hazelnuts",
+    "Pine nuts"
+   ],
+   "correct": "Almonds",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Ajoblanco is a cold soup of bread, almonds, garlic, water and olive oil, sometimes called white gazpacho.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Ajoblanco",
+    "title": "Ajoblanco"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Guanciale, the cured meat traditionally used in Roman carbonara, comes from which part of the pig?",
+   "answers": [
+    "The belly",
+    "The jowl or cheeks",
+    "The shoulder",
+    "The hind leg"
+   ],
+   "correct": "The jowl or cheeks",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Guanciale is an Italian salt-cured meat made from pork jowl or cheeks. Its rendered fat flavors and thickens pasta sauces.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Guanciale",
+    "title": "Guanciale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Most Italian sources trace the origin of pasta carbonara to which region?",
+   "answers": [
+    "Tuscany",
+    "Sicily",
+    "Piedmont",
+    "Lazio"
+   ],
+   "correct": "Lazio",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Most Italian sources place carbonara's origin in Lazio, the region around Rome.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Carbonara",
+    "title": "Carbonara"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the minimum aging period for Parmigiano-Reggiano?",
+   "answers": [
+    "Three months",
+    "Six months",
+    "Twelve months",
+    "Twenty-four months"
+   ],
+   "correct": "Twelve months",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Parmigiano-Reggiano is a raw cow's milk PDO cheese aged at least 12 months. Most of it is sold at 24 to 36 months.",
+   "source": {
+    "url": "https://knowthecheese.com/cheeses/parmigiano-reggiano/",
+    "title": "Parmigiano-Reggiano: How to Spot the Real DOP Wheel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which herb is added during the production of Cypriot halloumi, giving it a slight minty flavor?",
+   "answers": [
+    "Basil",
+    "Dill",
+    "Thyme",
+    "Spearmint"
+   ],
+   "correct": "Spearmint",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Halloumi has a slight minty flavor because spearmint is added during production.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Halloumi",
+    "title": "Halloumi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the French cooking term \"sous vide\" literally mean?",
+   "answers": [
+    "Under pressure",
+    "Under water",
+    "Under vacuum",
+    "Under cover"
+   ],
+   "correct": "Under vacuum",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Sous vide means \"under vacuum.\" Food is vacuum-sealed and then slowly cooked in water at a low, controlled temperature.",
+   "source": {
+    "url": "https://www.britannica.com/topic/sous-vide-cooking",
+    "title": "Sous vide"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "From which seaweed did Kikunae Ikeda isolate glutamate in 1908, leading him to name the taste umami?",
+   "answers": [
+    "Nori",
+    "Wakame",
+    "Dulse",
+    "Kombu"
+   ],
+   "correct": "Kombu",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "In 1908 Ikeda identified glutamate, found in large quantities in kombu seaweed, as the source of the savory taste he called umami.",
+   "source": {
+    "url": "https://www.umamiinfo.com/what/whatisumami/",
+    "title": "What is Umami"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What plant is widely used in place of real wasabi in the paste served outside Japan?",
+   "answers": [
+    "Green chili paste",
+    "Horseradish",
+    "Pickled ginger",
+    "Seaweed paste"
+   ],
+   "correct": "Horseradish",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Real wasabi is costly and hard to cultivate. Western horseradish is widely used in its place.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Wasabi",
+    "title": "Wasabi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which genus of mold binds cooked soybeans together into a firm cake of tempeh?",
+   "answers": [
+    "Aspergillus",
+    "Penicillium",
+    "Rhizopus",
+    "Botrytis"
+   ],
+   "correct": "Rhizopus",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Tempeh consists of cooked and fermented soybeans bound together by the mycelium of Rhizopus oligosporus.",
+   "source": {
+    "url": "https://www.sciencedirect.com/topics/food-science/tempeh",
+    "title": "Tempeh - an overview"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Tempeh, a fermented whole-soybean cake, originated in which country?",
+   "answers": [
+    "Japan",
+    "China",
+    "Indonesia",
+    "Thailand"
+   ],
+   "correct": "Indonesia",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Tempeh is a fermented soy food that originated in Indonesia, where it is still the most popular soy food.",
+   "source": {
+    "url": "https://www.sciencedirect.com/topics/food-science/tempeh",
+    "title": "Tempeh - an overview"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which flavor base of garlic, onion and peppers cooked in olive oil is common in Spanish and Latin American cooking?",
+   "answers": [
+    "Matignon",
+    "Duxelles",
+    "Sofrito",
+    "Bouquet garni"
+   ],
+   "correct": "Sofrito",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Sofrito is a base of garlic, onion and peppers cooked in olive oil, sometimes with tomatoes or carrots.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sofrito",
+    "title": "Sofrito"
+   },
+   "ai_written": true
+  }
+ ]
+}

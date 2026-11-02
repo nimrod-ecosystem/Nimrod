@@ -1,0 +1,927 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Music trivia (medium)",
+ "description": "50 medium questions about composers, instruments, genres, famous songs and musicians (no lyrics quoted). Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Beethoven's Ninth Symphony sets a text based on an 1785 'Ode to Joy' by which German poet?",
+   "answers": [
+    "Johann von Goethe",
+    "Heinrich Heine",
+    "Friedrich Schiller",
+    "Friedrich Hölderlin"
+   ],
+   "correct": "Friedrich Schiller",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The finale of the Ninth uses words drawn from Friedrich Schiller's 1785 poem 'Ode to Joy', with a few lines added by Beethoven.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.esm.rochester.edu/beethoven/symphony-no-9/",
+    "title": "Symphony No. 9 in D minor, Op. 125 “Choral” (1824)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city was Beethoven's Ninth Symphony first performed, in May 1824?",
+   "answers": [
+    "Berlin",
+    "Salzburg",
+    "Prague",
+    "Vienna"
+   ],
+   "correct": "Vienna",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The Ninth Symphony was first performed in Vienna on 7 May 1824.",
+   "source": {
+    "url": "https://www.classicals.de/beethoven-ode-to-joy",
+    "title": "Beethoven: Ode to Joy - Symphony No. 9, Op. 125"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What groundbreaking element did Beethoven add to the finale of his Ninth Symphony?",
+   "answers": [
+    "A solo piano cadenza",
+    "Vocal soloists and a choir",
+    "A pipe organ part",
+    "A military brass band"
+   ],
+   "correct": "Vocal soloists and a choir",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Beethoven's introduction of vocal soloists and a chorus in the finale was a bold step that expanded what a symphony could do.",
+   "source": {
+    "url": "https://fwsymphony.org/program-notes/beethoven-ludwig-van-symphony-no-9-in-d-minor-opus-125-choral",
+    "title": "Beethoven, Ludwig van: Symphony No. 9 in D minor, Opus 125, “Choral”"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Vivaldi's The Four Seasons is a set of four concertos for which solo instrument?",
+   "answers": [
+    "Cello",
+    "Flute",
+    "Violin",
+    "Harpsichord"
+   ],
+   "correct": "Violin",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The Four Seasons is a group of four violin concertos by Antonio Vivaldi, each giving musical expression to a season of the year.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Four-Seasons-by-Vivaldi",
+    "title": "The Four Seasons"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Vivaldi published The Four Seasons with accompanying poems. It is an early example of which kind of music with a narrative element?",
+   "answers": [
+    "Absolute music",
+    "Chamber music",
+    "Incidental music",
+    "Program music"
+   ],
+   "correct": "Program music",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Music that tells a story or depicts events is called program music, and The Four Seasons is one of the earliest and most detailed examples.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Four-Seasons-by-Vivaldi",
+    "title": "The Four Seasons"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Four Seasons were published in 1725 as the first four concertos in a set of how many?",
+   "answers": [
+    "Six",
+    "Eight",
+    "Twelve",
+    "Twenty-four"
+   ],
+   "correct": "Twelve",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "They appeared together with eight more violin concertos, making twelve in the collection 'The Contest Between Harmony and Invention'.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Four-Seasons-by-Vivaldi",
+    "title": "The Four Seasons"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city did the famously scandalous 1913 premiere of Stravinsky's The Rite of Spring take place?",
+   "answers": [
+    "Paris",
+    "London",
+    "Berlin",
+    "St. Petersburg"
+   ],
+   "correct": "Paris",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The ballet premiered at the Théâtre des Champs-Élysées in Paris on 29 May 1913.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Rite-of-Spring",
+    "title": "The Rite of Spring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For which ballet company did Stravinsky write The Rite of Spring?",
+   "answers": [
+    "Bolshoi Ballet",
+    "Royal Ballet",
+    "Paris Opera Ballet",
+    "Ballets Russes"
+   ],
+   "correct": "Ballets Russes",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The piece was commissioned by Serge Diaghilev, impresario of the Ballets Russes, who had also produced Stravinsky's The Firebird and Petrushka.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Rite-of-Spring",
+    "title": "The Rite of Spring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which dancer created the original choreography for The Rite of Spring in 1913?",
+   "answers": [
+    "Michel Fokine",
+    "Vaslav Nijinsky",
+    "George Balanchine",
+    "Léonide Massine"
+   ],
+   "correct": "Vaslav Nijinsky",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The 1913 production had choreography by Vaslav Nijinsky, with staging and costumes by Nicholas Roerich.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.classical-music.com/features/works/stravinsky-rite-of-spring",
+    "title": "The riotous premiere of Stravinsky's Rite of Spring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which orchestral instrument plays the exposed opening melody of The Rite of Spring?",
+   "answers": [
+    "Oboe",
+    "Clarinet",
+    "French horn",
+    "Bassoon"
+   ],
+   "correct": "Bassoon",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The work is remembered as beginning with a bassoon. Stravinsky openly acknowledged borrowing that melody from a Lithuanian folk song anthology.",
+   "source": {
+    "url": "https://interlude.hk/the-riot-of-spring/",
+    "title": "The Premiere of Igor Stravinsky's Rite of Spring"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Italian instrument maker is credited with inventing the piano around 1700?",
+   "answers": [
+    "Antonio Stradivari",
+    "Giuseppe Guarneri",
+    "Bartolomeo Cristofori",
+    "Andrea Amati"
+   ],
+   "correct": "Bartolomeo Cristofori",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Cristofori of Padua, working in Florence, built the first true piano, a hammer-action keyboard instrument, around 1700.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.metmuseum.org/essays/the-piano-the-pianofortes-of-bartolomeo-cristofori-1655-1731",
+    "title": "The Piano: The Pianofortes of Bartolomeo Cristofori (1655–1731) - The Metropolitan Museum of Art"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word 'piano' is short for an early name for an instrument that could play what?",
+   "answers": [
+    "High and low",
+    "Soft and loud",
+    "Fast and slow",
+    "Sweet and sharp"
+   ],
+   "correct": "Soft and loud",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Cristofori's instrument was called a 'harpsichord that plays soft and loud'. The name refers to its ability to vary loudness with the pressure on the keys.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Bartolomeo-Cristofori",
+    "title": "Bartolomeo Cristofori"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Cristofori developed the first pianos while working for the court of which Italian ruling family?",
+   "answers": [
+    "Borgia",
+    "Sforza",
+    "Medici",
+    "Visconti"
+   ],
+   "correct": "Medici",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Cristofori was appointed to the Florentine court of Grand Prince Ferdinando de' Medici to care for its harpsichords and other instruments.",
+   "source": {
+    "url": "https://www.metmuseum.org/essays/the-piano-the-pianofortes-of-bartolomeo-cristofori-1655-1731",
+    "title": "The Piano: The Pianofortes of Bartolomeo Cristofori (1655–1731) - The Metropolitan Museum of Art"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Adolphe Sax, the inventor of the saxophone, was a native of which country?",
+   "answers": [
+    "France",
+    "Germany",
+    "Belgium",
+    "Italy"
+   ],
+   "correct": "Belgium",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Sax was a Belgian inventor and musician, born in Dinant, who later moved to Paris.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Adolphe_Sax",
+    "title": "Adolphe Sax"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Adolphe Sax patent the saxophone?",
+   "answers": [
+    "1826",
+    "1846",
+    "1866",
+    "1886"
+   ],
+   "correct": "1846",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Sax patented the saxophone on 28 June 1846, intending it for orchestras and military bands.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Adolphe_Sax",
+    "title": "Adolphe Sax"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Although saxophones are usually made of brass, to which instrument family do they belong?",
+   "answers": [
+    "Brass",
+    "Woodwind",
+    "Percussion",
+    "Free-reed"
+   ],
+   "correct": "Woodwind",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "A saxophone is played with a single-reed mouthpiece like a clarinet's, so it is classed as a woodwind.",
+   "source": {
+    "url": "https://thevault.musicarts.com/inspiration-and-invention-of-the-saxophone/",
+    "title": "Inspiration and Invention of the Saxophone"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which early electronic instrument is played without the performer touching it?",
+   "answers": [
+    "Mellotron",
+    "Ondes Martenot",
+    "Clavioline",
+    "Theremin"
+   ],
+   "correct": "Theremin",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The theremin is controlled without physical contact: the player moves their hands near two antennas.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Theremin",
+    "title": "Theremin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On a theremin, the player's two hands control which two qualities of the sound?",
+   "answers": [
+    "Tempo and key",
+    "Pitch and volume",
+    "Timbre and echo",
+    "Vibrato and attack"
+   ],
+   "correct": "Pitch and volume",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "One antenna controls pitch and the other controls volume, depending on how close the player's hands are.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Theremin",
+    "title": "Theremin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Leon Theremin, inventor of the instrument that bears his name, was a physicist from which country?",
+   "answers": [
+    "Germany",
+    "United States",
+    "Hungary",
+    "Russia"
+   ],
+   "correct": "Russia",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The instrument was invented around 1920 by the Russian physicist Lev Sergeyevich Termen, known in the West as Leon Theremin.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Theremin",
+    "title": "Theremin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Miles Davis's 1959 album Kind of Blue is a landmark recording of which jazz style?",
+   "answers": [
+    "Bebop",
+    "Dixieland",
+    "Swing",
+    "Modal jazz"
+   ],
+   "correct": "Modal jazz",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Davis based the album entirely on modality. He gave each performer a set of scales to improvise within instead of complex chord changes.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Kind_of_Blue",
+    "title": "Kind of Blue"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which track opens Miles Davis's album Kind of Blue?",
+   "answers": [
+    "So What",
+    "Take Five",
+    "Round Midnight",
+    "Summertime"
+   ],
+   "correct": "So What",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The album opens with 'So What', a 32-bar tune built on modal simplicity.",
+   "source": {
+    "url": "https://jazzfuel.com/kind-of-blue-miles-davis/",
+    "title": "Kind of Blue - Miles Davis's Modal Jazz Masterpiece"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pianist was a key figure on Miles Davis's Kind of Blue?",
+   "answers": [
+    "Thelonious Monk",
+    "Duke Ellington",
+    "Dave Brubeck",
+    "Bill Evans"
+   ],
+   "correct": "Bill Evans",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Bill Evans is described as a key figure on Kind of Blue, a milepost of jazz history and a leading example of modal jazz.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Kind-of-Blue",
+    "title": "Kind of Blue"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which New York City borough did hip-hop emerge in the early 1970s?",
+   "answers": [
+    "The Bronx",
+    "Brooklyn",
+    "Queens",
+    "Staten Island"
+   ],
+   "correct": "The Bronx",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Hip-hop's usual birth date is 11 August 1973, at a back-to-school party in the west Bronx where DJ Kool Herc played.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/august-11/hip-hop-is-born-at-a-birthday-party-in-the-bronx",
+    "title": "Hip-hop is born at a teen party in the Bronx"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country was DJ Kool Herc, credited as the founder of hip-hop, born?",
+   "answers": [
+    "Cuba",
+    "Barbados",
+    "Trinidad",
+    "Jamaica"
+   ],
+   "correct": "Jamaica",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Clive 'Kool Herc' Campbell was born in Kingston, Jamaica, before moving to the Bronx.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Kool-Herc",
+    "title": "DJ Kool Herc"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What DJing technique did Kool Herc pioneer at his early Bronx parties?",
+   "answers": [
+    "Slowing records to lower the pitch",
+    "Fading between two radio stations",
+    "Looping a record's percussion break",
+    "Recording live drums over vinyl"
+   ],
+   "correct": "Looping a record's percussion break",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Herc used two turntables to repeat the 'breakbeat', the percussive section of a record that dancers liked most.",
+   "source": {
+    "url": "https://wnyc.org/story/89709-south-bronx-hip-hop-year-zero/",
+    "title": "The South Bronx: Where Hip-Hop Was Born"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which bandleader commissioned George Gershwin's Rhapsody in Blue for his 1924 concert 'An Experiment in Modern Music'?",
+   "answers": [
+    "Duke Ellington",
+    "Benny Goodman",
+    "Paul Whiteman",
+    "Glenn Miller"
+   ],
+   "correct": "Paul Whiteman",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Whiteman wanted to elevate American popular music to the level of concert music. He invited Gershwin to compose a jazz concerto for the event.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/music/gershwins-rhapsody-blue-premieres-new-york",
+    "title": "Gershwin's Rhapsody in Blue Premieres in New York"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which instrument plays the flamboyant opening solo of Rhapsody in Blue?",
+   "answers": [
+    "Clarinet",
+    "Trumpet",
+    "Saxophone",
+    "Violin"
+   ],
+   "correct": "Clarinet",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The piece begins with a famous flamboyant clarinet solo.",
+   "source": {
+    "url": "https://www.laphil.com/works/rhapsody-in-blue",
+    "title": "Rhapsody in Blue — LA Phil"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who suggested the title 'Rhapsody in Blue' to George Gershwin?",
+   "answers": [
+    "Paul Whiteman",
+    "Ferde Grofé",
+    "Ira Gershwin",
+    "Irving Berlin"
+   ],
+   "correct": "Ira Gershwin",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "George Gershwin's brother Ira suggested the new title Rhapsody in Blue while the piece was being prepared for its February 1924 premiere.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/music/gershwins-rhapsody-blue-premieres-new-york",
+    "title": "Gershwin's Rhapsody in Blue Premieres in New York"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many movements are in Gustav Holst's orchestral suite The Planets?",
+   "answers": [
+    "Five",
+    "Seven",
+    "Nine",
+    "Twelve"
+   ],
+   "correct": "Seven",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The Planets is a suite of seven short tone poems, from 'Mars' to 'Neptune'.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Planets",
+    "title": "The Planets, Op. 32"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these planets has no movement in Holst's The Planets?",
+   "answers": [
+    "Mars",
+    "Saturn",
+    "Earth",
+    "Neptune"
+   ],
+   "correct": "Earth",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The seven movements cover Mars, Venus, Mercury, Jupiter, Saturn, Uranus and Neptune. Earth is not included.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Planets",
+    "title": "The Planets, Op. 32"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which movement of Holst's The Planets is subtitled 'the Bringer of Jollity'?",
+   "answers": [
+    "Mars",
+    "Venus",
+    "Mercury",
+    "Jupiter"
+   ],
+   "correct": "Jupiter",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "'Jupiter, the Bringer of Jollity' is the fourth movement and, with 'Mars', one of the most frequently heard.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Planets",
+    "title": "The Planets, Op. 32"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Holst's The Planets takes its starting point from which subject?",
+   "answers": [
+    "Astronomy",
+    "Astrology",
+    "Celtic folklore",
+    "Medieval alchemy"
+   ],
+   "correct": "Astrology",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Holst's starting point was the astrological character of each planet, not astronomy or classical mythology.",
+   "source": {
+    "url": "https://www.wisemusicclassical.com/work/13079/The-Planets-Suite-for-large-orchestra--Gustav-Holst/",
+    "title": "The Planets: Suite for large orchestra"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city did Handel's Messiah receive its first performance in 1742?",
+   "answers": [
+    "London",
+    "Vienna",
+    "Dublin",
+    "Hamburg"
+   ],
+   "correct": "Dublin",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Messiah premiered in Dublin on 13 April 1742. London heard it nearly a year later.",
+   "source": {
+    "url": "https://britannica.com/topic/Messiah-oratorio-by-Handel",
+    "title": "Messiah oratorio by Handel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What musical form is Handel's Messiah?",
+   "answers": [
+    "Opera",
+    "Oratorio",
+    "Cantata",
+    "Mass"
+   ],
+   "correct": "Oratorio",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Messiah is a large-scale semidramatic work for chorus, soloists and orchestra, and the most frequently performed of all oratorios.",
+   "source": {
+    "url": "https://britannica.com/topic/Messiah-oratorio-by-Handel",
+    "title": "Messiah oratorio by Handel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who assembled the Biblical verses that Handel set in Messiah?",
+   "answers": [
+    "Alexander Pope",
+    "John Gay",
+    "Samuel Johnson",
+    "Charles Jennens"
+   ],
+   "correct": "Charles Jennens",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The text was assembled by Handel's friend Charles Jennens, a wealthy supporter of the arts, from several parts of the Bible.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://britannica.com/topic/Messiah-oratorio-by-Handel",
+    "title": "Messiah oratorio by Handel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does an audience traditionally do when the Hallelujah Chorus is performed?",
+   "answers": [
+    "Hum along",
+    "Sit in silence",
+    "Stand up",
+    "Join in applause"
+   ],
+   "correct": "Stand up",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "By long tradition, audiences rise to their feet whenever the Hallelujah Chorus is performed.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Hallelujah_Chorus",
+    "title": "Hallelujah Chorus"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 2016, Bob Dylan became the first musician to win which Nobel Prize?",
+   "answers": [
+    "Peace",
+    "Physics",
+    "Literature",
+    "Economic Sciences"
+   ],
+   "correct": "Literature",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The Swedish Academy honoured Dylan 'for having created new poetic expressions within the great American song tradition'.",
+   "source": {
+    "url": "https://www.nobelprize.org/prizes/literature/2016/prize-announcement/",
+    "title": "The Nobel Prize in Literature 2016 - Prize announcement - NobelPrize.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which US state was Bob Dylan born?",
+   "answers": [
+    "Minnesota",
+    "Wisconsin",
+    "Michigan",
+    "Iowa"
+   ],
+   "correct": "Minnesota",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Dylan was born on 24 May 1941 in Duluth, Minnesota.",
+   "source": {
+    "url": "https://abc30.com/post/bob-dylan-wins-2016-nobel-prize-in-literature/1553151/",
+    "title": "Bob Dylan wins 2016 Nobel Prize in literature - ABC30 Fresno"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Dylan album did the Swedish Academy's permanent secretary recommend in 2016 as a starting point for newcomers?",
+   "answers": [
+    "Blood on the Tracks",
+    "Highway 61 Revisited",
+    "Desire",
+    "Blonde on Blonde"
+   ],
+   "correct": "Blonde on Blonde",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "When Dylan's Nobel win was announced, Sara Danius recommended Blonde on Blonde to those unfamiliar with his work.",
+   "source": {
+    "url": "https://time.com/4529418/bob-dylan-nobel-prize-literature/",
+    "title": "What to Know About Bob Dylan's Nobel Prize for Literature"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bossa nova blends Brazilian samba with which other musical style?",
+   "answers": [
+    "Jazz",
+    "Reggae",
+    "Salsa",
+    "Tango"
+   ],
+   "correct": "Jazz",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Bossa nova is a blend of Brazilian samba and jazz, and 'The Girl from Ipanema' helped popularize it worldwide.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Girl-from-Ipanema",
+    "title": "The Girl from Ipanema"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Brazilian guitarist is widely known as the 'father of bossa nova'?",
+   "answers": [
+    "Carlos Gardel",
+    "João Gilberto",
+    "Heitor Villa-Lobos",
+    "Tito Puente"
+   ],
+   "correct": "João Gilberto",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "João Gilberto is called the Father of Bossa Nova for the guitar style he developed from traditional samba.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.openculture.com/2019/07/remembering-the-father-of-bossa-nova-joao-gilberto-with-four-classic-live-performances.html",
+    "title": "Remembering the \"Father of Bossa Nova\" João Gilberto (RIP) with Four Classic Live Performances: “The Girl From Ipanema,” \"Corcovado” & More"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who composed the music of 'The Girl from Ipanema'?",
+   "answers": [
+    "Ary Barroso",
+    "Astor Piazzolla",
+    "Dorival Caymmi",
+    "Antônio Carlos Jobim"
+   ],
+   "correct": "Antônio Carlos Jobim",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The song was co-written by the poet Vinícius de Moraes and the composer Antônio Carlos Jobim.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Girl-from-Ipanema",
+    "title": "The Girl from Ipanema"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American saxophonist played on the 1964 hit recording of 'The Girl from Ipanema'?",
+   "answers": [
+    "Stan Getz",
+    "Charlie Parker",
+    "Sonny Rollins",
+    "Dexter Gordon"
+   ],
+   "correct": "Stan Getz",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The recording became the biggest hit of Stan Getz's career, with Astrud Gilberto adding English vocals.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Girl-from-Ipanema",
+    "title": "The Girl from Ipanema"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French composer wrote the opera Carmen, which premiered in Paris in 1875?",
+   "answers": [
+    "Jules Massenet",
+    "Charles Gounod",
+    "Georges Bizet",
+    "Jacques Offenbach"
+   ],
+   "correct": "Georges Bizet",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Carmen is an opera by Georges Bizet that premiered in Paris on 3 March 1875.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.classicfm.com/composers/bizet/carmen-opera-summary/",
+    "title": "Georges Bizet: Carmen"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bizet's Carmen is set in Spain. In which language is it sung?",
+   "answers": [
+    "Spanish",
+    "Italian",
+    "German",
+    "French"
+   ],
+   "correct": "French",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Despite its Spanish setting, Carmen is sung in French, as Bizet was a French composer writing for Paris.",
+   "source": {
+    "url": "https://www.classicfm.com/composers/bizet/carmen-opera-summary/",
+    "title": "Georges Bizet: Carmen"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which character sings the famous 'Toreador Song' in Bizet's Carmen?",
+   "answers": [
+    "Don José",
+    "Escamillo",
+    "Zuniga",
+    "Micaëla"
+   ],
+   "correct": "Escamillo",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The 'Toreador Song' is Escamillo's showpiece. Along with Carmen's 'Habanera', it is among the opera's best-known music.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.eno.org/operas/carmen/",
+    "title": "Bizet’s Carmen: Songs, Synopsis, Plot & More"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the title character's job at the start of Bizet's Carmen?",
+   "answers": [
+    "Convent novice",
+    "Opera chorus girl",
+    "Market flower seller",
+    "Cigarette factory worker"
+   ],
+   "correct": "Cigarette factory worker",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Carmen is a fiery cigarette factory worker whose relationship with the soldier Don José drives the story.",
+   "source": {
+    "url": "https://www.classicfm.com/composers/bizet/carmen-opera-summary/",
+    "title": "Georges Bizet: Carmen"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ballet was Tchaikovsky's first, composed in 1876?",
+   "answers": [
+    "The Nutcracker",
+    "The Sleeping Beauty",
+    "Romeo and Juliet",
+    "Swan Lake"
+   ],
+   "correct": "Swan Lake",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Swan Lake (1876) came before The Sleeping Beauty (1889) and The Nutcracker (1892). The Sleeping Beauty was Tchaikovsky's second ballet.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Sleeping_Beauty_(ballet)",
+    "title": "The Sleeping Beauty (ballet)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which choreographer collaborated with Tchaikovsky on the celebrated 1890 production of The Sleeping Beauty?",
+   "answers": [
+    "Rudolf Nureyev",
+    "Marius Petipa",
+    "Jerome Robbins",
+    "Frederick Ashton"
+   ],
+   "correct": "Marius Petipa",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "The 1890 Sleeping Beauty was Tchaikovsky's first collaboration with the choreographer Marius Petipa.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://academic.oup.com/book/49322",
+    "title": "Tchaikovsky’s Ballets: Swan Lake, Sleeping Beauty, Nutcracker"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Sleeping Beauty (1890) and The Nutcracker (1892) both premiered on the stage of which theatre?",
+   "answers": [
+    "Bolshoi Theatre",
+    "Mariinsky Theatre",
+    "Palais Garnier",
+    "La Scala"
+   ],
+   "correct": "Mariinsky Theatre",
+   "difficulty": "medium",
+   "category": "Music",
+   "explain": "Both ballets were commissioned by the Russian Imperial Theatres and premiered on the Mariinsky stage in St. Petersburg.",
+   "source": {
+    "url": "http://www.classical.net/music/recs/reviews/l/lon784273a.php",
+    "title": "Classical Net Review - Tchaikovsky - Swan Lake/Sleeping Beauty/Nutcracker"
+   },
+   "ai_written": true
+  }
+ ]
+}

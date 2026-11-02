@@ -93,6 +93,28 @@ try {
       packById(first.id)?.url === first.url);
   }
 
+  // =====================================================================================
+  // Row 2.175 (2026-11-02): a built-in pack that fails `validatePack` never loads, and "Every question pack" would just
+  // play without it, quietly. So every shipped pack is loaded and checked here.
+  section('every built-in pack loads and is valid');
+  {
+    const { loadPack } = await import('../packs.js');
+    const bad = [];
+    let questions = 0;
+    for (const p of PACK_LIBRARY) {
+      try {
+        const pack = await loadPack(p.url);
+        if (p.kind === 'trivia') questions += pack.items.length;
+        if (pack.kind !== p.kind) bad.push(`${p.id}: kind ${pack.kind}, listed as ${p.kind}`);
+      } catch (e) { bad.push(`${p.id}: ${e.message || e}`); }
+    }
+    check('every pack in PACK_LIBRARY loads, validates and is the kind it is listed as', !bad.length, bad.join(' | '));
+    check('the 33 general trivia packs are listed',
+      PACK_LIBRARY.filter((p) => /^trivia_.+_(easy|medium|hard)$/.test(p.id)).length === 33);
+    check('built-in trivia: at least 1,448 questions across the packs', questions >= 1448, questions);
+    check('no two built-in packs share an id', new Set(PACK_LIBRARY.map((p) => p.id)).size === PACK_LIBRARY.length);
+  }
+
   clearStore();
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));

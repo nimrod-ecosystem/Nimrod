@@ -1,0 +1,904 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "General trivia (hard)",
+ "description": "50 hard questions about a broad mix of everyday knowledge that fits none of the other categories. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Francis Beaufort's original wind scale was calibrated to the effects of wind on what kind of vessel?",
+   "answers": [
+    "A full-rigged man-of-war",
+    "A coastal fishing smack",
+    "A merchant East Indiaman",
+    "A steam-powered paddle frigate"
+   ],
+   "correct": "A full-rigged man-of-war",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Beaufort based his scale on how wind affected a full-rigged warship. Later revisions added sea and land effects and other ship types.",
+   "source": {
+    "url": "https://www.britannica.com/science/Beaufort-scale",
+    "title": "Beaufort scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Beaufort first devised his wind-force scale while in command of which Royal Navy ship?",
+   "answers": [
+    "HMS Beagle",
+    "HMS Victory",
+    "HMS Woolwich",
+    "HMS Blossom"
+   ],
+   "correct": "HMS Woolwich",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The Met Office records that Beaufort created the scale around 1806 while commanding HMS Woolwich. HMS Blossom came later, when he produced the 1810 version.",
+   "source": {
+    "url": "https://www.metoffice.gov.uk/research/library-and-archive/archive-hidden-treasures/beaufort-scale",
+    "title": "The Beaufort Scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the Beaufort scale become mandatory for log entries on all Royal Navy ships?",
+   "answers": [
+    "1805",
+    "1874",
+    "1926",
+    "1838"
+   ],
+   "correct": "1838",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The Royal Navy made the scale compulsory in ship logs in 1838. The International Meteorological Committee adopted it for international use in 1874.",
+   "source": {
+    "url": "https://www.britannica.com/science/Beaufort-scale",
+    "title": "Beaufort scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mineral is the reference mineral for hardness 5 on the Mohs scale?",
+   "answers": [
+    "Fluorite",
+    "Apatite",
+    "Orthoclase",
+    "Calcite"
+   ],
+   "correct": "Apatite",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "On the Mohs scale, calcite is 3, fluorite 4, apatite 5 and orthoclase 6.",
+   "source": {
+    "url": "https://www.capetowndiamondmuseum.org/mohs-scale-of-hardness/",
+    "title": "Mohs Scale of Hardness"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ancient author compared the hardness of diamond and quartz in his Naturalis Historia, an early precursor of Mohs's ranking?",
+   "answers": [
+    "Theophrastus",
+    "Vitruvius",
+    "Aristotle",
+    "Pliny the Elder"
+   ],
+   "correct": "Pliny the Elder",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Pliny the Elder compared diamond and quartz in the first century AD. Mohs later continued this ordinal ranking approach.",
+   "source": {
+    "url": "https://blogs.egu.eu/geolog/2020/09/25/freidrich-mohs-and-the-mineral-scale-of-hardness/",
+    "title": "Friedrich Mohs and the mineral scale of hardness"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Moving from corundum (9) to diamond (10) on the Mohs scale increases hardness by roughly how much?",
+   "answers": [
+    "About 10 percent",
+    "About 25 percent",
+    "About 100 percent",
+    "More than 300 percent"
+   ],
+   "correct": "More than 300 percent",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The Mohs scale is not linear. The step from 3 to 4 is about 25 percent, while the step from 9 to 10 is over 300 percent.",
+   "source": {
+    "url": "https://www.britannica.com/science/Mohs-hardness",
+    "title": "Mohs hardness"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which college library was Melvil Dewey working in 1873 when he began developing his classification system?",
+   "answers": [
+    "Harvard College",
+    "Yale College",
+    "Amherst College",
+    "Columbia College"
+   ],
+   "correct": "Amherst College",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Dewey began developing the system at the Amherst College Library in 1873. He published the first edition in 1876.",
+   "source": {
+    "url": "https://blogs.loc.gov/manuscripts/2026/04/of-note-registering-the-dewey-decimal-system-at-the-library-of-congress/",
+    "title": "Of Note: Registering the Dewey Decimal System at the Library of Congress"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1930, which institution began printing Dewey Decimal numbers on its catalog cards?",
+   "answers": [
+    "The Library of Congress",
+    "The British Museum",
+    "The New York Public Library",
+    "Harvard University Library"
+   ],
+   "correct": "The Library of Congress",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "OCLC's timeline records that the Library of Congress began printing Dewey numbers on catalog cards in 1930.",
+   "source": {
+    "url": "https://www.oclc.org/en/dewey/resources/timeline.html",
+    "title": "DDC timeline"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what form did the first edition of the Dewey Decimal Classification appear in 1876?",
+   "answers": [
+    "Under Dewey's name as a 300-page book",
+    "Anonymously, as a 44-page pamphlet",
+    "As a set of printed catalogue cards",
+    "As an official report for Congress"
+   ],
+   "correct": "Anonymously, as a 44-page pamphlet",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The first edition was issued anonymously as a short pamphlet. Dewey's name only appeared on the second edition in 1885.",
+   "source": {
+    "url": "https://www.librarianshipstudies.com/2026/01/dewey-decimal-classification-ddc.html",
+    "title": "Dewey Decimal Classification (DDC)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the Rubik's Cube originally called when it was first sold in Hungary?",
+   "answers": [
+    "The Wonder Block",
+    "The Magic Cube",
+    "The Twist Box",
+    "The Logic Cube"
+   ],
+   "correct": "The Magic Cube",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Ernő Rubik's puzzle was first sold in Hungary as the Magic Cube (Bűvös kocka). It was renamed Rubik's Cube for the 1980 international launch.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rubik's_Cube",
+    "title": "Rubik's Cube"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How long did it take Ernő Rubik to solve his own scrambled cube for the first time?",
+   "answers": [
+    "About a day",
+    "About a week",
+    "About a year",
+    "About a month"
+   ],
+   "correct": "About a month",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Britannica says it took Rubik a month to solve the prototype cube after scrambling it.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Erno-Rubik",
+    "title": "Erno Rubik"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Ernő Rubik's father, also named Ernő, was best known for designing which type of craft?",
+   "answers": [
+    "Locomotives",
+    "Gliders",
+    "Motorcycles",
+    "Ocean liners"
+   ],
+   "correct": "Gliders",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The Smithsonian says Rubik's father was an aircraft engineer known for his glider designs.",
+   "source": {
+    "url": "https://invention.si.edu/invention-stories/twist-fate-invention-rubiks-cube",
+    "title": "A Twist of Fate: The Invention of the Rubik's Cube"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Ernő Rubik apply for a Hungarian patent for his Magic Cube?",
+   "answers": [
+    "1974",
+    "1977",
+    "1975",
+    "1980"
+   ],
+   "correct": "1975",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Rubik applied for the Hungarian patent on 30 January 1975, the year after he invented the cube.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rubik's_Cube",
+    "title": "Rubik's Cube"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which toy company signed the 1979 deal to release the Magic Cube worldwide?",
+   "answers": [
+    "Mattel",
+    "Ideal Toy Corporation",
+    "Milton Bradley",
+    "Parker Brothers"
+   ],
+   "correct": "Ideal Toy Corporation",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Rubik's partners signed with Ideal Toys in September 1979. Ideal then rebranded the puzzle as Rubik's Cube.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rubik's_Cube",
+    "title": "Rubik's Cube"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Louis Braille adapted a dot-based code originally devised for military use by which man?",
+   "answers": [
+    "Valentin Haüy",
+    "Claude Chappe",
+    "Joseph Jacquard",
+    "Charles Barbier"
+   ],
+   "correct": "Charles Barbier",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Braille learned of Charles Barbier's tangible dot-writing system at his school. He simplified it into the six-dot cell.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Braille-writing-system",
+    "title": "Braille"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In what year did British and American agencies for the blind agree on Standard English Braille in London?",
+   "answers": [
+    "1829",
+    "1878",
+    "1905",
+    "1932"
+   ],
+   "correct": "1932",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "A universal braille code for the English-speaking world was not adopted until 1932, when the agencies met in London.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Braille-writing-system",
+    "title": "Braille"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which French village was Louis Braille born?",
+   "answers": [
+    "Reims",
+    "Coupvray",
+    "Rouen",
+    "Chartres"
+   ],
+   "correct": "Coupvray",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Louis Braille was born on 4 January 1809 in Coupvray, France.",
+   "source": {
+    "url": "https://www.icoe.org/news/story-louis-braille-inventor-braille-code",
+    "title": "The Story of Louis Braille: Inventor of the Braille Code"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city was the 1884 International Meridian Conference, which recommended Greenwich as the prime meridian, held?",
+   "answers": [
+    "Washington, D.C.",
+    "Paris",
+    "Rome",
+    "London"
+   ],
+   "correct": "Washington, D.C.",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The conference met in Washington, D.C., in October 1884. A geodetic conference in Rome the year before had settled most technical details.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/International_Meridian_Conference",
+    "title": "International Meridian Conference"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which US president issued the invitations to the 1884 International Meridian Conference?",
+   "answers": [
+    "Grover Cleveland",
+    "Rutherford B. Hayes",
+    "Chester A. Arthur",
+    "James A. Garfield"
+   ],
+   "correct": "Chester A. Arthur",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Chester Arthur, the 21st president, sent out the invitations to the conference after an 1882 act of Congress authorised it.",
+   "source": {
+    "url": "https://www.thegreenwichmeridian.org/tgm/articles.php?article=10",
+    "title": "The adoption of a Prime Meridian and the International Meridian Conference of 1884"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "How many nations were represented at the 1884 International Meridian Conference?",
+   "answers": [
+    "12",
+    "25",
+    "41",
+    "60"
+   ],
+   "correct": "25",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The conference was attended by 41 delegates from 25 nations.",
+   "source": {
+    "url": "https://www.thegreenwichmeridian.org/tgm/articles.php?article=10",
+    "title": "The adoption of a Prime Meridian and the International Meridian Conference of 1884"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Pierre de Coubertin first publicly present the five-ring Olympic emblem in the Revue Olympique?",
+   "answers": [
+    "1894",
+    "1913",
+    "1920",
+    "1936"
+   ],
+   "correct": "1913",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Coubertin described the emblem and flag in the August 1913 Revue Olympique.",
+   "source": {
+    "url": "https://www.olympics.com/ioc/1913-first-public-presentation-of-the-five-rings-symbol",
+    "title": "1913 : First public presentation of the Five Rings Symbol."
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to Coubertin, why were the six colours of the Olympic flag, including the white background, chosen?",
+   "answers": [
+    "Each colour stood for one continent",
+    "They echoed banners of the ancient Greek Games",
+    "They were the colours of the first medals awarded",
+    "Every national flag could be reproduced with them"
+   ],
+   "correct": "Every national flag could be reproduced with them",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Coubertin said the combined colours reproduce those of every nation's flag. The individual rings do not stand for particular continents.",
+   "source": {
+    "url": "https://library.bellevue.edu/articles/what-do-the-olympic-rings-symbolize/",
+    "title": "What Do the Olympic Rings Symbolize?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "An early Sholes typewriter layout read 'QWE.TY'. What character stood where the R is today?",
+   "answers": [
+    "A comma",
+    "A hyphen",
+    "A period",
+    "A semicolon"
+   ],
+   "correct": "A period",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The 1872 Sholes machine had a period where R now sits. The layout was later altered into QWERTY.",
+   "source": {
+    "url": "https://historyfacts.com/science-industry/article/where-did-the-qwerty-keyboard-layout-come-from/",
+    "title": "Where Did the QWERTY Keyboard Layout Come From?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1873, Christopher Sholes sold the manufacturing rights to his typewriter to which company?",
+   "answers": [
+    "Colt's Manufacturing Company",
+    "Winchester Repeating Arms",
+    "The Remington Arms Company",
+    "The Singer Manufacturing Company"
+   ],
+   "correct": "The Remington Arms Company",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Sholes sold the rights to Remington, which developed the machine further and popularised the QWERTY layout.",
+   "source": {
+    "url": "https://historyfacts.com/science-industry/article/where-did-the-qwerty-keyboard-layout-come-from/",
+    "title": "Where Did the QWERTY Keyboard Layout Come From?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Alfred Nobel obtain his Swedish patent for dynamite?",
+   "answers": [
+    "1857",
+    "1863",
+    "1887",
+    "1867"
+   ],
+   "correct": "1867",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Nobel's dynamite patent dates from 1867. In 1863 he patented nitroglycerin as an industrial explosive, and in 1887 ballistite.",
+   "source": {
+    "url": "https://www.nobelprize.org/alfred-nobel",
+    "title": "The man behind the prize – Alfred Nobel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Nobel made nitroglycerin safe to handle by blending it with which absorbent material?",
+   "answers": [
+    "Sawdust",
+    "Diatomaceous earth",
+    "Powdered charcoal",
+    "Wood pulp"
+   ],
+   "correct": "Diatomaceous earth",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Nobel found that nitroglycerin mixed into diatomaceous earth was stable and easy to use, and he called the result dynamite.",
+   "source": {
+    "url": "https://www.adamsmith.org/blog/alfred-nobel-gave-us-armaments-and-achievement-prizes",
+    "title": "Alfred Nobel gave us armaments and achievement prizes"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many patents did Alfred Nobel hold during his lifetime?",
+   "answers": [
+    "55",
+    "155",
+    "355",
+    "755"
+   ],
+   "correct": "355",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Nobel held 355 patents over his life.",
+   "source": {
+    "url": "https://www.tekniskamuseet.se/en/learn-more/swedish-inventors/alfred-nobel-dynamite/",
+    "title": "Alfred Nobel - Dynamite - Tekniska museet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Alfred Nobel's first patent, filed in England in 1857, was for which device?",
+   "answers": [
+    "A blasting cap",
+    "A gas meter",
+    "A safety fuse",
+    "A detonator"
+   ],
+   "correct": "A gas meter",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "His first patent was an English one for a gas meter. His first Swedish patent, in 1863, covered ways to prepare gunpowder.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Alfred_Nobel",
+    "title": "Alfred Nobel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which institution established the prize in economic sciences in memory of Alfred Nobel in 1968?",
+   "answers": [
+    "The Swedish Academy",
+    "Sveriges Riksbank",
+    "The Karolinska Institute",
+    "The Nobel Foundation"
+   ],
+   "correct": "Sveriges Riksbank",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Sweden's central bank, Sveriges Riksbank, established the economics prize in 1968. It was not one of the original prizes in Nobel's will.",
+   "source": {
+    "url": "https://www.biography.com/inventors/a45977855/alfred-nobel",
+    "title": "Alfred Nobel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city was Alfred Nobel & Co., the company that became Dynamit Nobel, founded in 1865?",
+   "answers": [
+    "Stockholm",
+    "Paris",
+    "Glasgow",
+    "Hamburg"
+   ],
+   "correct": "Hamburg",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Nobel founded Alfred Nobel & Co. in Hamburg on 21 June 1865. Dynamit Nobel AG grew out of it.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Dynamit_Nobel",
+    "title": "Dynamit Nobel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Nobel's blasting cap was a copper capsule filled with which compound?",
+   "answers": [
+    "Lead azide",
+    "Mercury fulminate",
+    "Picric acid",
+    "Potassium chlorate"
+   ],
+   "correct": "Mercury fulminate",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Nobel's blasting cap was a copper capsule filled with mercury fulminate and set off by a fuse wire.",
+   "source": {
+    "url": "https://www.tekniskamuseet.se/en/learn-more/swedish-inventors/alfred-nobel-dynamite/",
+    "title": "Alfred Nobel - Dynamite - Tekniska museet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was Lizzie Magie's The Landlord's Game, the forerunner of Monopoly, patented?",
+   "answers": [
+    "1887",
+    "1904",
+    "1924",
+    "1935"
+   ],
+   "correct": "1904",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Magie patented The Landlord's Game in 1904, three decades before Parker Brothers sold Monopoly.",
+   "source": {
+    "url": "https://www.britannica.com/sports/Monopoly-board-game",
+    "title": "Monopoly"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How much did Parker Brothers pay in 1935 for Elizabeth Magie's Landlord's Game patent?",
+   "answers": [
+    "$50",
+    "$500",
+    "$5,000",
+    "$50,000"
+   ],
+   "correct": "$500",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Parker Brothers bought her patent for $500, on condition that it keep publishing The Landlord's Game.",
+   "source": {
+    "url": "https://www.henrygeorge.org/dodson_on_monopoly.htm",
+    "title": "The True History of the Monopoly Game"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which policy did Magie use The Landlord's Game to promote?",
+   "answers": [
+    "A ban on private rental housing",
+    "A national minimum wage",
+    "Public ownership of railways",
+    "A single tax on property owners"
+   ],
+   "correct": "A single tax on property owners",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Magie used the game to illustrate how greedy landlords could exploit tenants. She promoted the single tax as a remedy.",
+   "source": {
+    "url": "https://www.britannica.com/sports/Monopoly-board-game",
+    "title": "Monopoly"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the King's baker whose bakery on Pudding Lane was where the Great Fire of London began?",
+   "answers": [
+    "Thomas Farriner",
+    "Thomas Bloodworth",
+    "John Evelyn",
+    "Samuel Pepys"
+   ],
+   "correct": "Thomas Farriner",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The fire began in the early hours of 2 September 1666 in Thomas Farriner's bakery on Pudding Lane.",
+   "source": {
+    "url": "https://www.londonmuseum.org.uk/collections/london-stories/great-fire-of-london/",
+    "title": "The Great Fire of London"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which scientist co-designed the Monument to the Great Fire of London with Sir Christopher Wren?",
+   "answers": [
+    "Isaac Newton",
+    "Robert Boyle",
+    "Edmond Halley",
+    "Robert Hooke"
+   ],
+   "correct": "Robert Hooke",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The Monument was designed by Wren and Robert Hooke. It stands 202 feet high and 202 feet from where the fire started.",
+   "source": {
+    "url": "https://onecitylondon.com/article/the-great-fire-of-london-walking-trail/",
+    "title": "The Great Fire of London Walking Trail - OneCity"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "According to a London walking-trail account, Pudding Lane takes its name from what?",
+   "answers": [
+    "A guild of medieval pudding makers",
+    "Black puddings sold at Eastcheap",
+    "Offal dropped from butchers' carts",
+    "Bread puddings baked in the lane"
+   ],
+   "correct": "Offal dropped from butchers' carts",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The lane was named for the 'puddings' (offal) that fell from carts travelling from Eastcheap meat market to the Thames.",
+   "source": {
+    "url": "https://onecitylondon.com/article/the-great-fire-of-london-walking-trail/",
+    "title": "The Great Fire of London Walking Trail - OneCity"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many people are estimated to have died in the Great Fire of London?",
+   "answers": [
+    "About six",
+    "About sixty",
+    "About six hundred",
+    "About six thousand"
+   ],
+   "correct": "About six",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Despite the huge destruction, it is estimated that only about six people died, though thousands were left homeless.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Great-Fire-of-London/476266",
+    "title": "Great Fire of London - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Frenchman falsely confessed to starting the Great Fire of London and was executed, despite not being in the city when it began?",
+   "answers": [
+    "Titus Oates",
+    "Thomas Blood",
+    "Robert Hubert",
+    "Thomas Farriner"
+   ],
+   "correct": "Robert Hubert",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Robert Hubert confessed to starting the fire, but he was not in London when it began. He was executed anyway.",
+   "source": {
+    "url": "https://onecitylondon.com/article/the-great-fire-of-london-walking-trail/",
+    "title": "The Great Fire of London Walking Trail - OneCity"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which French army engineer officer discovered the Rosetta Stone in 1799?",
+   "answers": [
+    "Jean-François Champollion",
+    "Pierre-François Bouchard",
+    "Thomas Young",
+    "Dominique Vivant Denon"
+   ],
+   "correct": "Pierre-François Bouchard",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Bouchard, an engineer officer in Napoleon's army, took the stone from an old wall being demolished at Fort Julien near Rashid (Rosetta).",
+   "source": {
+    "url": "https://www.worldhistory.org/Rosetta_Stone/",
+    "title": "Rosetta Stone - World History Encyclopedia"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The decree inscribed on the Rosetta Stone dates from the reign of which ruler?",
+   "answers": [
+    "Ptolemy I",
+    "Ptolemy II",
+    "Ramesses II",
+    "Ptolemy V"
+   ],
+   "correct": "Ptolemy V",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The stone carries a priestly decree from the reign of Ptolemy V, dated to 196 BCE.",
+   "source": {
+    "url": "https://www.worldhistory.org/Rosetta_Stone/",
+    "title": "Rosetta Stone - World History Encyclopedia"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Alongside Greek, which two scripts are carved on the Rosetta Stone?",
+   "answers": [
+    "Hieroglyphic and hieratic",
+    "Hieroglyphic and demotic",
+    "Hieratic and Coptic",
+    "Demotic and Coptic"
+   ],
+   "correct": "Hieroglyphic and demotic",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The stone carries the same text in Egyptian hieroglyphic, Egyptian demotic and Greek. Scholars could read the Greek, which made the other two scripts decipherable.",
+   "source": {
+    "url": "https://www.lindahall.org/experience/digital-exhibitions/napoleon-and-the-scientific-expedition-to-egypt/15-the-rosetta-stone/",
+    "title": "15. The Rosetta Stone - The Linda Hall"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What did Daniel Gabriel Fahrenheit use to set the zero point of his temperature scale?",
+   "answers": [
+    "The freezing point of pure water",
+    "The temperature of a deep winter cellar",
+    "The coldest temperature of an ice-and-salt mixture",
+    "The boiling point of strong spirits"
+   ],
+   "correct": "The coldest temperature of an ice-and-salt mixture",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Fahrenheit set zero at the lowest temperature he could produce by mixing ice and common salt.",
+   "source": {
+    "url": "https://www.encyclopedia.com/science-and-technology/physics/physics/fahrenheit-temperature-scale",
+    "title": "Fahrenheit Temperature Scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On the Fahrenheit scale, into how many equal parts is the interval between water's freezing and boiling points divided?",
+   "answers": [
+    "100",
+    "150",
+    "212",
+    "180"
+   ],
+   "correct": "180",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Water freezes at 32°F and boils at 212°F, and the 180 degrees between them are equal parts.",
+   "source": {
+    "url": "https://www.britannica.com/science/Fahrenheit-temperature-scale",
+    "title": "Fahrenheit temperature scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was the name 'centigrade' replaced by 'Celsius' for the temperature scale?",
+   "answers": [
+    "1924",
+    "1948",
+    "1960",
+    "1975"
+   ],
+   "correct": "1948",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The scale was known as centigrade until 1948, when the Celsius name was adopted as the international standard.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Fahrenheit",
+    "title": "Fahrenheit"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which event did Whitcomb Judson exhibit his 'clasp locker', an early zipper, in 1893?",
+   "answers": [
+    "The Great Exhibition in London",
+    "The Centennial Exposition in Philadelphia",
+    "The Exposition Universelle in Paris",
+    "The World's Columbian Exposition in Chicago"
+   ],
+   "correct": "The World's Columbian Exposition in Chicago",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Judson showed his hook-and-eye slide fastener at the 1893 World's Columbian Exposition in Chicago.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Whitcomb-L-Judson",
+    "title": "Whitcomb L. Judson"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which company's employee coined the word 'zipper' in 1923 for its overshoes?",
+   "answers": [
+    "B.F. Goodrich",
+    "Goodyear",
+    "Firestone",
+    "U.S. Rubber"
+   ],
+   "correct": "B.F. Goodrich",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "The term was coined in 1923 by B.G. Work of the B.F. Goodrich Company for use on overshoes.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Whitcomb-L-Judson",
+    "title": "Whitcomb L. Judson"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was Gideon Sundback's patent for the forerunner of the modern brass-toothed zipper granted?",
+   "answers": [
+    "1893",
+    "1913",
+    "1917",
+    "1923"
+   ],
+   "correct": "1917",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Sundback developed his metal-toothed fastener in 1913, and his patent followed in 1917.",
+   "source": {
+    "url": "https://ykkdigitalshowroom.com/en/b5f/about_a_zip/history_of_zipper/",
+    "title": "HISTORY OF ZIPPER"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In British and French heraldry, what are arms that break the rule of tincture called?",
+   "answers": [
+    "Armes parlantes",
+    "Armes pleines",
+    "Armes de concession",
+    "Armes fausses"
+   ],
+   "correct": "Armes fausses",
+   "difficulty": "hard",
+   "category": "General",
+   "explain": "Arms that put metal on metal or colour on colour are called armes fausses (or armes à enquérir).",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rule_of_tincture",
+    "title": "Rule of tincture"
+   },
+   "ai_written": true
+  }
+ ]
+}

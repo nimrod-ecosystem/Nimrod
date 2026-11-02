@@ -1,0 +1,576 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "General trivia (easy)",
+ "description": "31 easy questions about a broad mix of everyday knowledge that fits none of the other categories. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which is the largest ocean on Earth?",
+   "answers": [
+    "Atlantic Ocean",
+    "Pacific Ocean",
+    "Indian Ocean",
+    "Arctic Ocean"
+   ],
+   "correct": "Pacific Ocean",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Britannica describes the Pacific as by far the largest ocean, covering about one-third of the globe and twice the area of the Atlantic.",
+   "source": {
+    "url": "https://www.britannica.com/place/Pacific-Ocean",
+    "title": "Pacific Ocean"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which explorer gave the Pacific Ocean a name meaning \"the peaceful sea\"?",
+   "answers": [
+    "Christopher Columbus",
+    "Captain James Cook",
+    "Ferdinand Magellan",
+    "Vasco da Gama"
+   ],
+   "correct": "Ferdinand Magellan",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Magellan named the ocean El Mar Pacifico, which means \"the peaceful sea\".",
+   "answerKind": "person",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Pacific-Ocean/346191",
+    "title": "Pacific Ocean - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ocean trench holds the deepest known point in Earth's oceans?",
+   "answers": [
+    "Puerto Rico Trench",
+    "Java Trench",
+    "Peru-Chile Trench",
+    "Mariana Trench"
+   ],
+   "correct": "Mariana Trench",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The Mariana Trench in the Pacific holds the Challenger Deep, the deepest known point on Earth, far deeper than Mount Everest is high.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Pacific-Ocean/346191",
+    "title": "Pacific Ocean - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the chemical symbol for gold?",
+   "answers": [
+    "Ag",
+    "Gd",
+    "Pt",
+    "Au"
+   ],
+   "correct": "Au",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Gold's symbol Au comes from its Latin name, aurum, and its atomic number is 79.",
+   "source": {
+    "url": "https://www.britannica.com/science/gold-chemical-element",
+    "title": "Gold"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the chemical symbol for silver?",
+   "answers": [
+    "Ag",
+    "Au",
+    "Si",
+    "Sr"
+   ],
+   "correct": "Ag",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Silver's symbol Ag is short for its Latin name, argentum.",
+   "source": {
+    "url": "https://goldsell.co.uk/what-is-the-chemical-symbol-for-gold/",
+    "title": "What Is The Chemical Symbol For Gold?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which planet is the largest in our solar system?",
+   "answers": [
+    "Saturn",
+    "Neptune",
+    "Jupiter",
+    "Uranus"
+   ],
+   "correct": "Jupiter",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "NASA calls Jupiter the largest planet in the solar system, big enough that about 1,000 Earths could fit inside it.",
+   "source": {
+    "url": "https://science.nasa.gov/jupiter/jupiter-facts/",
+    "title": "Jupiter Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the Great Red Spot on Jupiter?",
+   "answers": [
+    "A giant storm",
+    "An enormous volcano",
+    "A massive crater",
+    "A frozen ocean"
+   ],
+   "correct": "A giant storm",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "NASA describes the Great Red Spot as a giant storm bigger than Earth.",
+   "source": {
+    "url": "https://science.nasa.gov/jupiter/jupiter-facts/",
+    "title": "Jupiter Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Jupiter takes its name from the king of the gods in which ancient culture?",
+   "answers": [
+    "Greek",
+    "Egyptian",
+    "Norse",
+    "Roman"
+   ],
+   "correct": "Roman",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "NASA notes that Jupiter is named for the king of the ancient Roman gods.",
+   "source": {
+    "url": "https://science.nasa.gov/jupiter/jupiter-facts/",
+    "title": "Jupiter Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who made the first detailed observations of Jupiter in 1610, using a small homemade telescope?",
+   "answers": [
+    "Isaac Newton",
+    "Galileo Galilei",
+    "Johannes Kepler",
+    "Nicolaus Copernicus"
+   ],
+   "correct": "Galileo Galilei",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "NASA says Galileo Galilei made the first detailed observations of Jupiter in 1610 with a small homemade telescope.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://science.nasa.gov/jupiter/",
+    "title": "Jupiter"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many planets are in our solar system?",
+   "answers": [
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten"
+   ],
+   "correct": "Eight",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "NASA lists eight planets, from Mercury to Neptune, plus five officially recognized dwarf planets.",
+   "source": {
+    "url": "https://science.nasa.gov/solar-system/planets/",
+    "title": "About the Planets"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which planet is closest to the Sun?",
+   "answers": [
+    "Venus",
+    "Mars",
+    "Earth",
+    "Mercury"
+   ],
+   "correct": "Mercury",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "NASA identifies Mercury as the closest planet to the Sun and also the smallest.",
+   "source": {
+    "url": "https://science.nasa.gov/mercury/",
+    "title": "Mercury"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which planet is the hottest in our solar system?",
+   "answers": [
+    "Mercury",
+    "Venus",
+    "Mars",
+    "Jupiter"
+   ],
+   "correct": "Venus",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Venus is hotter than Mercury because its thick atmosphere is full of carbon dioxide, a greenhouse gas.",
+   "source": {
+    "url": "https://astrobackyard.com/mercury-closest-planet-to-the-sun/",
+    "title": "Mercury"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital city of Australia?",
+   "answers": [
+    "Sydney",
+    "Melbourne",
+    "Perth",
+    "Canberra"
+   ],
+   "correct": "Canberra",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Canberra is the federal capital of Australia, even though Sydney and Melbourne are larger cities.",
+   "source": {
+    "url": "https://www.britannica.com/place/Canberra",
+    "title": "Canberra"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many bones are in a typical adult human skeleton?",
+   "answers": [
+    "156",
+    "206",
+    "256",
+    "306"
+   ],
+   "correct": "206",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Adults have 206 bones. Children have more because some bones fuse together as they grow.",
+   "source": {
+    "url": "https://courses.lumenlearning.com/suny-ap1/chapter/divisions-of-the-skeletal-system/",
+    "title": "Divisions of the Skeletal System"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the largest hot desert in the world?",
+   "answers": [
+    "Gobi Desert",
+    "Kalahari Desert",
+    "Sahara Desert",
+    "Mojave Desert"
+   ],
+   "correct": "Sahara Desert",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Britannica calls the Sahara of northern Africa the largest hot desert in the world.",
+   "source": {
+    "url": "https://www.britannica.com/place/Sahara-desert-Africa",
+    "title": "Sahara"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If a desert is defined simply as a place with very little rainfall, which continent is technically the largest desert?",
+   "answers": [
+    "Africa",
+    "Australia",
+    "Asia",
+    "Antarctica"
+   ],
+   "correct": "Antarctica",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Guinness notes that by the rainfall definition, Antarctica, at about 14 million square kilometres, is technically the largest desert.",
+   "source": {
+    "url": "https://www.guinnessworldrecords.com/world-records/largest-desert",
+    "title": "Largest hot desert"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who painted the Mona Lisa?",
+   "answers": [
+    "Michelangelo",
+    "Raphael",
+    "Sandro Botticelli",
+    "Leonardo da Vinci"
+   ],
+   "correct": "Leonardo da Vinci",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Leonardo da Vinci began the Mona Lisa around 1503 and it was still in his studio when he died in 1519.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Mona-Lisa-painting",
+    "title": "Mona Lisa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which museum does the Mona Lisa hang?",
+   "answers": [
+    "Prado Museum, Madrid",
+    "Uffizi Gallery, Florence",
+    "Louvre Museum, Paris",
+    "British Museum, London"
+   ],
+   "correct": "Louvre Museum, Paris",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The Mona Lisa hangs behind bulletproof glass in the Louvre in Paris and has been in the museum's collection since 1804.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Mona-Lisa-painting",
+    "title": "Mona Lisa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these mammals lays eggs?",
+   "answers": [
+    "Platypus",
+    "Kangaroo",
+    "Koala",
+    "Wombat"
+   ],
+   "correct": "Platypus",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The platypus is a monotreme, a group of mammals that lay eggs.",
+   "source": {
+    "url": "https://www.britannica.com/animal/platypus",
+    "title": "Platypus"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the largest organ of the human body?",
+   "answers": [
+    "Liver",
+    "Skin",
+    "Brain",
+    "Lungs"
+   ],
+   "correct": "Skin",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "MedlinePlus states that the skin is the largest organ of the body.",
+   "source": {
+    "url": "https://medlineplus.gov/ency/imagepages/8912.htm",
+    "title": "Skin layers: MedlinePlus Medical Encyclopedia Image"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gas do plants take in from the air to carry out photosynthesis?",
+   "answers": [
+    "Nitrogen",
+    "Hydrogen",
+    "Carbon dioxide",
+    "Helium"
+   ],
+   "correct": "Carbon dioxide",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "In photosynthesis, green plants use light energy to turn water and carbon dioxide into oxygen and energy-rich compounds.",
+   "source": {
+    "url": "https://www.britannica.com/science/photosynthesis",
+    "title": "Photosynthesis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which substance in plant leaves captures light energy for photosynthesis?",
+   "answers": [
+    "Keratin",
+    "Melanin",
+    "Collagen",
+    "Chlorophyll"
+   ],
+   "correct": "Chlorophyll",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Chlorophyll in the leaves absorbs light energy, which the plant uses to convert carbon dioxide and water into glucose and oxygen.",
+   "source": {
+    "url": "https://www.britannica.com/science/photosynthesis",
+    "title": "Photosynthesis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the hardest naturally occurring substance on Earth?",
+   "answers": [
+    "Quartz",
+    "Diamond",
+    "Granite",
+    "Iron"
+   ],
+   "correct": "Diamond",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Diamond is the hardest naturally occurring substance and sits at 10 on the Mohs scale of mineral hardness.",
+   "source": {
+    "url": "https://www.britannica.com/science/Is-Diamond-the-Hardest-Substance-on-Earth",
+    "title": "Is Diamond the Hardest Substance on Earth?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which chemical element is diamond made entirely of?",
+   "answers": [
+    "Silicon",
+    "Calcium",
+    "Sulfur",
+    "Carbon"
+   ],
+   "correct": "Carbon",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Diamond is pure carbon, with each atom tightly bonded to four neighbours, which gives it its hardness.",
+   "source": {
+    "url": "https://www.britannica.com/science/Is-Diamond-the-Hardest-Substance-on-Earth",
+    "title": "Is Diamond the Hardest Substance on Earth?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many pieces does each player start with in a standard game of chess?",
+   "answers": [
+    "12",
+    "14",
+    "16",
+    "20"
+   ],
+   "correct": "16",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Each side starts with sixteen pieces: one king, one queen, two rooks, two bishops, two knights and eight pawns.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Chess_piece",
+    "title": "Chess piece"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many squares are on a chessboard?",
+   "answers": [
+    "48",
+    "56",
+    "64",
+    "72"
+   ],
+   "correct": "64",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "A chessboard has 64 squares of alternating colours.",
+   "source": {
+    "url": "https://www.chess.com/learn-how-to-play-chess",
+    "title": "How to Play Chess: Learn the Rules & 7 Steps To Get You Started - Chess.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which chess piece is the only one that can jump over other pieces?",
+   "answers": [
+    "Bishop",
+    "Rook",
+    "Queen",
+    "Knight"
+   ],
+   "correct": "Knight",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Pieces cannot move through other pieces, except that the knight can jump over them.",
+   "source": {
+    "url": "https://www.chess.com/learn-how-to-play-chess",
+    "title": "How to Play Chess: Learn the Rules & 7 Steps To Get You Started - Chess.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the official currency of Japan?",
+   "answers": [
+    "Won",
+    "Yuan",
+    "Baht",
+    "Yen"
+   ],
+   "correct": "Yen",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The yen, written ¥ or 円, is the official currency of Japan.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Japanese_yen",
+    "title": "Japanese yen"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who wrote the play Romeo and Juliet?",
+   "answers": [
+    "William Shakespeare",
+    "Christopher Marlowe",
+    "Charles Dickens",
+    "Geoffrey Chaucer"
+   ],
+   "correct": "William Shakespeare",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Romeo and Juliet was written by William Shakespeare around 1594–96 and first published in 1597.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Romeo-and-Juliet",
+    "title": "Romeo and Juliet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Italian city is Shakespeare's Romeo and Juliet set?",
+   "answers": [
+    "Venice",
+    "Florence",
+    "Milan",
+    "Verona"
+   ],
+   "correct": "Verona",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Shakespeare sets the play in Verona, Italy.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Romeo-and-Juliet",
+    "title": "Romeo and Juliet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Shakespeare's play, which family does Romeo belong to?",
+   "answers": [
+    "Capulet",
+    "Montague",
+    "Medici",
+    "Borgia"
+   ],
+   "correct": "Montague",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Romeo is the son of the house of Montague, while Juliet is a Capulet.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/romeo-and-juliet-william-shakespeare",
+    "title": "Romeo and Juliet by William Shakespeare"
+   },
+   "ai_written": true
+  }
+ ]
+}

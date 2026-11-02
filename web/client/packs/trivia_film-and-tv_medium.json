@@ -1,0 +1,938 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Film and TV trivia (medium)",
+ "description": "50 medium questions about films, television, animation, actors, directors, from any decade. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "In Citizen Kane, what does the dying Charles Foster Kane's last word, \"Rosebud\", turn out to refer to?",
+   "answers": [
+    "A family racehorse",
+    "A mother's locket",
+    "A childhood sled",
+    "A boyhood pet dog"
+   ],
+   "correct": "A childhood sled",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The film's closing shots show Kane's childhood sled, with \"Rosebud\" painted on it, being thrown into a furnace.",
+   "source": {
+    "url": "https://www.history.com/articles/rosebud-citizen-kane-meaning",
+    "title": "'Rosebud': The 'Citizen Kane' Mystery Explained"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which newspaper magnate banned any mention of Citizen Kane in his papers when the film was released?",
+   "answers": [
+    "Joseph Pulitzer",
+    "Henry Luce",
+    "Lord Northcliffe",
+    "William Randolph Hearst"
+   ],
+   "correct": "William Randolph Hearst",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "On the film's release, Hearst prohibited any mention of it in his newspapers.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Citizen_Kane",
+    "title": "Citizen Kane"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Who co-wrote Citizen Kane with Orson Welles?",
+   "answers": [
+    "Ben Hecht",
+    "Herman J. Mankiewicz",
+    "Billy Wilder",
+    "Robert Riskin"
+   ],
+   "correct": "Herman J. Mankiewicz",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Citizen Kane was co-written by Welles and Herman J. Mankiewicz.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Citizen_Kane",
+    "title": "Citizen Kane"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which author wrote the 1959 novel on which Alfred Hitchcock's Psycho was based?",
+   "answers": [
+    "Ira Levin",
+    "Patricia Highsmith",
+    "Daphne du Maurier",
+    "Robert Bloch"
+   ],
+   "correct": "Robert Bloch",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Psycho (1960) was based on Robert Bloch's 1959 novel of the same name.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Psycho_(1960_film)",
+    "title": "Psycho (1960 film)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The 2017 documentary 78/52 takes its title from the number of camera setups and cuts in a famous scene from which Hitchcock film?",
+   "answers": [
+    "Vertigo",
+    "Psycho",
+    "Rear Window",
+    "The Birds"
+   ],
+   "correct": "Psycho",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The documentary examines Psycho's shower scene, which has 78 camera setups and 52 cuts.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/78/52",
+    "title": "78/52"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which composer wrote the shrieking string score for Psycho's shower scene, which Hitchcock first wanted to leave without music?",
+   "answers": [
+    "Max Steiner",
+    "Henry Mancini",
+    "Bernard Herrmann",
+    "Elmer Bernstein"
+   ],
+   "correct": "Bernard Herrmann",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Bernard Herrmann's shrieking violins scored the scene, even though Hitchcock at first resisted using any soundtrack for it.",
+   "source": {
+    "url": "https://www.history.com/articles/psycho-shower-scene-hitchcock-tricks-fooled-censors",
+    "title": "Psycho's Shower Scene: How Hitchcock Upped the Terror—and Fooled the Censors"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What nickname did the Jaws crew give to the film's troublesome mechanical shark?",
+   "answers": [
+    "Gilbert",
+    "Duncan",
+    "Walter",
+    "Bruce"
+   ],
+   "correct": "Bruce",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The production nicknamed the malfunctioning mechanical great white \"Bruce\". Its breakdowns pushed Spielberg to keep it mostly hidden.",
+   "source": {
+    "url": "https://www.abc.net.au/news/2025-08-25/jaws-50-year-anniversary-steven-spielberg-director-sharks/105515272",
+    "title": "Jaws at 50: How the 1975 Steven Spielberg shark thriller became a commercial and cultural phenomenon - ABC News"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which composer created the ominous, minimalist theme that signals the shark's approach in Jaws?",
+   "answers": [
+    "Jerry Goldsmith",
+    "Ennio Morricone",
+    "John Williams",
+    "Hans Zimmer"
+   ],
+   "correct": "John Williams",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Because the mechanical sharks often malfunctioned, Spielberg relied on John Williams's minimalist theme to suggest the shark's presence.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Jaws_(film)",
+    "title": "Jaws (film)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Who wrote the 1974 novel on which the film Jaws was based?",
+   "answers": [
+    "Stephen King",
+    "Peter Benchley",
+    "Michael Crichton",
+    "Thomas Harris"
+   ],
+   "correct": "Peter Benchley",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Jaws (1975) was based on Peter Benchley's 1974 novel.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Jaws_(film)",
+    "title": "Jaws (film)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Jaws was shot mostly on location at which Massachusetts island?",
+   "answers": [
+    "Nantucket",
+    "Martha's Vineyard",
+    "Long Island",
+    "Mount Desert Island"
+   ],
+   "correct": "Martha's Vineyard",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Jaws was shot mostly on location at Martha's Vineyard, making it the first major motion picture shot on the ocean.",
+   "source": {
+    "url": "https://graphsearch.epfl.ch/en/concept/74830",
+    "title": "Jaws (film) - EPFL Graph Search"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who directed Casablanca and won the Academy Award for Best Director for it?",
+   "answers": [
+    "William Wyler",
+    "Howard Hawks",
+    "Frank Capra",
+    "Michael Curtiz"
+   ],
+   "correct": "Michael Curtiz",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Michael Curtiz directed Casablanca and was named Best Director for it.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Casablanca_(film)",
+    "title": "Casablanca (film)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Casablanca was loosely based on which unproduced stage play?",
+   "answers": [
+    "Rick's Café Américain",
+    "Nobody Leaves Casablanca",
+    "Everybody Comes to Rick's",
+    "Letters from Morocco"
+   ],
+   "correct": "Everybody Comes to Rick's",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The film was loosely based on Murray Burnett and Joan Alison's unproduced play Everybody Comes to Rick's.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Casablanca-film-by-Curtiz",
+    "title": "Casablanca"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Casablanca was nominated for eight Academy Awards. How many did it win?",
+   "answers": [
+    "Two",
+    "Five",
+    "Three",
+    "Eight"
+   ],
+   "correct": "Three",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "It won three: Best Picture, Best Director and Best Adapted Screenplay.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Casablanca-film-by-Curtiz",
+    "title": "Casablanca"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which 1960 American western was a remake of Akira Kurosawa's Seven Samurai?",
+   "answers": [
+    "The Searchers",
+    "Rio Bravo",
+    "Shane",
+    "The Magnificent Seven"
+   ],
+   "correct": "The Magnificent Seven",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Seven Samurai was remade as John Sturges's western The Magnificent Seven in 1960.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Seven-Samurai",
+    "title": "Seven Samurai"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor, a frequent Kurosawa collaborator, starred in Seven Samurai alongside Takashi Shimura?",
+   "answers": [
+    "Toshiro Mifune",
+    "Ken Watanabe",
+    "Sessue Hayakawa",
+    "Tatsuya Nakadai"
+   ],
+   "correct": "Toshiro Mifune",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Toshiro Mifune and Takashi Shimura were the film's leading men, both longtime Kurosawa collaborators.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Seven-Samurai",
+    "title": "Seven Samurai"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which Kurosawa film won the top prize at the 1951 Venice Film Festival and then an honorary Academy Award?",
+   "answers": [
+    "Ikiru",
+    "Throne of Blood",
+    "Ran",
+    "Rashomon"
+   ],
+   "correct": "Rashomon",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Rashomon won the top prize at Venice in 1951 and an honorary Academy Award as the best foreign-language film, given before that category existed.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rashomon",
+    "title": "Rashomon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which 2019 film became the first non-English-language film to win the Academy Award for Best Picture?",
+   "answers": [
+    "Roma",
+    "Parasite",
+    "Amour",
+    "Life Is Beautiful"
+   ],
+   "correct": "Parasite",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Bong Joon-ho's Parasite was the first foreign-language film to win Best Picture, and also won the Palme d'Or at Cannes.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Parasite-2019-film",
+    "title": "Parasite"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many Academy Awards did Parasite win?",
+   "answers": [
+    "Two",
+    "Three",
+    "Six",
+    "Four"
+   ],
+   "correct": "Four",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "It won four Academy Awards: Best Picture, Best Director, Best Original Screenplay and Best International Feature.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Parasite-2019-film",
+    "title": "Parasite"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who directed Parasite?",
+   "answers": [
+    "Park Chan-wook",
+    "Kim Ki-duk",
+    "Bong Joon-ho",
+    "Lee Chang-dong"
+   ],
+   "correct": "Bong Joon-ho",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Parasite was directed by Bong Joon-ho, who also co-wrote the screenplay.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Parasite_(2019_film)",
+    "title": "Parasite (2019 film)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which 1988 Pixar short became the first computer-generated film to win an Academy Award?",
+   "answers": [
+    "Luxo Jr.",
+    "Knick Knack",
+    "Geri's Game",
+    "Tin Toy"
+   ],
+   "correct": "Tin Toy",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Tin Toy won the 1988 Academy Award for Animated Short Film and helped pave the way for Toy Story.",
+   "source": {
+    "url": "https://www.filmsite.org/toystory1995.html",
+    "title": "Toy Story (1995)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which 1995 film was the first computer-animated feature film?",
+   "answers": [
+    "A Bug's Life",
+    "Antz",
+    "Toy Story",
+    "Shrek"
+   ],
+   "correct": "Toy Story",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Toy Story, released in 1995, was Pixar's debut feature and the first computer-animated feature film.",
+   "source": {
+    "url": "https://www.oscars.org/collection-highlights/toy-story",
+    "title": "Toy Story"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Pixar figure received a Special Achievement Academy Award for leading the Toy Story team?",
+   "answers": [
+    "Brad Bird",
+    "John Lasseter",
+    "Pete Docter",
+    "Andrew Stanton"
+   ],
+   "correct": "John Lasseter",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "John Lasseter received a Special Achievement Academy Award for his leadership of the team that made the first feature-length computer-animated film.",
+   "source": {
+    "url": "https://www.pixar.com/our-story",
+    "title": "Our Story — Pixar Animation Studios"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which singer-songwriter wrote the Academy Award-nominated song \"You've Got a Friend in Me\" for Toy Story?",
+   "answers": [
+    "Elton John",
+    "Phil Collins",
+    "Harry Nilsson",
+    "Randy Newman"
+   ],
+   "correct": "Randy Newman",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Randy Newman's song was one of Toy Story's three Academy Award nominations, alongside Best Original Score and Best Original Screenplay.",
+   "source": {
+    "url": "https://www.filmsite.org/toystory1995.html",
+    "title": "Toy Story (1995)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What derisive nickname did industry critics give Walt Disney's plan to make Snow White and the Seven Dwarfs?",
+   "answers": [
+    "Disney's Delusion",
+    "Disney's Blunder",
+    "Disney's Folly",
+    "Disney's Dilemma"
+   ],
+   "correct": "Disney's Folly",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Critics called the plan \"Disney's Folly\", believing audiences would not sit through a full-length cartoon.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Disney_Golden_Age",
+    "title": "Disney Golden Age"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Walt Disney received an Honorary Academy Award for Snow White made up of one full-size statuette and how many miniature ones?",
+   "answers": [
+    "Three",
+    "Five",
+    "Seven",
+    "Ten"
+   ],
+   "correct": "Seven",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The Honorary Academy Award given in 1939 consisted of one full-size statuette and seven miniature ones.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Disney_Golden_Age",
+    "title": "Disney Golden Age"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who provided the voice of Snow White in Disney's 1937 film?",
+   "answers": [
+    "Deanna Durbin",
+    "Judy Garland",
+    "Adriana Caselotti",
+    "Ginger Rogers"
+   ],
+   "correct": "Adriana Caselotti",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Adriana Caselotti voiced Snow White in the 1937 film.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Snow_White_and_the_Seven_Dwarfs_(1937_film)",
+    "title": "Snow White and the Seven Dwarfs (1937 film)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "At which festival did Spirited Away share the top prize in 2002, becoming the first animated feature to win it?",
+   "answers": [
+    "Cannes Film Festival",
+    "Venice Film Festival",
+    "Sundance Film Festival",
+    "Berlin International Film Festival"
+   ],
+   "correct": "Berlin International Film Festival",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Spirited Away was a co-recipient of the Golden Bear at the 2002 Berlin festival, the first animated feature to win the festival's highest prize.",
+   "source": {
+    "url": "https://time.com/6081937/spirited-away-changed-animation-studio-ghibli/",
+    "title": "Spirited Away Changed Animation Forever. Here's How"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Spirited Away, into what animals are Chihiro's parents turned after eating cursed food?",
+   "answers": [
+    "Frogs",
+    "Pigs",
+    "Cows",
+    "Rats"
+   ],
+   "correct": "Pigs",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Chihiro's parents are turned into pigs after eating cursed food, and she tries to save them.",
+   "source": {
+    "url": "https://www.hollywoodreporter.com/movies/movie-news/spirited-away-film-oscars-records-history-1235052088/",
+    "title": "'Spirited Away' Broke Records and Made [Academy Award] History"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Hayao Miyazaki film won Best Animated Feature at the 75th Academy Awards?",
+   "answers": [
+    "Princess Mononoke",
+    "My Neighbor Totoro",
+    "Spirited Away",
+    "Howl's Moving Castle"
+   ],
+   "correct": "Spirited Away",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Spirited Away won Best Animated Feature at the 75th Academy Awards, in the category's second year.",
+   "source": {
+    "url": "https://www.hollywoodreporter.com/movies/movie-news/spirited-away-film-oscars-records-history-1235052088/",
+    "title": "'Spirited Away' Broke Records and Made [Academy Award] History"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Simpsons first appeared as animated shorts on which show before getting their own series?",
+   "answers": [
+    "Saturday Night Live",
+    "The Tracey Ullman Show",
+    "In Living Color",
+    "The Arsenio Hall Show"
+   ],
+   "correct": "The Tracey Ullman Show",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The Simpson family spent two years on The Tracey Ullman Show before their own series premiered on Fox on December 17, 1989.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bart_Simpson",
+    "title": "Bart Simpson"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Simpson family member's name was not taken from one of Matt Groening's real relatives?",
+   "answers": [
+    "Homer",
+    "Lisa",
+    "Maggie",
+    "Bart"
+   ],
+   "correct": "Bart",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The other family members were named after Groening's relatives, but Bart's name is an anagram of \"brat\".",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bart_Simpson",
+    "title": "Bart Simpson"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the lobby of whose office did Matt Groening conceive the idea for The Simpsons?",
+   "answers": [
+    "Lorne Michaels",
+    "Norman Lear",
+    "James L. Brooks",
+    "Aaron Spelling"
+   ],
+   "correct": "James L. Brooks",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Groening sketched the Simpson family while waiting in the office of producer James L. Brooks.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/History_of_The_Simpsons",
+    "title": "History of The Simpsons"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which composer did Matt Groening pick to write the iconic Simpsons theme tune?",
+   "answers": [
+    "Alf Clausen",
+    "Mark Mothersbaugh",
+    "Danny Elfman",
+    "Thomas Newman"
+   ],
+   "correct": "Danny Elfman",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Groening chose Danny Elfman to compose the show's theme song.",
+   "source": {
+    "url": "https://www.biography.com/movies-tv/matt-groening-the-simpsons",
+    "title": "Creating 'The Simpsons:' How Matt Groening's Own Family Inspired the Characters"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In which US city is Breaking Bad set?",
+   "answers": [
+    "Phoenix",
+    "Santa Fe",
+    "El Paso",
+    "Albuquerque"
+   ],
+   "correct": "Albuquerque",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Breaking Bad is set in Albuquerque, New Mexico, where chemistry teacher Walter White starts making meth.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Breaking-Bad",
+    "title": "Breaking Bad"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who created Breaking Bad?",
+   "answers": [
+    "David Chase",
+    "Matthew Weiner",
+    "Vince Gilligan",
+    "David Simon"
+   ],
+   "correct": "Vince Gilligan",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Breaking Bad was created and produced by Vince Gilligan for AMC.",
+   "source": {
+    "url": "https://breakingbad.fandom.com/wiki/Breaking_Bad_(TV_series)",
+    "title": "Breaking Bad"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What alias does Walter White adopt in Breaking Bad's drug trade?",
+   "answers": [
+    "Schrödinger",
+    "Oppenheimer",
+    "Heisenberg",
+    "Planck"
+   ],
+   "correct": "Heisenberg",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Walter Hartwell White is also known by his alias Heisenberg.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Walter_White_(Breaking_Bad)",
+    "title": "Walter White (Breaking Bad)"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Who created the HBO crime drama The Sopranos?",
+   "answers": [
+    "Vince Gilligan",
+    "David Simon",
+    "David Chase",
+    "Alan Ball"
+   ],
+   "correct": "David Chase",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The Sopranos was created by David Chase for HBO and ran for six seasons.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Sopranos",
+    "title": "The Sopranos"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which 2021 film, co-written by David Chase, is a prequel to The Sopranos?",
+   "answers": [
+    "The Irishman",
+    "A Bronx Tale",
+    "Donnie Brasco",
+    "The Many Saints of Newark"
+   ],
+   "correct": "The Many Saints of Newark",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The Many Saints of Newark was the 2021 prequel film to The Sopranos, co-written by Chase.",
+   "source": {
+    "url": "https://collider.com/the-sopranos-creator-new-tv-show-hbo-david-chase-project-mkultra/",
+    "title": "'The Sopranos' Creator Sets First Series at HBO Since Groundbreaking Mafia Classic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did The Sopranos begin broadcasting on HBO?",
+   "answers": [
+    "1995",
+    "1997",
+    "1999",
+    "2001"
+   ],
+   "correct": "1999",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The series was greenlit in 1997 but was first broadcast on HBO on January 10, 1999.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Sopranos",
+    "title": "The Sopranos"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played the First Doctor in the original run of Doctor Who?",
+   "answers": [
+    "Patrick Troughton",
+    "Jon Pertwee",
+    "William Hartnell",
+    "Tom Baker"
+   ],
+   "correct": "William Hartnell",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "William Hartnell played the First Doctor in the show's first serial, An Unearthly Child, in 1963.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/An_Unearthly_Child",
+    "title": "An Unearthly Child"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which writer scripted the 1963 Doctor Who serial that introduced the Daleks?",
+   "answers": [
+    "Sydney Newman",
+    "Terry Nation",
+    "David Whitaker",
+    "Anthony Coburn"
+   ],
+   "correct": "Terry Nation",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The Daleks serial, first broadcast in December 1963, was written by Terry Nation.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Daleks",
+    "title": "The Daleks"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Who, the BBC drama department's first female producer, led production of the first Doctor Who serial?",
+   "answers": [
+    "Verity Lambert",
+    "Sydney Newman",
+    "Waris Hussein",
+    "Anthony Coburn"
+   ],
+   "correct": "Verity Lambert",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Verity Lambert, the BBC drama department's first female producer, led production of An Unearthly Child.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/An_Unearthly_Child",
+    "title": "An Unearthly Child"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Why was the first episode of Doctor Who repeated the week after its debut?",
+   "answers": [
+    "The BBC had broadcast the wrong episode",
+    "A recording fault spoiled the original transmission",
+    "Viewers were distracted by news of Kennedy's assassination",
+    "A strike disrupted the BBC's schedule that week"
+   ],
+   "correct": "Viewers were distracted by news of Kennedy's assassination",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The first episode aired the day after the assassination of John F. Kennedy, so it was repeated the following week.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/An_Unearthly_Child",
+    "title": "An Unearthly Child"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which star of M*A*S*H also directed its two-and-a-half-hour series finale, \"Goodbye, Farewell, and Amen\"?",
+   "answers": [
+    "Mike Farrell",
+    "Harry Morgan",
+    "Alan Alda",
+    "Loretta Swit"
+   ],
+   "correct": "Alan Alda",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Alan Alda, who played Hawkeye Pierce, directed the finale, which first aired on February 28, 1983.",
+   "source": {
+    "url": "https://interviews.televisionacademy.com/shows/mash-goodbye-farewell-and-amen",
+    "title": "M*A*S*H: \"Goodbye, Farewell, and Amen\""
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In M*A*S*H, what is the number of the Mobile Army Surgical Hospital unit at the centre of the story?",
+   "answers": [
+    "8055th",
+    "4077th",
+    "2077th",
+    "1177th"
+   ],
+   "correct": "4077th",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The series follows the staff of the 4077th Mobile Army Surgical Hospital during the Korean War.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/literature-and-writing/mash-series-finale/",
+    "title": "M*A*S*H series finale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the hometown of M*A*S*H's Captain Benjamin Franklin \"Hawkeye\" Pierce?",
+   "answers": [
+    "Cherry Hill, New Jersey",
+    "Peach Grove, Georgia",
+    "Crabapple Cove, Maine",
+    "Maple Bluff, Vermont"
+   ],
+   "correct": "Crabapple Cove, Maine",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Hawkeye Pierce's hometown is listed as Crabapple Cove, Maine.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_M*A*S*H_characters",
+    "title": "List of M*A*S*H characters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "John Cleese and Connie Booth conceived Fawlty Towers after staying at a hotel in which English seaside town?",
+   "answers": [
+    "Brighton",
+    "Torquay",
+    "Blackpool",
+    "Bournemouth"
+   ],
+   "correct": "Torquay",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "The idea came from a stay at a Torquay hotel, whose rude owner, Donald Sinclair, inspired the character of Basil.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Fawlty-Towers",
+    "title": "Fawlty Towers"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who co-created and co-wrote Fawlty Towers with John Cleese?",
+   "answers": [
+    "Prunella Scales",
+    "Andrew Sachs",
+    "Michael Palin",
+    "Connie Booth"
+   ],
+   "correct": "Connie Booth",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Fawlty Towers was created by John Cleese and Connie Booth, who also played the chambermaid Polly.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Fawlty-Towers",
+    "title": "Fawlty Towers"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played the hapless Spanish waiter Manuel in Fawlty Towers?",
+   "answers": [
+    "Andrew Sachs",
+    "Ronnie Corbett",
+    "Bill Pertwee",
+    "Richard Briers"
+   ],
+   "correct": "Andrew Sachs",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Andrew Sachs played Manuel, the kind but often confused waiter at the hotel.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Fawlty-Towers",
+    "title": "Fawlty Towers"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Fawlty Towers was inspired by a 1970 stay at a Torquay hotel by which comedy troupe?",
+   "answers": [
+    "The Goodies",
+    "The Goons",
+    "Monty Python",
+    "Beyond the Fringe"
+   ],
+   "correct": "Monty Python",
+   "difficulty": "medium",
+   "category": "Film and TV",
+   "explain": "Monty Python stayed at the Gleneagles Hotel in Torquay in May 1970, and Cleese and Booth stayed on after filming finished.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Basil_Fawlty",
+    "title": "Basil Fawlty"
+   },
+   "ai_written": true
+  }
+ ]
+}

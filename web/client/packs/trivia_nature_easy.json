@@ -1,0 +1,897 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Nature trivia (easy)",
+ "description": "50 easy questions about animals, plants, weather, ecosystems. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which animal is the largest on Earth?",
+   "answers": [
+    "African bush elephant",
+    "Blue whale",
+    "Whale shark",
+    "Colossal squid"
+   ],
+   "correct": "Blue whale",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The blue whale is the largest animal on Earth. It is also the largest animal known ever to have lived.",
+   "source": {
+    "url": "https://www.fisheries.noaa.gov/species/blue-whale",
+    "title": "Blue Whale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What do blue whales feed on almost exclusively?",
+   "answers": [
+    "Herring",
+    "Seals",
+    "Squid",
+    "Krill"
+   ],
+   "correct": "Krill",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Blue whales strain huge volumes of ocean water through their baleen plates to catch krill, and they eat almost nothing else.",
+   "source": {
+    "url": "https://www.fisheries.noaa.gov/species/blue-whale",
+    "title": "Blue Whale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "To which animal group do blue whales belong?",
+   "answers": [
+    "Fish",
+    "Mammals",
+    "Reptiles",
+    "Amphibians"
+   ],
+   "correct": "Mammals",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The blue whale is a marine mammal.",
+   "source": {
+    "url": "https://www.montereybayaquarium.org/animals-the-ocean/animals-a-to-z/blue-whale",
+    "title": "Blue whale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gas do plants take in from the air to carry out photosynthesis?",
+   "answers": [
+    "Nitrogen",
+    "Helium",
+    "Methane",
+    "Carbon dioxide"
+   ],
+   "correct": "Carbon dioxide",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Plants use sunlight, water and carbon dioxide to make sugar and oxygen.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/photosynthesis/",
+    "title": "Photosynthesis - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gas do green plants release as a by-product of photosynthesis?",
+   "answers": [
+    "Oxygen",
+    "Hydrogen",
+    "Carbon monoxide",
+    "Nitrogen"
+   ],
+   "correct": "Oxygen",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "In photosynthesis, green plants turn light energy, water and carbon dioxide into energy-rich compounds and release oxygen.",
+   "source": {
+    "url": "https://www.britannica.com/science/photosynthesis",
+    "title": "Photosynthesis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the green pigment in plants that helps them make food from sunlight?",
+   "answers": [
+    "Melanin",
+    "Hemoglobin",
+    "Keratin",
+    "Chlorophyll"
+   ],
+   "correct": "Chlorophyll",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Chlorophyll is the green pigment found in plants that perform photosynthesis.",
+   "source": {
+    "url": "https://www.snexplores.org/article/explainer-how-photosynthesis-works",
+    "title": "Explainer: How photosynthesis works"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Through which part of a tree is water mainly taken up from the soil?",
+   "answers": [
+    "Leaves",
+    "Roots",
+    "Bark",
+    "Branches"
+   ],
+   "correct": "Roots",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Tree and plant roots absorb water, minerals and nutrients from the soil, while the leaves absorb carbon dioxide from the air.",
+   "source": {
+    "url": "https://oregonforests.org/photosynthesis-forest",
+    "title": "Photosynthesis in the forest"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which energy source do plants use to make their own food through photosynthesis?",
+   "answers": [
+    "Moonlight",
+    "Wind",
+    "Soil heat",
+    "Sunlight"
+   ],
+   "correct": "Sunlight",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Plants need carbon dioxide, water and light energy from the Sun to make sugar and oxygen.",
+   "source": {
+    "url": "https://ssec.si.edu/stemvisions-blog/what-photosynthesis",
+    "title": "What is Photosynthesis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which animal is the fastest on land?",
+   "answers": [
+    "Lion",
+    "Greyhound",
+    "Cheetah",
+    "Pronghorn"
+   ],
+   "correct": "Cheetah",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The cheetah is the world's fastest land mammal, able to go from zero to 60 miles an hour in about three seconds.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/animals/mammals/facts/cheetah",
+    "title": "Cheetah, facts and photos"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does a cheetah's light tail help it do during a high-speed chase?",
+   "answers": [
+    "Stay cool",
+    "Scare its prey",
+    "Balance and steer",
+    "Dig into the ground"
+   ],
+   "correct": "Balance and steer",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "A cheetah's light tail acts like a rudder, helping it stay stable and turn quickly while chasing prey.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/animals/mammals/facts/cheetah",
+    "title": "Cheetah, facts and photos"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which animal is the tallest on land?",
+   "answers": [
+    "African elephant",
+    "Ostrich",
+    "Camel",
+    "Giraffe"
+   ],
+   "correct": "Giraffe",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Giraffes are the tallest land animals. Males can top 5.5 metres (18 feet).",
+   "source": {
+    "url": "https://www.britannica.com/science/How-Tall-Are-Giraffes",
+    "title": "How Tall Are Giraffes?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Giraffes feed mostly on the leaves of which kind of tree?",
+   "answers": [
+    "Oak",
+    "Acacia",
+    "Pine",
+    "Maple"
+   ],
+   "correct": "Acacia",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Giraffes feed mostly on acacia leaves, stripping them from branches with their long prehensile tongues.",
+   "source": {
+    "url": "https://www.natural-destinations.com/en/wildlife/mammals/giraffe",
+    "title": "Giraffe"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which continent do wild giraffes live?",
+   "answers": [
+    "Asia",
+    "South America",
+    "Australia",
+    "Africa"
+   ],
+   "correct": "Africa",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Giraffes live in habitats across Africa, from savannahs to woodlands.",
+   "source": {
+    "url": "https://www.ifaw.org/animals/giraffes",
+    "title": "Giraffes: Diet, Habitat, Threats, & Conservation"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What sweet liquid do bees search for when they visit flowers?",
+   "answers": [
+    "Sap",
+    "Resin",
+    "Nectar",
+    "Dew"
+   ],
+   "correct": "Nectar",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Bees fly from plant to plant looking for nectar, the sweet liquid that flowers secrete.",
+   "source": {
+    "url": "https://www.britannica.com/video/Flowers-attractors-pollinators-bees/-107227",
+    "title": "Bees pollinate amid search for flowers' nectar"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the process in which bees carry pollen between flowers, helping plants reproduce?",
+   "answers": [
+    "Germination",
+    "Pollination",
+    "Respiration",
+    "Transpiration"
+   ],
+   "correct": "Pollination",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Bees collect pollen on their bodies and leave it on the next flower they visit, which pollinates the plant.",
+   "source": {
+    "url": "https://www.britannica.com/video/Flowers-attractors-pollinators-bees/-107227",
+    "title": "Bees pollinate amid search for flowers' nectar"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the largest tropical rainforest in the world?",
+   "answers": [
+    "The Congo Basin",
+    "The Daintree",
+    "The Amazon",
+    "Borneo's rainforest"
+   ],
+   "correct": "The Amazon",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The Amazon is the world's largest tropical rainforest, covering over 5.5 million square kilometres in South America.",
+   "source": {
+    "url": "https://www.natgeokids.com/uk/discover/geography/physical-geography/amazon-facts/",
+    "title": "10 amazing Amazon facts!"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country contains the largest share of the Amazon rainforest?",
+   "answers": [
+    "Peru",
+    "Colombia",
+    "Venezuela",
+    "Brazil"
+   ],
+   "correct": "Brazil",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "About 60% of the Amazon rainforest lies in Brazil, followed by Peru and Colombia.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Amazon_rainforest",
+    "title": "Amazon rainforest"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which activity has led to large areas of the Amazon rainforest being felled or burned?",
+   "answers": [
+    "Beekeeping",
+    "Cattle ranching",
+    "Cruise tourism",
+    "Deep-sea fishing"
+   ],
+   "correct": "Cattle ranching",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Large parts of the Amazon have been felled or burned to make way for cattle ranches and other activities.",
+   "source": {
+    "url": "https://www.sciencefocus.com/planet-earth/the-amazon-rainforest",
+    "title": "The Amazon rainforest: The wonders of Earth's most unexplored wilderness, explained - BBC Science Focus Magazine"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the calm region at the center of a hurricane called?",
+   "answers": [
+    "The funnel",
+    "The core",
+    "The crown",
+    "The eye"
+   ],
+   "correct": "The eye",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The eye is a region of mostly calm weather at the center of a strong tropical cyclone.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Eye_(cyclone)",
+    "title": "Eye (cyclone)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which part of a hurricane, ringing the eye, contains the storm's strongest winds?",
+   "answers": [
+    "The rainbands",
+    "The anvil",
+    "The eyewall",
+    "The wake"
+   ],
+   "correct": "The eyewall",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The eyewall surrounds the calm eye and holds the storm's strongest winds.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Eye_(cyclone)",
+    "title": "Eye (cyclone)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What causes the sound of thunder?",
+   "answers": [
+    "Storm clouds smashing into each other",
+    "Air rapidly expanding around a lightning bolt",
+    "Raindrops striking high-altitude ice",
+    "Strong winds blowing through valleys"
+   ],
+   "correct": "Air rapidly expanding around a lightning bolt",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Lightning heats the air in its path so fast that it expands and creates a shock wave, which we hear as thunder.",
+   "source": {
+    "url": "https://www.britannica.com/science/What-Causes-Thunder-After-Lightning",
+    "title": "What Causes Thunder After Lightning?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why do we usually see a lightning flash before we hear its thunder?",
+   "answers": [
+    "Sound travels faster than light",
+    "Clouds hold back sound for a while",
+    "Light travels much faster than sound",
+    "Thunder forms only after rain begins"
+   ],
+   "correct": "Light travels much faster than sound",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Lightning is seen first because the speed of sound in air is much slower than the speed of light.",
+   "source": {
+    "url": "https://www.scientificamerican.com/article/what-causes-thunder/",
+    "title": "What causes thunder?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many seconds between a lightning flash and its thunder equal a distance of one mile?",
+   "answers": [
+    "About 1 second",
+    "About 10 seconds",
+    "About 20 seconds",
+    "About 5 seconds"
+   ],
+   "correct": "About 5 seconds",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Every five seconds between flash and thunder corresponds to about one mile, or three seconds per kilometre.",
+   "source": {
+    "url": "https://www.britannica.com/science/What-Causes-Thunder-After-Lightning",
+    "title": "What Causes Thunder After Lightning?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American is credited with discovering in 1752 that lightning is caused by electrical discharges?",
+   "answers": [
+    "Thomas Jefferson",
+    "George Washington",
+    "Benjamin Franklin",
+    "John Adams"
+   ],
+   "correct": "Benjamin Franklin",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Benjamin Franklin showed as early as 1752 that lightning is a powerful electrical discharge.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/video/lightning-thunder/-194043",
+    "title": "What Causes Thunder & Lightning?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which kind of object does lightning usually strike?",
+   "answers": [
+    "The widest object nearby",
+    "The wettest object nearby",
+    "The darkest object nearby",
+    "The tallest object nearby"
+   ],
+   "correct": "The tallest object nearby",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Lightning usually strikes the tallest object, which is why open fields and tall trees are dangerous in storms.",
+   "source": {
+    "url": "https://www.nssl.noaa.gov/education/svrwx101/lightning/faq/",
+    "title": "Severe Weather 101: Lightning FAQ"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the aquatic larval stage of a frog called?",
+   "answers": [
+    "Nymph",
+    "Pupa",
+    "Tadpole",
+    "Fry"
+   ],
+   "correct": "Tadpole",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "A tadpole is the aquatic larval stage of frogs and toads.",
+   "source": {
+    "url": "https://www.britannica.com/science/tadpole",
+    "title": "Tadpole"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which organs do newly hatched tadpoles use to breathe underwater?",
+   "answers": [
+    "Lungs",
+    "Blowholes",
+    "Gills",
+    "Spiracles"
+   ],
+   "correct": "Gills",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Most tadpoles hatch as fully aquatic larvae that breathe through gills and swim with a long tail.",
+   "source": {
+    "url": "https://australian.museum/learn/teachers/learning/frog-life-cycle/",
+    "title": "Interactive: Frog life cycle, from egg to adult - The Australian Museum"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where do most frogs lay their jelly-like eggs?",
+   "answers": [
+    "On dry sand",
+    "In tree hollows",
+    "In rock cracks",
+    "In water"
+   ],
+   "correct": "In water",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Frogs lay jelly-like eggs in water, and these hatch into tadpoles.",
+   "source": {
+    "url": "https://www.natgeokids.com/uk/discover/science/nature/frog-life-cycle/",
+    "title": "The Frog Life Cycle for Kids - National Geographic Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the process called by which a caterpillar changes into a butterfly?",
+   "answers": [
+    "Hibernation",
+    "Migration",
+    "Germination",
+    "Metamorphosis"
+   ],
+   "correct": "Metamorphosis",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The cycle from egg to caterpillar to chrysalis to butterfly is called metamorphosis.",
+   "source": {
+    "url": "https://www.amnh.org/exhibitions/butterflies/metamorphosis",
+    "title": "Butterfly Metamorphosis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the stage called in which a butterfly caterpillar changes into an adult?",
+   "answers": [
+    "Nymph",
+    "Chrysalis",
+    "Larva",
+    "Embryo"
+   ],
+   "correct": "Chrysalis",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "When a caterpillar reaches full size it forms a chrysalis (or pupa), and the adult butterfly develops inside.",
+   "source": {
+    "url": "https://louisvillezoo.org/butterfly-exhibit/butterfly-life-cycle/",
+    "title": "Butterfly Life Cycle"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does a caterpillar spend most of its time doing?",
+   "answers": [
+    "Sleeping",
+    "Flying",
+    "Eating",
+    "Spinning webs"
+   ],
+   "correct": "Eating",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "A caterpillar spends most of its time eating, until hormonal changes make it stop feeding and begin its transformation.",
+   "source": {
+    "url": "https://www.sciencing.com/happens-inside-chrysalis-butterfly-8148799/",
+    "title": "What Happens Inside The Chrysalis Of A Butterfly? - Sciencing"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is a baby kangaroo called?",
+   "answers": [
+    "Cub",
+    "Joey",
+    "Kit",
+    "Calf"
+   ],
+   "correct": "Joey",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "A baby kangaroo is called a joey. It is born tiny and underdeveloped and grows mostly inside its mother's pouch.",
+   "source": {
+    "url": "https://www.brookfieldzoo.org/stories/five-facts-kangaroo-joey",
+    "title": "Story: 5 Facts About Kangaroo Joeys At Brookfield Zoo Chicago"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Kangaroos belong to which group of mammals, named from a Latin word for \"pouch\"?",
+   "answers": [
+    "Monotremes",
+    "Rodents",
+    "Marsupials",
+    "Primates"
+   ],
+   "correct": "Marsupials",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The name marsupial comes from the Latin marsupium, meaning pouch. Kangaroos are marsupials.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pouch_(marsupial)",
+    "title": "Pouch (marsupial)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At birth, a baby kangaroo is about the size of which object?",
+   "answers": [
+    "A tennis ball",
+    "A baseball",
+    "A banana",
+    "A jelly bean"
+   ],
+   "correct": "A jelly bean",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "A newborn joey is about jelly-bean sized and weighs less than a gram, so it finishes developing in the pouch.",
+   "source": {
+    "url": "https://a-z-animals.com/blog/what-is-inside-a-kangaroo-pouch/",
+    "title": "What Is Inside a Kangaroo Pouch? - A-Z Animals"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mammal is capable of true, powered flight?",
+   "answers": [
+    "Flying squirrel",
+    "Sugar glider",
+    "Flying lemur",
+    "Bat"
+   ],
+   "correct": "Bat",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Bats are the only mammals capable of true powered flight. Animals like sugar gliders and flying squirrels only glide.",
+   "source": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12650304/",
+    "title": "What Factors Shape the Flyability in Bats?—The Perspective from Bat's Wing Development - PMC"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bats are found on every continent except which one?",
+   "answers": [
+    "Australia",
+    "Antarctica",
+    "Africa",
+    "South America"
+   ],
+   "correct": "Antarctica",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Bats are remarkably adaptable and live on every continent except Antarctica.",
+   "source": {
+    "url": "https://india.mongabay.com/short-article/2026/08/the-worlds-only-flying-mammal/",
+    "title": "The world's only flying mammal"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Many bats find prey in the dark by using sound waves. What is this ability called?",
+   "answers": [
+    "Infrared vision",
+    "Echolocation",
+    "Electroreception",
+    "Scent tracking"
+   ],
+   "correct": "Echolocation",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Many bats hunt in the dark by using sound waves, a skill known as echolocation.",
+   "source": {
+    "url": "https://india.mongabay.com/short-article/2026/08/the-worlds-only-flying-mammal/",
+    "title": "The world's only flying mammal"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which prey do many bats eat in huge numbers, helping control pests such as mosquitoes?",
+   "answers": [
+    "Earthworms",
+    "Snails",
+    "Grass seeds",
+    "Insects"
+   ],
+   "correct": "Insects",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Many bats prey on insects, including agricultural pests and disease-carrying mosquitoes.",
+   "source": {
+    "url": "https://india.mongabay.com/short-article/2026/08/the-worlds-only-flying-mammal/",
+    "title": "The world's only flying mammal"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what position do bats typically sleep?",
+   "answers": [
+    "Standing upright",
+    "Lying on their backs",
+    "Hanging upside down",
+    "Curled on the ground"
+   ],
+   "correct": "Hanging upside down",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Bats are well known for sleeping upside down.",
+   "source": {
+    "url": "https://india.mongabay.com/short-article/2026/08/the-worlds-only-flying-mammal/",
+    "title": "The world's only flying mammal"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many hearts does an octopus have?",
+   "answers": [
+    "Two",
+    "Four",
+    "Three",
+    "Eight"
+   ],
+   "correct": "Three",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "An octopus has three hearts: two pump blood through the gills and one pumps it to the rest of the body.",
+   "source": {
+    "url": "https://www.britannica.com/science/How-Many-Hearts-Does-an-Octopus-Have",
+    "title": "How Many Hearts Does an Octopus Have?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What color is an octopus's blood?",
+   "answers": [
+    "Red",
+    "Green",
+    "Yellow",
+    "Blue"
+   ],
+   "correct": "Blue",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Octopus blood is blue because the oxygen-carrying protein haemocyanin contains copper rather than iron.",
+   "source": {
+    "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "title": "Octopuses keep surprising us - here are eight examples how"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many arms does an octopus have?",
+   "answers": [
+    "Six",
+    "Ten",
+    "Twelve",
+    "Eight"
+   ],
+   "correct": "Eight",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "An octopus has an eight-armed body.",
+   "source": {
+    "url": "https://www.britannica.com/science/How-Many-Hearts-Does-an-Octopus-Have",
+    "title": "How Many Hearts Does an Octopus Have?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the largest hot desert in the world?",
+   "answers": [
+    "Gobi",
+    "Kalahari",
+    "Arabian",
+    "Sahara"
+   ],
+   "correct": "Sahara",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "At about 9.4 million square kilometers, the Sahara in northern Africa is the largest hot desert on Earth.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/deserts/",
+    "title": "Not all Deserts are Sandy - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is a fertile spot in a desert, where underground water reaches the surface, called?",
+   "answers": [
+    "Mirage",
+    "Oasis",
+    "Dune",
+    "Mesa"
+   ],
+   "correct": "Oasis",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "In some places in the Sahara there is underground water. These places are called oases, and the water comes up through springs.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Sahara/346205",
+    "title": "Sahara - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name \"Sahara\" comes from an Arabic word meaning what?",
+   "answers": [
+    "Oasis",
+    "Dune",
+    "Sunrise",
+    "Desert"
+   ],
+   "correct": "Desert",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "The name of the Sahara comes from the Arabic word for \"desert\".",
+   "source": {
+    "url": "https://www.livescience.com/23140-sahara-desert.html",
+    "title": "The Sahara: Earth's largest hot desert"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What kind of living things are corals?",
+   "answers": [
+    "Plants",
+    "Animals",
+    "Algae",
+    "Fungi"
+   ],
+   "correct": "Animals",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Corals may look like colorful rocks or plants, but they are animals that form colonies of tiny polyps.",
+   "source": {
+    "url": "https://www.aims.gov.au/research-topics/marine-life/corals",
+    "title": "Corals"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the term for stressed corals losing their algae and turning white?",
+   "answers": [
+    "Molting",
+    "Fossilizing",
+    "Budding",
+    "Bleaching"
+   ],
+   "correct": "Bleaching",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "When coral polyps are stressed by pollution or water that is too warm, they release their algae, which is called coral bleaching.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Coral_bleaching",
+    "title": "Coral bleaching"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Coral reefs get their bright colors mainly from which living things in the coral's tissues?",
+   "answers": [
+    "Sand",
+    "Algae",
+    "Salt",
+    "Plankton"
+   ],
+   "correct": "Algae",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Coral reefs get their bright colors from algae called zooxanthellae that live in the coral's tissues.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Zooxanthellae",
+    "title": "Zooxanthellae"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Coral polyps are close relatives of which sea animals?",
+   "answers": [
+    "Starfish",
+    "Clams",
+    "Jellyfish",
+    "Sea sponges"
+   ],
+   "correct": "Jellyfish",
+   "difficulty": "easy",
+   "category": "Nature",
+   "explain": "Coral polyps are small, soft animals related to jellyfish and sea anemones.",
+   "source": {
+    "url": "https://www.ifaw.org/animals/coral",
+    "title": "Coral: Facts, Conservation, Ecological Importance"
+   },
+   "ai_written": true
+  }
+ ]
+}

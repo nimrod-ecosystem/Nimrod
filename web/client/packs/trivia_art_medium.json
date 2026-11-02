@@ -1,0 +1,927 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Art trivia (medium)",
+ "description": "50 medium questions about visual art: painters, sculptors, famous works, movements, techniques, museums. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which Louvre employee stole the Mona Lisa in August 1911?",
+   "answers": [
+    "Francesco Melzi",
+    "Giorgio Vasari",
+    "Vincenzo Peruggia",
+    "Giovanni Boltraffio"
+   ],
+   "correct": "Vincenzo Peruggia",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Vincenzo Peruggia, a worker at the Louvre, stole the Mona Lisa on 21 August 1911.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.dailyartmagazine.com/mona-lisa/",
+    "title": "Masterpiece Story: Mona Lisa by Leonardo da Vinci"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which technique, a smoky haziness that softens outlines, is Leonardo da Vinci known for in the Mona Lisa?",
+   "answers": [
+    "Tenebrism",
+    "Sfumato",
+    "Grisaille",
+    "Pointillism"
+   ],
+   "correct": "Sfumato",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Leonardo used sfumato, a smoky haziness, to soften outlines and create an atmospheric effect around the figure.",
+   "source": {
+    "url": "https://www.khanacademy.org/humanities/renaissance-reformation/high-ren-florence-rome/leonardo-da-vinci/a/leonardo-mona-lisa",
+    "title": "Mona Lisa (article) - Khan Academy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French king acquired the Mona Lisa after Leonardo da Vinci's death in 1519?",
+   "answers": [
+    "Louis XIV",
+    "Henry IV",
+    "Charles VIII",
+    "Francis I"
+   ],
+   "correct": "Francis I",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "King Francis I of France acquired the painting after Leonardo died, and it later became the property of the French Republic.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Mona_Lisa",
+    "title": "Mona Lisa - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Mona Lisa is also known as La Gioconda. Where does that name come from?",
+   "answers": [
+    "The street in Florence where Leonardo worked",
+    "The family name of the sitter's husband",
+    "A nickname coined by King Francis I",
+    "The name of Leonardo's wealthy patron"
+   ],
+   "correct": "The family name of the sitter's husband",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "According to Vasari, the sitter married a Florentine named del Giocondo, which gave the painting its other name.",
+   "source": {
+    "url": "https://www.wga.hu/html_m/l/leonardo/04/1monali.html",
+    "title": "Mona Lisa (La Gioconda) by LEONARDO da Vinci - Web Gallery of Art"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which critic's satirical 1874 review gave Impressionism its name?",
+   "answers": [
+    "Émile Zola",
+    "Charles Baudelaire",
+    "Louis Leroy",
+    "Théophile Gautier"
+   ],
+   "correct": "Louis Leroy",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Louis Leroy mocked Monet's Impression, Sunrise in a review in Le Charivari and coined the term 'Impressionism'.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Impressionism",
+    "title": "Impressionism - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Paris museum holds Monet's Impression, Sunrise, the painting that gave Impressionism its name?",
+   "answers": [
+    "Musée d'Orsay",
+    "Musée de l'Orangerie",
+    "Musée Marmottan Monet",
+    "Petit Palais"
+   ],
+   "correct": "Musée Marmottan Monet",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Impression, Sunrise is one of the best-known works in the Musée Marmottan Monet, which holds more than three hundred Impressionist and post-Impressionist paintings.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Mus%C3%A9e_Marmottan_Monet",
+    "title": "Musée Marmottan Monet - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French port does Monet's Impression, Sunrise depict?",
+   "answers": [
+    "Marseille",
+    "Honfleur",
+    "Calais",
+    "Le Havre"
+   ],
+   "correct": "Le Havre",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Monet painted the harbor of Le Havre, working from a window overlooking the port.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Impression-Sunrise",
+    "title": "Impression, Sunrise - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The independent 1874 exhibition where Impression, Sunrise was first shown was an alternative to which official institution?",
+   "answers": [
+    "The Royal Academy in London",
+    "The state-run Paris Salon",
+    "The Venice Biennale",
+    "The Académie Julian"
+   ],
+   "correct": "The state-run Paris Salon",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The artists' own show was organized as an alternative to the traditional, state-run Salon.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Impression-Sunrise",
+    "title": "Impression, Sunrise - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pope commissioned Michelangelo to paint the ceiling of the Sistine Chapel?",
+   "answers": [
+    "Julius II",
+    "Leo X",
+    "Clement VII",
+    "Paul III"
+   ],
+   "correct": "Julius II",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The ceiling was painted between 1508 and 1512 at the commission of Pope Julius II.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://graphsearch.epfl.ch/en/concept/734692",
+    "title": "Sistine Chapel ceiling - EPFL Graph Search"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which technique, applying water-mixed pigment to wet lime plaster, did Michelangelo use for the Sistine Chapel ceiling?",
+   "answers": [
+    "Encaustic",
+    "Tempera",
+    "Gouache",
+    "Fresco"
+   ],
+   "correct": "Fresco",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The ceiling was painted as a fresco, which means applying pigment mixed with water to wet lime plaster.",
+   "source": {
+    "url": "https://artincontext.org/sistine-chapel-ceiling-painting-by-michelangelo/",
+    "title": "Sistine Chapel Ceiling Painting by Michelangelo - Art in Context"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After finishing the ceiling, Michelangelo returned to the Sistine Chapel to paint which large fresco behind the altar?",
+   "answers": [
+    "The School of Athens",
+    "The Last Judgment",
+    "The Transfiguration",
+    "The Deluge"
+   ],
+   "correct": "The Last Judgment",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Michelangelo came back to the chapel to create The Last Judgment, a large wall fresco behind the altar.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sistine_Chapel_ceiling",
+    "title": "Sistine Chapel ceiling - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The nine central scenes of the Sistine Chapel ceiling, including The Creation of Adam, come from which book of the Bible?",
+   "answers": [
+    "Exodus",
+    "Revelation",
+    "Psalms",
+    "Genesis"
+   ],
+   "correct": "Genesis",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Central to the ceiling decoration are nine scenes from the Book of Genesis.",
+   "source": {
+    "url": "https://graphsearch.epfl.ch/en/concept/734692",
+    "title": "Sistine Chapel ceiling - EPFL Graph Search"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After Michelangelo finished the ceiling, which artist created a set of large tapestries (1515–1516) to cover the lower walls of the Sistine Chapel?",
+   "answers": [
+    "Raphael",
+    "Titian",
+    "Leonardo da Vinci",
+    "Bramante"
+   ],
+   "correct": "Raphael",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Raphael created the set of large tapestries in 1515–1516 for the lower part of the chapel walls.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://graphsearch.epfl.ch/en/concept/734692",
+    "title": "Sistine Chapel ceiling - EPFL Graph Search"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which artist co-invented Cubism with Pablo Picasso in the first decade of the twentieth century?",
+   "answers": [
+    "Henri Matisse",
+    "André Derain",
+    "Paul Cézanne",
+    "Georges Braque"
+   ],
+   "correct": "Georges Braque",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "MoMA says Picasso invented Cubism with his close friend and collaborator Georges Braque.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79766",
+    "title": "Pablo Picasso. Les Demoiselles d'Avignon. Paris, June-July 1907 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 'Avignon' in Picasso's Les Demoiselles d'Avignon refers to a street in which city?",
+   "answers": [
+    "Paris",
+    "Madrid",
+    "Málaga",
+    "Barcelona"
+   ],
+   "correct": "Barcelona",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The title refers to the carrer d'Avinyó (Avignon Street) in Barcelona, the city where Picasso spent his youth.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79766",
+    "title": "Pablo Picasso. Les Demoiselles d'Avignon. Paris, June-July 1907 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The stylized features of the two rightmost figures in Les Demoiselles d'Avignon show Picasso's interest in what?",
+   "answers": [
+    "Japanese woodblock prints",
+    "African masks and sculpture",
+    "Byzantine icon painting",
+    "Aztec stone carving"
+   ],
+   "correct": "African masks and sculpture",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "MoMA notes that these figures reflect the formal innovations of African masks and sculpture, which Picasso and his peers collected.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79766",
+    "title": "Pablo Picasso. Les Demoiselles d'Avignon. Paris, June-July 1907 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which dealer showed Braque's work at his gallery on the rue Vignon in November 1908, introducing Cubism to the public?",
+   "answers": [
+    "Ambroise Vollard",
+    "Paul Durand-Ruel",
+    "Daniel-Henry Kahnweiler",
+    "Leo Castelli"
+   ],
+   "correct": "Daniel-Henry Kahnweiler",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Cubism reached the public through Braque's one-man show at Daniel-Henry Kahnweiler's gallery, and Kahnweiler was a major supporter of Picasso and Braque.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.theartstory.org/movement/cubism/",
+    "title": "Cubism Movement Overview - The Art Story"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which name is given to the phase of Cubism (c. 1912–1914) that followed Analytical Cubism?",
+   "answers": [
+    "Orphic Cubism",
+    "Primitive Cubism",
+    "Fauvist Cubism",
+    "Synthetic Cubism"
+   ],
+   "correct": "Synthetic Cubism",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Picasso's Analytical Cubism (c. 1909–12) was followed by Synthetic Cubism (1912–14).",
+   "source": {
+    "url": "http://www.visual-arts-cork.com/paintings-analysis/les-demoiselles-davignon.htm",
+    "title": "Les Demoiselles d'Avignon, Picasso: Analysis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which French town did Vincent van Gogh paint The Starry Night while staying at an asylum?",
+   "answers": [
+    "Arles",
+    "Saint-Rémy-de-Provence",
+    "Auvers-sur-Oise",
+    "Nîmes"
+   ],
+   "correct": "Saint-Rémy-de-Provence",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Van Gogh painted it in June 1889 at the Saint-Paul-de-Mausole asylum in Saint-Rémy, inspired by the view from his window.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79802",
+    "title": "Vincent van Gogh. The Starry Night. Saint Rémy, June 1889 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which New York museum has held Van Gogh's The Starry Night since 1941?",
+   "answers": [
+    "The Metropolitan Museum of Art",
+    "The Guggenheim Museum",
+    "The Museum of Modern Art",
+    "The Whitney Museum of American Art"
+   ],
+   "correct": "The Museum of Modern Art",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Starry Night entered the permanent collection of the Museum of Modern Art in 1941.",
+   "source": {
+    "url": "https://www.moma.org/momaorg/shared/pdfs/docs/learn/courses/Thomson_Van_Gogh_The_Starry_Night.pdf",
+    "title": "Vincent van Gogh The Starry Night - The Museum of Modern Art"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to MoMA, which planet appears at center left in the night sky of The Starry Night, alongside the bright moon?",
+   "answers": [
+    "Mars",
+    "Jupiter",
+    "Venus",
+    "Saturn"
+   ],
+   "correct": "Venus",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "MoMA describes the sky as dominated by the bright moon at right and Venus at center left.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79802",
+    "title": "Vincent van Gogh. The Starry Night. Saint Rémy, June 1889 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which technique, in which paint is laid on thickly so brushstrokes stand out, did van Gogh use in The Starry Night?",
+   "answers": [
+    "Glazing",
+    "Scumbling",
+    "Impasto",
+    "Grisaille"
+   ],
+   "correct": "Impasto",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Britannica notes that van Gogh used thick impasto and intense colors, applying paint directly to the canvas.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Starry-Night",
+    "title": "The Starry Night - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Rodin's The Thinker began as a figure for The Gates of Hell, which was inspired by an epic poem by which poet?",
+   "answers": [
+    "Virgil",
+    "Homer",
+    "Francesco Petrarca",
+    "Dante Alighieri"
+   ],
+   "correct": "Dante Alighieri",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Gates of Hell drew on Dante's Divine Comedy, and the figure was first meant to represent Dante pondering his poem.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.philamuseum.org/objects/103355",
+    "title": "Auguste Rodin, The Thinker - Philadelphia Museum of Art"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was Rodin's The Thinker originally called?",
+   "answers": [
+    "The Poet",
+    "The Dreamer",
+    "The Philosopher",
+    "The Sculptor"
+   ],
+   "correct": "The Poet",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Thinker was originally called The Poet and was conceived as part of The Gates of Hell.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Thinker-sculpture-by-Rodin",
+    "title": "The Thinker - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Rodin's Gates of Hell was commissioned in 1880 as bronze doors for a planned museum of what?",
+   "answers": [
+    "Natural history",
+    "Modern painting",
+    "Decorative arts",
+    "Classical casts"
+   ],
+   "correct": "Decorative arts",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Gates of Hell was meant for a museum of decorative arts in Paris, which was never built.",
+   "source": {
+    "url": "https://www.nga.gov/collection/art-object-page.1005.html",
+    "title": "The Thinker (Le Penseur) by Auguste Rodin - National Gallery of Art"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "When asked whether his soft watches were inspired by relativity, Dalí said they came from what?",
+   "answers": [
+    "A candle melting in a church",
+    "A Camembert melting in the sun",
+    "A wilted flower in a vase",
+    "A clock left out in the rain"
+   ],
+   "correct": "A Camembert melting in the sun",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Dalí told Ilya Prigogine the soft watches were inspired by the Surrealist perception of a Camembert melting in the sun, not by the theory of relativity.",
+   "source": {
+    "url": "https://www.wikiart.org/en/salvador-dali/the-persistence-of-memory-1931",
+    "title": "The Persistence of Memory, 1931 - Salvador Dali - WikiArt.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Spanish artist helped Dalí meet members of the Surrealist group, which he joined in 1929?",
+   "answers": [
+    "Juan Gris",
+    "Pablo Picasso",
+    "Antoni Tàpies",
+    "Joan Miró"
+   ],
+   "correct": "Joan Miró",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Dalí joined the Surrealists in 1929 after meeting some members of the group thanks to Joan Miró.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://blog.artsper.com/en/lifestyle/the-persistence-of-memory-understanding-dalis-masterpiece/",
+    "title": "The Persistence of Memory: Understanding Dalí's Masterpiece - Artsper Magazine"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Vermeer's Girl with a Pearl Earring is not a portrait but which type of Dutch picture, meaning a 'head' of a character or type?",
+   "answers": [
+    "Vanitas",
+    "Tronie",
+    "Schutterstuk",
+    "Pronkstilleven"
+   ],
+   "correct": "Tronie",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "A tronie is the Dutch 17th-century term for a head that was not meant to be a portrait of a specific person.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Girl-with-a-Pearl-Earring-by-Vermeer",
+    "title": "Girl with a Pearl Earring - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city is the Mauritshuis, the museum that owns Vermeer's Girl with a Pearl Earring?",
+   "answers": [
+    "Amsterdam",
+    "Delft",
+    "The Hague",
+    "Haarlem"
+   ],
+   "correct": "The Hague",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The painting has been in the collection of the Mauritshuis in The Hague since 1902.",
+   "source": {
+    "url": "https://www.wikiart.org/en/johannes-vermeer/the-girl-with-a-pearl-earring",
+    "title": "The Girl with a Pearl Earring, c.1665 - Johannes Vermeer - WikiArt.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these paintings is by Johannes Vermeer?",
+   "answers": [
+    "The Laughing Cavalier",
+    "The Goldfinch",
+    "The Jewish Bride",
+    "The Milkmaid"
+   ],
+   "correct": "The Milkmaid",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Besides Girl with a Pearl Earring, Vermeer is known for The Milkmaid and View of Delft.",
+   "source": {
+    "url": "https://www.timeout.com/osaka/news/vermeers-girl-with-a-pearl-earring-is-coming-to-osaka-and-only-osaka-012026",
+    "title": "Vermeer's 'Girl with a Pearl Earring' is coming to Osaka - Time Out"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Botticelli's The Birth of Venus, the goddess arrives on the shore of which island?",
+   "answers": [
+    "Cyprus",
+    "Crete",
+    "Sicily",
+    "Rhodes"
+   ],
+   "correct": "Cyprus",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Uffizi says the painting shows Venus arriving on the island of Cyprus, born of the sea spray and blown there by the winds.",
+   "source": {
+    "url": "https://www.uffizi.it/en/artworks/birth-of-venus",
+    "title": "The birth of Venus by Botticelli - Uffizi Galleries"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What medium did Botticelli use for The Birth of Venus, according to the Uffizi?",
+   "answers": [
+    "Fresco on plaster",
+    "Oil on copper",
+    "Oil on oak panel",
+    "Tempera on canvas"
+   ],
+   "correct": "Tempera on canvas",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Uffizi lists the technique of The Birth of Venus as tempera on canvas.",
+   "source": {
+    "url": "https://www.uffizi.it/en/artworks/birth-of-venus",
+    "title": "The birth of Venus by Botticelli - Uffizi Galleries"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which other large mythological painting by Botticelli hangs in the Uffizi alongside The Birth of Venus?",
+   "answers": [
+    "The Tempest",
+    "Primavera",
+    "The Garden of Earthly Delights",
+    "The Madonna of the Meadow"
+   ],
+   "correct": "Primavera",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Primavera is a large tempera painting by Botticelli in the Uffizi, often discussed alongside The Birth of Venus.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Primavera_(Botticelli)",
+    "title": "Primavera (Botticelli) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1945 Jackson Pollock moved to Springs, New York, with his wife, which American painter?",
+   "answers": [
+    "Georgia O'Keeffe",
+    "Helen Frankenthaler",
+    "Elaine de Kooning",
+    "Lee Krasner"
+   ],
+   "correct": "Lee Krasner",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Pollock and his wife, the painter Lee Krasner, moved to Springs in 1945, and he developed his drip technique in the barn studio there.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.wikiart.org/en/jackson-pollock",
+    "title": "Jackson Pollock - WikiArt.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which magazine gave Jackson Pollock the nickname 'Jack the Dripper' in 1956?",
+   "answers": [
+    "Life",
+    "Newsweek",
+    "Harper's",
+    "Time"
+   ],
+   "correct": "Time",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "In 1956 Time magazine called Pollock 'Jack the Dripper', a reference to his drip style of action painting.",
+   "source": {
+    "url": "https://www.wikiart.org/en/jackson-pollock",
+    "title": "Jackson Pollock - WikiArt.org"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Regionalist painter taught Jackson Pollock before he moved to abstraction?",
+   "answers": [
+    "Edward Hopper",
+    "Thomas Hart Benton",
+    "Grant Wood",
+    "John Sloan"
+   ],
+   "correct": "Thomas Hart Benton",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Pollock trained under Thomas Hart Benton before abandoning established methods to experiment with abstract expressionism.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://artincontext.org/jackson-pollock/",
+    "title": "Jackson Pollock - A Look at the Famous Master of the Drip Painting - Art in Context"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many canvases made up Andy Warhol's original Campbell's Soup Cans, one for each soup variety then sold?",
+   "answers": [
+    "12",
+    "24",
+    "48",
+    "32"
+   ],
+   "correct": "32",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "MoMA says Warhol's first Campbell's Soup Cans series had thirty-two canvases, matching the number of soup varieties Campbell's then sold.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79809",
+    "title": "Andy Warhol. Campbell's Soup Cans. 1962 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city did Warhol first exhibit Campbell's Soup Cans at the Ferus Gallery in July 1962?",
+   "answers": [
+    "New York",
+    "Los Angeles",
+    "San Francisco",
+    "Chicago"
+   ],
+   "correct": "Los Angeles",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "MoMA records that in July 1962 Warhol exhibited his Campbell's Soup Cans at the Ferus Gallery in Los Angeles.",
+   "source": {
+    "url": "https://www.moma.org/collection/works/79809",
+    "title": "Andy Warhol. Campbell's Soup Cans. 1962 - MoMA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After his Campbell's Soup Can paintings, Warhol shifted to which printing method, which gave more mechanical-looking results?",
+   "answers": [
+    "Etching",
+    "Woodblock printing",
+    "Silkscreen printing",
+    "Lithography"
+   ],
+   "correct": "Silkscreen printing",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "After the soup can paintings, Warhol moved to silkscreen printing, which let him make multiple versions of one artwork.",
+   "source": {
+    "url": "https://andipaeditions.com/blog/216-warhol-soup-cans-a-guide-all-you-need-to-know/",
+    "title": "Andy Warhol's Soup Cans: A Complete Guide to Pop Art Icon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which museum owns Georges Seurat's A Sunday on La Grande Jatte — 1884?",
+   "answers": [
+    "The Metropolitan Museum of Art",
+    "National Gallery of Art",
+    "Museum of Fine Arts, Boston",
+    "Art Institute of Chicago"
+   ],
+   "correct": "Art Institute of Chicago",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Art Institute of Chicago holds the nearly ten-foot-wide painting.",
+   "source": {
+    "url": "https://www.artic.edu/artworks/27992/a-sunday-on-la-grande-jatte-1884",
+    "title": "A Sunday on La Grande Jatte — 1884 - Art Institute of Chicago"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Seurat's A Sunday Afternoon on the Island of La Grande Jatte initiated which art movement?",
+   "answers": [
+    "Fauvism",
+    "Neo-Impressionism",
+    "Symbolism",
+    "Art Nouveau"
+   ],
+   "correct": "Neo-Impressionism",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The 1884–1886 painting altered the direction of modern art by initiating Neo-Impressionism.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Georges_Seurat",
+    "title": "Georges Seurat - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which painter was strongly influenced by Seurat's pointillism and went on to paint in the same idiom?",
+   "answers": [
+    "Paul Gauguin",
+    "Édouard Manet",
+    "Paul Signac",
+    "Henri de Toulouse-Lautrec"
+   ],
+   "correct": "Paul Signac",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Seurat's ideas on pointillism had an especially strong influence on Paul Signac, who then painted in the same idiom.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Georges_Seurat",
+    "title": "Georges Seurat - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which 1980s comedy does Cameron Frye stare intently at Seurat's La Grande Jatte during a scene at an art museum?",
+   "answers": [
+    "The Breakfast Club",
+    "Sixteen Candles",
+    "Back to the Future",
+    "Ferris Bueller's Day Off"
+   ],
+   "correct": "Ferris Bueller's Day Off",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Art Institute of Chicago notes that Ferris's best friend Cameron Frye studies the painting in Ferris Bueller's Day Off.",
+   "source": {
+    "url": "https://www.artic.edu/artworks/27992/a-sunday-on-la-grande-jatte-1884",
+    "title": "A Sunday on La Grande Jatte — 1884 - Art Institute of Chicago"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Rembrandt's The Night Watch actually shows a daytime scene. Why does 'night' appear in its title?",
+   "answers": [
+    "The militia was assigned to guard the city after dark",
+    "Rembrandt painted it only by lamplight at night",
+    "A later owner commissioned it for his bedroom",
+    "Old darkened varnish made the scene look like night"
+   ],
+   "correct": "Old darkened varnish made the scene look like night",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The title is a later misidentification caused by centuries of darkened varnish, even though the scene takes place in daylight.",
+   "source": {
+    "url": "https://worldmuseumguide.org/artworks/the-night-watch/",
+    "title": "The Night Watch by Rembrandt van Rijn: Where to See It"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Rembrandt's The Night Watch is a group portrait of what?",
+   "answers": [
+    "A guild of Amsterdam surgeons",
+    "An Amsterdam civic militia company",
+    "The regents of an almshouse",
+    "A guild of cloth merchants"
+   ],
+   "correct": "An Amsterdam civic militia company",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The painting shows armed militiamen led by Captain Frans Banninck Cocq, assembled as a civic guard company.",
+   "source": {
+    "url": "https://www.britannica.com/topic/The-Night-Watch",
+    "title": "The Night Watch - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Mexican muralist was the husband of Frida Kahlo, who lived with her at the Casa Azul?",
+   "answers": [
+    "José Clemente Orozco",
+    "David Alfaro Siqueiros",
+    "Diego Rivera",
+    "Rufino Tamayo"
+   ],
+   "correct": "Diego Rivera",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Frida Kahlo Museum shows photos of Frida Kahlo and Diego Rivera as a couple in the Casa Azul, which holds paintings by both artists.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.museofridakahlo.org.mx/museo/?lang=en",
+    "title": "Museum - Museo Frida Kahlo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was Frida Kahlo's Casa Azul inaugurated as a museum?",
+   "answers": [
+    "1954",
+    "1958",
+    "1966",
+    "1972"
+   ],
+   "correct": "1958",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The museum's own site says the Casa Azul and its gardens have displayed personal objects and paintings since its inauguration in July 1958.",
+   "source": {
+    "url": "https://www.museofridakahlo.org.mx/museo/?lang=en",
+    "title": "Museum - Museo Frida Kahlo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Edvard Munch's The Scream belongs to which semi-autobiographical cycle of works?",
+   "answers": [
+    "The Frieze of Life",
+    "The Dance of Death",
+    "The Nordic Nocturnes",
+    "The Songs of Anxiety"
+   ],
+   "correct": "The Frieze of Life",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "The Scream was conceived as part of Munch's semi-autobiographical cycle 'The Frieze of Life'.",
+   "source": {
+    "url": "https://smarthistory.org/munch-the-scream/",
+    "title": "Edvard Munch, The Scream - Smarthistory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Munch's work, including The Scream, had a formative influence on which art movement?",
+   "answers": [
+    "Cubism",
+    "Futurism",
+    "Dada",
+    "Expressionism"
+   ],
+   "correct": "Expressionism",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Munch's work, including The Scream, had a formative influence on the Expressionist movement.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Scream",
+    "title": "The Scream - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Some scholars link the blood-red sky in The Scream to the 1883 eruption of which volcano?",
+   "answers": [
+    "Krakatoa",
+    "Vesuvius",
+    "Mount Pelée",
+    "Mount St. Helens"
+   ],
+   "correct": "Krakatoa",
+   "difficulty": "medium",
+   "category": "Art",
+   "explain": "Some scholars think Munch was describing the sunsets tinted red by the 1883 Krakatoa eruption, about a decade before he painted The Scream.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Scream",
+    "title": "The Scream - Wikipedia"
+   },
+   "ai_written": true
+  }
+ ]
+}

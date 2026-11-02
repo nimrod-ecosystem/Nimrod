@@ -1879,8 +1879,11 @@ Shared Q | Shared A` });
     const answerRight = (r) => r.host.querySelector(`[data-opt="${r.probe().question.correctIndex}"]`).click();
     const answerWrong = (r) => r.host.querySelector(`[data-opt="${r.probe().question.correctIndex === 0 ? 1 : 0}"]`).click();
     const next = (r) => r.host.querySelector('[data-next]')?.click();
+    // A question is its wording AND its answer (Trivia's own id, triviaId): the spelling pack asks "Which of these is the
+    // correct spelling?" of eight different words (2026-11-02), which are eight questions, not one asked eight times.
     const asked = (r, k, how) => { const out = []; for (let i = 0; i < k; i++) {
-      out.push(r.probe().question?.question); how(r, i); next(r); } return out; };
+      const q = r.probe().question;
+      out.push(q?.question && `${q.question} | ${q.options?.[q.correctIndex]}`); how(r, i); next(r); } return out; };
     const dupes = (qs) => qs.filter((q, i) => qs.indexOf(q) !== i);
     const liveRow = (init = {}) => { let d = JSON.parse(JSON.stringify(init)); const subs = new Set();
       return { get: () => d, set: (p) => { d = { ...d, ...p }; for (const f of [...subs]) f(d); },

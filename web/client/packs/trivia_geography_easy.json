@@ -1,0 +1,916 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Geography trivia (easy)",
+ "description": "50 easy questions about countries, capitals, rivers, mountains, landmarks, maps. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which river flows north through Egypt and empties into the Mediterranean Sea?",
+   "answers": [
+    "Nile",
+    "Congo",
+    "Niger",
+    "Zambezi"
+   ],
+   "correct": "Nile",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Nile flows north through Uganda, South Sudan, Sudan and Egypt, then drains into the Mediterranean near Cairo. It is generally regarded as the world's longest river.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Nile-River",
+    "title": "Nile River summary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which river carved the Grand Canyon?",
+   "answers": [
+    "Columbia River",
+    "Missouri River",
+    "Colorado River",
+    "Rio Grande"
+   ],
+   "correct": "Colorado River",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Colorado River began cutting through the rock layers of the Colorado Plateau about six million years ago and carved the canyon.",
+   "source": {
+    "url": "https://www.britannica.com/place/Which-river-carved-the-Grand-Canyon",
+    "title": "Which river carved the Grand Canyon?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which continent does the Amazon River flow?",
+   "answers": [
+    "Africa",
+    "South America",
+    "Asia",
+    "North America"
+   ],
+   "correct": "South America",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Amazon is the greatest river of South America. It drains roughly two-fifths of the continent.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/Amazon-River/272828",
+    "title": "Amazon River - Students"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which river carries more water than any other river in the world?",
+   "answers": [
+    "Nile",
+    "Mississippi",
+    "Amazon",
+    "Yangtze"
+   ],
+   "correct": "Amazon",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Amazon is the largest drainage system in the world by volume of flow and basin area. Its discharge exceeds that of the next nine largest rivers.",
+   "source": {
+    "url": "https://www.britannica.com/facts/Amazon-River",
+    "title": "Amazon River Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the largest ocean on Earth?",
+   "answers": [
+    "Atlantic Ocean",
+    "Indian Ocean",
+    "Arctic Ocean",
+    "Pacific Ocean"
+   ],
+   "correct": "Pacific Ocean",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Pacific covers about one-third of the globe. It has twice the area of the Atlantic, the next largest ocean.",
+   "source": {
+    "url": "https://www.britannica.com/place/Pacific-Ocean",
+    "title": "Pacific Ocean"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which trench in the Pacific Ocean holds the deepest known point on Earth?",
+   "answers": [
+    "Mariana Trench",
+    "Puerto Rico Trench",
+    "Java Trench",
+    "Peru–Chile Trench"
+   ],
+   "correct": "Mariana Trench",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Mariana Trench, near the Mariana Islands, reaches about 36,201 feet (11,034 m). That is deeper than Mount Everest is tall.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Pacific-Ocean/346191",
+    "title": "Pacific Ocean - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of Earth's oceans is the smallest by surface area?",
+   "answers": [
+    "Indian Ocean",
+    "Southern Ocean",
+    "Atlantic Ocean",
+    "Arctic Ocean"
+   ],
+   "correct": "Arctic Ocean",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Britannica ranks the Pacific as largest, then the Atlantic, with the Arctic the smallest.",
+   "source": {
+    "url": "https://www.britannica.com/science/ocean/Major-subdivisions-of-the-oceans",
+    "title": "Ocean - Atlantic, Pacific, Indian"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The explorer Ferdinand Magellan gave the Pacific Ocean a name that means what?",
+   "answers": [
+    "The endless sea",
+    "The sunset sea",
+    "The peaceful sea",
+    "The southern sea"
+   ],
+   "correct": "The peaceful sea",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Magellan called the ocean El Mar Pacifico, which means \"the peaceful sea.\"",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Pacific-Ocean/346191",
+    "title": "Pacific Ocean - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About what fraction of Earth's surface is covered by ocean?",
+   "answers": [
+    "Almost three-fourths",
+    "About one-half",
+    "About one-third",
+    "Nearly nine-tenths"
+   ],
+   "correct": "Almost three-fourths",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Oceans cover almost three-fourths of Earth. Their area is more than double that of all the continents combined.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/Continent/",
+    "title": "Continent - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the highest mountain in the world above sea level?",
+   "answers": [
+    "K2",
+    "Mount Everest",
+    "Kilimanjaro",
+    "Mont Blanc"
+   ],
+   "correct": "Mount Everest",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Mount Everest reaches about 29,032 feet (8,849 m), making it the highest mountain in the world.",
+   "source": {
+    "url": "https://www.britannica.com/place/Mount-Everest",
+    "title": "Mount Everest"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Mount Everest lies on the border between Nepal and which other country?",
+   "answers": [
+    "India",
+    "Bhutan",
+    "China",
+    "Pakistan"
+   ],
+   "correct": "China",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Everest sits on the border between Nepal and the Tibet Autonomous Region of China.",
+   "source": {
+    "url": "https://www.britannica.com/place/Mount-Everest",
+    "title": "Mount Everest"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Mount Everest is part of which mountain range?",
+   "answers": [
+    "Himalayas",
+    "Andes",
+    "Alps",
+    "Rocky Mountains"
+   ],
+   "correct": "Himalayas",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Everest stands on the crest of the Great Himalayas of southern Asia.",
+   "source": {
+    "url": "https://www.britannica.com/place/Mount-Everest",
+    "title": "Mount Everest"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who made the first recorded climb to the summit of Mount Everest, in 1953?",
+   "answers": [
+    "George Mallory and Andrew Irvine",
+    "Reinhold Messner and Peter Habeler",
+    "Roald Amundsen and Robert Scott",
+    "Edmund Hillary and Tenzing Norgay"
+   ],
+   "correct": "Edmund Hillary and Tenzing Norgay",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "New Zealander Edmund Hillary and Sherpa Tenzing Norgay were the first to summit Everest, in 1953.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/place/Mount-Everest",
+    "title": "Mount Everest"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is Mount Kilimanjaro, the highest peak in Africa?",
+   "answers": [
+    "Kenya",
+    "Ethiopia",
+    "Uganda",
+    "Tanzania"
+   ],
+   "correct": "Tanzania",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Kilimanjaro, at 5,895 m, is Africa's highest peak and stands in Tanzania.",
+   "source": {
+    "url": "https://www.worldatlas.com/articles/the-seven-summits.html",
+    "title": "The Seven Summits"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Denali, the highest peak in North America, is located in which U.S. state?",
+   "answers": [
+    "Colorado",
+    "Washington",
+    "Montana",
+    "Alaska"
+   ],
+   "correct": "Alaska",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Denali, also known as Mount McKinley, is the highest peak in North America and lies in Alaska.",
+   "source": {
+    "url": "https://www.ultimatekilimanjaro.com/the-seven-summits/",
+    "title": "The Seven Summits - Highest Mountain on Each Continent"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which desert is the largest hot desert in the world?",
+   "answers": [
+    "Gobi",
+    "Kalahari",
+    "Arabian Desert",
+    "Sahara"
+   ],
+   "correct": "Sahara",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Sahara, across northern Africa, is the world's largest hot desert.",
+   "source": {
+    "url": "https://www.britannica.com/place/Sahara-desert-Africa",
+    "title": "Sahara"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these countries contains part of the Sahara?",
+   "answers": [
+    "Kenya",
+    "Egypt",
+    "Tanzania",
+    "South Africa"
+   ],
+   "correct": "Egypt",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Sahara covers parts of Morocco, Algeria, Tunisia, Libya, Egypt, Mauritania, Mali, Niger, Chad and Sudan.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Sahara/346205",
+    "title": "Sahara - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If cold deserts are counted as well as hot ones, which is the largest desert on Earth?",
+   "answers": [
+    "Sahara",
+    "Arabian Desert",
+    "Antarctica",
+    "Gobi"
+   ],
+   "correct": "Antarctica",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "A desert is defined by low rainfall, not heat. Antarctica covers about 14.2 million km², far more than the Sahara.",
+   "source": {
+    "url": "https://desertsoftheworld.com/largest-deserts-in-the-world/",
+    "title": "Top 10 Largest Deserts in the World (Ranked by Area)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name \"Sahara\" comes from an Arabic word meaning what?",
+   "answers": [
+    "Sunrise",
+    "Caravan",
+    "Dune",
+    "Desert"
+   ],
+   "correct": "Desert",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Sahara comes from the Arabic word ṣaḥrāʾ, which means \"desert.\"",
+   "source": {
+    "url": "https://www.britannica.com/place/Sahara-desert-Africa",
+    "title": "Sahara"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country is the largest in the world by area?",
+   "answers": [
+    "Canada",
+    "Russia",
+    "China",
+    "United States"
+   ],
+   "correct": "Russia",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Russia covers about 17 million square kilometres, by far the largest of any country.",
+   "source": {
+    "url": "https://www.britannica.com/place/Russia",
+    "title": "Russia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the smallest country in the world by area?",
+   "answers": [
+    "Vatican City",
+    "Monaco",
+    "San Marino",
+    "Liechtenstein"
+   ],
+   "correct": "Vatican City",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Vatican City covers just 0.17 square mile (0.44 sq km). Monaco is the next smallest.",
+   "source": {
+    "url": "https://www.britannica.com/topic/list-of-the-smallest-countries-by-area",
+    "title": "List of the smallest countries by area"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Vatican City is an enclave entirely surrounded by which city?",
+   "answers": [
+    "Florence",
+    "Milan",
+    "Rome",
+    "Naples"
+   ],
+   "correct": "Rome",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Vatican City is an independent enclave within the city of Rome, Italy.",
+   "source": {
+    "url": "https://www.guinnessworldrecords.com/world-records/smallest-country",
+    "title": "Smallest country"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country is the largest in South America?",
+   "answers": [
+    "Argentina",
+    "Peru",
+    "Colombia",
+    "Brazil"
+   ],
+   "correct": "Brazil",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Brazil is the largest country in South America. It occupies nearly half of the continent's land area.",
+   "source": {
+    "url": "https://www.britannica.com/place/Brazil/Rivers",
+    "title": "Brazil - Rivers, Amazon, Basin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Russia stretches across eastern Europe and the northern part of which other continent?",
+   "answers": [
+    "Asia",
+    "Africa",
+    "North America",
+    "Australia"
+   ],
+   "correct": "Asia",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Russia covers much of eastern Europe and all of northern Asia.",
+   "source": {
+    "url": "https://www.britannica.com/place/Russia",
+    "title": "Russia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many continents does Earth have, by the most common count?",
+   "answers": [
+    "Five",
+    "Six",
+    "Seven",
+    "Eight"
+   ],
+   "correct": "Seven",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The seven continents are Asia, Africa, North America, South America, Antarctica, Europe and Australia.",
+   "source": {
+    "url": "https://www.britannica.com/science/continent",
+    "title": "Continent"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the largest continent on Earth by size?",
+   "answers": [
+    "Africa",
+    "North America",
+    "Europe",
+    "Asia"
+   ],
+   "correct": "Asia",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Asia is the largest continent, at about 44.6 million square kilometres.",
+   "source": {
+    "url": "https://www.britannica.com/science/continent",
+    "title": "Continent"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which is the smallest of Earth's seven continents?",
+   "answers": [
+    "Europe",
+    "Australia",
+    "Antarctica",
+    "South America"
+   ],
+   "correct": "Australia",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Ranked from largest to smallest, the continents end with Europe and then Australia, the smallest.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/continent/352997",
+    "title": "continent - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which continent is the second largest, after Asia?",
+   "answers": [
+    "Africa",
+    "North America",
+    "South America",
+    "Antarctica"
+   ],
+   "correct": "Africa",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Africa is the second-largest continent, covering more than three times the area of the United States.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/Continent/",
+    "title": "Continent - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the world's largest island?",
+   "answers": [
+    "Madagascar",
+    "Greenland",
+    "Borneo",
+    "Iceland"
+   ],
+   "correct": "Greenland",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Britannica calls Greenland the world's largest island. Australia is about four times larger, but it counts as a continent.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/continent/273790",
+    "title": "kids.britannica.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1912 Alfred Wegener proposed that the continents were once joined in one huge landmass. What did he call it?",
+   "answers": [
+    "Atlantis",
+    "Lemuria",
+    "Eurasia",
+    "Pangaea"
+   ],
+   "correct": "Pangaea",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Wegener named the single large landmass Pangaea. He suggested it split apart more than 200 million years ago.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/continent/352997",
+    "title": "continent - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Australia?",
+   "answers": [
+    "Sydney",
+    "Melbourne",
+    "Canberra",
+    "Perth"
+   ],
+   "correct": "Canberra",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Canberra, in the southeast, lies between the larger cities of Sydney and Melbourne.",
+   "source": {
+    "url": "https://www.britannica.com/question/What-is-the-capital-of-Australia",
+    "title": "What is the capital of Australia?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Canada?",
+   "answers": [
+    "Ottawa",
+    "Toronto",
+    "Montreal",
+    "Vancouver"
+   ],
+   "correct": "Ottawa",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Ottawa is the capital of Canada.",
+   "source": {
+    "url": "https://www.britannica.com/quiz/countries-and-capitals-quiz",
+    "title": "Countries and Capitals Quiz"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Japan?",
+   "answers": [
+    "Kyoto",
+    "Osaka",
+    "Yokohama",
+    "Tokyo"
+   ],
+   "correct": "Tokyo",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Tokyo is the capital of Japan.",
+   "source": {
+    "url": "https://www.britannica.com/quiz/capital-cities-of-the-world-quiz",
+    "title": "World Capitals Quiz"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Greece?",
+   "answers": [
+    "Thessaloniki",
+    "Athens",
+    "Patras",
+    "Heraklion"
+   ],
+   "correct": "Athens",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Athens is the capital of Greece.",
+   "source": {
+    "url": "https://www.britannica.com/quiz/capital-cities-of-the-world-quiz",
+    "title": "World Capitals Quiz"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Norway?",
+   "answers": [
+    "Bergen",
+    "Stockholm",
+    "Helsinki",
+    "Oslo"
+   ],
+   "correct": "Oslo",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Oslo is the capital of Norway.",
+   "source": {
+    "url": "https://www.britannica.com/quiz/capital-cities-of-the-world-quiz",
+    "title": "World Capitals Quiz"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Russia?",
+   "answers": [
+    "Moscow",
+    "Saint Petersburg",
+    "Kyiv",
+    "Minsk"
+   ],
+   "correct": "Moscow",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Moscow is the capital of Russia.",
+   "source": {
+    "url": "https://www.britannica.com/place/Russia",
+    "title": "Russia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of China?",
+   "answers": [
+    "Shanghai",
+    "Hong Kong",
+    "Beijing",
+    "Guangzhou"
+   ],
+   "correct": "Beijing",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Beijing is the capital of China.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/world-capitals-at-a-glance/624667",
+    "title": "world capitals at a glance - Students"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of India?",
+   "answers": [
+    "Mumbai",
+    "Kolkata",
+    "Bengaluru",
+    "New Delhi"
+   ],
+   "correct": "New Delhi",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "New Delhi is the capital of India.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/world-capitals-at-a-glance/624667",
+    "title": "world capitals at a glance - Students"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Egypt?",
+   "answers": [
+    "Alexandria",
+    "Giza",
+    "Luxor",
+    "Cairo"
+   ],
+   "correct": "Cairo",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Cairo is the capital of Egypt.",
+   "source": {
+    "url": "https://www.countries-ofthe-world.com/capitals-of-the-world.html",
+    "title": "List of world capitals by countries"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Argentina?",
+   "answers": [
+    "Santiago",
+    "Montevideo",
+    "Buenos Aires",
+    "Lima"
+   ],
+   "correct": "Buenos Aires",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Buenos Aires is the capital of Argentina.",
+   "source": {
+    "url": "https://happytowander.com/world-capitals/",
+    "title": "World Capitals FULL LIST + Photos of all the Capital Cities in the World!"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city is the Eiffel Tower?",
+   "answers": [
+    "Lyon",
+    "Marseille",
+    "Brussels",
+    "Paris"
+   ],
+   "correct": "Paris",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Eiffel Tower is in Paris, the capital of France. It is among the most famous landmarks in the world.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Eiffel-Tower/353088",
+    "title": "Eiffel Tower - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French engineer designed the iron framework of the Statue of Liberty and a famous Paris tower?",
+   "answers": [
+    "Ferdinand de Lesseps",
+    "Georges-Eugène Haussmann",
+    "Gustave Eiffel",
+    "Louis Pasteur"
+   ],
+   "correct": "Gustave Eiffel",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Gustave Eiffel built the Eiffel Tower in Paris between 1887 and 1889. His other major structures include the Statue of Liberty.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Gustave-Eiffel",
+    "title": "Gustave Eiffel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is the Taj Mahal located?",
+   "answers": [
+    "India",
+    "Pakistan",
+    "Bangladesh",
+    "Nepal"
+   ],
+   "correct": "India",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Taj Mahal is in Agra, India. It is a white-marble mausoleum.",
+   "source": {
+    "url": "https://www.worldatlas.com/places/7-wonders-of-the-world.html",
+    "title": "The 7 Wonders Of The World"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is the Inca citadel of Machu Picchu?",
+   "answers": [
+    "Bolivia",
+    "Ecuador",
+    "Peru",
+    "Chile"
+   ],
+   "correct": "Peru",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Machu Picchu is in the Cusco Region of Peru.",
+   "source": {
+    "url": "https://www.worldatlas.com/places/7-wonders-of-the-world.html",
+    "title": "The 7 Wonders Of The World"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is the ancient rock-carved city of Petra?",
+   "answers": [
+    "Egypt",
+    "Jordan",
+    "Syria",
+    "Saudi Arabia"
+   ],
+   "correct": "Jordan",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Petra is an ancient city in Ma'an, Jordan, with buildings carved into sandstone cliffs.",
+   "source": {
+    "url": "https://www.worldatlas.com/places/7-wonders-of-the-world.html",
+    "title": "The 7 Wonders Of The World"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is the statue of Christ the Redeemer?",
+   "answers": [
+    "Portugal",
+    "Argentina",
+    "Mexico",
+    "Brazil"
+   ],
+   "correct": "Brazil",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Brazil's Statue of Christ the Redeemer was named one of the new seven wonders of the world in 2007.",
+   "source": {
+    "url": "https://www.nbcnews.com/news/amp/wbna19652635",
+    "title": "New Seven Wonders of the World chosen"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country are the Maya ruins of Chichén Itzá?",
+   "answers": [
+    "Mexico",
+    "Guatemala",
+    "Honduras",
+    "Peru"
+   ],
+   "correct": "Mexico",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "Chichén Itzá is in the Yucatán region of Mexico.",
+   "source": {
+    "url": "https://www.worldatlas.com/places/7-wonders-of-the-world.html",
+    "title": "The 7 Wonders Of The World"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Historically, the Great Wall of China was built to fortify which border of China?",
+   "answers": [
+    "Its southern border",
+    "Its eastern coast",
+    "Its western border",
+    "Its northern border"
+   ],
+   "correct": "Its northern border",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The wall was built to defend China's northern frontier against raiders and invaders.",
+   "source": {
+    "url": "https://www.britannica.com/question/Why-was-the-Great-Wall-of-China-built",
+    "title": "Why was the Great Wall of China built?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which U.S. state is the Grand Canyon?",
+   "answers": [
+    "Utah",
+    "Nevada",
+    "Colorado",
+    "Arizona"
+   ],
+   "correct": "Arizona",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The Grand Canyon lies in the high plateau region of northwestern Arizona.",
+   "source": {
+    "url": "https://www.britannica.com/place/Grand-Canyon",
+    "title": "Grand Canyon"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of the original Seven Wonders of the Ancient World is the only one still standing?",
+   "answers": [
+    "Hanging Gardens of Babylon",
+    "Colossus of Rhodes",
+    "Lighthouse of Alexandria",
+    "Great Pyramid of Giza"
+   ],
+   "correct": "Great Pyramid of Giza",
+   "difficulty": "easy",
+   "category": "Geography",
+   "explain": "The pyramids at Giza in Egypt are the only surviving structures from the original ancient wonders.",
+   "source": {
+    "url": "https://www.nbcnews.com/news/amp/wbna19652635",
+    "title": "New Seven Wonders of the World chosen"
+   },
+   "ai_written": true
+  }
+ ]
+}

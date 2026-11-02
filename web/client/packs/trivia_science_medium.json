@@ -1,0 +1,702 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Science trivia (medium)",
+ "description": "38 medium questions about physics, chemistry, biology, astronomy, the human body, inventions. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Who devised the scale of mineral hardness, based on which mineral can scratch another, that is still used today?",
+   "answers": [
+    "Friedrich Mohs",
+    "James Dwight Dana",
+    "Abraham Werner",
+    "Georgius Agricola"
+   ],
+   "correct": "Friedrich Mohs",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The German mineralogist Friedrich Mohs devised his ten-mineral scratch-hardness scale in 1812.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/science/Mohs-hardness",
+    "title": "Mohs hardness"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On the Mohs scale of mineral hardness, which mineral sits at 1 as the softest?",
+   "answers": [
+    "Gypsum",
+    "Talc",
+    "Calcite",
+    "Fluorite"
+   ],
+   "correct": "Talc",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Mohs chose ten standard minerals in order of hardness, with talc the softest at 1 and diamond the hardest at 10.",
+   "source": {
+    "url": "https://learningzone.oumnh.ox.ac.uk/mineral-hardness",
+    "title": "Hardness of a mineral"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these Mohs-scale minerals, rated 2, can be scratched by a human fingernail?",
+   "answers": [
+    "Calcite",
+    "Fluorite",
+    "Gypsum",
+    "Quartz"
+   ],
+   "correct": "Gypsum",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Gypsum has a Mohs hardness of 2, close to that of a fingernail (about 2.2). Calcite, fluorite and quartz are all harder.",
+   "source": {
+    "url": "https://www.britannica.com/science/Mohs-hardness",
+    "title": "Mohs hardness"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Alexander Fleming shared the 1945 Nobel Prize in Physiology or Medicine for penicillin with Ernst Chain and which other scientist?",
+   "answers": [
+    "Jonas Salk",
+    "Selman Waksman",
+    "Paul Ehrlich",
+    "Howard Florey"
+   ],
+   "correct": "Howard Florey",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The 1945 prize went jointly to Fleming, Ernst Boris Chain and Howard Walter Florey for the discovery of penicillin and its curative effect.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.nobelprize.org/prizes/medicine/1945/fleming/facts/",
+    "title": "Sir Alexander Fleming"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The antibiotic penicillin is named after which genus of mold?",
+   "answers": [
+    "Aspergillus",
+    "Rhizopus",
+    "Penicillium",
+    "Mucor"
+   ],
+   "correct": "Penicillium",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Fleming realized the mold produced an antibacterial substance and named it penicillin after the Penicillium mold.",
+   "source": {
+    "url": "https://www.britannica.com/science/penicillin",
+    "title": "penicillin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Fleming noticed mold killing bacteria on a contaminated culture plate in 1928. Which bacterium was he growing?",
+   "answers": [
+    "Escherichia coli",
+    "Salmonella enterica",
+    "Streptococcus pyogenes",
+    "Staphylococcus aureus"
+   ],
+   "correct": "Staphylococcus aureus",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "In 1928 Fleming saw that a culture plate of Staphylococcus aureus had been contaminated by a fungus that stopped the bacteria growing nearby.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Alexander-Fleming",
+    "title": "Alexander Fleming"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which member of the noble-gas group is synthetic and is not found in Earth's atmosphere?",
+   "answers": [
+    "Krypton",
+    "Xenon",
+    "Radon",
+    "Oganesson"
+   ],
+   "correct": "Oganesson",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "All the noble gases except the synthetic oganesson are present in Earth's atmosphere.",
+   "source": {
+    "url": "https://www.britannica.com/science/noble-gas",
+    "title": "Noble gas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why were the noble gases missing from Mendeleev's original periodic table?",
+   "answers": [
+    "They had not yet been discovered",
+    "He judged them too unreactive",
+    "He took them to be compounds",
+    "Their masses were unmeasured"
+   ],
+   "correct": "They had not yet been discovered",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The noble gases had not been discovered when Mendeleev made his original table. In 1902 he accepted the evidence for them and they were added as a new group.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Group_(periodic_table)",
+    "title": "Group (periodic table)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1868, spectral lines of helium were first observed in which body?",
+   "answers": [
+    "In Earth's atmosphere",
+    "In the Sun",
+    "In a uranium mineral",
+    "In natural gas wells"
+   ],
+   "correct": "In the Sun",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Jules Janssen saw distinct spectral lines in the Sun in 1868, which were at first mistaken for sodium. They came from helium.",
+   "source": {
+    "url": "https://www.matrix.edu.au/the-beginners-guide-to-the-periodic-table-of-elements/groups-18-noble-gases/",
+    "title": "Group 18: Noble Gases"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many bones does a newborn baby have, before many of them fuse?",
+   "answers": [
+    "About 150",
+    "About 270",
+    "About 350",
+    "About 450"
+   ],
+   "correct": "About 270",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Babies are born with about 270 bones. Many fuse over time, leaving 206 in the typical adult skeleton.",
+   "source": {
+    "url": "https://byjus.com/biology/206-bones-in-our-body/",
+    "title": "List of the 206 Bones in Our Body"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Inside most bones, which soft tissue is where blood cells are made?",
+   "answers": [
+    "Cartilage",
+    "Periosteum",
+    "Synovial fluid",
+    "Bone marrow"
+   ],
+   "correct": "Bone marrow",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Most bones contain bone marrow, which is where blood cells are made.",
+   "source": {
+    "url": "https://www.betterhealth.vic.gov.au/health/conditionsandtreatments/bones",
+    "title": "Bones"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The axial skeleton (skull, vertebral column, ribs and breastbone) contains how many bones in an adult?",
+   "answers": [
+    "60",
+    "80",
+    "106",
+    "126"
+   ],
+   "correct": "80",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The adult skeleton's 206 bones split into an 80-bone axial skeleton and a 126-bone appendicular skeleton.",
+   "source": {
+    "url": "https://training.seer.cancer.gov/anatomy/skeletal/divisions/",
+    "title": "Divisions of the Skeleton - SEER Training Modules"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The molecule ATP, which mitochondria make most of the cell's supply of, stands for what?",
+   "answers": [
+    "Adenosine triphosphate",
+    "Amino tri-peptide",
+    "Acetyl transfer protein",
+    "Adenine thymine phosphate"
+   ],
+   "correct": "Adenosine triphosphate",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "ATP is adenosine triphosphate, the universal energy supplier in cells. Mitochondria produce it during cellular respiration.",
+   "source": {
+    "url": "https://www.sciencelearn.org.nz/resources/1839-mitochondria-cell-powerhouses",
+    "title": "Mitochondria"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which type of cell, because it needs a lot of energy, can contain thousands of mitochondria?",
+   "answers": [
+    "Mature red blood cells",
+    "Muscle cells",
+    "Dead surface skin cells",
+    "Fingernail cells"
+   ],
+   "correct": "Muscle cells",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Cells that need a lot of energy, like muscle cells, can contain thousands of mitochondria.",
+   "source": {
+    "url": "https://www.sciencelearn.org.nz/resources/1839-mitochondria-cell-powerhouses",
+    "title": "Mitochondria"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What kind of weather system is Jupiter's Great Red Spot?",
+   "answers": [
+    "A low-pressure hurricane",
+    "A high-pressure anticyclone",
+    "A volcanic ash plume",
+    "An auroral storm ring"
+   ],
+   "correct": "A high-pressure anticyclone",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The Great Red Spot is an anticyclonic circulation system, a high-pressure centre in Jupiter's southern hemisphere.",
+   "source": {
+    "url": "https://www.britannica.com/place/Great-Red-Spot",
+    "title": "Great Red Spot"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how long does Jupiter's Great Red Spot take to complete one counterclockwise rotation?",
+   "answers": [
+    "About six hours",
+    "About six days",
+    "About six weeks",
+    "About six years"
+   ],
+   "correct": "About six days",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The Great Red Spot rotates counterclockwise, completing one turn about every six days.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/astronomy-and-astrophysics/jupiters-great-red-spot/",
+    "title": "Jupiter's Great Red Spot"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The first transistor was invented in 1947 at which research organization?",
+   "answers": [
+    "IBM",
+    "Westinghouse Electric",
+    "Texas Instruments",
+    "Bell Labs"
+   ],
+   "correct": "Bell Labs",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Bardeen, Brattain and Shockley made the transistor at Bell Telephone Laboratories in Murray Hill, New Jersey.",
+   "source": {
+    "url": "https://ethw.org/Milestones:Invention_of_the_First_Transistor_at_Bell_Telephone_Laboratories,_Inc.,_1947",
+    "title": "Milestones:Invention of the First Transistor at Bell Telephone Laboratories, Inc., 1947"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which semiconductor was used in the first working point-contact transistor of 1947?",
+   "answers": [
+    "Silicon",
+    "Selenium",
+    "Germanium",
+    "Gallium arsenide"
+   ],
+   "correct": "Germanium",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The first working point-contact transistor used a germanium crystal. A working silicon transistor came later, in 1954.",
+   "source": {
+    "url": "https://ethw.org/Milestones:Invention_of_the_First_Transistor_at_Bell_Telephone_Laboratories,_Inc.,_1947",
+    "title": "Milestones:Invention of the First Transistor at Bell Telephone Laboratories, Inc., 1947"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Bardeen, Brattain and Shockley share the Nobel Prize in Physics for the transistor?",
+   "answers": [
+    "1946",
+    "1956",
+    "1966",
+    "1976"
+   ],
+   "correct": "1956",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The three Bell Labs physicists shared the 1956 Nobel Prize in Physics for their achievement.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Transistor",
+    "title": "Transistor"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The pH scale is logarithmic. What does a change of one whole pH unit mean for hydrogen ion concentration?",
+   "answers": [
+    "A twofold change",
+    "A fixed one-percent change",
+    "A hundredfold change",
+    "A tenfold change"
+   ],
+   "correct": "A tenfold change",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Each whole-number step on the pH scale is a tenfold change in hydrogen ion concentration.",
+   "source": {
+    "url": "https://sciencenotes.org/the-ph-scale-of-common-chemicals/",
+    "title": "The pH Scale of Common Chemicals"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pH value is closest to that of healthy human blood?",
+   "answers": [
+    "About 1.5",
+    "About 4.5",
+    "About 7.4",
+    "About 10.5"
+   ],
+   "correct": "About 7.4",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Blood is slightly alkaline, with a pH of about 7.4. Stomach contents are highly acidic, at pH 1 to 2.",
+   "source": {
+    "url": "https://courses.lumenlearning.com/wm-nmbiology1/chapter/buffers-ph-acids-and-bases/",
+    "title": "Buffers, pH, Acids, and Bases"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is absolute zero, the coldest possible temperature, on the Celsius scale?",
+   "answers": [
+    "−100 °C",
+    "−273.15 °C",
+    "−373.15 °C",
+    "−459.67 °C"
+   ],
+   "correct": "−273.15 °C",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Absolute zero is 0 K, which equals −273.15 °C. The figure −459.67 is its value on the Fahrenheit scale.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Absolute_zero",
+    "title": "Absolute zero"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Besides the Kelvin scale, which temperature scale sets its zero point at absolute zero?",
+   "answers": [
+    "Celsius",
+    "Réaumur",
+    "Fahrenheit",
+    "Rankine"
+   ],
+   "correct": "Rankine",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The Kelvin and Rankine scales both put their zero points at absolute zero by definition. Rankine uses Fahrenheit-sized degrees.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Absolute_zero",
+    "title": "Absolute zero"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At normal atmospheric pressure, water freezes at what temperature on the Kelvin scale?",
+   "answers": [
+    "0 K",
+    "100 K",
+    "273.15 K",
+    "373.15 K"
+   ],
+   "correct": "273.15 K",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Water at one atmosphere freezes at 273.15 kelvins (0 °C) and boils at 373.15 kelvins (100 °C).",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/physics/absolute-zero-temperature/",
+    "title": "Absolute Zero Temperature"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Scurvy symptoms such as bleeding gums and fragile blood vessels come from vitamin C deficiency weakening which protein?",
+   "answers": [
+    "Keratin",
+    "Hemoglobin",
+    "Collagen",
+    "Myosin"
+   ],
+   "correct": "Collagen",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Vitamin C is needed to make collagen. Without it, collagen and the capillaries it supports become weak, which causes scurvy's bleeding and bruising.",
+   "source": {
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10296835/",
+    "title": "Scurvy: Rediscovering a Forgotten Disease"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how long does sunlight take to reach Earth?",
+   "answers": [
+    "About 8 seconds",
+    "About 8 minutes",
+    "About 80 minutes",
+    "About 8 hours"
+   ],
+   "correct": "About 8 minutes",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The Sun is about 93 million miles away, so its light takes about 8.3 minutes to reach us.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/light-year/en/",
+    "title": "What Is a Light-Year?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How far away is the Andromeda galaxy, the nearest large galaxy to ours?",
+   "answers": [
+    "About 2,500 light-years",
+    "About 250,000 light-years",
+    "About 2.5 million light-years",
+    "About 2.5 billion light-years"
+   ],
+   "correct": "About 2.5 million light-years",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "NASA gives Andromeda's distance as about 2.5 million light-years.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/light-year/en/",
+    "title": "What Is a Light-Year?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A parsec, another astronomical distance unit, is equal to roughly how many light-years?",
+   "answers": [
+    "About 0.3",
+    "About 3.3",
+    "About 33",
+    "About 330"
+   ],
+   "correct": "About 3.3",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "One parsec is equal to about 3.26 light-years, or nearly 19 trillion miles.",
+   "source": {
+    "url": "https://www.livescience.com/56115-what-is-a-light-year.html",
+    "title": "What Is a Light-Year?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which two fields did Marie Curie win her Nobel Prizes?",
+   "answers": [
+    "Physics and chemistry",
+    "Chemistry and medicine",
+    "Physics and peace",
+    "Medicine and literature"
+   ],
+   "correct": "Physics and chemistry",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Curie won the Nobel Prize in Physics in 1903 and the Nobel Prize in Chemistry in 1911.",
+   "source": {
+    "url": "https://ahf.nuclearmuseum.org/ahf/profile/marie-curie/",
+    "title": "Marie Curie - Nuclear Museum - Atomic Heritage Foundation"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1898 the Curies announced an element named after Marie's homeland of Poland. Which one?",
+   "answers": [
+    "Francium",
+    "Americium",
+    "Europium",
+    "Polonium"
+   ],
+   "correct": "Polonium",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Marie and Pierre Curie named polonium after Poland. They announced it, along with radium, in 1898.",
+   "source": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11390158/",
+    "title": "Marie Curie (1867–1934): Twice Nobel Laureate and Her Enduring Legacy in Radiation Medicine - PMC"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which uranium-rich mineral did the Curies investigate to isolate polonium and radium?",
+   "answers": [
+    "Malachite",
+    "Bauxite",
+    "Galena",
+    "Pitchblende"
+   ],
+   "correct": "Pitchblende",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The Curies worked on pitchblende, a uranium-rich mineral, and isolated two new elements from it in 1898.",
+   "source": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11390158/",
+    "title": "Marie Curie (1867–1934): Twice Nobel Laureate and Her Enduring Legacy in Radiation Medicine - PMC"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In May 1952 at King's College London, which chemist and crystallographer captured the X-ray image known as 'Photo 51' of DNA?",
+   "answers": [
+    "Dorothy Hodgkin",
+    "Rosalind Franklin",
+    "Barbara McClintock",
+    "Lise Meitner"
+   ],
+   "correct": "Rosalind Franklin",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Rosalind Franklin and her PhD student Ray Gosling captured Photo 51. It supported the double-helix model of DNA.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.kcl.ac.uk/photo-51-and-the-discovery-of-dna",
+    "title": "Photo 51 and the discovery of DNA's structure"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Watson and Crick build the first correct model of DNA's double helix?",
+   "answers": [
+    "1943",
+    "1953",
+    "1963",
+    "1973"
+   ],
+   "correct": "1953",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Watson and Crick built the first correct DNA model in 1953, confirmed by the X-ray evidence in Photo 51.",
+   "source": {
+    "url": "https://www.kcl.ac.uk/photo-51-and-the-discovery-of-dna",
+    "title": "Photo 51 and the discovery of DNA's structure"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which gas makes up about 95 percent of the atmosphere of Saturn's moon Titan?",
+   "answers": [
+    "Methane",
+    "Hydrogen",
+    "Carbon dioxide",
+    "Nitrogen"
+   ],
+   "correct": "Nitrogen",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Titan's atmosphere is about 95 percent nitrogen and 5 percent methane, with small amounts of other carbon-rich compounds.",
+   "source": {
+    "url": "https://science.nasa.gov/saturn/moons/titan/facts/",
+    "title": "Titan: Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Titan is the second-largest moon in the solar system. Which moon is the only one larger?",
+   "answers": [
+    "Callisto",
+    "Ganymede",
+    "Europa",
+    "Triton"
+   ],
+   "correct": "Ganymede",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Only Jupiter's moon Ganymede is larger than Titan, by just 2 percent.",
+   "source": {
+    "url": "https://science.nasa.gov/saturn/moons/titan/facts/",
+    "title": "Titan: Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which English country doctor developed the world's first successful vaccine, against smallpox, in 1796?",
+   "answers": [
+    "Louis Pasteur",
+    "Edward Jenner",
+    "Joseph Lister",
+    "William Harvey"
+   ],
+   "correct": "Edward Jenner",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Edward Jenner showed in 1796 that infection with mild cowpox gave immunity to smallpox.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Edward-Jenner",
+    "title": "Edward Jenner"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word 'vaccine' comes from the Latin word vacca, meaning which animal?",
+   "answers": [
+    "Horse",
+    "Sheep",
+    "Pig",
+    "Cow"
+   ],
+   "correct": "Cow",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The term comes from vacca, the Latin word for cow, because smallpox vaccination originated with cowpox.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Smallpox_vaccine",
+    "title": "Smallpox vaccine"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was the smallpox virus eradicated, after the spread of vaccination that Jenner began?",
+   "answers": [
+    "1960",
+    "1970",
+    "1980",
+    "1990"
+   ],
+   "correct": "1980",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Jenner's vaccination work led to the eradication of smallpox in 1980.",
+   "source": {
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11450354/",
+    "title": "Jenner's Legacy: How Edward Jenner's Smallpox Vaccine Changed Public Health"
+   },
+   "ai_written": true
+  }
+ ]
+}

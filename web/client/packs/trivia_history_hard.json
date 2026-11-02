@@ -1,0 +1,329 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "History trivia (hard)",
+ "description": "17 hard questions about world and US history, from ancient times to about 2000. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "The oldest surviving peace treaty, concluded around 1259 BCE, was agreed between Pharaoh Ramesses II and which Hittite king?",
+   "answers": [
+    "Hattusili III",
+    "Muwatalli II",
+    "Suppiluliuma I",
+    "Mursili II"
+   ],
+   "correct": "Hattusili III",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Egyptian–Hittite treaty was concluded between Ramesses II and Hattusili III. Muwatalli II was the Hittite king at the earlier Battle of Kadesh.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Egyptian%E2%80%93Hittite_peace_treaty",
+    "title": "Egyptian–Hittite peace treaty"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which archaeologist found the Cyrus Cylinder at Babylon in 1879 while excavating for the British Museum?",
+   "answers": [
+    "Austen Henry Layard",
+    "Henry Rawlinson",
+    "Hormuzd Rassam",
+    "George Smith"
+   ],
+   "correct": "Hormuzd Rassam",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Assyro-British archaeologist Hormuzd Rassam discovered the Cyrus Cylinder in March 1879 during a British Museum excavation programme in Mesopotamia.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Cyrus_Cylinder",
+    "title": "Cyrus Cylinder"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 405 BCE, which naval battle in the Hellespont saw Lysander's Spartan fleet destroy the Athenian navy and effectively end the Peloponnesian War?",
+   "answers": [
+    "Arginusae",
+    "Aegospotami",
+    "Cyzicus",
+    "Sybota"
+   ],
+   "correct": "Aegospotami",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "At Aegospotami, Lysander surprised the beached Athenian fleet and captured almost all of it. Athens surrendered the following spring.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Battle_of_Aegospotami",
+    "title": "Battle of Aegospotami"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pair of consuls led the large Roman army that Hannibal crushed at Cannae in 216 BCE?",
+   "answers": [
+    "Fabius Maximus and Marcellus",
+    "Flaminius and Scipio",
+    "Paullus and Terentius Varro",
+    "Sempronius Longus and Regulus"
+   ],
+   "correct": "Paullus and Terentius Varro",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Romans at Cannae were led by the consuls Lucius Aemilius Paullus and Gaius Terentius Varro.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Battle_of_Cannae",
+    "title": "Battle of Cannae"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which eastern co-emperor joined Constantine in issuing the 313 Edict of Milan, which ended the persecution of Christians?",
+   "answers": [
+    "Galerius",
+    "Maxentius",
+    "Maximinus Daia",
+    "Licinius"
+   ],
+   "correct": "Licinius",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The edict was issued in the names of Constantine, who ruled the West, and Licinius, who ruled the East. They had met in Milan for the wedding of Licinius to Constantine's sister.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Edict_of_Milan",
+    "title": "Edict of Milan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who commanded Octavian's fleet at the Battle of Actium in 31 BCE?",
+   "answers": [
+    "Gaius Maecenas",
+    "Marcus Lepidus",
+    "Lucius Munatius Plancus",
+    "Marcus Vipsanius Agrippa"
+   ],
+   "correct": "Marcus Vipsanius Agrippa",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Octavian's fleet at Actium was commanded by his close friend and general Marcus Vipsanius Agrippa, who defeated the fleets of Antony and Cleopatra.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/event/Battle-of-Actium-ancient-Roman-history",
+    "title": "Battle of Actium"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Remorse over the bloody conquest of which region led the Mauryan emperor Ashoka to renounce armed conquest and embrace Buddhism?",
+   "answers": [
+    "Gandhara",
+    "Malwa",
+    "Kalinga",
+    "Vanga"
+   ],
+   "correct": "Kalinga",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Ashoka conquered Kalinga (modern Odisha) in the eighth year of his reign. The suffering the war caused moved him to renounce armed conquest.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Ashoka",
+    "title": "Ashoka"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Seljuk sultan defeated and captured the Byzantine emperor Romanos IV Diogenes at Manzikert in 1071?",
+   "answers": [
+    "Alp Arslan",
+    "Tughril Beg",
+    "Malik-Shah I",
+    "Kilij Arslan I"
+   ],
+   "correct": "Alp Arslan",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Alp Arslan's Seljuk Turks defeated the Byzantine army at Manzikert on 26 August 1071. He captured the emperor and released him only after he agreed to cede territory.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/event/Battle-of-Manzikert",
+    "title": "Battle of Manzikert (1071)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pope nullified Magna Carta only about ten weeks after King John sealed it in 1215?",
+   "answers": [
+    "Honorius III",
+    "Gregory IX",
+    "Innocent III",
+    "Boniface VIII"
+   ],
+   "correct": "Innocent III",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The U.S. National Archives notes that Pope Innocent III annulled the agreement about ten weeks after John sealed it, and England fell into civil war.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.archives.gov/exhibits/featured-documents/magna-carta",
+    "title": "Magna Carta"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1494 Treaty of Tordesillas set its dividing meridian 370 leagues west of which island group?",
+   "answers": [
+    "The Canary Islands",
+    "The Cape Verde Islands",
+    "Madeira",
+    "São Tomé and Príncipe"
+   ],
+   "correct": "The Cape Verde Islands",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The treaty moved the papal line to a meridian 370 leagues west of the Cape Verde Islands. This put Brazil on the Portuguese side.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Treaty_of_Tordesillas",
+    "title": "Treaty of Tordesillas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which 1529 treaty divided the other side of the world between Spain and Portugal by fixing the antimeridian of the Tordesillas line?",
+   "answers": [
+    "Treaty of Alcáçovas",
+    "Treaty of Zaragoza",
+    "Treaty of Utrecht",
+    "Treaty of Cateau-Cambrésis"
+   ],
+   "correct": "Treaty of Zaragoza",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Treaty of Zaragoza, signed on 22 April 1529, specified the antimeridian to the Tordesillas line, dividing the Pacific side of the world.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Treaty_of_Tordesillas",
+    "title": "Treaty of Tordesillas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Mamluk sultan's realm did Mansa Musa of Mali pass through on his famous 1324 pilgrimage, when his spending in Cairo depressed gold's value?",
+   "answers": [
+    "Baibars",
+    "Qalawun",
+    "Saladin",
+    "Al-Nasir Muhammad"
+   ],
+   "correct": "Al-Nasir Muhammad",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Al-Umari's account describes Musa's reception on behalf of the sultan al-Malik al-Nasir, and says Musa's gold lowered gold's price in Egypt.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://worldhistorycommons.org/al-umaris-account-mansa-musas-visit-cairo",
+    "title": "Al-Umari's Account of Mansa Musa's Visit to Cairo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Umayyad governor of al-Andalus was killed leading the army defeated by Charles Martel at the Battle of Tours in 732?",
+   "answers": [
+    "Tariq ibn Ziyad",
+    "Musa ibn Nusayr",
+    "Abd al-Rahman al-Ghafiqi",
+    "Yusuf ibn Abd al-Rahman al-Fihri"
+   ],
+   "correct": "Abd al-Rahman al-Ghafiqi",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Abd al-Rahman al-Ghafiqi, governor of al-Andalus, led the Umayyad force and was killed at Tours on 10 October 732.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Battle_of_Tours",
+    "title": "Battle of Tours"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which cannon-founder, who left Constantinople and offered his services to Mehmed II, cast the giant bombard used in the 1453 siege?",
+   "answers": [
+    "Giovanni Giustiniani",
+    "Loukas Notaras",
+    "János Hunyadi",
+    "Orban"
+   ],
+   "correct": "Orban",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Orban (Urban) approached Mehmed II after leaving Constantinople, and he cast the great bombard that helped breach the city's walls.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Orb%C3%A1n_(ironmaster)",
+    "title": "Orbán (ironmaster)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the negotiations that produced the 1648 Peace of Westphalia, which city hosted the talks involving Sweden?",
+   "answers": [
+    "Regensburg",
+    "Augsburg",
+    "Cologne",
+    "Osnabrück"
+   ],
+   "correct": "Osnabrück",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Osnabrück treaty was drafted between the Holy Roman Empire and Sweden. The empire's agreement with France was drafted in Münster.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/peace-westphalia",
+    "title": "Peace of Westphalia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1689 Treaty of Nerchinsk between Russia and Qing China followed Russia's defeat at the siege of which Amur fortress?",
+   "answers": [
+    "Yakutsk",
+    "Albazin",
+    "Irkutsk",
+    "Tobolsk"
+   ],
+   "correct": "Albazin",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The treaty followed Russia's defeat at the Siege of Albazin. It left the Amur region to the Qing.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Treaty_of_Nerchinsk",
+    "title": "Treaty of Nerchinsk"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many original copies of the 1215 Magna Carta are known to survive today?",
+   "answers": [
+    "Two",
+    "Four",
+    "Seven",
+    "Eleven"
+   ],
+   "correct": "Four",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Britannica notes that four original copies of the 1215 Magna Carta survive.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Magna-Carta",
+    "title": "Magna Carta"
+   },
+   "ai_written": true
+  }
+ ]
+}

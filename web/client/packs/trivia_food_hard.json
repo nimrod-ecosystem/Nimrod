@@ -1,0 +1,647 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Food trivia (hard)",
+ "description": "35 hard questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "When Escoffier revised Carême's list of foundational sauces, which sauce did he demote to a derivative of velouté?",
+   "answers": [
+    "Soubise",
+    "Bordelaise",
+    "Allemande",
+    "Mornay"
+   ],
+   "correct": "Allemande",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Carême listed allemande as a mother sauce, but Escoffier treated it as a derivative of velouté and put hollandaise in its place.",
+   "source": {
+    "url": "https://www.tastingtable.com/1143868/french-cuisines-5-mother-sauces-explained/",
+    "title": "French Cuisine's 5 Mother Sauces, Explained - Tasting Table"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mother sauce, whose name means 'velvet', is made by combining a light roux with a clear white stock?",
+   "answers": [
+    "Béchamel",
+    "Velouté",
+    "Espagnole",
+    "Hollandaise"
+   ],
+   "correct": "Velouté",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Velouté is a light roux thickened with clear or white stock. Béchamel uses milk instead.",
+   "source": {
+    "url": "https://www.tastingtable.com/1143868/french-cuisines-5-mother-sauces-explained/",
+    "title": "French Cuisine's 5 Mother Sauces, Explained - Tasting Table"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which 1903 cookbook did Auguste Escoffier set out his five mother sauces?",
+   "answers": [
+    "La Cuisine Classique",
+    "Le Répertoire de la Cuisine",
+    "L'Art de la Cuisine Française",
+    "Le Guide Culinaire"
+   ],
+   "correct": "Le Guide Culinaire",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Escoffier presented his refined list of mother sauces in Le Guide Culinaire (1903), adding hollandaise and tomato and treating allemande as a velouté derivative.",
+   "source": {
+    "url": "https://www.cookunity.com/blog/guide-to-french-sauces",
+    "title": "French sauces: Learn the 5 mother sauces, uses & techniques"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which classic 'daughter' sauce is made by further reducing espagnole, the brown mother sauce?",
+   "answers": [
+    "Mornay",
+    "Béarnaise",
+    "Demi-glace",
+    "Allemande"
+   ],
+   "correct": "Demi-glace",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Reducing espagnole further, sometimes with wine, sherry or Madeira added, gives demi-glace.",
+   "source": {
+    "url": "https://noseychef.com/2018/12/11/the-five-mother-sauces/",
+    "title": "The five mother sauces"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Wilbur Scoville's original 1912 organoleptic test, pepper extract was diluted in what until tasters could no longer detect heat?",
+   "answers": [
+    "Salted brine",
+    "Plain vinegar",
+    "Sugar water",
+    "Olive oil"
+   ],
+   "correct": "Sugar water",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The extract was diluted in sugar water, and the degree of dilution at which a panel could no longer detect heat gave the Scoville rating.",
+   "source": {
+    "url": "https://www.hotsauce.com/Scoville-Hot-Sauce-Heat-Scale/",
+    "title": "Scoville Hot Sauce Heat Scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Wilbur Scoville devised his famous heat scale in 1912 while working for which pharmaceutical company?",
+   "answers": [
+    "Eli Lilly",
+    "Parke-Davis",
+    "Merck & Co.",
+    "Abbott Laboratories"
+   ],
+   "correct": "Parke-Davis",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Scoville devised the test in 1912 while working at Parke-Davis, to measure the pungency of chili peppers.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Wilbur_Scoville",
+    "title": "Wilbur Scoville"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which compound, found in a cactus-like plant from Morocco, rates around 15 billion on the Scoville scale?",
+   "answers": [
+    "Piperine",
+    "Allicin",
+    "Gingerol",
+    "Resiniferatoxin"
+   ],
+   "correct": "Resiniferatoxin",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The Scoville scale can also rate other pungent compounds, and resiniferatoxin measures around 15 billion SHU.",
+   "source": {
+    "url": "https://www.nist.gov/how-do-you-measure-it/how-do-you-measure-heat-pepper",
+    "title": "How Do You Measure the 'Heat' of a Pepper? - NIST"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Scoville originally created his test to measure capsaicin for use in which kind of product?",
+   "answers": [
+    "Throat lozenges",
+    "Muscle-pain salves",
+    "Digestive bitters",
+    "Whitening toothpastes"
+   ],
+   "correct": "Muscle-pain salves",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The scale began as a pharmaceutical tool for gauging the capsaicin in salves used for muscle pain, not as a culinary measure.",
+   "source": {
+    "url": "https://www.mcphs.edu/news/the-spicy-legacy-of-alum-wilbur-scoville",
+    "title": "The Spicy Legacy of Alum Wilbur Scoville - MCPHS"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which temperature range is commonly cited for the Maillard browning reaction in cooking?",
+   "answers": [
+    "40–70°C",
+    "80–100°C",
+    "140–165°C",
+    "200–230°C"
+   ],
+   "correct": "140–165°C",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The Maillard reaction is usually cited as occurring at about 140–165°C (280–330°F). At higher temperatures caramelization takes over.",
+   "source": {
+    "url": "https://www.masterclass.com/articles/maillard-reaction-explained",
+    "title": "Maillard Reaction Explained - MasterClass"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which sugar is NOT a reducing sugar in its usual form, so it does not directly take part in Maillard browning?",
+   "answers": [
+    "Glucose",
+    "Fructose",
+    "Lactose",
+    "Sucrose"
+   ],
+   "correct": "Sucrose",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Glucose and fructose are reducing sugars that react with amino compounds. Table sugar (sucrose) is not a reducing sugar in its usual form.",
+   "source": {
+    "url": "https://www.ragus.co.uk/the-maillard-reaction-the-science-behind-flavour-and-colour-in-foods-and-beverages/",
+    "title": "Maillard reaction in food manufacturing - Ragus Sugars"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name is given to the brown pigments produced by the Maillard reaction?",
+   "answers": [
+    "Carotenoids",
+    "Anthocyanins",
+    "Tannins",
+    "Melanoidins"
+   ],
+   "correct": "Melanoidins",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The Maillard reaction produces brown pigments called melanoidins, which give roasted and baked foods their colour and savory flavours.",
+   "source": {
+    "url": "https://foodsciencetoolbox.substack.com/p/how-to-explain-the-maillard-reaction-the-science-behind-browning-aroma-and-flavor",
+    "title": "How to Explain the Maillard Reaction"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which part of the Crocus sativus flower is dried to make saffron?",
+   "answers": [
+    "The stigmas",
+    "The petals",
+    "The anthers",
+    "The corms"
+   ],
+   "correct": "The stigmas",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Saffron is made from the dried, pollen-receiving stigmas of the flower, three per bloom.",
+   "source": {
+    "url": "https://www.britannica.com/topic/saffron",
+    "title": "Saffron - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many saffron crocus flowers are needed to yield one gram of dried saffron?",
+   "answers": [
+    "About 15",
+    "About 150",
+    "About 1,500",
+    "About 15,000"
+   ],
+   "correct": "About 150",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Each flower gives only three tiny stigmas, so about 150 flowers are needed per gram of dried spice. This is why saffron is so expensive.",
+   "source": {
+    "url": "https://ucanr.edu/site/uc-master-gardeners-santa-clara-county/saffron",
+    "title": "Saffron - UC Master Gardeners of Santa Clara County"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which toxic, fall-flowering plant, sometimes called 'meadow saffron', must not be confused with the saffron crocus?",
+   "answers": [
+    "Foxglove",
+    "Colchicum",
+    "Monkshood",
+    "Oleander"
+   ],
+   "correct": "Colchicum",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Colchicums look similar to the saffron crocus but are toxic. They have six stamens, while true crocuses have three.",
+   "source": {
+    "url": "https://ucanr.edu/site/uc-master-gardeners-santa-clara-county/saffron",
+    "title": "Saffron - UC Master Gardeners of Santa Clara County"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Under PDO rules, what is the minimum maturation period for Parmigiano Reggiano?",
+   "answers": [
+    "6 months",
+    "12 months",
+    "18 months",
+    "24 months"
+   ],
+   "correct": "12 months",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Parmigiano Reggiano must mature for at least 12 months within its area of origin before it can be sold.",
+   "source": {
+    "url": "https://news.italianfood.net/2023/03/14/what-makes-parmigiano-reggiano-pdo-unique/",
+    "title": "What makes Parmigiano Reggiano Pdo unique - Italianfood.net"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Parmigiano Reggiano's production area lies between which two Italian rivers?",
+   "answers": [
+    "Adige and Brenta",
+    "Arno and Tiber",
+    "Tanaro and Ticino",
+    "Po and Reno"
+   ],
+   "correct": "Po and Reno",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The area covers Parma, Reggio Emilia, Modena, and parts of Mantua and Bologna, between the Po and Reno rivers.",
+   "source": {
+    "url": "https://www.agriform.it/en/products/parmigiano-reggiano-pdo",
+    "title": "Parmigiano Reggiano, characteristics and nutritional values - Agriform"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A 1612 document from which Duke of Parma marks the start of efforts to protect Parmigiano Reggiano from counterfeits?",
+   "answers": [
+    "Cosimo de' Medici",
+    "Ranuccio Farnese",
+    "Ludovico Sforza",
+    "Federico da Montefeltro"
+   ],
+   "correct": "Ranuccio Farnese",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The history of protecting the cheese's designation of origin is traced to a 1612 document of Ranuccio Farnese, Duke of Parma.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://wineandtravelitaly.com/food/parmigiano-reggiano-dop/",
+    "title": "Parmigiano Reggiano DOP - Wine and Travel Italy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word 'mole' derives from the Nahuatl chilmolli. What does that word mean?",
+   "answers": [
+    "Ground cocoa paste",
+    "Stone-pounded seeds",
+    "Burnt spice stew",
+    "Chilli pepper sauce"
+   ],
+   "correct": "Chilli pepper sauce",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "In Nahuatl, 'chil' means chilli pepper and 'molli' means sauce or ragout.",
+   "source": {
+    "url": "https://www.alimentarium.org/en/fact-sheet/mole",
+    "title": "Mole - Alimentarium"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is a dried poblano pepper called?",
+   "answers": [
+    "Ancho",
+    "Pasilla",
+    "Guajillo",
+    "Cascabel"
+   ],
+   "correct": "Ancho",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "A fresh poblano becomes a chile ancho when dried. The pasilla is sometimes wrongly called 'poblano' but is a different pepper.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Poblano",
+    "title": "Poblano - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to legend, nuns of which convent in Puebla created mole poblano to honour a visiting archbishop?",
+   "answers": [
+    "Santa Clara",
+    "San Jerónimo",
+    "Santa Cruz",
+    "Santa Rosa"
+   ],
+   "correct": "Santa Rosa",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The story says a nun at the Santa Rosa convent made the sauce for Juan de Palafox, Viceroy of New Spain and Archbishop of Puebla. The origin is disputed.",
+   "source": {
+    "url": "https://www.alimentarium.org/en/fact-sheet/mole",
+    "title": "Mole - Alimentarium"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which umami compound does katsuobushi mainly contribute to dashi?",
+   "answers": [
+    "Glutamic acid",
+    "Inosinic acid",
+    "Guanylic acid",
+    "Aspartic acid"
+   ],
+   "correct": "Inosinic acid",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Kombu supplies glutamic acid, while katsuobushi and niboshi supply inosinic acid.",
+   "source": {
+    "url": "https://www.foodinjapan.org/japan/dashi/",
+    "title": "Dashi: Japanese Soup Stock Guide & Easy Recipe"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Japanese cooking, what is 'niban dashi'?",
+   "answers": [
+    "A stock made by reusing the first batch's solids",
+    "A vegan stock made only from dried shiitake",
+    "A stock of dried sardines simmered for hours",
+    "A syrupy stock reduced to a thick glaze"
+   ],
+   "correct": "A stock made by reusing the first batch's solids",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Niban ('second') dashi is made by reusing the kombu and katsuobushi left over from the first dashi. It has a milder aroma than ichiban dashi.",
+   "source": {
+    "url": "https://paqupeljapan.com/recipes/dashi-japanese-soup-stock",
+    "title": "Dashi (Japanese Soup Stock) - Paqupel Japan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What distinguishes the salt traditionally used to brine napa cabbage for baechu-kimchi?",
+   "answers": [
+    "It is smoked before use",
+    "It has a larger grain than kitchen salt",
+    "It is milled as fine as table salt",
+    "It is infused with rice vinegar"
+   ],
+   "correct": "It has a larger grain than kitchen salt",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Korean brining salt has a larger grain size than common kitchen salt, and it is used for the initial salting of the cabbage.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Baechu-kimchi",
+    "title": "Baechu-kimchi - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ingredient, first imported during Korea's Joseon Dynasty, quickly became widespread as a kimchi seasoning?",
+   "answers": [
+    "Chili peppers",
+    "Garlic",
+    "Ginger",
+    "Korean radish"
+   ],
+   "correct": "Chili peppers",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Chili peppers arrived in Korea during the Joseon Dynasty and soon became a standard seasoning for kimchi.",
+   "source": {
+    "url": "https://www.chefssociety.org/collaborative_culinary_organization/kimchi-fermented-korean-napa-cabbage/",
+    "title": "Kimchi—Fermented Korean Napa Cabbage - Chefs Society"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year did 11 Marseille restaurateurs draw up the Bouillabaisse Charter?",
+   "answers": [
+    "1950",
+    "1965",
+    "1980",
+    "1995"
+   ],
+   "correct": "1980",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "In 1980, 11 Marseille restaurateurs drew up a charter codifying both the ingredients and the method of preparing bouillabaisse.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bouillabaisse",
+    "title": "Bouillabaisse - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bouillabaisse is said to have roots in an ancient Greek fish soup called what?",
+   "answers": [
+    "Psarosoupa",
+    "Bourdeto",
+    "Plaki",
+    "Kakavia"
+   ],
+   "correct": "Kakavia",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Provençal sources trace bouillabaisse to the Greek kakavia, which is said to date from the founding of Marseille in the 7th century BC.",
+   "source": {
+    "url": "https://www.provenceweb.fr/e/gastronomy/provencal-recipes/bouillabaisse-recipe.htm",
+    "title": "Traditional bouillabaisse recipe - Provenceweb"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name of rouille, the garlicky sauce served with bouillabaisse, translates from French as what?",
+   "answers": [
+    "Ember",
+    "Rust",
+    "Brick",
+    "Clay"
+   ],
+   "correct": "Rust",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Rouille means 'rust', after the sauce's reddish colour.",
+   "source": {
+    "url": "https://perfectlyprovence.co/the-story-of-bouillabaisse-marseilles-seafood-delicacy-and-a-recipe/",
+    "title": "The Story of Bouillabaisse - Perfectly Provence"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French chef pioneered sous vide cooking at the Troisgros restaurant in the 1970s, combining vacuum sealing with low-temperature cooking?",
+   "answers": [
+    "Alain Ducasse",
+    "Georges Pralus",
+    "Fernand Point",
+    "Michel Roux"
+   ],
+   "correct": "Georges Pralus",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Georges Pralus pioneered cooking vacuum-sealed food at low temperature in the 1970s and is often called the father of sous vide.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://blog.suvie.com/a-brief-history-of-sous-vide-2",
+    "title": "A Brief History of Sous Vide - Suvie"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which American-born physicist described low-and-slow cooking in 1799, an early ancestor of sous vide?",
+   "answers": [
+    "Joseph Priestley",
+    "Humphry Davy",
+    "Benjamin Thompson",
+    "Benjamin Rush"
+   ],
+   "correct": "Benjamin Thompson",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Benjamin Thompson (Count Rumford) described low-temperature cooking in 1799, long before modern vacuum-sealed sous vide.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://blog.suvie.com/a-brief-history-of-sous-vide-2",
+    "title": "A Brief History of Sous Vide - Suvie"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ingredient is typical of Western-style curry powder but absent from garam masala?",
+   "answers": [
+    "Cinnamon",
+    "Cloves",
+    "Mace",
+    "Turmeric"
+   ],
+   "correct": "Turmeric",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Garam masala uses no turmeric and is sweeter, leaning on spices such as cinnamon, cloves and nutmeg or mace.",
+   "source": {
+    "url": "https://www.daringgourmet.com/garam-masala/",
+    "title": "Garam Masala Recipe - The Daring Gourmet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Tempering chocolate aims to build which form of cocoa butter crystal?",
+   "answers": [
+    "Form I",
+    "Form III",
+    "Form V",
+    "Form VI"
+   ],
+   "correct": "Form V",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Form V crystals are the key to good chocolate. They are not the most stable form (that is Form VI), but they give snap and gloss.",
+   "source": {
+    "url": "https://www.chemistryworld.com/features/well-tempered-chocolate/9200.article",
+    "title": "Well-tempered chocolate - Chemistry World"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At roughly what temperature does the Form V cocoa butter crystal melt?",
+   "answers": [
+    "About 24°C",
+    "About 29°C",
+    "About 34°C",
+    "About 42°C"
+   ],
+   "correct": "About 34°C",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Type V cocoa butter melts at about 33.8°C (92.8°F), so tempered chocolate must be worked below that.",
+   "source": {
+    "url": "https://chocolatealchemy.com/tempering-deconstruction-and-reconstruction-illustrated-tempering",
+    "title": "Tempering - Deconstruction and Reconstruction - Chocolate Alchemy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Beijing roast-duck restaurant brand was founded in 1864?",
+   "answers": [
+    "Quanjude",
+    "Bianyifang",
+    "Donglaishun",
+    "Haidilao"
+   ],
+   "correct": "Quanjude",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Quanjude was established in 1864 and is famous for its Peking duck. Bianyifang is much older, dating from the 1410s.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Quanjude",
+    "title": "Quanjude - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Quanjude's roast-duck tradition uses non-smoky hardwood from which kind of tree to give a subtle fruity flavour?",
+   "answers": [
+    "Mesquite and hickory",
+    "Pine and cedar",
+    "Jujube, peach or pear",
+    "Oak and walnut"
+   ],
+   "correct": "Jujube, peach or pear",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Quanjude's open-oven roasting uses non-smoky fruitwoods such as Chinese date (jujube), peach or pear.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Quanjude",
+    "title": "Quanjude - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year was the Pekin duck breed introduced to the United States from China?",
+   "answers": [
+    "1823",
+    "1873",
+    "1903",
+    "1949"
+   ],
+   "correct": "1873",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The Pekin breed, now a common choice for roast duck, was introduced to the U.S. from China in 1873.",
+   "source": {
+    "url": "https://modernfarmer.com/2015/06/a-brief-history-of-peking-duck/",
+    "title": "A Brief History of Peking Duck - Modern Farmer"
+   },
+   "ai_written": true
+  }
+ ]
+}

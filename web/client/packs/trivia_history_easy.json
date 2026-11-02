@@ -1,0 +1,927 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "History trivia (easy)",
+ "description": "50 easy questions about world and US history, from ancient times to about 2000. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "For which ancient Egyptian pharaoh was the Great Pyramid of Giza built as a tomb?",
+   "answers": [
+    "Ramesses II",
+    "Khufu",
+    "Tutankhamun",
+    "Thutmose III"
+   ],
+   "correct": "Khufu",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The Great Pyramid was built for Khufu, the second king of Egypt's 4th dynasty, around 4,500 years ago.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/place/Great-Pyramid-of-Giza",
+    "title": "Great Pyramid of Giza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the main purpose of the Great Pyramid of Giza?",
+   "answers": [
+    "A temple for public worship",
+    "A granary for storing grain",
+    "An observatory for the stars",
+    "A royal tomb for a pharaoh"
+   ],
+   "correct": "A royal tomb for a pharaoh",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The Great Pyramid was constructed as a royal tomb for Pharaoh Khufu.",
+   "source": {
+    "url": "https://www.britannica.com/place/Great-Pyramid-of-Giza",
+    "title": "Great Pyramid of Giza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of the Seven Wonders of the Ancient World is the only one still standing today?",
+   "answers": [
+    "Hanging Gardens of Babylon",
+    "Colossus of Rhodes",
+    "Great Pyramid of Giza",
+    "Lighthouse of Alexandria"
+   ],
+   "correct": "Great Pyramid of Giza",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Khufu's Great Pyramid at Giza is the only one of the ancient wonders that survives.",
+   "source": {
+    "url": "https://www.worldhistory.org/Great_Pyramid_of_Giza/",
+    "title": "Great Pyramid of Giza - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What did the Romans call March 15, the day on which Julius Caesar was assassinated in 44 BC?",
+   "answers": [
+    "The Ides of March",
+    "The Nones of March",
+    "The Kalends of March",
+    "The Lupercalia"
+   ],
+   "correct": "The Ides of March",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Caesar was killed on the Ides of March, which fell on March 15.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Ides-of-March",
+    "title": "Ides of March"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Roman senator, together with Gaius Cassius Longinus, led the plot to kill Julius Caesar?",
+   "answers": [
+    "Mark Antony",
+    "Cicero",
+    "Pompey",
+    "Marcus Junius Brutus"
+   ],
+   "correct": "Marcus Junius Brutus",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The conspiracy of roughly 60 men was led by Cassius and Marcus Junius Brutus.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Julius-Caesar-Roman-ruler",
+    "title": "Julius Caesar"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who emerged from the civil wars after Caesar's death to become Rome's first emperor?",
+   "answers": [
+    "Nero",
+    "Augustus",
+    "Constantine",
+    "Marcus Aurelius"
+   ],
+   "correct": "Augustus",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Caesar's grand-nephew Octavian won the civil wars and became Augustus, the first Roman emperor.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/march-15/the-ides-of-march",
+    "title": "The Ides of March"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In early 44 BC, which title gave Julius Caesar rule over Rome with no time limit?",
+   "answers": [
+    "Emperor of Rome",
+    "Consul for life",
+    "King of Italy",
+    "Dictator for life"
+   ],
+   "correct": "Dictator for life",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Caesar was named dictator perpetuo, meaning dictator in perpetuity, in early 44 BC.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Assassination_of_Julius_Caesar",
+    "title": "Assassination of Julius Caesar"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did King John of England seal the Magna Carta?",
+   "answers": [
+    "1066",
+    "1215",
+    "1314",
+    "1415"
+   ],
+   "correct": "1215",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "King John set his seal to Magna Carta on 15 June 1215.",
+   "source": {
+    "url": "https://www.nationalarchives.gov.uk/education/teaching-resources/magna-carta-1214-1225/",
+    "title": "Magna Carta 1214–1225 - The National Archives"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which meadow beside the River Thames did King John seal the Magna Carta?",
+   "answers": [
+    "Hastings",
+    "Canterbury",
+    "Nottingham",
+    "Runnymede"
+   ],
+   "correct": "Runnymede",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The charter was drafted at Runnymede, a meadow by the Thames, and sealed there in 1215.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Magna-Carta",
+    "title": "Magna Carta"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the Latin name \"Magna Carta\" mean in English?",
+   "answers": [
+    "Great Charter",
+    "Grand Council",
+    "Royal Decree",
+    "Free Kingdom"
+   ],
+   "correct": "Great Charter",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Magna Carta translates as \"Great Charter\".",
+   "source": {
+    "url": "https://www.britannica.com/topic/Magna-Carta",
+    "title": "Magna Carta"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Columbus's 1492 voyage across the Atlantic was financed by the rulers of which country?",
+   "answers": [
+    "Portugal",
+    "England",
+    "Spain",
+    "France"
+   ],
+   "correct": "Spain",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Columbus won the sponsorship of Spain's monarchs, Ferdinand II and Isabella I.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Christopher-Columbus",
+    "title": "Early career and voyages of Christopher Columbus"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these was one of the three ships Columbus sailed on his first voyage in 1492?",
+   "answers": [
+    "Mayflower",
+    "Golden Hind",
+    "Santa María",
+    "Bounty"
+   ],
+   "correct": "Santa María",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Columbus set out with the Santa María, the Niña and the Pinta.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Christopher-Columbus",
+    "title": "Early career and voyages of Christopher Columbus"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Columbus sailed west in 1492 hoping to reach which continent?",
+   "answers": [
+    "Asia",
+    "Africa",
+    "Australia",
+    "Antarctica"
+   ],
+   "correct": "Asia",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Columbus hoped to reach Asia by sailing west across what he thought was open sea.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Christopher-Columbus",
+    "title": "Early career and voyages of Christopher Columbus"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Columbus's first landfall in the Americas, in October 1492, was in what is now which island country?",
+   "answers": [
+    "Cuba",
+    "Jamaica",
+    "The Bahamas",
+    "Haiti"
+   ],
+   "correct": "The Bahamas",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Land was sighted in the Bahamas on October 12, 1492, before he explored Cuba and Hispaniola.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Christopher-Columbus",
+    "title": "Early career and voyages of Christopher Columbus"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the principal author of the US Declaration of Independence?",
+   "answers": [
+    "Thomas Jefferson",
+    "George Washington",
+    "Alexander Hamilton",
+    "James Madison"
+   ],
+   "correct": "Thomas Jefferson",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The drafting committee gave the actual writing of the Declaration to Thomas Jefferson.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.archives.gov/milestone-documents/declaration-of-independence",
+    "title": "Declaration of Independence (1776)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On what date did the Continental Congress approve the Declaration of Independence?",
+   "answers": [
+    "April 19, 1775",
+    "December 16, 1773",
+    "September 17, 1787",
+    "July 4, 1776"
+   ],
+   "correct": "July 4, 1776",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The Continental Congress approved the Declaration on July 4, 1776, the date celebrated as American independence.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Declaration-of-Independence",
+    "title": "Declaration of Independence"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Declaration of Independence announced the separation of 13 North American colonies from which country?",
+   "answers": [
+    "France",
+    "Spain",
+    "Great Britain",
+    "The Netherlands"
+   ],
+   "correct": "Great Britain",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "With the Declaration, the 13 American colonies severed their political ties to Great Britain.",
+   "source": {
+    "url": "https://history.state.gov/milestones/1776-1783/declaration",
+    "title": "Milestones in the History of U.S. Foreign Relations - Office of the Historian"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which US president issued the Emancipation Proclamation on January 1, 1863?",
+   "answers": [
+    "Andrew Johnson",
+    "Ulysses S. Grant",
+    "James Buchanan",
+    "Abraham Lincoln"
+   ],
+   "correct": "Abraham Lincoln",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Abraham Lincoln issued the Emancipation Proclamation during the third year of the Civil War.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.archives.gov/press/press-releases/1998/nr98-37",
+    "title": "Information on the Emancipation Proclamation"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Juneteenth marks the arrival of the promise of freedom to about 250,000 enslaved people in which state?",
+   "answers": [
+    "Georgia",
+    "Texas",
+    "Virginia",
+    "Mississippi"
+   ],
+   "correct": "Texas",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Freedom reached the enslaved people of Texas two and a half years after Lincoln's proclamation, once Union victory was secured.",
+   "source": {
+    "url": "https://www.archives.gov/press/press-releases/2025/nr25-09",
+    "title": "National Archives To Display Emancipation Proclamation and 'Juneteenth' General Order No. 3"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Whom did Lincoln's 1863 Emancipation Proclamation declare free?",
+   "answers": [
+    "Every enslaved person in the whole United States",
+    "Only enslaved people held in the loyal border states",
+    "Enslaved people held in areas still in revolt",
+    "Only enslaved people who had joined the Union army"
+   ],
+   "correct": "Enslaved people held in areas still in revolt",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The proclamation freed slaves in areas still in rebellion, and it left slavery in the loyal border states untouched.",
+   "source": {
+    "url": "https://www.archives.gov/press/press-releases/1998/nr98-23",
+    "title": "The Original Emancipation Proclamation on Display at the National Archives and Records Administration"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the Bastille, the Paris building stormed on July 14, 1789?",
+   "answers": [
+    "A royal palace and hunting lodge",
+    "A cathedral and bell tower",
+    "A university and library",
+    "A medieval fortress and political prison"
+   ],
+   "correct": "A medieval fortress and political prison",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The Bastille was a medieval fortress, armory and political prison that became a symbol of royal tyranny.",
+   "source": {
+    "url": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/the-storming-of-the-bastille/",
+    "title": "The Storming of the Bastille"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French king was on the throne when the Bastille was stormed in 1789?",
+   "answers": [
+    "Louis XVI",
+    "Louis XIV",
+    "Charles X",
+    "Henry IV"
+   ],
+   "correct": "Louis XVI",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Louis XVI was king in July 1789, when his dismissal of his finance minister Necker helped set off the crisis in Paris.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/the-storming-of-the-bastille/",
+    "title": "The Storming of the Bastille"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The storming of the Bastille in July 1789 was the flashpoint of which revolution?",
+   "answers": [
+    "The American Revolution",
+    "The Russian Revolution",
+    "The Haitian Revolution",
+    "The French Revolution"
+   ],
+   "correct": "The French Revolution",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The storming of the Bastille on July 14, 1789 was a pivotal event in the French Revolution.",
+   "source": {
+    "url": "https://www.britannica.com/event/storming-of-the-Bastille",
+    "title": "Storming of the Bastille"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French emperor suffered his final defeat at the Battle of Waterloo?",
+   "answers": [
+    "Charlemagne",
+    "Napoleon Bonaparte",
+    "Napoleon III",
+    "Louis XVI"
+   ],
+   "correct": "Napoleon Bonaparte",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Waterloo was Napoleon's final defeat, ending 23 years of recurrent warfare between France and the other powers of Europe.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/event/Battle-of-Waterloo",
+    "title": "Battle of Waterloo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which British commander led the allied army that defeated Napoleon at Waterloo?",
+   "answers": [
+    "Duke of Marlborough",
+    "Lord Nelson",
+    "Lord Cornwallis",
+    "Duke of Wellington"
+   ],
+   "correct": "Duke of Wellington",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Napoleon was beaten by the Duke of Wellington's combined allied army and a Prussian army under Blücher.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/event/Battle-of-Waterloo",
+    "title": "Battle of Waterloo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Battle of Waterloo was fought near a village in what is now which country?",
+   "answers": [
+    "Belgium",
+    "France",
+    "Germany",
+    "The Netherlands"
+   ],
+   "correct": "Belgium",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The battle was fought south of Brussels near the village of Waterloo, in present-day Belgium.",
+   "source": {
+    "url": "https://www.britannica.com/event/Battle-of-Waterloo",
+    "title": "Battle of Waterloo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was the Battle of Waterloo fought?",
+   "answers": [
+    "1789",
+    "1805",
+    "1815",
+    "1848"
+   ],
+   "correct": "1815",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The battle took place on 18 June 1815.",
+   "source": {
+    "url": "https://www.nam.ac.uk/explore/battle-waterloo",
+    "title": "Battle of Waterloo"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1914 assassination of which archduke was the immediate cause of World War I?",
+   "answers": [
+    "Franz Joseph",
+    "Franz Ferdinand",
+    "Otto von Bismarck",
+    "Wilhelm II"
+   ],
+   "correct": "Franz Ferdinand",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The killing of Archduke Franz Ferdinand, heir to the Austro-Hungarian throne, on June 28, 1914 sparked the war.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Franz-Ferdinand-Archduke-of-Austria-Este",
+    "title": "Franz Ferdinand, archduke of Austria-Este"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After the 1914 assassination of the Austro-Hungarian heir, which country did Austria-Hungary declare war on?",
+   "answers": [
+    "Russia",
+    "France",
+    "Belgium",
+    "Serbia"
+   ],
+   "correct": "Serbia",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Austria-Hungary declared war on Serbia on 28 July 1914, and the conflict spread as other powers took sides.",
+   "source": {
+    "url": "https://www.iwm.org.uk/history/how-the-world-went-to-war-in-1914",
+    "title": "Outbreak of the First World War"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which city was the Austro-Hungarian heir shot on June 28, 1914, sparking World War I?",
+   "answers": [
+    "Vienna",
+    "Belgrade",
+    "Sarajevo",
+    "Berlin"
+   ],
+   "correct": "Sarajevo",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The assassination happened in Sarajevo, in Bosnia, and was the catalyst for World War I.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Franz-Ferdinand-Archduke-of-Austria-Este",
+    "title": "Franz Ferdinand, archduke of Austria-Este"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which US president addressed Congress after Pearl Harbor, calling December 7, 1941 \"a date which will live in infamy\"?",
+   "answers": [
+    "Franklin D. Roosevelt",
+    "Harry S. Truman",
+    "Herbert Hoover",
+    "Woodrow Wilson"
+   ],
+   "correct": "Franklin D. Roosevelt",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "President Franklin D. Roosevelt gave the speech the day after the attack and asked Congress to recognize a state of war with Japan.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/articles/pearl-harbor",
+    "title": "Pearl Harbor: December 7 Attack, Deaths & Summary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country launched the surprise attack on the US naval base at Pearl Harbor on December 7, 1941?",
+   "answers": [
+    "Germany",
+    "Italy",
+    "Japan",
+    "The Soviet Union"
+   ],
+   "correct": "Japan",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Japan carried out the surprise aerial attack on the US naval base on Oahu, Hawaii.",
+   "source": {
+    "url": "https://www.britannica.com/event/Pearl-Harbor-attack",
+    "title": "Pearl Harbor attack"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1941 attack on Pearl Harbor drew the United States into which conflict?",
+   "answers": [
+    "World War I",
+    "The Korean War",
+    "The Spanish-American War",
+    "World War II"
+   ],
+   "correct": "World War II",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The attack precipitated the entry of the United States into World War II.",
+   "source": {
+    "url": "https://www.britannica.com/event/Pearl-Harbor-attack",
+    "title": "Pearl Harbor attack"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On what date did the Allied D-Day landings in Normandy take place?",
+   "answers": [
+    "June 6, 1944",
+    "December 7, 1941",
+    "May 8, 1945",
+    "August 6, 1945"
+   ],
+   "correct": "June 6, 1944",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The Normandy invasion, known as D-Day, was launched on June 6, 1944.",
+   "source": {
+    "url": "https://www.britannica.com/event/Normandy-Invasion",
+    "title": "Normandy Invasion"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the code name for the Allied invasion of Normandy in 1944?",
+   "answers": [
+    "Operation Barbarossa",
+    "Operation Torch",
+    "Operation Overlord",
+    "Operation Market Garden"
+   ],
+   "correct": "Operation Overlord",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Operation Overlord was the code name for the Normandy invasion that began on D-Day.",
+   "source": {
+    "url": "https://encyclopedia.ushmm.org/content/en/article/d-day",
+    "title": "D-Day: Learn about the D-Day Invasion"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which US general led the Allied force that landed in Normandy on D-Day?",
+   "answers": [
+    "George S. Patton",
+    "Douglas MacArthur",
+    "Omar Bradley",
+    "Dwight D. Eisenhower"
+   ],
+   "correct": "Dwight D. Eisenhower",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "An Allied force led by Gen. Dwight D. Eisenhower launched the invasion on June 6, 1944.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/event/Normandy-Invasion/D-Day-June-6-1944",
+    "title": "Normandy Invasion - D-Day, WWII, Allies"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the Berlin Wall fall?",
+   "answers": [
+    "1961",
+    "1975",
+    "1989",
+    "1991"
+   ],
+   "correct": "1989",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The Berlin Wall fell on November 9, 1989.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/fall-berlin-wall/",
+    "title": "Fall of the Berlin Wall"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year were East and West Germany formally reunited?",
+   "answers": [
+    "1990",
+    "1989",
+    "1991",
+    "1995"
+   ],
+   "correct": "1990",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Germany reunited on 3 October 1990, about 11 months after the Berlin Wall fell.",
+   "source": {
+    "url": "https://www.iwm.org.uk/history/cold-war/germany/berlin-wall",
+    "title": "What Was The Berlin Wall And How Did It Fall? - The Cold War"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The fall of the Berlin Wall is seen as the symbolic end of which long standoff?",
+   "answers": [
+    "The Hundred Years' War",
+    "The Cold War",
+    "The Thirty Years' War",
+    "The Crimean War"
+   ],
+   "correct": "The Cold War",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The wall's fall symbolized the end of the Cold War division between East and West.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/fall-berlin-wall/",
+    "title": "Fall of the Berlin Wall"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the first person to walk on the Moon, during the Apollo 11 mission?",
+   "answers": [
+    "Buzz Aldrin",
+    "John Glenn",
+    "Alan Shepard",
+    "Neil Armstrong"
+   ],
+   "correct": "Neil Armstrong",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Neil Armstrong, commander of Apollo 11, was the first human to walk on the surface of the Moon.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.nasa.gov/mission/apollo-11/",
+    "title": "Apollo 11 - NASA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Apollo 11 astronaut stayed in lunar orbit aboard the command module while two crewmates landed on the Moon?",
+   "answers": [
+    "Michael Collins",
+    "Buzz Aldrin",
+    "Neil Armstrong",
+    "Jim Lovell"
+   ],
+   "correct": "Michael Collins",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Armstrong and Aldrin took the lunar module down to the surface, while Michael Collins remained in the command module.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.history.com/articles/moon-landing-1969",
+    "title": "1969 Apollo 11 Moon Landing: Timeline, Facts, Video"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Apollo 11 land the first humans on the Moon?",
+   "answers": [
+    "1961",
+    "1965",
+    "1969",
+    "1972"
+   ],
+   "correct": "1969",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Apollo 11 launched on July 16, 1969, and Armstrong stepped onto the Moon that July.",
+   "source": {
+    "url": "https://www.nasa.gov/history/apollo-11-mission-overview/",
+    "title": "Apollo 11 Mission Overview - NASA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the name of the Apollo 11 lunar module that landed on the Moon?",
+   "answers": [
+    "Columbia",
+    "Eagle",
+    "Endeavour",
+    "Challenger"
+   ],
+   "correct": "Eagle",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Armstrong and Aldrin landed in the lunar module Eagle, while Collins flew the command module Columbia.",
+   "source": {
+    "url": "https://www.nasa.gov/history/apollo-11-mission-overview/",
+    "title": "Apollo 11 Mission Overview - NASA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In April 1912, the Titanic sank after striking what?",
+   "answers": [
+    "A coral reef",
+    "A rival ship",
+    "An iceberg",
+    "A sea mine"
+   ],
+   "correct": "An iceberg",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The British liner sank on its maiden voyage after hitting an iceberg in the North Atlantic.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Titanic",
+    "title": "Titanic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On its maiden voyage from Southampton, England, the Titanic was bound for which city?",
+   "answers": [
+    "Boston",
+    "Halifax",
+    "Philadelphia",
+    "New York City"
+   ],
+   "correct": "New York City",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The Titanic was heading from Southampton to New York City when it sank.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Titanic",
+    "title": "Titanic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Approximately how many people died when the Titanic sank?",
+   "answers": [
+    "About 150",
+    "About 1,500",
+    "About 15,000",
+    "About 500"
+   ],
+   "correct": "About 1,500",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "Roughly 1,500 passengers and crew died in the sinking.",
+   "source": {
+    "url": "https://www.history.com/articles/titanic",
+    "title": "The Titanic: Deaths, Dates, Sinking & Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which century did the Black Death devastate Europe?",
+   "answers": [
+    "The 11th century",
+    "The 14th century",
+    "The 17th century",
+    "The 9th century"
+   ],
+   "correct": "The 14th century",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The Black Death ravaged Europe between 1347 and 1351, in the 14th century.",
+   "source": {
+    "url": "https://www.britannica.com/event/Black-Death",
+    "title": "Black Death"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Black Death reached Europe aboard ships carrying fleas that lived on which animals?",
+   "answers": [
+    "Pigeons",
+    "Goats",
+    "Horses",
+    "Rats"
+   ],
+   "correct": "Rats",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The plague probably reached Sicily in 1347 on Genoese ships carrying flea-laden rats.",
+   "source": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7513766/",
+    "title": "History of the Plague: An Ancient Pandemic for the Age of COVID-19 - PMC"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why was the 14th-century plague nicknamed the \"Black Death\"?",
+   "answers": [
+    "Black spots appeared on the skin of many victims",
+    "Mourners across Europe wore black for years",
+    "Victims' bodies were burned and turned to ash",
+    "It spread mostly during moonless winter nights"
+   ],
+   "correct": "Black spots appeared on the skin of many victims",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The usual explanation is the black spots that developed on the skin of many victims. Some historians think the name came later, from a Latin phrase meaning \"dreadful death\".",
+   "source": {
+    "url": "https://www.britannica.com/summary/Black-Death-Key-Facts",
+    "title": "Black Death"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which continent did the plague that caused the Black Death originate?",
+   "answers": [
+    "Africa",
+    "North America",
+    "South America",
+    "Asia"
+   ],
+   "correct": "Asia",
+   "difficulty": "easy",
+   "category": "History",
+   "explain": "The plague originated in Asia and spread westward along trade routes to reach Europe.",
+   "source": {
+    "url": "https://www.britannica.com/event/Black-Death",
+    "title": "Black Death"
+   },
+   "ai_written": true
+  }
+ ]
+}

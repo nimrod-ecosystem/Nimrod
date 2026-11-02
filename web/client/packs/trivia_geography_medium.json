@@ -1,0 +1,917 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Geography trivia (medium)",
+ "description": "50 medium questions about countries, capitals, rivers, mountains, landmarks, maps. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "What does it mean to call Kilimanjaro a \"free-standing\" mountain?",
+   "answers": [
+    "It is not part of a mountain range",
+    "It has never been covered by snow",
+    "It rises directly out of the sea",
+    "It has no volcanic origin"
+   ],
+   "correct": "It is not part of a mountain range",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Kilimanjaro is described as the world's largest free-standing mountain rise, meaning it does not belong to a mountain range. It is a stratovolcano.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/kilimanjaro/",
+    "title": "Kilimanjaro - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Kilimanjaro is made up of three volcanic cones. Two are Kibo and Mawenzi. What is the third?",
+   "answers": [
+    "Meru",
+    "Lengai",
+    "Shira",
+    "Rongai"
+   ],
+   "correct": "Shira",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The three cones of Kilimanjaro are Kibo, Mawenzi and Shira. Kibo is the tallest and holds the summit.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/kilimanjaro/",
+    "title": "Kilimanjaro - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The highest point on Kilimanjaro's Kibo crater rim is called Uhuru. What does \"uhuru\" mean in Swahili?",
+   "answers": [
+    "Victory",
+    "Unity",
+    "Peace",
+    "Freedom"
+   ],
+   "correct": "Freedom",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Uhuru is the Swahili word for freedom. The summit was renamed Uhuru Peak after independence.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/kilimanjaro/",
+    "title": "Kilimanjaro - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which lake, at roughly 1,642 metres deep, is the deepest in the world?",
+   "answers": [
+    "Lake Tanganyika",
+    "Lake Baikal",
+    "Lake Superior",
+    "Lake Titicaca"
+   ],
+   "correct": "Lake Baikal",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Lake Baikal in southern Siberia reaches a maximum depth of about 1,642 metres (5,387 feet). Lake Tanganyika is second deepest.",
+   "source": {
+    "url": "https://geology.com/records/deepest-lake.shtml",
+    "title": "Deepest Lake in the World - Deepest Lake in the United States"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Lake Baikal is extremely deep because it sits in what kind of geological setting?",
+   "answers": [
+    "An ancient meteorite impact crater",
+    "A collapsed volcanic caldera",
+    "An active continental rift zone",
+    "A glacier-carved coastal fjord"
+   ],
+   "correct": "An active continental rift zone",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Baikal lies in an active continental rift that is slowly widening and deepening through subsidence.",
+   "source": {
+    "url": "https://geology.com/records/deepest-lake.shtml",
+    "title": "Deepest Lake in the World - Deepest Lake in the United States"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Siberian city lies close to Lake Baikal?",
+   "answers": [
+    "Novosibirsk",
+    "Omsk",
+    "Yakutsk",
+    "Irkutsk"
+   ],
+   "correct": "Irkutsk",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Lake Baikal is in southern Siberia, near the city of Irkutsk.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Lake_Baikal",
+    "title": "Lake Baikal - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which river is the main outflow of Lake Baikal?",
+   "answers": [
+    "Angara",
+    "Lena",
+    "Ob",
+    "Amur"
+   ],
+   "correct": "Angara",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Many rivers feed Baikal, but its primary outflow is the Angara River.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Lake_Baikal",
+    "title": "Lake Baikal - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Through how many countries does the Danube River pass, according to Britannica?",
+   "answers": [
+    "Six",
+    "Seven",
+    "Ten",
+    "Thirteen"
+   ],
+   "correct": "Ten",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Danube passes through ten countries, from Germany to Ukraine.",
+   "source": {
+    "url": "https://www.britannica.com/place/Danube-River",
+    "title": "Danube River - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Danube is the second-longest river in Europe. Which river is the longest?",
+   "answers": [
+    "Rhine",
+    "Dnieper",
+    "Volga",
+    "Don"
+   ],
+   "correct": "Volga",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Volga in Russia is the longest river in Europe, and the Danube comes second.",
+   "source": {
+    "url": "https://www.britannica.com/place/Danube-River",
+    "title": "Danube River - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these capital cities does the Danube flow through?",
+   "answers": [
+    "Prague",
+    "Warsaw",
+    "Zagreb",
+    "Budapest"
+   ],
+   "correct": "Budapest",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Danube flows through four capitals: Vienna, Bratislava, Budapest and Belgrade. Prague, Warsaw and Zagreb lie on other rivers.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/environmental-sciences/danube-river/",
+    "title": "Danube River - EBSCO Research Starters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which German upland region does the Danube have its source?",
+   "answers": [
+    "The Black Forest",
+    "The Harz",
+    "The Thuringian Forest",
+    "The Bavarian Alps"
+   ],
+   "correct": "The Black Forest",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Danube begins at Donaueschingen in Germany's Black Forest, where the Brigach and Breg streams meet.",
+   "source": {
+    "url": "https://www.tauck.com/river-cruises/european-river-facts/danube-river-facts",
+    "title": "Danube River Facts - Tauck"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two bodies of water does the Strait of Gibraltar connect?",
+   "answers": [
+    "The Mediterranean Sea and the Red Sea",
+    "The Atlantic Ocean and the Baltic Sea",
+    "The Black Sea and the Aegean Sea",
+    "The Atlantic Ocean and the Mediterranean Sea"
+   ],
+   "correct": "The Atlantic Ocean and the Mediterranean Sea",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Strait of Gibraltar is a narrow passage linking the Atlantic Ocean with the Mediterranean Sea. It also separates Europe from Africa.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Strait_of_Gibraltar",
+    "title": "Strait of Gibraltar - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Across the Strait of Gibraltar from southern Spain lies the northern coast of which African country?",
+   "answers": [
+    "Algeria",
+    "Morocco",
+    "Tunisia",
+    "Mauritania"
+   ],
+   "correct": "Morocco",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The strait separates Spain and Gibraltar to the north from Morocco, including Ceuta, to the south.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Strait_of_Gibraltar",
+    "title": "Strait of Gibraltar - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At its narrowest point, roughly how wide is the Strait of Gibraltar?",
+   "answers": [
+    "About 3 km",
+    "About 14 km",
+    "About 45 km",
+    "About 90 km"
+   ],
+   "correct": "About 14 km",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The narrowest distance between the Rock of Gibraltar and Morocco is about 14 km (7.7 nautical miles).",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Strait_of_Gibraltar",
+    "title": "Strait of Gibraltar - Simple English Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Atacama Desert, the driest non-polar desert on Earth, lies mainly in which country?",
+   "answers": [
+    "Peru",
+    "Argentina",
+    "Chile",
+    "Bolivia"
+   ],
+   "correct": "Chile",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Atacama stretches along the Pacific coast of northern Chile, between the Andes and the coastal range.",
+   "source": {
+    "url": "https://www.livescience.com/64752-atacama-desert.html",
+    "title": "What's So Special About the Atacama Desert? - Live Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On average, how much rain does the driest part of the Atacama Desert receive each year?",
+   "answers": [
+    "About 25 millimetres",
+    "Less than 1 millimetre",
+    "About 100 millimetres",
+    "About 250 millimetres"
+   ],
+   "correct": "Less than 1 millimetre",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The driest part of the Atacama gets under a millimetre of rain a year on average, which is why it is so extreme.",
+   "source": {
+    "url": "https://www.livescience.com/64752-atacama-desert.html",
+    "title": "What's So Special About the Atacama Desert? - Live Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Scientists study the Atacama Desert's soils partly because they resemble those found on which planet?",
+   "answers": [
+    "Venus",
+    "Mercury",
+    "Neptune",
+    "Mars"
+   ],
+   "correct": "Mars",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Comparisons with data from Mars rovers showed that Atacama soils have many similarities to Martian soils.",
+   "source": {
+    "url": "https://ourenvironment.berkeley.edu/driest-place-earth",
+    "title": "The driest place on earth - UC Berkeley"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which city is Bolivia's constitutional capital, home to its Supreme Court?",
+   "answers": [
+    "Sucre",
+    "Potosí",
+    "Cochabamba",
+    "Santa Cruz"
+   ],
+   "correct": "Sucre",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Sucre is the constitutional capital and seat of the judiciary. La Paz is the administrative capital.",
+   "source": {
+    "url": "https://www.britannica.com/place/Bolivia",
+    "title": "Bolivia - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bolivia is landlocked. Which of these countries does NOT border it?",
+   "answers": [
+    "Peru",
+    "Chile",
+    "Ecuador",
+    "Argentina"
+   ],
+   "correct": "Ecuador",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Bolivia borders Brazil, Paraguay, Argentina, Chile and Peru. Ecuador does not share a border with it.",
+   "source": {
+    "url": "https://www.britannica.com/place/Bolivia",
+    "title": "Bolivia - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bolivia was named in honour of which South American liberator?",
+   "answers": [
+    "José de San Martín",
+    "Simón Bolívar",
+    "Bernardo O'Higgins",
+    "Antonio José de Sucre"
+   ],
+   "correct": "Simón Bolívar",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Bolivia's 1825 congress named the new country after Simón Bolívar. Antonio José de Sucre led the army that liberated Upper Peru and gave his name to the capital city.",
+   "source": {
+    "url": "https://www.britannica.com/place/Bolivia",
+    "title": "Bolivia - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these national capitals sits highest above sea level?",
+   "answers": [
+    "Quito",
+    "Bogotá",
+    "La Paz",
+    "Addis Ababa"
+   ],
+   "correct": "La Paz",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "La Paz, Bolivia's seat of government, lies at more than 3,000 metres and is described as the highest national capital in the world.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/La-Paz/345940",
+    "title": "La Paz - Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which city did Brasília replace as Brazil's capital?",
+   "answers": [
+    "São Paulo",
+    "Salvador",
+    "Recife",
+    "Rio de Janeiro"
+   ],
+   "correct": "Rio de Janeiro",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Brasília was planned to move the capital from coastal Rio de Janeiro to a more central location.",
+   "source": {
+    "url": "https://artsandculture.google.com/entity/brasilia/m01hy_?hl=en",
+    "title": "Brasilia — Google Arts & Culture"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was Brasília founded as Brazil's new national capital?",
+   "answers": [
+    "1948",
+    "1960",
+    "1972",
+    "1985"
+   ],
+   "correct": "1960",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "President Juscelino Kubitschek founded Brasília on 21 April 1960.",
+   "source": {
+    "url": "https://artsandculture.google.com/entity/brasilia/m01hy_?hl=en",
+    "title": "Brasilia — Google Arts & Culture"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which modernist architect worked with planner Lúcio Costa on the design of Brasília?",
+   "answers": [
+    "Le Corbusier",
+    "Gropius",
+    "Mies van der Rohe",
+    "Niemeyer"
+   ],
+   "correct": "Niemeyer",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Brasília was planned by Lúcio Costa, and the architect Niemeyer designed many of its landmark buildings.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://artsandculture.google.com/entity/brasilia/m01hy_?hl=en",
+    "title": "Brasilia — Google Arts & Culture"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Victoria Falls is formed by which river?",
+   "answers": [
+    "Zambezi",
+    "Limpopo",
+    "Okavango",
+    "Orange"
+   ],
+   "correct": "Zambezi",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Victoria Falls is a waterfall on the Zambezi River, about midway along its course.",
+   "source": {
+    "url": "https://www.britannica.com/facts/Victoria-Falls-waterfall-Zambia-Zimbabwe",
+    "title": "Victoria Falls Facts - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Victoria Falls lies on the border between which two countries?",
+   "answers": [
+    "Zambia and Zimbabwe",
+    "Zimbabwe and Mozambique",
+    "Mozambique and Malawi",
+    "Zambia and Angola"
+   ],
+   "correct": "Zambia and Zimbabwe",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The falls sit on the Zambezi, with Zambia to the north and Zimbabwe to the south.",
+   "source": {
+    "url": "https://www.britannica.com/facts/Victoria-Falls-waterfall-Zambia-Zimbabwe",
+    "title": "Victoria Falls Facts - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Victoria Falls is known locally as Mosi-oa-Tunya. What does that name mean?",
+   "answers": [
+    "The Mist That Sings",
+    "The Water That Roars",
+    "The Smoke That Thunders",
+    "The River That Falls"
+   ],
+   "correct": "The Smoke That Thunders",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Mosi-oa-Tunya translates as \"The Smoke That Thunders\", after the mist and roar of the falls.",
+   "source": {
+    "url": "https://www.britannica.com/facts/Victoria-Falls-waterfall-Zambia-Zimbabwe",
+    "title": "Victoria Falls Facts - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is Angel Falls, the world's tallest uninterrupted waterfall?",
+   "answers": [
+    "Colombia",
+    "Venezuela",
+    "Guyana",
+    "Brazil"
+   ],
+   "correct": "Venezuela",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Angel Falls is in Canaima National Park in Bolívar State, Venezuela. It drops about 979 metres in total.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Angel_Falls",
+    "title": "Angel Falls - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Angel Falls was named after which aviator?",
+   "answers": [
+    "Charles Lindbergh",
+    "Amelia Earhart",
+    "Alberto Santos-Dumont",
+    "Jimmy Angel"
+   ],
+   "correct": "Jimmy Angel",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The falls are named after the aviator Jimmy Angel, who brought them to wider attention in the 1930s.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Angel_Falls",
+    "title": "Angel Falls - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Angel Falls plunges from the top of which table-top mountain?",
+   "answers": [
+    "Auyán-tepui",
+    "Mount Roraima",
+    "Cerro Autana",
+    "Pico da Neblina"
+   ],
+   "correct": "Auyán-tepui",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The falls drop from Auyán-tepui in Canaima National Park.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Angel_Falls",
+    "title": "Angel Falls - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ancient people made Petra the capital of their kingdom?",
+   "answers": [
+    "Phoenicians",
+    "Assyrians",
+    "Hittites",
+    "Nabataeans"
+   ],
+   "correct": "Nabataeans",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Petra was the capital of the Nabataean Kingdom, which grew rich from controlling trade routes such as the Incense Road.",
+   "source": {
+    "url": "https://www.amnh.org/explore/ology/archaeology/the-ancient-city-of-petra2",
+    "title": "The Ancient City of Petra - American Museum of Natural History"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Visitors reach Petra's Treasury through a winding gorge. What is it called?",
+   "answers": [
+    "Wadi Rum",
+    "Wadi Mujib",
+    "The Siq",
+    "The Hijaz Pass"
+   ],
+   "correct": "The Siq",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Visitors walk through the Siq, a winding gorge, and first see Al Khazna (the Treasury) carved in rosy sandstone.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/history/article/lost-city-petra",
+    "title": "Petra, Jordan, archaeology and history - National Geographic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1812, which adventurer, disguised as a Muslim pilgrim, reached Petra and revealed it to the Western world?",
+   "answers": [
+    "Johann Burckhardt",
+    "Richard Burton",
+    "Heinrich Schliemann",
+    "Howard Carter"
+   ],
+   "correct": "Johann Burckhardt",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Swiss explorer Johann Burckhardt posed as a pilgrim to persuade a Bedouin guide to take him to Petra. Many Westerners had thought the city a myth.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.nationalgeographic.com/history/article/lost-city-petra",
+    "title": "Petra, Jordan, archaeology and history - National Geographic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name Petra comes from the Greek word for what?",
+   "answers": [
+    "Rose",
+    "Gate",
+    "Spring",
+    "Rock"
+   ],
+   "correct": "Rock",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Petra is the Greek name for the Nabataean capital Raqmu, and the word means \"rock\".",
+   "source": {
+    "url": "https://www.worldhistory.org/Kingdom_of_Nabatea/",
+    "title": "Kingdom of Nabatea - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Ural Mountains form the traditional boundary between which two continents?",
+   "answers": [
+    "Asia and Africa",
+    "Europe and Asia",
+    "Europe and Africa",
+    "Asia and North America"
+   ],
+   "correct": "Europe and Asia",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Urals run through west-central Russia and form the main part of the traditional Europe–Asia boundary.",
+   "source": {
+    "url": "https://www.britannica.com/place/Ural-Mountains",
+    "title": "Ural Mountains - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the highest peak of the Ural Mountains?",
+   "answers": [
+    "Mount Elbrus",
+    "Mount Kazbek",
+    "Mount Belukha",
+    "Mount Narodnaya"
+   ],
+   "correct": "Mount Narodnaya",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Mount Narodnaya, at about 1,895 metres, is the highest peak in the Urals.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Ural-Mountains/346220",
+    "title": "Ural Mountains - Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Ural River, conventionally part of the Europe–Asia boundary, empties into which body of water?",
+   "answers": [
+    "Black Sea",
+    "Aral Sea",
+    "Caspian Sea",
+    "Sea of Azov"
+   ],
+   "correct": "Caspian Sea",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Ural is one of the major rivers, with the Volga and Terek, that empty into the northern Caspian Sea.",
+   "source": {
+    "url": "https://www.britannica.com/place/Caspian-Sea",
+    "title": "Caspian Sea - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the Panama Canal open to shipping?",
+   "answers": [
+    "1869",
+    "1904",
+    "1914",
+    "1929"
+   ],
+   "correct": "1914",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The canal opened on 15 August 1914, after the United States completed the work.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Panama-Canal",
+    "title": "Panama Canal summary - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country's company began building the Panama Canal in 1881, before the project collapsed in 1889?",
+   "answers": [
+    "Spain",
+    "Britain",
+    "France",
+    "The Netherlands"
+   ],
+   "correct": "France",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "A French company started the canal in 1881 but failed. The United States took over in 1904.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Panama-Canal",
+    "title": "Panama Canal summary - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Panama take full control of the Panama Canal?",
+   "answers": [
+    "1977",
+    "1989",
+    "1999",
+    "2007"
+   ],
+   "correct": "1999",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "A 1977 treaty provided for handover by 2000, and Panama took control in 1999.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Panama-Canal",
+    "title": "Panama Canal summary - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Ships crossing the Panama Canal pass through which large lake after the Gatún Locks?",
+   "answers": [
+    "Lake Nicaragua",
+    "Lake Maracaibo",
+    "Lake Managua",
+    "Gatún Lake"
+   ],
+   "correct": "Gatún Lake",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The canal runs from Colón through the Gatún Locks to Gatún Lake. It then continues toward the Bay of Panama.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Panama-Canal",
+    "title": "Panama Canal - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country is completely surrounded by South Africa?",
+   "answers": [
+    "Eswatini",
+    "Botswana",
+    "Lesotho",
+    "Namibia"
+   ],
+   "correct": "Lesotho",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Lesotho is a landlocked enclave entirely encircled by South Africa. Eswatini also borders Mozambique.",
+   "source": {
+    "url": "https://www.britannica.com/topic/history-of-Lesotho",
+    "title": "History of Lesotho - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the capital of Lesotho?",
+   "answers": [
+    "Mbabane",
+    "Gaborone",
+    "Windhoek",
+    "Maseru"
+   ],
+   "correct": "Maseru",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Maseru is the capital and largest city of Lesotho.",
+   "source": {
+    "url": "https://www.britannica.com/topic/history-of-Lesotho",
+    "title": "History of Lesotho - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Under a 1986 treaty, Lesotho built a large scheme to export which resource to South Africa?",
+   "answers": [
+    "Coal",
+    "Water",
+    "Natural gas",
+    "Timber"
+   ],
+   "correct": "Water",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Lesotho Highlands Water Treaty set up a transfer scheme exporting water to South Africa and producing hydroelectric power for Lesotho.",
+   "source": {
+    "url": "https://www.britannica.com/topic/history-of-Lesotho",
+    "title": "History of Lesotho - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country is the smallest in the world by area, at about 0.44 square kilometres?",
+   "answers": [
+    "Monaco",
+    "Liechtenstein",
+    "San Marino",
+    "Vatican City"
+   ],
+   "correct": "Vatican City",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Vatican City covers only about 0.17 square miles (0.44 sq km).",
+   "source": {
+    "url": "https://www.britannica.com/topic/list-of-the-smallest-countries-by-area",
+    "title": "List of the smallest countries by area - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country ranks second in the world's smallest countries by area, behind Vatican City?",
+   "answers": [
+    "Nauru",
+    "Monaco",
+    "Tuvalu",
+    "Liechtenstein"
+   ],
+   "correct": "Monaco",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "Monaco, at about 0.8 square miles (2.1 sq km), comes closest behind Vatican City.",
+   "source": {
+    "url": "https://www.britannica.com/topic/list-of-the-smallest-countries-by-area",
+    "title": "List of the smallest countries by area - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the Lateran Treaty recognise the sovereignty of Vatican City?",
+   "answers": [
+    "1871",
+    "1929",
+    "1946",
+    "1957"
+   ],
+   "correct": "1929",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Italian government recognised Vatican City's sovereignty under the Lateran Treaty of 11 February 1929.",
+   "source": {
+    "url": "https://www.guinnessworldrecords.com/world-records/smallest-country",
+    "title": "Smallest country - Guinness World Records"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which body of water is the world's largest inland body of water?",
+   "answers": [
+    "Lake Superior",
+    "Lake Victoria",
+    "Aral Sea",
+    "Caspian Sea"
+   ],
+   "correct": "Caspian Sea",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Caspian Sea is the largest inland body of water by surface area, and it is a salt lake.",
+   "source": {
+    "url": "https://www.britannica.com/place/Caspian-Sea",
+    "title": "Caspian Sea - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these countries has a coastline on the Caspian Sea?",
+   "answers": [
+    "Uzbekistan",
+    "Georgia",
+    "Turkmenistan",
+    "Armenia"
+   ],
+   "correct": "Turkmenistan",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Caspian borders five countries: Iran, Russia, Kazakhstan, Turkmenistan and Azerbaijan.",
+   "source": {
+    "url": "https://www.livescience.com/30141-caspian-sea-satellite-image.html",
+    "title": "Caspian Sea: Largest Inland Water Body - Live Science"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which statement about the Caspian Sea's water is correct?",
+   "answers": [
+    "It is fresh and drains to the Black Sea",
+    "It is salty and drains to the Persian Gulf",
+    "It is fresh and drains to the Arctic Ocean",
+    "It is salty and has no outlet to the ocean"
+   ],
+   "correct": "It is salty and has no outlet to the ocean",
+   "difficulty": "medium",
+   "category": "Geography",
+   "explain": "The Caspian has no outlet and loses water only by evaporation, which lets salt accumulate. It is therefore not a freshwater lake.",
+   "source": {
+    "url": "https://www.livescience.com/30141-caspian-sea-satellite-image.html",
+    "title": "Caspian Sea: Largest Inland Water Body - Live Science"
+   },
+   "ai_written": true
+  }
+ ]
+}

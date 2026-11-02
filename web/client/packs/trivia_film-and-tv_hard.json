@@ -1,0 +1,806 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Film and TV trivia (hard)",
+ "description": "43 hard questions about films, television, animation, actors, directors, from any decade. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "For which category did Citizen Kane win its only Academy Award, despite nine nominations?",
+   "answers": [
+    "Best Original Screenplay",
+    "Best Cinematography",
+    "Best Film Editing",
+    "Best Sound Recording"
+   ],
+   "correct": "Best Original Screenplay",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Citizen Kane was nominated for nine Academy Awards but won only one, for original screenplay.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/Citizen-Kane/624062",
+    "title": "Welles, Orson (Citizen Kane) – Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which scene of Citizen Kane was the final one shot during production?",
+   "answers": [
+    "The opening deathbed scene",
+    "The newsreel screening",
+    "The breakfast-table montage",
+    "The picnic in the desert"
+   ],
+   "correct": "The opening deathbed scene",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "The opening scene, in which the dying Kane whispers 'Rosebud', was shot in one take and was the last scene filmed.",
+   "source": {
+    "url": "https://www.afi.com/news/orson-welles-citizen-kane-75th-anniversary/",
+    "title": "15 Facts About Orson Welles' CITIZEN KANE – AFI"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did Vertigo top the Sight and Sound critics' poll, ending Citizen Kane's long run in first place?",
+   "answers": [
+    "1992",
+    "2002",
+    "2012",
+    "2022"
+   ],
+   "correct": "2012",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Vertigo topped the 2012 poll and ended Kane's 50-year reign. It fell to second in 2022.",
+   "source": {
+    "url": "https://variety.com/2012/film/news/vertigo-tops-sight-sound-poll-1118057324/",
+    "title": "'Vertigo' tops Sight & Sound poll – Variety"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Vertigo received only two Academy Award nominations on its original release. Which categories were they?",
+   "answers": [
+    "Art Direction and Sound",
+    "Cinematography and Original Score",
+    "Director and Actor",
+    "Costume Design and Film Editing"
+   ],
+   "correct": "Art Direction and Sound",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Despite its later reputation, Vertigo was nominated only for Art Direction and Sound.",
+   "source": {
+    "url": "https://web.library.yale.edu/film/notes/fn00030",
+    "title": "Film Notes: VERTIGO – Yale University Library"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to one account, Hitchcock developed Vertigo's signature dolly-zoom technique from a drunken experience at which event?",
+   "answers": [
+    "The Chelsea Arts Ball",
+    "A BAFTA awards dinner",
+    "The Cannes closing gala",
+    "A Royal Variety Performance"
+   ],
+   "correct": "The Chelsea Arts Ball",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "A Cambridge University Press piece says Hitchcock based the dolly-plus-zoom shot on a drunken experience at the Chelsea Arts Ball.",
+   "source": {
+    "url": "https://www.cambridge.org/core/product/ADCA6CA0AC4E10D968DD886A4CDE84AD/core-reader",
+    "title": "Vertigo: an overnight success in 54 years – Cambridge Core"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which prize did Kurosawa's Seven Samurai win at the 1954 Venice International Film Festival?",
+   "answers": [
+    "The Silver Lion",
+    "The Golden Lion",
+    "The Special Jury Prize",
+    "The Volpi Cup"
+   ],
+   "correct": "The Silver Lion",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Seven Samurai won the Silver Lion at Venice in 1954. The Golden Lion went to Kurosawa's Rashomon three years earlier.",
+   "source": {
+    "url": "https://www.cinematheque.qc.ca/en/cinema/seven-samurai/",
+    "title": "Seven Samurai – Cinémathèque québécoise"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What technical approach did Kurosawa innovate for the final battle of Seven Samurai?",
+   "answers": [
+    "A multi-camera setup with telephoto lenses",
+    "Handheld cameras mounted on horses",
+    "Slow-motion photography at high frame rates",
+    "Wide-angle lenses with deep-focus staging"
+   ],
+   "correct": "A multi-camera setup with telephoto lenses",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Kurosawa used several cameras and telephoto lenses to shape how the audience perceived the battle.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Seven_Samurai",
+    "title": "Seven Samurai – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which composer scored Kurosawa's Rashomon, Ikiru and Seven Samurai?",
+   "answers": [
+    "Fumio Hayasaka",
+    "Akira Ifukube",
+    "Toru Takemitsu",
+    "Masaru Sato"
+   ],
+   "correct": "Fumio Hayasaka",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Hayasaka composed the music for these Kurosawa films, among others.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Fumio_Hayasaka",
+    "title": "Fumio Hayasaka – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which film won the Golden Lion at the 12th Venice International Film Festival in 1951?",
+   "answers": [
+    "Rashomon",
+    "Ikiru",
+    "Ugetsu",
+    "Tokyo Story"
+   ],
+   "correct": "Rashomon",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Kurosawa's Rashomon won the 1951 Golden Lion and drew Western attention to Japanese cinema.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/12th_Venice_International_Film_Festival",
+    "title": "12th Venice International Film Festival – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actress played Audrey Horne in the original Twin Peaks?",
+   "answers": [
+    "Sherilyn Fenn",
+    "Lara Flynn Boyle",
+    "Piper Laurie",
+    "Sheryl Lee"
+   ],
+   "correct": "Sherilyn Fenn",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Sherilyn Fenn played Audrey Horne, the character created by Mark Frost and David Lynch.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Audrey_Horne",
+    "title": "Audrey Horne – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many nominations did Twin Peaks receive for its first season at the 42nd Primetime Emmy Awards?",
+   "answers": [
+    "Fourteen",
+    "Six",
+    "Ten",
+    "Eighteen"
+   ],
+   "correct": "Fourteen",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Twin Peaks earned fourteen Emmy nominations for its first season.",
+   "source": {
+    "url": "https://abc.fandom.com/wiki/Twin_Peaks",
+    "title": "Twin Peaks – ABC Wiki (Fandom)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the title of the 1992 feature film that serves as a prequel to the Twin Peaks series?",
+   "answers": [
+    "Fire Walk with Me",
+    "The Missing Pieces",
+    "The Return",
+    "The Final Dossier"
+   ],
+   "correct": "Fire Walk with Me",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Twin Peaks: Fire Walk with Me (1992) is the prequel feature to the series.",
+   "source": {
+    "url": "https://abc.fandom.com/wiki/Twin_Peaks",
+    "title": "Twin Peaks – ABC Wiki (Fandom)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which stage actor, father of co-creator Mark Frost, was cast in the original Twin Peaks as a doctor?",
+   "answers": [
+    "Warren Frost",
+    "Ray Wise",
+    "Richard Beymer",
+    "Michael Ontkean"
+   ],
+   "correct": "Warren Frost",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Warren Frost, Mark Frost's father, was cast as the town doctor.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://abc.fandom.com/wiki/Twin_Peaks",
+    "title": "Twin Peaks – ABC Wiki (Fandom)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Fritz Lang said his first sight of which city's skyline inspired Metropolis?",
+   "answers": [
+    "New York",
+    "Chicago",
+    "Berlin",
+    "London"
+   ],
+   "correct": "New York",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Lang claimed he was inspired by his first glimpse of the New York skyline.",
+   "source": {
+    "url": "https://www.bfi.org.uk/film/bda6ff8a-ed7e-5942-980d-c2910c0120ec/metropolis",
+    "title": "Metropolis (1927) – British Film Institute"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 2008, a damaged print of Lang's original cut of Metropolis was found in a museum in which country?",
+   "answers": [
+    "Argentina",
+    "Brazil",
+    "Chile",
+    "Uruguay"
+   ],
+   "correct": "Argentina",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "A 16 mm reduction negative of the original cut was found at the Museo del Cine in Buenos Aires.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Metropolis_(1927_film)",
+    "title": "Metropolis (1927 film) – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played the inventor Rotwang in Fritz Lang's Metropolis?",
+   "answers": [
+    "Rudolf Klein-Rogge",
+    "Alfred Abel",
+    "Gustav Fröhlich",
+    "Emil Jannings"
+   ],
+   "correct": "Rudolf Klein-Rogge",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Rudolf Klein-Rogge played Rotwang. Alfred Abel played Joh Fredersen.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Rotwang",
+    "title": "Rotwang – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who produced Metropolis at the Babelsberg Studio for UFA?",
+   "answers": [
+    "Erich Pommer",
+    "Joe May",
+    "Karl Freund",
+    "Thea von Harbou"
+   ],
+   "correct": "Erich Pommer",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Erich Pommer produced Metropolis at Babelsberg for Universum Film A.G. (UFA).",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Metropolis_(1927_film)",
+    "title": "Metropolis (1927 film) – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who directed the pilot episode of The Wire, 'The Target'?",
+   "answers": [
+    "Clark Johnson",
+    "Ed Bianchi",
+    "Peter Medak",
+    "Joe Chappelle"
+   ],
+   "correct": "Clark Johnson",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Clark Johnson directed the series premiere, which aired on June 2, 2002.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Target_(The_Wire)",
+    "title": "The Target (The Wire) – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which former Baltimore homicide detective and schoolteacher worked with David Simon on The Corner and The Wire?",
+   "answers": [
+    "Ed Burns",
+    "George Pelecanos",
+    "Eric Overmyer",
+    "Robert F. Colesberry"
+   ],
+   "correct": "Ed Burns",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Ed Burns, a former Baltimore police homicide detective and public school teacher, collaborated with Simon on both projects.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Wire_season_1",
+    "title": "The Wire season 1 – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which film festival was Spirited Away a co-recipient of the top prize in 2002?",
+   "answers": [
+    "Berlin International Film Festival",
+    "Cannes Film Festival",
+    "Venice Film Festival",
+    "Toronto International Film Festival"
+   ],
+   "correct": "Berlin International Film Festival",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Spirited Away shared the Golden Bear at the 2002 Berlin International Film Festival.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Spirited_Away",
+    "title": "Spirited Away – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who produced Spirited Away for Studio Ghibli?",
+   "answers": [
+    "Toshio Suzuki",
+    "Isao Takahata",
+    "Yasuyoshi Tokuma",
+    "Goro Miyazaki"
+   ],
+   "correct": "Toshio Suzuki",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Toshio Suzuki produced the film, which Miyazaki wrote and directed.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Spirited_Away",
+    "title": "Spirited Away – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Spirited Away, who is Yubaba's twin sister?",
+   "answers": [
+    "Zeniba",
+    "Lin",
+    "Kamaji",
+    "Haku"
+   ],
+   "correct": "Zeniba",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Zeniba is Yubaba's twin sister. A shikigami that stowed away on Chihiro's back shapeshifts into her.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Spirited_Away",
+    "title": "Spirited Away – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Miyazaki film was the first animated film to win the Japan Academy Film Prize for Picture of the Year?",
+   "answers": [
+    "Princess Mononoke",
+    "Spirited Away",
+    "My Neighbor Totoro",
+    "Castle in the Sky"
+   ],
+   "correct": "Princess Mononoke",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Princess Mononoke (1997) was the first animated film to win the prize.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_works_by_Hayao_Miyazaki",
+    "title": "List of works by Hayao Miyazaki – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who wrote the 1959 novel on which Hitchcock's Psycho was based?",
+   "answers": [
+    "Robert Bloch",
+    "Patricia Highsmith",
+    "Cornell Woolrich",
+    "Ira Levin"
+   ],
+   "correct": "Robert Bloch",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Psycho (1960) was adapted from Robert Bloch's 1959 novel.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Psycho_(1960_film)",
+    "title": "Psycho (1960 film) – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who served as the body double for Janet Leigh in some shots of Psycho's shower scene?",
+   "answers": [
+    "Marli Renfro",
+    "Margo Epper",
+    "Vera Miles",
+    "Tippi Hedren"
+   ],
+   "correct": "Marli Renfro",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Marli Renfro was Leigh's body double in the shower scene.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Marli_Renfro",
+    "title": "Marli Renfro – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly what was the production budget of Psycho (1960)?",
+   "answers": [
+    "About $800,000",
+    "About $80,000",
+    "About $400,000",
+    "About $2.4 million"
+   ],
+   "correct": "About $800,000",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Psycho had a budget of US$806,947 and earned about $50 million worldwide.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Psycho_(1960_film)",
+    "title": "Psycho (1960 film) – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Whom did producer Hal Wallis want to direct Casablanca before Michael Curtiz got the job?",
+   "answers": [
+    "William Wyler",
+    "John Huston",
+    "Howard Hawks",
+    "Frank Capra"
+   ],
+   "correct": "William Wyler",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Wallis's first choice was William Wyler, who became unavailable, so he chose Curtiz.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://warnerbros.fandom.com/wiki/Casablanca",
+    "title": "Casablanca – Warner Bros. Entertainment Wiki (Fandom)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Casablanca was based on which unproduced stage play?",
+   "answers": [
+    "Everybody Comes to Rick's",
+    "Nightclub in Morocco",
+    "Letters of Transit",
+    "Rick's Café Américain"
+   ],
+   "correct": "Everybody Comes to Rick's",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "The film was based on Murray Burnett and Joan Alison's unproduced play Everybody Comes to Rick's.",
+   "source": {
+    "url": "https://warnerbros.fandom.com/wiki/Casablanca",
+    "title": "Casablanca – Warner Bros. Entertainment Wiki (Fandom)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Australian writer scripted the first Doctor Who serial, An Unearthly Child?",
+   "answers": [
+    "Anthony Coburn",
+    "Terry Nation",
+    "Sydney Newman",
+    "Verity Lambert"
+   ],
+   "correct": "Anthony Coburn",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Anthony Coburn wrote An Unearthly Child, which introduced William Hartnell as the First Doctor.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/An_Unearthly_Child",
+    "title": "An Unearthly Child – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which event led the BBC to repeat the first episode of Doctor Who the following week?",
+   "answers": [
+    "The assassination of President Kennedy",
+    "A nationwide power cut",
+    "A technicians' strike at the BBC",
+    "A royal state funeral broadcast"
+   ],
+   "correct": "The assassination of President Kennedy",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "News of the Kennedy assassination overshadowed the first episode, so it was repeated before episode 2.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/An_Unearthly_Child",
+    "title": "An Unearthly Child – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "As of the mid-2020s, how many of William Hartnell's 134 episodes as a regular were missing from the archives?",
+   "answers": [
+    "42",
+    "18",
+    "67",
+    "91"
+   ],
+   "correct": "42",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "42 of Hartnell's 134 episodes as a regular were missing in the mid-2020s. The number has changed before, when lost episodes turned up.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/First_Doctor",
+    "title": "First Doctor – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What was the concept of regeneration in Doctor Who initially called when it was introduced?",
+   "answers": [
+    "Renewal",
+    "Rebirth",
+    "Transference",
+    "Reincarnation"
+   ],
+   "correct": "Renewal",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "It was first called a 'renewal' when Hartnell left because of his bad health.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/First_Doctor",
+    "title": "First Doctor – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which century is the Doctor Who serial The Dalek Invasion of Earth set?",
+   "answers": [
+    "The 22nd century",
+    "The 20th century",
+    "The 24th century",
+    "The 30th century"
+   ],
+   "correct": "The 22nd century",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "In the serial, the Doctor and companions find Earth in the 22nd century occupied by Daleks.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Dalek_Invasion_of_Earth",
+    "title": "The Dalek Invasion of Earth – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which film's record of nine Academy Awards did Ben-Hur break at the 32nd Academy Awards?",
+   "answers": [
+    "Gigi",
+    "Gone with the Wind",
+    "On the Waterfront",
+    "South Pacific"
+   ],
+   "correct": "Gigi",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Ben-Hur won 11 Academy Awards, breaking the record of nine set the previous year by Gigi.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/32nd_Academy_Awards",
+    "title": "32nd Academy Awards – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For the chariot race in Ben-Hur (1959), about how much sand was imported?",
+   "answers": [
+    "40,000 tons",
+    "4,000 tons",
+    "14,000 tons",
+    "140,000 tons"
+   ],
+   "correct": "40,000 tons",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Britannica notes that 40,000 tons of sand was imported for the chariot race, along with 300 sets and 8,000 extras.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Ben-Hur-film-by-Wyler",
+    "title": "Ben-Hur – Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who won the Academy Award for Best Supporting Actor for Ben-Hur at the 32nd Academy Awards?",
+   "answers": [
+    "Hugh Griffith",
+    "Stephen Boyd",
+    "Arthur O'Connell",
+    "Jack Hawkins"
+   ],
+   "correct": "Hugh Griffith",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Hugh Griffith won for playing Sheik Ilderim in Ben-Hur.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/32nd_Academy_Awards",
+    "title": "32nd Academy Awards – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actress provided the voice of Snow White in Disney's 1937 film?",
+   "answers": [
+    "Adriana Caselotti",
+    "Marge Champion",
+    "Lucille La Verne",
+    "Deanna Durbin"
+   ],
+   "correct": "Adriana Caselotti",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Adriana Caselotti voiced Snow White in Snow White and the Seven Dwarfs.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Snow_White_and_the_Seven_Dwarfs_(1937_film)",
+    "title": "Snow White and the Seven Dwarfs (1937 film) – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What nickname did industry figures give Disney's risky first feature, Snow White and the Seven Dwarfs?",
+   "answers": [
+    "Disney's Folly",
+    "Walt's Gamble",
+    "The Mouse's Misstep",
+    "Disney's Dream"
+   ],
+   "correct": "Disney's Folly",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "A feature-length animated film was seen as such a gamble that industry figures dubbed it 'Disney's Folly'.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Disney_Golden_Age",
+    "title": "Disney Golden Age – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who appeared at the 1973 Academy Awards to explain why Marlon Brando would not accept his Best Actor award for The Godfather?",
+   "answers": [
+    "Sacheen Littlefeather",
+    "Russell Means",
+    "Jane Fonda",
+    "Dennis Banks"
+   ],
+   "correct": "Sacheen Littlefeather",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Brando boycotted the ceremony and sent Sacheen Littlefeather to explain why he could not collect the award.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/45th_Academy_Awards",
+    "title": "45th Academy Awards – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For which film did Charlie Chaplin win his only competitive Academy Award, at the 1973 ceremony?",
+   "answers": [
+    "Limelight",
+    "The Great Dictator",
+    "Modern Times",
+    "City Lights"
+   ],
+   "correct": "Limelight",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Chaplin won Best Original Dramatic Score for Limelight, which became eligible because it did not screen in Los Angeles until 1972.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/45th_Academy_Awards",
+    "title": "45th Academy Awards – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor did Paramount reportedly want for Vito Corleone instead of Marlon Brando?",
+   "answers": [
+    "Ernest Borgnine",
+    "Edward G. Robinson",
+    "Spencer Tracy",
+    "Karl Malden"
+   ],
+   "correct": "Ernest Borgnine",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Paramount preferred Ernest Borgnine and resisted Brando because he had delayed production on recent films.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://godfather.fandom.com/wiki/The_Godfather",
+    "title": "The Godfather – The Godfather Wiki (Fandom)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "David Chase directed only two episodes of The Sopranos: the pilot and which other episode?",
+   "answers": [
+    "Made in America",
+    "Pine Barrens",
+    "Funhouse",
+    "Whitecaps"
+   ],
+   "correct": "Made in America",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Chase directed the pilot and the series finale, 'Made in America'.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/The_Sopranos_(The_Sopranos_episode)",
+    "title": "The Sopranos (The Sopranos episode) – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played Tony Blundetto in the fifth-season premiere of The Sopranos, 'Two Tonys'?",
+   "answers": [
+    "Steve Buscemi",
+    "Michael Rapaport",
+    "Chris Cooper",
+    "Dominic Chianese"
+   ],
+   "correct": "Steve Buscemi",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Steve Buscemi played Tony Blundetto, Tony Soprano's cousin, in the season 5 opener.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Two_Tonys",
+    "title": "Two Tonys – Wikipedia"
+   },
+   "ai_written": true
+  }
+ ]
+}

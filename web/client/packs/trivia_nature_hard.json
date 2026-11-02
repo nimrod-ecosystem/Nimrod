@@ -1,0 +1,896 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Nature trivia (hard)",
+ "description": "50 hard questions about animals, plants, weather, ecosystems. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-01",
+ "items": [
+  {
+   "question": "Which animals are the only ones known to detect circularly polarised light?",
+   "answers": [
+    "Honeybees",
+    "Mantis shrimp",
+    "Jumping spiders",
+    "Cuttlefish"
+   ],
+   "correct": "Mantis shrimp",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Mantis shrimp can have up to 16 photoreceptor types and are the only animals known to detect circularly polarised light.",
+   "source": {
+    "url": "https://phys.org/news/2013-09-mantis-shrimp-world-eyesbut.html",
+    "title": "Mantis shrimp have the world's best eyes—but why?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Mantis shrimp have up to 16 photoreceptor types, while humans have three. How does their colour discrimination compare with ours?",
+   "answers": [
+    "They tell apart about twice as many colours",
+    "They tell apart fewer colours than humans do",
+    "They tell apart exactly the same colours",
+    "They tell apart colours only in ultraviolet"
+   ],
+   "correct": "They tell apart fewer colours than humans do",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Despite having more photoreceptor types, mantis shrimp have been found to distinguish fewer colours than humans.",
+   "source": {
+    "url": "https://www.discovermagazine.com/rainbow-shrimp-vision-is-the-most-powerful-of-any-animal-on-earth-but-we-don-t-know-why-47994",
+    "title": "Rainbow Shrimp Vision Is the Most Powerful of Any Animal on Earth, But We Don’t Know Why"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the best-sighted mantis shrimp species, how many rows of modified ommatidia form the eye's mid-band?",
+   "answers": [
+    "Two",
+    "Four",
+    "Eight",
+    "Six"
+   ],
+   "correct": "Six",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "In species with spectacular vision, the middle of the eye has a mid-band of six rows of modified ommatidia.",
+   "source": {
+    "url": "https://phys.org/news/2013-09-mantis-shrimp-world-eyesbut.html",
+    "title": "Mantis shrimp have the world's best eyes—but why?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Mantis shrimp are neither mantises nor shrimp. Which animals are their close relatives?",
+   "answers": [
+    "Wasps and ants",
+    "Spiders and scorpions",
+    "Crabs and lobsters",
+    "Sea stars and urchins"
+   ],
+   "correct": "Crabs and lobsters",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Mantis shrimp are marine crustaceans that are close relatives of crabs and lobsters.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/science/article/natures-most-amazing-eyes-just-got-a-bit-weirder",
+    "title": "Nature’s Most Amazing Eyes Just Got A Bit Weirder"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Darwin reportedly regarded the Namib Desert plant Welwitschia mirabilis as the botanical counterpart of which animal?",
+   "answers": [
+    "The coelacanth",
+    "The okapi",
+    "The tuatara",
+    "The platypus"
+   ],
+   "correct": "The platypus",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Because of its peculiar features, Darwin regarded Welwitschia as the plant equivalent of the platypus.",
+   "source": {
+    "url": "https://www.ortobotaniconapoli.it/en/resources/information-on-tree-species/welwitschia-mirabilis.html",
+    "title": "Orto Botanico di Napoli - Welwitschia mirabilis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which cold, north-flowing ocean current meets hot desert air to create the dense fog that Welwitschia relies on?",
+   "answers": [
+    "Humboldt Current",
+    "Canary Current",
+    "Benguela Current",
+    "Agulhas Current"
+   ],
+   "correct": "Benguela Current",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The regular dense fog forms where the cold Benguela Current meets hot air coming off the Namib Desert.",
+   "source": {
+    "url": "https://pza.sanbi.org/welwitschia-mirabilis",
+    "title": "Welwitschia mirabilis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Afrikaans name for Welwitschia, \"tweeblaarkanniedood\", literally means what?",
+   "answers": [
+    "Two leaves that cannot die",
+    "Desert tongue of the dunes",
+    "Old man of the morning fog",
+    "Stone that drinks the mist"
+   ],
+   "correct": "Two leaves that cannot die",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The name refers to the plant's two lifelong leaves, which keep growing and are never shed.",
+   "source": {
+    "url": "https://www.ortobotaniconapoli.it/en/resources/information-on-tree-species/welwitschia-mirabilis.html",
+    "title": "Orto Botanico di Napoli - Welwitschia mirabilis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Cambridge University Botanic Garden describes Welwitschia mirabilis as a relic of which geological period?",
+   "answers": [
+    "The Devonian",
+    "The Permian",
+    "The Miocene",
+    "The Jurassic"
+   ],
+   "correct": "The Jurassic",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The garden says the plant is believed to be a Jurassic relic and the sole surviving member of its family.",
+   "source": {
+    "url": "https://www.botanic.cam.ac.uk/the-garden/plant-list/welwitschia-mirabilis/",
+    "title": "Welwitschia mirabilis - Cambridge University Botanic Garden"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name of Pando, the giant aspen clone in Utah, is Latin for what?",
+   "answers": [
+    "I spread out",
+    "I stand alone",
+    "I grow tall",
+    "I endure"
+   ],
+   "correct": "I spread out",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Pando is Latin for \"I spread\", a nod to the clone's huge root-connected colony.",
+   "source": {
+    "url": "https://www.earthdate.org/episodes/pando-a-forest-of-one",
+    "title": "Pando - A Forest of One"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How does the quaking aspen mainly propagate itself, producing huge clonal colonies?",
+   "answers": [
+    "By dropping rooting branches",
+    "By forming leaf bulbils",
+    "By sending up root sprouts",
+    "By releasing floating seed pods"
+   ],
+   "correct": "By sending up root sprouts",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Quaking aspen spreads primarily through root sprouts, so whole groves can be one genetic individual.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Populus_tremuloides",
+    "title": "Populus tremuloides"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 2006 a clonal colony about 8 km across, perhaps 100,000 years old, was found south of Ibiza. What kind of organism is it?",
+   "answers": [
+    "A giant kelp",
+    "A seagrass",
+    "A sponge",
+    "A mangrove"
+   ],
+   "correct": "A seagrass",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The colony is the seagrass Posidonia oceanica, which may be one of the largest and oldest clonal colonies on Earth.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Largest_organisms",
+    "title": "Largest organisms"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which rare Tasmanian shrub survives in the wild as a clonal colony estimated at about 43,600 years old?",
+   "answers": [
+    "Huon pine",
+    "Waratah",
+    "King's Lomatia",
+    "Tasmanian blue gum"
+   ],
+   "correct": "King's Lomatia",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The wild King's Lomatia colony in Tasmania is a clone estimated to be at least 43,600 years old.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Clonal_colony",
+    "title": "Clonal colony"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Octopus blood is blue because its oxygen-carrying protein, haemocyanin, contains which metal?",
+   "answers": [
+    "Zinc",
+    "Copper",
+    "Cobalt",
+    "Magnesium"
+   ],
+   "correct": "Copper",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Haemocyanin uses copper rather than the iron in our haemoglobin, and it works well in cold, low-oxygen water.",
+   "source": {
+    "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "title": "Octopuses keep surprising us - here are eight examples how"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What are the roles of an octopus's three hearts?",
+   "answers": [
+    "Two supply the arms; one pumps blood past the gills",
+    "Two supply the brain; one circulates blood to the arms",
+    "Two pump blood past the gills; one supplies the body",
+    "Two pump blood to the siphon; one circulates it to the gills"
+   ],
+   "correct": "Two pump blood past the gills; one supplies the body",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Two branchial hearts push blood through the gills to pick up oxygen, and the third heart circulates it around the body.",
+   "source": {
+    "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "title": "Octopuses keep surprising us - here are eight examples how"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly what share of an octopus's neurons sit in its eight arms rather than in its brain?",
+   "answers": [
+    "About one-tenth",
+    "About one-third",
+    "About nine-tenths",
+    "About two-thirds"
+   ],
+   "correct": "About two-thirds",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "About two-thirds of an octopus's neurons are spread through its arms, which can taste, smell and grasp on their own.",
+   "source": {
+    "url": "https://www.marinebio.org/video/three-hearts-blue-blood-and-nine-brains-the-octopus-explained/",
+    "title": "Three Hearts, Blue Blood, and Nine Brains: The Octopus Explained (video)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What happens to octopus blood when it becomes deoxygenated, for example when the animal dies?",
+   "answers": [
+    "It loses its blue colour and turns clear",
+    "It turns bright red like ours",
+    "It turns black and clots",
+    "It turns green as the copper oxidises"
+   ],
+   "correct": "It loses its blue colour and turns clear",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Deoxygenated octopus haemolymph loses its blue colour and becomes clear.",
+   "source": {
+    "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "title": "Octopuses keep surprising us - here are eight examples how"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Francis Beaufort's 1805 wind-force scale was originally devised around which practical matter?",
+   "answers": [
+    "Reading barometric pressure at sea",
+    "Measuring wave height with a staff",
+    "Judging cloud cover from a masthead",
+    "Setting sails on a warship"
+   ],
+   "correct": "Setting sails on a warship",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "In 1805 Beaufort described wind force according to the procedures for setting sails on a warship.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/beaufort-scale/",
+    "title": "Beaufort Scale - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On the Beaufort scale, what is wind of 56–63 knots (Force 11) officially called?",
+   "answers": [
+    "Strong gale",
+    "Violent storm",
+    "Storm",
+    "Fresh gale"
+   ],
+   "correct": "Violent storm",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The NWS lists Force 11 as winds of 56–63 knots, classed as a violent storm.",
+   "source": {
+    "url": "https://forecast.weather.gov/glossary.php?word=BEAUFORT+SCALE",
+    "title": "NOAA's National Weather Service - Glossary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year were Forces 13 to 17 added to the Beaufort scale?",
+   "answers": [
+    "1853",
+    "1916",
+    "1971",
+    "1946"
+   ],
+   "correct": "1946",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The original 0–12 scale was extended in 1946 when forces 13 to 17 were added.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Beaufort_scale",
+    "title": "Beaufort scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year did the US National Weather Service fully implement the Enhanced Fujita scale to replace the original Fujita scale?",
+   "answers": [
+    "1987",
+    "1997",
+    "2007",
+    "2017"
+   ],
+   "correct": "2007",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "NOAA's National Weather Service fully implemented the EF scale on February 1, 2007.",
+   "source": {
+    "url": "https://www.weather.gov/lsx/enhancedfujitascale",
+    "title": "National Weather Service United States Department of Commerce"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What wind-speed estimate range does the Enhanced Fujita scale assign to an EF3 tornado?",
+   "answers": [
+    "86–110 mph",
+    "111–135 mph",
+    "136–165 mph",
+    "166–200 mph"
+   ],
+   "correct": "136–165 mph",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The NWS lists EF3 (severe tornado) as 136–165 mph.",
+   "source": {
+    "url": "https://www.weather.gov/lzk/efscale.htm",
+    "title": "National Weather Service United States Department of Commerce"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Ratings on the Enhanced Fujita scale are based solely on the effects of which wind measure on a given damage indicator?",
+   "answers": [
+    "3-second gusts",
+    "1-minute sustained winds",
+    "10-minute average winds",
+    "Hourly peak gusts"
+   ],
+   "correct": "3-second gusts",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Unlike the original Fujita scale, EF ratings are based solely on the effects of 3-second gusts.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Enhanced_Fujita_scale",
+    "title": "Enhanced Fujita scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "To fuel its high metabolism, a sea otter must eat roughly what share of its body weight each day?",
+   "answers": [
+    "About 5 percent",
+    "About 10 percent",
+    "About 25 percent",
+    "About 50 percent"
+   ],
+   "correct": "About 25 percent",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Sea otters have an extremely high metabolism and must consume about 25 percent of their body weight daily.",
+   "source": {
+    "url": "https://cimi.org/blog/the-keystone-species/",
+    "title": "The Keystone Species - Catalina Island Marine Institute"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Sea otters keeping urchins in check, which protects kelp and the species that depend on it, is a textbook example of which ecological process?",
+   "answers": [
+    "A trophic cascade",
+    "Competitive exclusion",
+    "Ecological succession",
+    "Character displacement"
+   ],
+   "correct": "A trophic cascade",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "A change in one species, the otter, indirectly affects many others through the food web, which is a trophic cascade.",
+   "source": {
+    "url": "https://media.hhmi.org/biointeractive/click/keystone/sea-otter.html",
+    "title": "Sea Otter: Exploring Keystone Species: HHMI BioInteractive"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In a Monterey Bay study, why did sea otters ignore urchins in urchin barrens but eat those in healthy kelp patches?",
+   "answers": [
+    "Barren urchins were too large to crack open",
+    "Barren urchins carried a toxic algal bloom",
+    "Barren urchins hid in deep crevices",
+    "Barren urchins were starved and nutritionally poor"
+   ],
+   "correct": "Barren urchins were starved and nutritionally poor",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Urchins in barrens are starved with little nutritional value, so otters target the well-fed urchins in kelp patches and help sustain them.",
+   "source": {
+    "url": "https://news.ucsc.edu/2021/03/kelp-forests-monterey/",
+    "title": "Sea otters maintain remnants of healthy kelp forest amid sea urchin barrens - News"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A 2010 PNAS tracking study found Arctic terns from Greenland and Iceland travelled roughly how far in a year of migration?",
+   "answers": [
+    "About 20,000 km",
+    "About 40,000 km",
+    "About 70,000 km",
+    "About 120,000 km"
+   ],
+   "correct": "About 70,000 km",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Tracked terns covered about 70,900 km on average, far above the roughly 40,000 km that had usually been quoted.",
+   "source": {
+    "url": "https://www.pnas.org/doi/10.1073/pnas.0909493107",
+    "title": "Tracking of Arctic terns Sterna paradisaea reveals longest animal migration"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "An Arctic tern ringed as a chick on England's Farne Islands in 1982 reached which city just three months after fledging?",
+   "answers": [
+    "Cape Town",
+    "Buenos Aires",
+    "Wellington",
+    "Melbourne"
+   ],
+   "correct": "Melbourne",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The ringed tern reached Melbourne, Australia, in October, a journey of more than 22,000 km.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Arctic_tern",
+    "title": "Arctic tern"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many species of periodical cicada (genus Magicicada) are there?",
+   "answers": [
+    "Three",
+    "Seven",
+    "Twelve",
+    "Fifteen"
+   ],
+   "correct": "Seven",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "There are seven species: four with 13-year cycles and three with 17-year cycles.",
+   "source": {
+    "url": "https://www.nature.com/scitable/blog/accumulating-glitches/cicadian_rhythms_why_does_the/",
+    "title": "Cicadian Rhythms: Why Does the 17-Year Cicada Emerge Like Clockwork?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 2024, a 13-year brood and a 17-year brood of periodical cicadas co-emerged for the first time since which year?",
+   "answers": [
+    "1845",
+    "1803",
+    "1895",
+    "1921"
+   ],
+   "correct": "1803",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Broods XIX and XIII co-emerged in 2024 for the first time since 1803.",
+   "source": {
+    "url": "https://guides.loc.gov/periodical-cicadas",
+    "title": "Introduction - Periodical Cicadas: A Resource Guide - Research Guides at Library of Congress"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The survival advantage that periodical cicadas gain by emerging in the billions is known as what?",
+   "answers": [
+    "Batesian mimicry",
+    "Kin selection",
+    "Aposematism",
+    "Predator satiation"
+   ],
+   "correct": "Predator satiation",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "With numbers in the billions, cicadas overwhelm predators, which can only eat a fraction of them.",
+   "source": {
+    "url": "https://guides.loc.gov/periodical-cicadas",
+    "title": "Introduction - Periodical Cicadas: A Resource Guide - Research Guides at Library of Congress"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which fungus genus infects periodical cicadas, staying inactive in the ground until the next emergence years later?",
+   "answers": [
+    "Massospora",
+    "Batrachochytrium",
+    "Armillaria",
+    "Claviceps"
+   ],
+   "correct": "Massospora",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The entomopathogenic fungus Massospora cicadina infects both 13- and 17-year cicadas.",
+   "source": {
+    "url": "https://ohioline.osu.edu/factsheet/ENT-58",
+    "title": "Periodical Cicadas in Ohio"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Periodical cicada nymphs spend nearly all of their 13 or 17 years at roughly what depth, feeding on sap from tree roots?",
+   "answers": [
+    "2 to 4 inches",
+    "18 to 24 inches",
+    "6 to 8 feet",
+    "20 to 30 feet"
+   ],
+   "correct": "18 to 24 inches",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "All but a few weeks of the cycle is spent as a nymph 18 to 24 inches deep, feeding on root sap.",
+   "source": {
+    "url": "https://yardandgarden.extension.iastate.edu/encyclopedia/periodical-cicadas",
+    "title": "Periodical Cicadas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In CAM plants, in what form is carbon dioxide stored overnight in the vacuoles before daytime photosynthesis?",
+   "answers": [
+    "Citric acid",
+    "Lactic acid",
+    "Malic acid",
+    "Oxalic acid"
+   ],
+   "correct": "Malic acid",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "CO2 taken in through stomata at night is stored as four-carbon malic acid and released again in daylight.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Crassulacean_acid_metabolism",
+    "title": "Crassulacean acid metabolism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Kranz anatomy is a distinctive leaf structure found in plants using which photosynthetic pathway?",
+   "answers": [
+    "C4 photosynthesis",
+    "C3 photosynthesis",
+    "CAM photosynthesis",
+    "Anoxygenic photosynthesis"
+   ],
+   "correct": "C4 photosynthesis",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Kranz anatomy is unique to C4 plants, just as night-opening stomata are characteristic of CAM plants.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/botany/c4-and-cam-photosynthesis",
+    "title": "C4 and CAM photosynthesis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Symbiotic bacteria inside giant vent tubeworms obtain energy by oxidising which chemical from the vents?",
+   "answers": [
+    "Ammonia",
+    "Carbon monoxide",
+    "Hydrogen sulfide",
+    "Sulfur dioxide"
+   ],
+   "correct": "Hydrogen sulfide",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The bacteria use hydrogen sulfide from the vents as an energy source in chemosynthesis, feeding themselves and the worm.",
+   "source": {
+    "url": "https://medium.com/hhmi-science-media/how-giant-tube-worms-survive-at-hydrothermal-vents-8088496bdad8",
+    "title": "How Giant Tube Worms Survive at Hydrothermal Vents"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The crew of which research submersible found the thriving vent communities that included giant tubeworms?",
+   "answers": [
+    "Trieste",
+    "Nautilus",
+    "Shinkai",
+    "Alvin"
+   ],
+   "correct": "Alvin",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The Alvin crew found the vents and the unexpected tubeworm-filled ecosystem, where life was powered by chemosynthesis.",
+   "source": {
+    "url": "https://medium.com/hhmi-science-media/how-giant-tube-worms-survive-at-hydrothermal-vents-8088496bdad8",
+    "title": "How Giant Tube Worms Survive at Hydrothermal Vents"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the organ in which a vent tubeworm houses its symbiotic bacteria?",
+   "answers": [
+    "Trophosome",
+    "Hepatopancreas",
+    "Statocyst",
+    "Rhabdome"
+   ],
+   "correct": "Trophosome",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The bacteria live in the tubeworm's trophosome, where they oxidise vent chemicals to generate energy.",
+   "source": {
+    "url": "https://www.boem.gov/newsroom/ocean-science-news/tube-worms",
+    "title": "Tube Worms"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Giant tubeworms build their protective tube from which material, also found in insect exoskeletons?",
+   "answers": [
+    "Keratin",
+    "Chitin",
+    "Calcium carbonate",
+    "Silica"
+   ],
+   "correct": "Chitin",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Tubeworms secrete chitin, which hardens into a protective tube and is extended as the worm grows.",
+   "source": {
+    "url": "https://www.boem.gov/newsroom/ocean-science-news/tube-worms",
+    "title": "Tube Worms"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Dungeness Valley around Sequim, Washington, is unusually dry because it lies in the rain shadow of which range?",
+   "answers": [
+    "Cascade Range",
+    "Olympic Mountains",
+    "Bitterroot Range",
+    "Blue Mountains"
+   ],
+   "correct": "Olympic Mountains",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Sequim and the Dungeness Valley sit in the rain shadow of the Olympic Mountains.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/earth-and-atmospheric-sciences/rain-shadow-deserts/",
+    "title": "Rain Shadow deserts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Death Valley is so hot and dry partly because it sits in the rain shadow of which mountain range?",
+   "answers": [
+    "Rocky Mountains",
+    "Brooks Range",
+    "Appalachians",
+    "Sierra Nevada"
+   ],
+   "correct": "Sierra Nevada",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The Sierra Nevada blocks much of the moisture-bearing weather before it reaches Death Valley.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/rain-shadow/",
+    "title": "Rain Shadow"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Of the four major toxins in platypus venom, three belong to which class of proteins?",
+   "answers": [
+    "Three-finger toxins",
+    "Phospholipase enzymes",
+    "Conotoxin peptides",
+    "Defensin-like proteins"
+   ],
+   "correct": "Defensin-like proteins",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The venom is a cocktail of over 250 chemicals, and three of its four major toxins are defensin-like proteins unique to the platypus.",
+   "source": {
+    "url": "https://www.bionity.com/en/encyclopedia/Platypus_venom.html",
+    "title": "Platypus_venom"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which relative of the platypus has a spur linked to a crural gland that cannot be erected?",
+   "answers": [
+    "Echidna",
+    "Solenodon",
+    "Slow loris",
+    "Short-tailed shrew"
+   ],
+   "correct": "Echidna",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The echidna's spur is attached to a gland but cannot be erected and used for spurring, unlike the platypus's.",
+   "source": {
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3827146/",
+    "title": "Echidna Venom Gland Transcriptome Provides Insights into the Evolution of Monotreme Venom"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How does platypus venom differ from snake venom in its effect on tissue?",
+   "answers": [
+    "It destroys tissue more quickly",
+    "It seems to lack a tissue-destroying component",
+    "It clots blood on contact",
+    "It paralyses the heart muscle"
+   ],
+   "correct": "It seems to lack a tissue-destroying component",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "Unlike snake venom, platypus venom appears to have no necrotising component.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Platypus_venom",
+    "title": "Platypus venom"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Greenland shark vertebrae lack growth bands, so scientists estimate the shark's age by radiocarbon dating which tissue?",
+   "answers": [
+    "The liver",
+    "The eye lens",
+    "The dermal denticles",
+    "The fin cartilage"
+   ],
+   "correct": "The eye lens",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The lens of the eye keeps adding layers through life, and radiocarbon dating its centre gives an age estimate.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/animals/fish/facts/greenland-shark",
+    "title": "Greenland shark, facts and photos"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Greenland sharks reach sexual maturity at roughly what age?",
+   "answers": [
+    "About 15 years",
+    "About 40 years",
+    "About 150 years",
+    "About 300 years"
+   ],
+   "correct": "About 150 years",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "A 2016 Science study estimated that Greenland sharks live at least 272 years and reach sexual maturity at about 150.",
+   "source": {
+    "url": "https://www.aaas.org/news/greenland-sharks-are-longest-living-vertebrates",
+    "title": "Greenland Sharks Are the Longest-Living Vertebrates"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The bombardier beetle Stenaptinus insignis ejects its defensive spray in pulses at about what rate?",
+   "answers": [
+    "5 per second",
+    "50 per second",
+    "500 per second",
+    "5,000 per second"
+   ],
+   "correct": "500 per second",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "A study in Science found the spray is ejected in quick pulses at about 500 per second, like a pulse jet.",
+   "source": {
+    "url": "https://www.science.org/doi/10.1126/science.2349480",
+    "title": "Defensive Spray of the Bombardier Beetle: a Biological Pulse Jet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the main component of the bombardier beetle's hot defensive spray?",
+   "answers": [
+    "Formic acid",
+    "Hydrogen cyanide",
+    "Acetic acid",
+    "1,4-Benzoquinone"
+   ],
+   "correct": "1,4-Benzoquinone",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The spray's main component is 1,4-benzoquinone, an irritant to the eyes and respiratory system of vertebrates.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bombardier_beetle",
+    "title": "Bombardier beetle"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many times can a bombardier beetle fire its spray before its stored chemicals run out?",
+   "answers": [
+    "About 2",
+    "About 20",
+    "About 200",
+    "About 2,000"
+   ],
+   "correct": "About 20",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The beetle's glands store enough hydroquinone and hydrogen peroxide for roughly 20 sprays.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bombardier_beetle",
+    "title": "Bombardier beetle"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which fluid-dynamic phenomenon does the bombardier beetle use to control the direction of its spray?",
+   "answers": [
+    "The Magnus effect",
+    "The Venturi effect",
+    "The Coanda effect",
+    "The Leidenfrost effect"
+   ],
+   "correct": "The Coanda effect",
+   "difficulty": "hard",
+   "category": "Nature",
+   "explain": "The beetle steers its spray using the Coanda effect, where a fluid flows along the curvature of a surface.",
+   "source": {
+    "url": "https://arxiv.org/pdf/2403.02359",
+    "title": "Fluid ejections in nature"
+   },
+   "ai_written": true
+  }
+ ]
+}
