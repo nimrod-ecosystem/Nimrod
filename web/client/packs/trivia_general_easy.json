@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "General trivia (easy)",
- "description": "31 easy questions about a broad mix of everyday knowledge that fits none of the other categories. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 easy questions about a broad mix of everyday knowledge that fits none of the other categories. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -569,6 +569,350 @@
    "source": {
     "url": "https://www.ebsco.com/research-starters/history/romeo-and-juliet-william-shakespeare",
     "title": "Romeo and Juliet by William Shakespeare"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mountain is the highest in the world above sea level?",
+   "answers": [
+    "Mount Everest",
+    "K2",
+    "Mont Blanc",
+    "Denali"
+   ],
+   "correct": "Mount Everest",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Mount Everest's summit is about 8,849 metres above sea level, higher than any other mountain on Earth.",
+   "source": {
+    "url": "https://geology.com/records/highest-mountain-in-the-world.shtml",
+    "title": "Highest Mountain in the World - Tallest Mountain"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which animal is the largest known to have ever lived on Earth?",
+   "answers": [
+    "Blue whale",
+    "African elephant",
+    "Sperm whale",
+    "Whale shark"
+   ],
+   "correct": "Blue whale",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The blue whale is the largest animal known to have ever existed, bigger than any dinosaur.",
+   "source": {
+    "url": "https://www.britannica.com/science/What-Is-the-Largest-Animal-on-Earth",
+    "title": "What Is the Largest Animal on Earth?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many days does a leap year have?",
+   "answers": [
+    "364",
+    "365",
+    "366",
+    "367"
+   ],
+   "correct": "366",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "A common year has 365 days. A leap year adds February 29, making 366.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Leap_year",
+    "title": "Leap year"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many chambers does a healthy human heart have?",
+   "answers": [
+    "Two",
+    "Three",
+    "Four",
+    "Six"
+   ],
+   "correct": "Four",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The heart has four chambers: the left and right atria on top and the left and right ventricles below.",
+   "source": {
+    "url": "https://my.clevelandclinic.org/health/body/23074-heart-chambers",
+    "title": "Chambers of the Heart"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which country gave the Statue of Liberty to the United States?",
+   "answers": [
+    "France",
+    "Britain",
+    "Italy",
+    "Spain"
+   ],
+   "correct": "France",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The statue was a gift from the people of France, presented in 1884 to mark the alliance between the two nations.",
+   "source": {
+    "url": "https://www.nps.gov/stli/learn/historyculture/the-french-connection.htm",
+    "title": "The French Connection - Statue Of Liberty National Monument (U.S. National Park Service)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which metal is liquid at normal room temperature?",
+   "answers": [
+    "Mercury",
+    "Lead",
+    "Tin",
+    "Copper"
+   ],
+   "correct": "Mercury",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Mercury is the only elemental metal that is liquid at room temperature. It melts at about −38.8 °C.",
+   "source": {
+    "url": "https://www.britannica.com/science/mercury-chemical-element",
+    "title": "Mercury"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which vitamin does human skin produce when it is exposed to sunlight?",
+   "answers": [
+    "Vitamin D",
+    "Vitamin C",
+    "Vitamin A",
+    "Vitamin E"
+   ],
+   "correct": "Vitamin D",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Ultraviolet rays from sunlight striking the skin trigger the body to make vitamin D.",
+   "source": {
+    "url": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/",
+    "title": "Vitamin D - Health Professional Fact Sheet"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the first person to walk on the Moon?",
+   "answers": [
+    "Neil Armstrong",
+    "Buzz Aldrin",
+    "Yuri Gagarin",
+    "John Glenn"
+   ],
+   "correct": "Neil Armstrong",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Neil Armstrong, commander of Apollo 11, was the first human to set foot on the Moon in July 1969.",
+   "source": {
+    "url": "https://www.nasa.gov/mission/apollo-11/",
+    "title": "Apollo 11 - NASA"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What was the Great Pyramid of Giza originally built to be?",
+   "answers": [
+    "A tomb for a pharaoh",
+    "A temple to the sun god",
+    "A granary for the kingdom",
+    "A lighthouse for Nile boats"
+   ],
+   "correct": "A tomb for a pharaoh",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The Great Pyramid was built as a royal tomb for the Egyptian pharaoh Khufu.",
+   "source": {
+    "url": "https://www.britannica.com/place/Great-Pyramid-of-Giza",
+    "title": "Great Pyramid of Giza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What did the Titanic strike on its maiden voyage in 1912, causing it to sink?",
+   "answers": [
+    "An iceberg",
+    "A coral reef",
+    "A rival ship",
+    "A sunken wreck"
+   ],
+   "correct": "An iceberg",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The Titanic hit an iceberg in the North Atlantic on the night of April 14, 1912, and sank in the early hours of April 15.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Titanic",
+    "title": "Titanic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is Mount Kilimanjaro, Africa's highest mountain?",
+   "answers": [
+    "Tanzania",
+    "Kenya",
+    "Uganda",
+    "Ethiopia"
+   ],
+   "correct": "Tanzania",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Kilimanjaro stands in Tanzania, near the Kenyan border, and rises to about 5,895 metres.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/kilimanjaro/",
+    "title": "Kilimanjaro - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the model most commonly taught in English-speaking countries, how many continents are there?",
+   "answers": [
+    "Five",
+    "Six",
+    "Seven",
+    "Eight"
+   ],
+   "correct": "Seven",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The standard model counts Asia, Africa, North America, South America, Antarctica, Europe and Australia/Oceania, which makes seven.",
+   "source": {
+    "url": "https://kids.britannica.com/students/assembly/view/166560",
+    "title": "Earth's seven continents - Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Eiffel Tower was built in 1889 as the centrepiece of which event in Paris?",
+   "answers": [
+    "A World's Fair",
+    "A royal wedding",
+    "A military parade",
+    "An Olympic Games"
+   ],
+   "correct": "A World's Fair",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The tower was built for the 1889 Paris Exposition, the World's Fair, and served as its entrance gateway.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/march-31/eiffel-tower-opens",
+    "title": "Eiffel Tower opens in Paris"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At what temperature does pure water boil at sea level?",
+   "answers": [
+    "50 °C",
+    "80 °C",
+    "100 °C",
+    "120 °C"
+   ],
+   "correct": "100 °C",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Under standard sea-level pressure, water boils at 100 °C (212 °F).",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Boiling_point",
+    "title": "Boiling point"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which novel gave the world the idea of Big Brother and the Thought Police?",
+   "answers": [
+    "Nineteen Eighty-Four",
+    "Animal Farm",
+    "Brave New World",
+    "Fahrenheit 451"
+   ],
+   "correct": "Nineteen Eighty-Four",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "George Orwell's 1949 novel Nineteen Eighty-Four invented concepts such as Big Brother and the Thought Police.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Nineteen-Eighty-four",
+    "title": "Nineteen Eighty-four"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which metal forms the thin outer skin of the Statue of Liberty?",
+   "answers": [
+    "Copper",
+    "Bronze",
+    "Aluminium",
+    "Zinc"
+   ],
+   "correct": "Copper",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The statue is made of thin copper sheets over an inner structure of iron and steel.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Statue_of_Liberty",
+    "title": "Statue of Liberty"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Swedish astronomer based a temperature scale on the freezing and boiling points of water?",
+   "answers": [
+    "Anders Celsius",
+    "Daniel Fahrenheit",
+    "Lord Kelvin",
+    "Isaac Newton"
+   ],
+   "correct": "Anders Celsius",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "In 1742 Anders Celsius created a temperature scale using the freezing and boiling points of water, and it carries his name.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/science/boiling-points",
+    "title": "Boiling points"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which continent is the largest by area?",
+   "answers": [
+    "Asia",
+    "Africa",
+    "North America",
+    "Europe"
+   ],
+   "correct": "Asia",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "Asia covers about 44.6 million square kilometres, more than any other continent, and it is also the most populous.",
+   "source": {
+    "url": "https://continenten.com/en/the-continents/",
+    "title": "The Seven Continents in Order — Size, Population & Map"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of the Seven Wonders of the Ancient World can still be seen today?",
+   "answers": [
+    "The Great Pyramid of Giza",
+    "The Colossus of Rhodes",
+    "The Hanging Gardens",
+    "The Lighthouse of Alexandria"
+   ],
+   "correct": "The Great Pyramid of Giza",
+   "difficulty": "easy",
+   "category": "General",
+   "explain": "The Great Pyramid of Giza is the last surviving member of the Seven Wonders of the Ancient World.",
+   "source": {
+    "url": "https://egymonuments.gov.eg/en/monuments/the-great-pyramid",
+    "title": "The Great Pyramid - Discover Egypt's Monuments - Ministry of Tourism and Antiquities"
    },
    "ai_written": true
   }

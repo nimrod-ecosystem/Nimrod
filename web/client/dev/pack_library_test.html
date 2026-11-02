@@ -111,7 +111,7 @@ try {
     check('every pack in PACK_LIBRARY loads, validates and is the kind it is listed as', !bad.length, bad.join(' | '));
     check('the 33 general trivia packs are listed',
       PACK_LIBRARY.filter((p) => /^trivia_.+_(easy|medium|hard)$/.test(p.id)).length === 33);
-    check('built-in trivia: at least 1,448 questions across the packs', questions >= 1448, questions);
+    check('built-in trivia: at least 1,633 questions across the packs (with the top-up, 2026-11-02)', questions >= 1633, questions);
     check('no two built-in packs share an id', new Set(PACK_LIBRARY.map((p) => p.id)).size === PACK_LIBRARY.length);
   }
 

@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "History trivia (hard)",
- "description": "17 hard questions about world and US history, from ancient times to about 2000. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 hard questions about world and US history, from ancient times to about 2000. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -322,6 +322,615 @@
    "source": {
     "url": "https://www.britannica.com/topic/Magna-Carta",
     "title": "Magna Carta"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After the Roman disaster at Carrhae in 53 BCE, which Parthian king had his victorious general Surena put to death?",
+   "answers": [
+    "Phraates III",
+    "Orodes II",
+    "Mithridates IV",
+    "Artavasdes II"
+   ],
+   "correct": "Orodes II",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Surena, who beat Crassus at Carrhae, was killed by his own king, Orodes II, because his achievements had made him too dangerous.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Orodes_II",
+    "title": "Orodes II"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Roman army of Crassus was destroyed in 53 BCE near the ancient town of Carrhae, known today by what name?",
+   "answers": [
+    "Mardin",
+    "Antakya",
+    "Harran",
+    "Diyarbakır"
+   ],
+   "correct": "Harran",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Carrhae is the ancient name of Harran, in present-day Turkey, near where Crassus met the Parthians.",
+   "source": {
+    "url": "https://www.britannica.com/event/Battle-of-Carrhae",
+    "title": "Battle of Carrhae"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Arminius, who destroyed three Roman legions in AD 9, was a chieftain of which Germanic tribe?",
+   "answers": [
+    "Marcomanni",
+    "Batavi",
+    "Chatti",
+    "Cherusci"
+   ],
+   "correct": "Cherusci",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Arminius was a Roman-trained chieftain of the Cherusci, and he led the ambush that defeated Varus in the Teutoburg Forest.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/battle-teutoburg-forest",
+    "title": "Battle of Teutoburg Forest"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which three legions were lost with Varus in the Teutoburg Forest in AD 9?",
+   "answers": [
+    "The 10th, 11th and 12th",
+    "The 17th, 18th and 19th",
+    "The 5th, 6th and 7th",
+    "The 13th, 14th and 15th"
+   ],
+   "correct": "The 17th, 18th and 19th",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Varus was leading the XVII, XVIII and XIX legions to winter quarters when Arminius ambushed them.",
+   "source": {
+    "url": "https://www.deutschlandmuseum.de/en/history/the-battle-of-the-teutoburg-forest/",
+    "title": "The Battle of the Teutoburg Forest and the founding myth of the German nation"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which countess, a leading Italian supporter of Pope Gregory VII, inherited Canossa Castle, where Henry IV did penance in 1077?",
+   "answers": [
+    "Adelaide of Susa",
+    "Beatrice of Bar",
+    "Bertha of Savoy",
+    "Matilda of Tuscany"
+   ],
+   "correct": "Matilda of Tuscany",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Matilda of Tuscany inherited Canossa in 1052 and invited Gregory VII to take refuge there during his dispute with Henry IV.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Canossa",
+    "title": "Canossa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Although Henry IV was absolved at Canossa, which man did German nobles elect as antiking in March 1077?",
+   "answers": [
+    "Hermann of Salm",
+    "Rudolf of Rheinfelden",
+    "Otto of Nordheim",
+    "Welf IV of Bavaria"
+   ],
+   "correct": "Rudolf of Rheinfelden",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Nobles opposed to Henry IV elected Rudolf of Rheinfelden, Duke of Swabia, as antiking in March 1077, even though Henry had been absolved.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/1077",
+    "title": "1077"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1202 the Fourth Crusade's army helped Venice retake which rebellious Dalmatian port city as payment for its transport?",
+   "answers": [
+    "Ragusa",
+    "Spalato",
+    "Zara",
+    "Cattaro"
+   ],
+   "correct": "Zara",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Doge Enrico Dandolo proposed that the Crusaders attack the rebellious city of Zara (Zadar) instead of paying Venice in cash.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Fourth_Crusade",
+    "title": "Fourth Crusade"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was chosen in May 1204 as the first Latin Emperor of Constantinople after the city fell to the Fourth Crusade?",
+   "answers": [
+    "Boniface of Montferrat",
+    "Enrico Dandolo",
+    "Louis of Blois",
+    "Baldwin of Flanders"
+   ],
+   "correct": "Baldwin of Flanders",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Count Baldwin of Flanders was made the first Latin Emperor of Constantinople on 9 May 1204, a few weeks after the sack.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.worldhistory.org/Fourth_Crusade/",
+    "title": "Fourth Crusade - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At Panipat in 1526, which flanking tactic did Babur use to surround Ibrahim Lodi's much larger army?",
+   "answers": [
+    "Chakravyuha",
+    "Parthian shot",
+    "Tulughma",
+    "Oblique order"
+   ],
+   "correct": "Tulughma",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Babur split his army into left, right and centre units with flanking forces, a method called tulughma, which let his smaller force encircle the Lodi army.",
+   "source": {
+    "url": "https://www.britannica.com/event/First-Battle-of-Panipat-1526",
+    "title": "First Battle of Panipat (1526)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Babur's victory at the First Battle of Panipat in 1526 ended the rule of which Delhi Sultanate dynasty?",
+   "answers": [
+    "Sayyid",
+    "Tughlaq",
+    "Khalji",
+    "Lodi"
+   ],
+   "correct": "Lodi",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Ibrahim Lodi, the last ruler of the Lodi dynasty, was killed at Panipat, which opened the way for Mughal rule in India.",
+   "source": {
+    "url": "https://www.britannica.com/event/Battles-of-Panipat",
+    "title": "Battles of Panipat"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pope arranged the Holy League coalition whose fleet defeated the Ottomans at Lepanto in 1571?",
+   "answers": [
+    "Gregory XIII",
+    "Pius V",
+    "Paul IV",
+    "Julius III"
+   ],
+   "correct": "Pius V",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Holy League was a coalition of Catholic states arranged by Pope Pius V, with the Spanish and Venetian navies leading its fleet.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Battle_of_Lepanto",
+    "title": "Battle of Lepanto"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Habsburg negotiated the 1555 Peace of Augsburg on behalf of Emperor Charles V, his brother?",
+   "answers": [
+    "Maximilian II",
+    "Philip II",
+    "Rudolf II",
+    "Ferdinand I"
+   ],
+   "correct": "Ferdinand I",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Ferdinand, King of the Romans, acted for Charles V at the Diet of Augsburg and pushed through the agreement that included cuius regio, eius religio.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Cuius_regio,_eius_religio",
+    "title": "Cuius regio, eius religio"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Under the 1555 Peace of Augsburg's 'ecclesiastical reservation', what happened to a Catholic prince-bishop who converted to Lutheranism?",
+   "answers": [
+    "He could keep his lands and convert his subjects",
+    "He kept his lands but a regent had to rule them",
+    "He had to give up his rule, so the lands stayed Catholic",
+    "He could secularize his lands as a hereditary duchy"
+   ],
+   "correct": "He had to give up his rule, so the lands stayed Catholic",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The ecclesiastical reservation required church rulers who changed religion to give up their rule, which kept their territories Catholic.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Cuius_regio,_eius_religio",
+    "title": "Cuius regio, eius religio"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ruler issued the Edict of Potsdam in late October 1685, encouraging Huguenots expelled from France to settle in his lands?",
+   "answers": [
+    "William III, Prince of Orange",
+    "Charles XI, King of Sweden",
+    "Leopold I, Holy Roman Emperor",
+    "Frederick William, Elector of Brandenburg"
+   ],
+   "correct": "Frederick William, Elector of Brandenburg",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Right after Louis XIV's Edict of Fontainebleau, Frederick William of Brandenburg issued the Edict of Potsdam to welcome Protestant refugees.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Edict_of_Fontainebleau",
+    "title": "Edict of Fontainebleau"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Louis XIV's 1685 Edict of Fontainebleau revoked an edict that had been signed in 1598 by which French king?",
+   "answers": [
+    "Henry III",
+    "Louis XIII",
+    "Francis I",
+    "Henry IV"
+   ],
+   "correct": "Henry IV",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Henry IV signed the Edict of Nantes in 1598, giving Huguenots substantial rights. His grandson Louis XIV revoked it in 1685.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Edict_of_Nantes",
+    "title": "Edict of Nantes"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which commander of Siraj ud-Daulah's army betrayed him at Plassey in 1757 and succeeded him as Nawab of Bengal?",
+   "answers": [
+    "Mir Qasim",
+    "Mir Madan",
+    "Mir Jafar",
+    "Alivardi Khan"
+   ],
+   "correct": "Mir Jafar",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Mir Jafar secretly sided with Robert Clive and the East India Company, and he was installed as Nawab after Siraj ud-Daulah's defeat.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Siraj-ud-Daulah",
+    "title": "Siraj-ud-Daulah"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Marbury v. Madison (1803), the Supreme Court found part of which law to be unconstitutional?",
+   "answers": [
+    "Judiciary Act of 1801",
+    "Sedition Act of 1798",
+    "Process Act of 1792",
+    "Judiciary Act of 1789"
+   ],
+   "correct": "Judiciary Act of 1789",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Chief Justice John Marshall ruled that the provision of the Judiciary Act of 1789 giving the Court the power to issue Marbury's writ was unconstitutional.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/law/marbury-v-madison",
+    "title": "Marbury v. Madison"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "William Marbury, whose undelivered commission started the famous 1803 case, had been appointed to what office by outgoing President John Adams?",
+   "answers": [
+    "Federal district judge for Maryland",
+    "Collector of the Port of Baltimore",
+    "Marshal of the District of Columbia",
+    "Justice of the peace in the District of Columbia"
+   ],
+   "correct": "Justice of the peace in the District of Columbia",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "In 1801 Adams issued Marbury a commission as a justice of the peace, but the new Secretary of State, James Madison, refused to deliver it.",
+   "source": {
+    "url": "https://www.archives.gov/milestone-documents/marbury-v-madison",
+    "title": "Marbury v. Madison (1803)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which statesman chaired the Congress of Vienna, held from September 1814 to June 1815?",
+   "answers": [
+    "Viscount Castlereagh",
+    "Klemens von Metternich",
+    "Karl August von Hardenberg",
+    "Charles-Maurice de Talleyrand"
+   ],
+   "correct": "Klemens von Metternich",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Austria's Klemens von Metternich chaired the Congress, which reorganized Europe after the Napoleonic Wars.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Congress_of_Vienna",
+    "title": "Congress of Vienna"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In January 1815, Talleyrand signed a secret defensive alliance at the Congress of Vienna joining France with which two powers?",
+   "answers": [
+    "Russia and Prussia",
+    "Russia and Britain",
+    "Austria and Britain",
+    "Prussia and Austria"
+   ],
+   "correct": "Austria and Britain",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Secret Treaty of Vienna of 3 January 1815 was signed by France, Austria and Great Britain, which ended France's diplomatic isolation.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Secret_Treaty_of_Vienna",
+    "title": "Secret Treaty of Vienna"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Illinois senator offered the amendment that banned slavery in the rest of the Louisiana Purchase north of 36°30′ in the Missouri Compromise?",
+   "answers": [
+    "Henry Clay",
+    "Rufus King",
+    "Jesse B. Thomas",
+    "William Pinkney"
+   ],
+   "correct": "Jesse B. Thomas",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Senator Jesse B. Thomas of Illinois proposed the compromise amendment that admitted Missouri as a slave state and barred slavery above 36°30′.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/missouri-compromise/",
+    "title": "Missouri Compromise"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Maine entered the Union as a free state in 1820 after separating from which existing state?",
+   "answers": [
+    "New Hampshire",
+    "Massachusetts",
+    "New York",
+    "Vermont"
+   ],
+   "correct": "Massachusetts",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Maine had been part of Massachusetts, and its separation and admission as a free state was paired with Missouri's admission as a slave state.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/missouri-compromise/",
+    "title": "Missouri Compromise"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Mexican president signed the December 1853 treaty that sold the Mesilla Valley region to the United States in the Gadsden Purchase?",
+   "answers": [
+    "Mariano Arista",
+    "Benito Juárez",
+    "Anastasio Bustamante",
+    "Antonio López de Santa Anna"
+   ],
+   "correct": "Antonio López de Santa Anna",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Santa Anna's government, in financial distress, agreed to the sale negotiated with US minister James Gadsden.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Gadsden_Purchase",
+    "title": "Gadsden Purchase"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Before becoming US minister to Mexico, James Gadsden headed which railroad company and wanted a southern transcontinental route?",
+   "answers": [
+    "Baltimore and Ohio Railroad",
+    "Illinois Central Railroad",
+    "Virginia Central Railroad",
+    "South Carolina Railroad"
+   ],
+   "correct": "South Carolina Railroad",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Gadsden was president of the South Carolina Railroad Company and believed the best transcontinental route ran through part of northern Mexico.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/Gadsden-Purchase/324133",
+    "title": "Gadsden Purchase - Students"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 1842 Treaty of Nanking ending the First Opium War was signed aboard which British warship?",
+   "answers": [
+    "HMS Nemesis",
+    "HMS Wellesley",
+    "HMS Calliope",
+    "HMS Cornwallis"
+   ],
+   "correct": "HMS Cornwallis",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The treaty was signed on 29 August 1842 aboard HMS Cornwallis at Nanjing, then called Nanking.",
+   "source": {
+    "url": "https://www.newworldencyclopedia.org/entry/Treaty_of_Nanking",
+    "title": "Treaty of Nanking - New World Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which British diplomat replaced Charles Elliot and pressed the harsher demands that led to the Treaty of Nanking?",
+   "answers": [
+    "Sir Henry Pottinger",
+    "Lord Macartney",
+    "Lord Amherst",
+    "Lord Napier"
+   ],
+   "correct": "Sir Henry Pottinger",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Palmerston dismissed Elliot for not extracting enough concessions, and his replacement Pottinger demanded compensation and more open ports.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.nam.ac.uk/explore/first-china-war-1839-1842",
+    "title": "First China War"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which city did the Taiping rebels capture in 1853 and rename Tianjing, making it their capital?",
+   "answers": [
+    "Wuchang",
+    "Guangzhou",
+    "Hangzhou",
+    "Nanjing"
+   ],
+   "correct": "Nanjing",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Taipings took Nanjing in 1853 and ran their Heavenly Kingdom from it until Qing forces recaptured it in 1864.",
+   "source": {
+    "url": "https://www.britannica.com/event/Taiping-Rebellion",
+    "title": "Taiping Rebellion"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Hong Xiuquan, leader of the Taiping Rebellion, belonged to which ethnic group?",
+   "answers": [
+    "Manchu",
+    "Hakka",
+    "Hui",
+    "Miao"
+   ],
+   "correct": "Hakka",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Hong Xiuquan was an ethnic Hakka who proclaimed himself the younger brother of Jesus Christ after a series of visions.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Taiping_Rebellion",
+    "title": "Taiping Rebellion"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which document, linked to Pope Gregory VII's push to reform lay investiture, met resistance from Emperor Henry IV?",
+   "answers": [
+    "Unam Sanctam",
+    "Clericis Laicos",
+    "Concordat of Worms",
+    "Dictatus papae"
+   ],
+   "correct": "Dictatus papae",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Gregory VII's reforms of investiture, set out in the Dictatus papae, were resisted by Henry IV, leading to the Walk to Canossa.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Road_to_Canossa",
+    "title": "Road to Canossa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Venetian commander defended Famagusta for about eleven months before asking for a truce and surrendering in 1571?",
+   "answers": [
+    "Sebastiano Venier",
+    "Marco Antonio Bragadin",
+    "Agostino Barbarigo",
+    "Gianantonio Querini"
+   ],
+   "correct": "Marco Antonio Bragadin",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Marco Antonio Bragadin commanded the besieged Venetian garrison at Famagusta in Cyprus until he sought a truce and surrendered in the summer of 1571.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Oltremarini",
+    "title": "Oltremarini"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Byzantine prince persuaded Boniface of Montferrat and the Venetians to divert the Fourth Crusade to Constantinople to restore his father Isaac II?",
+   "answers": [
+    "Alexios III Angelos",
+    "Alexios V Doukas",
+    "Alexios IV Angelos",
+    "John II Komnenos"
+   ],
+   "correct": "Alexios IV Angelos",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Alexios IV Angelos, son of the deposed Isaac II, persuaded the Crusader leaders to divert to Constantinople to reinstate his father as co-emperor.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sack_of_Constantinople",
+    "title": "Sack of Constantinople"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these cities was NOT among the five treaty ports opened to British trade by the 1842 Treaty of Nanking?",
+   "answers": [
+    "Amoy",
+    "Ningpo",
+    "Foochow",
+    "Tientsin"
+   ],
+   "correct": "Tientsin",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "The Treaty of Nanking opened Canton, Amoy, Foochow, Shanghai and Ningpo. Tientsin was opened later, by the 1860 Convention of Peking, which followed the 1858 Treaty of Tientsin.",
+   "source": {
+    "url": "https://www.nam.ac.uk/explore/first-china-war-1839-1842",
+    "title": "First China War"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At the Congress of Vienna, Talleyrand urged Austria and Britain to secretly block Prussia from annexing all of which German kingdom?",
+   "answers": [
+    "Bavaria",
+    "Saxony",
+    "Hanover",
+    "Württemberg"
+   ],
+   "correct": "Saxony",
+   "difficulty": "hard",
+   "category": "History",
+   "explain": "Talleyrand divided the Allies by backing secret agreements to stop Russia annexing all of Poland and Prussia annexing all of Saxony.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Charles-Maurice-de-Talleyrand-prince-de-Benevent/During-the-Restoration-and-the-July-Monarchy",
+    "title": "Charles-Maurice de Talleyrand, prince de Bénévent - Diplomat, Statesman, France"
    },
    "ai_written": true
   }

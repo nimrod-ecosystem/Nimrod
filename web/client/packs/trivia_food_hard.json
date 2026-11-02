@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "Food trivia (hard)",
- "description": "35 hard questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 hard questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -640,6 +640,278 @@
    "source": {
     "url": "https://modernfarmer.com/2015/06/a-brief-history-of-peking-duck/",
     "title": "A Brief History of Peking Duck - Modern Farmer"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Tokyo Imperial University chemist identified glutamate as the source of kombu's savoury taste in 1908 and named that taste 'umami'?",
+   "answers": [
+    "Umetaro Suzuki",
+    "Kikunae Ikeda",
+    "Jōkichi Takamine",
+    "Saburosuke Suzuki"
+   ],
+   "correct": "Kikunae Ikeda",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Ikeda analysed kombu dashi, isolated the glutamate responsible for its flavour, and coined the word 'umami' in 1908.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Kikunae_Ikeda",
+    "title": "Kikunae Ikeda"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the minimum ageing period for the standard 'Affinato' grade of Traditional Balsamic Vinegar of Modena PDO?",
+   "answers": [
+    "At least 3 years",
+    "At least 6 years",
+    "At least 12 years",
+    "At least 25 years"
+   ],
+   "correct": "At least 12 years",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The product specification sets 'Affinato' at a minimum of 12 years, while 'Extravecchio' needs at least 25 years.",
+   "source": {
+    "url": "https://www.balsamicotradizionale.it/en/frequently-asked-questions/",
+    "title": "Balsamic vinegar FAQs"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In nixtamalization, dried maize kernels are cooked and steeped in water with which alkaline compound?",
+   "answers": [
+    "Sodium bicarbonate (baking soda)",
+    "Magnesium hydroxide (milk of magnesia)",
+    "Calcium hydroxide (slaked lime)",
+    "Potassium bitartrate (cream of tartar)"
+   ],
+   "correct": "Calcium hydroxide (slaked lime)",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Nixtamalization uses food-grade lime, which is calcium hydroxide. It loosens the kernel's outer skin and raises the calcium content of the masa.",
+   "source": {
+    "url": "https://www.cimmyt.org/news/what-is-nixtamalization/",
+    "title": "What is nixtamalization?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Roman fish-sauce production, what was the paste left behind after the liquid garum was drawn off called?",
+   "answers": [
+    "Defrutum",
+    "Caroenum",
+    "Passum",
+    "Allec"
+   ],
+   "correct": "Allec",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Garum was the thick amber liquid from fermented fish guts and salt. The paste left behind was called allec, an inferior product that was also widely traded.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/history/history-magazine/article/what-is-garum-rome-fish-sauce",
+    "title": "What Is Garum? More About Rome's Funky Sauce Made of Fish Guts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Neapolitan pizzaiolo is traditionally credited with creating pizza Margherita in 1889 in honour of a visiting queen?",
+   "answers": [
+    "Gennaro Lombardi",
+    "Antonio Starita",
+    "Pasquale Pintauro",
+    "Raffaele Esposito"
+   ],
+   "correct": "Raffaele Esposito",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The Royal Palace of Capodimonte commissioned Raffaele Esposito to make a pizza for Queen Margherita, and the Margherita is the result.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pizza",
+    "title": "Pizza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Sichuan pepper, famous for its numbing tingle, belongs to which plant family?",
+   "answers": [
+    "Solanaceae (nightshades)",
+    "Piperaceae (black pepper family)",
+    "Brassicaceae (mustard family)",
+    "Rutaceae (citrus family)"
+   ],
+   "correct": "Rutaceae (citrus family)",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Sichuan pepper comes from the genus Zanthoxylum in the family Rutaceae. It is not closely related to black pepper or chili pepper.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sichuan_pepper",
+    "title": "Sichuan pepper"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which Indian Ocean island did a 12-year-old enslaved boy, Edmond Albius, devise a practical method of hand-pollinating vanilla in 1841?",
+   "answers": [
+    "Madagascar",
+    "Réunion",
+    "Mauritius",
+    "Zanzibar"
+   ],
+   "correct": "Réunion",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Albius worked on the French island of Réunion. His hand-pollination technique let vanilla be grown commercially outside Mexico.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Vanilla",
+    "title": "Vanilla"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The French stew cassoulet takes its name from which item?",
+   "answers": [
+    "The cassis, a blackcurrant cordial used to glaze the crust",
+    "The cassoun, an Occitan word for the white haricot bean",
+    "The casse, a Languedoc term for slow-rendered goose fat",
+    "The cassole, the hollow earthenware dish it is cooked in"
+   ],
+   "correct": "The cassole, the hollow earthenware dish it is cooked in",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The dish is named after the cassole, the hollow terracotta cooking dish traditionally used to make it.",
+   "source": {
+    "url": "https://www.castelnaudary-tourisme.com/en/gastronomie/le-cassoulet-de-castelnaudary/",
+    "title": "Castelnaudary cassoulet - Castelnaudary Tourist Office"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Traditional Ethiopian injera, a sour, spongy fermented flatbread, is made from the flour of which grain?",
+   "answers": [
+    "Fonio",
+    "Amaranth",
+    "Teff",
+    "Buckwheat"
+   ],
+   "correct": "Teff",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Injera is traditionally made from teff flour. Teff is a cereal crop that originated in Ethiopia.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Injera",
+    "title": "Injera"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Under EU law, Roquefort may only be aged in the natural caves of which mountain at Roquefort-sur-Soulzon?",
+   "answers": [
+    "Mont Aigoual",
+    "Mont Combalou",
+    "Puy Mary",
+    "Mont Ventoux"
+   ],
+   "correct": "Mont Combalou",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Roquefort has protected designation of origin status. Only cheeses aged in the natural Combalou caves of Roquefort-sur-Soulzon may carry the name.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roquefort",
+    "title": "Roquefort"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the main force that puffs up pâte à choux, the dough for éclairs and cream puffs, as it bakes?",
+   "answers": [
+    "Carbon dioxide from baking powder",
+    "Expanding water vapour (steam)",
+    "Air whipped into beaten egg whites",
+    "Wild yeast from a long fermentation"
+   ],
+   "correct": "Expanding water vapour (steam)",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Choux relies on steam leavening. The water in the paste turns to steam in the hot oven and inflates the dough.",
+   "source": {
+    "url": "https://www.britannica.com/technology/steam-leavening",
+    "title": "Steam leavening"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the Spanish name for the autumn-to-winter season when Iberian pigs fatten on acorns in the dehesa?",
+   "answers": [
+    "Matanza",
+    "Vendimia",
+    "Montanera",
+    "Trashumancia"
+   ],
+   "correct": "Montanera",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The montanera, roughly October to February, is when Iberian pigs gain much of their weight on acorns. Acorn feeding during it is what earns the 'de bellota' label.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/travel/article/story-behind-jamn-ibrico-de-bellota",
+    "title": "The story behind jamón ibérico de bellota"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In San Francisco-style sourdough, maltose-negative yeasts live alongside Fructilactobacillus sanfranciscensis. Which sugar does the bacterium need that the yeast cannot use?",
+   "answers": [
+    "Maltose",
+    "Glucose",
+    "Sucrose",
+    "Fructose"
+   ],
+   "correct": "Maltose",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "The yeast cannot metabolise the maltose in the dough, but the bacterium requires it. This lets the two microbes share the dough without competing for it.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Fructilactobacillus_sanfranciscensis",
+    "title": "Fructilactobacillus sanfranciscensis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which sour fruit pulp, used alongside anchovies, is a signature ingredient of Worcestershire sauce?",
+   "answers": [
+    "Green mango",
+    "Tamarind",
+    "Quince",
+    "Sour cherry"
+   ],
+   "correct": "Tamarind",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Worcestershire sauce is built on vinegar, anchovies and tamarind, among other ingredients. The tamarind gives it a fruity tartness.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Worcestershire_sauce",
+    "title": "Worcestershire sauce"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mould, known in Japan as kōji-kin, is the fermentation workhorse behind sake, miso and soy sauce?",
+   "answers": [
+    "Rhizopus oligosporus",
+    "Penicillium camemberti",
+    "Monascus purpureus",
+    "Aspergillus oryzae"
+   ],
+   "correct": "Aspergillus oryzae",
+   "difficulty": "hard",
+   "category": "Food",
+   "explain": "Aspergillus oryzae is the kōji mould used to make sake, miso, soy sauce and other traditional Japanese foods. Its enzymes break down starches and proteins.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Aspergillus_oryzae",
+    "title": "Aspergillus oryzae"
    },
    "ai_written": true
   }

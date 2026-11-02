@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "Food trivia (easy)",
- "description": "17 easy questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 easy questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -314,6 +314,600 @@
    "source": {
     "url": "https://en.wikipedia.org/wiki/Pesto",
     "title": "Pesto"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What seasoning gives sushi rice its characteristic tang and sets it apart from plain steamed rice?",
+   "answers": [
+    "Rice vinegar",
+    "Soy sauce",
+    "Sesame oil",
+    "Fish sauce"
+   ],
+   "correct": "Rice vinegar",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Sushi is defined by its vinegared rice, which is typically seasoned with sugar and salt as well.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sushi",
+    "title": "Sushi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the Japanese dish of thinly sliced raw fish served without sushi rice called?",
+   "answers": [
+    "Sashimi",
+    "Tempura",
+    "Teriyaki",
+    "Yakitori"
+   ],
+   "correct": "Sashimi",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Sashimi is thinly sliced raw fish or meat served without rice. Sushi, by contrast, is any dish made with vinegared rice.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sashimi",
+    "title": "Sashimi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which style of sushi, the most commonly recognized today, places seafood on a hand-pressed bed of vinegared rice?",
+   "answers": [
+    "Nigiri",
+    "Maki",
+    "Chirashi",
+    "Inari"
+   ],
+   "correct": "Nigiri",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Nigiri-zushi is the familiar style in which a slice of seafood sits on a small hand-pressed mound of vinegared rice.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sushi",
+    "title": "Sushi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the earliest forms of sushi, fermenting rice was a way to stop which food from spoiling?",
+   "answers": [
+    "Fish",
+    "Eggs",
+    "Pork",
+    "Milk"
+   ],
+   "correct": "Fish",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Sushi began as a preservation method, in which lacto-fermentation of the rice prevented the fish from spoiling.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sushi",
+    "title": "Sushi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which short-grain rice, named after a town in Italy's Po Valley, is traditionally used to make risotto?",
+   "answers": [
+    "Arborio",
+    "Basmati",
+    "Jasmine",
+    "Wild rice"
+   ],
+   "correct": "Arborio",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Arborio rice is named after the town of Arborio in the Po Valley and is the best-known rice for risotto.",
+   "source": {
+    "url": "https://www.npr.org/2008/09/24/94939511/taking-the-risk-out-of-risotto",
+    "title": "taking the risk out of risotto"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What do the rice grains release while being stirred slowly in hot stock, giving risotto its creamy texture?",
+   "answers": [
+    "Starch",
+    "Gluten",
+    "Sugar",
+    "Protein"
+   ],
+   "correct": "Starch",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Risotto is cooked slowly with stock and stirred until the rice releases its starch, which makes the dish creamy.",
+   "source": {
+    "url": "https://www.kyleecooks.com/garlic-parmesan-risotto/",
+    "title": "Easy Garlic Parmesan Risotto Recipe (VIDEO) - Kylee Cooks"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Italian cooking term \"al dente\", used for pasta, literally means what?",
+   "answers": [
+    "To the tooth",
+    "To the boil",
+    "With the sauce",
+    "Well salted"
+   ],
+   "correct": "To the tooth",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "\"Al dente\" means \"to the tooth\" in Italian. It describes pasta that is cooked but still has a little firmness when you bite it.",
+   "source": {
+    "url": "https://www.iowapbs.org/education/initiatives/iowasciencephenomena/12650/cooking-pasta-al-dente-nutrition",
+    "title": "Cooking Pasta \"Al Dente\" for Nutrition"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The spice saffron is made from the dried stigmas of which flower?",
+   "answers": [
+    "Crocus",
+    "Tulip",
+    "Marigold",
+    "Lavender"
+   ],
+   "correct": "Crocus",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Saffron comes from the stigmas of the autumn-flowering saffron crocus, Crocus sativus.",
+   "source": {
+    "url": "https://www.britannica.com/topic/saffron",
+    "title": "Saffron"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why is saffron such an expensive spice?",
+   "answers": [
+    "Only a tiny part of each flower is used, and it is picked by hand",
+    "The plants can only be grown on one small island",
+    "The threads must be aged in barrels for many years",
+    "The flowers bloom only once every ten years"
+   ],
+   "correct": "Only a tiny part of each flower is used, and it is picked by hand",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Each flower has only three stigmas, and harvesting must be done by hand. It takes about 75,000 flowers to make a pound of saffron.",
+   "source": {
+    "url": "https://www.britannica.com/story/why-is-saffron-so-expensive",
+    "title": "Why Is Saffron So Expensive?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Saffron is an important ingredient in which classic French fish soup?",
+   "answers": [
+    "Bouillabaisse",
+    "Vichyssoise",
+    "Consommé",
+    "French onion soup"
+   ],
+   "correct": "Bouillabaisse",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Britannica names saffron as an important ingredient in bouillabaisse, the fish soup from the south of France.",
+   "source": {
+    "url": "https://britannica.com/EBchecked/topic/516133/saffron",
+    "title": "saffron | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Chocolate is made from the processed seeds of which tree?",
+   "answers": [
+    "Cacao",
+    "Coffee",
+    "Carob",
+    "Cola"
+   ],
+   "correct": "Cacao",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Cocoa beans are the processed seeds of the cacao tree, Theobroma cacao, and chocolate is made from them.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Chocolate",
+    "title": "Chocolate"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Cacao trees, the source of chocolate, originally come from which part of the world?",
+   "answers": [
+    "The Americas",
+    "West Africa",
+    "Southeast Asia",
+    "The Mediterranean"
+   ],
+   "correct": "The Americas",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Chocolate comes from the cacao tree, which is originally from Central and South America.",
+   "source": {
+    "url": "https://www.eataly.com/us_en/magazine/how-to/how-chocolate-is-made",
+    "title": "How Chocolate is Made"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "White chocolate is made from sugar, milk and which part of the cacao bean?",
+   "answers": [
+    "Cocoa butter",
+    "Cocoa powder",
+    "Cocoa nibs",
+    "Cocoa husks"
+   ],
+   "correct": "Cocoa butter",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "White chocolate contains cocoa butter, sugar and milk but no cocoa solids, which is why it is pale.",
+   "source": {
+    "url": "https://cocoasupply.com/how-cocoa-beans-become-chocolate-a-step-by-step-guide/",
+    "title": "How Cocoa Beans Become Chocolate: A Step-by-Step Guide"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Vanilla, a popular flavoring, is obtained from the seed pods of which type of plant?",
+   "answers": [
+    "Orchid",
+    "Palm",
+    "Coffee shrub",
+    "Cactus"
+   ],
+   "correct": "Orchid",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Vanilla is a spice derived from orchids of the genus Vanilla, mainly from the pods of the flat-leaved vanilla orchid.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Vanilla",
+    "title": "Vanilla"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is the vanilla orchid native, even though most vanilla is now grown elsewhere?",
+   "answers": [
+    "Mexico",
+    "Madagascar",
+    "India",
+    "Indonesia"
+   ],
+   "correct": "Mexico",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Vanilla planifolia is native to Mexico. Madagascar is now a major producer, but the plant did not originate there.",
+   "source": {
+    "url": "https://unitproj.library.ucla.edu/biomed/spice/index.cfm?displayID=27",
+    "title": "Medicinal Spices Exhibit - UCLA Biomedical Library: History & Special Collections"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How are the seafood and vegetables cooked in the Japanese dish tempura?",
+   "answers": [
+    "Dipped in a thin batter and deep-fried",
+    "Grilled over charcoal on skewers",
+    "Simmered slowly in a soy broth",
+    "Steamed inside bamboo leaves"
+   ],
+   "correct": "Dipped in a thin batter and deep-fried",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Tempura is seafood and vegetables coated in a thin batter and deep-fried.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Tempura",
+    "title": "Tempura"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which European country is credited with bringing the batter-frying technique that became tempura to Japan?",
+   "answers": [
+    "Portugal",
+    "France",
+    "The Netherlands",
+    "Italy"
+   ],
+   "correct": "Portugal",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "The forerunner of tempura first appeared in Nagasaki in the late 16th century, brought over by Portuguese traders and missionaries.",
+   "source": {
+    "url": "https://www.kikkoman.com/en/cookbook/glossary/tenpura.html",
+    "title": "Tempura"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Overmixing tempura batter activates which wheat protein, making the fried coating soft and dough-like instead of crisp?",
+   "answers": [
+    "Gluten",
+    "Casein",
+    "Collagen",
+    "Lecithin"
+   ],
+   "correct": "Gluten",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Tempura batter is mixed only briefly, leaving lumps, because overmixing activates wheat gluten and ruins the crisp texture.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Tempura",
+    "title": "Tempura"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Egypt, falafel is most often made from ground versions of which bean?",
+   "answers": [
+    "Fava beans",
+    "Kidney beans",
+    "Black beans",
+    "Soybeans"
+   ],
+   "correct": "Fava beans",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "In Egypt and the Arabian Peninsula falafel is most often made with fava beans. In the Levant it is usually made with chickpeas.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Falafel",
+    "title": "Falafel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Gazpacho, the cold vegetable soup, comes from which region of southern Spain?",
+   "answers": [
+    "Andalusia",
+    "Catalonia",
+    "Galicia",
+    "The Basque Country"
+   ],
+   "correct": "Andalusia",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Gazpacho originates in Andalusia in southern Spain and is mostly eaten in summer because it is cold and refreshing.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Tomato_soup",
+    "title": "Tomato soup"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ingredient, added in the 19th century, gave gazpacho its familiar red color?",
+   "answers": [
+    "Tomatoes",
+    "Beets",
+    "Radishes",
+    "Red cabbage"
+   ],
+   "correct": "Tomatoes",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Red gazpacho was created in the 19th century when tomatoes were added to the ingredients.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Gazpacho",
+    "title": "Gazpacho"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which soft Italian cheese is used to make the creamy layer of tiramisu?",
+   "answers": [
+    "Mascarpone",
+    "Ricotta",
+    "Parmesan",
+    "Gorgonzola"
+   ],
+   "correct": "Mascarpone",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Tiramisu is covered with a cream of egg yolks, sugar and mascarpone.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Tiramisu",
+    "title": "Tiramisu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Italian dessert tiramisu, the ladyfingers are soaked in which drink?",
+   "answers": [
+    "Coffee",
+    "Milk",
+    "Orange juice",
+    "Black tea"
+   ],
+   "correct": "Coffee",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Tiramisu is made with coffee-soaked ladyfingers (savoiardi) layered with a mascarpone cream and dusted with cocoa.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Tiramisu",
+    "title": "Tiramisu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the German word \"sauerkraut\" literally mean?",
+   "answers": [
+    "Sour cabbage",
+    "Salted greens",
+    "Pickled beet",
+    "Bitter herb"
+   ],
+   "correct": "Sour cabbage",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Sauerkraut is German for \"sour cabbage\". It is finely cut cabbage fermented by lactic acid bacteria.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sauerkraut",
+    "title": "Sauerkraut"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Mayonnaise is a thick emulsion of oil, vinegar or lemon juice, and which other main ingredient?",
+   "answers": [
+    "Egg yolk",
+    "Cream",
+    "Gelatin",
+    "Cornstarch"
+   ],
+   "correct": "Egg yolk",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Mayonnaise is a stable emulsion of oil, egg yolks, and either vinegar or lemon juice. The egg yolk acts as the emulsifier.",
+   "source": {
+    "url": "https://www.sciencedirect.com/topics/agricultural-and-biological-sciences/mayonnaise",
+    "title": "Mayonnaise - an overview"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Wasabi, the pungent green paste served with sushi, is also known as Japanese what?",
+   "answers": [
+    "Horseradish",
+    "Ginger",
+    "Turnip",
+    "Garlic"
+   ],
+   "correct": "Horseradish",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Wasabi is also called Japanese horseradish. It belongs to the same plant family as horseradish and mustard.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Wasabi",
+    "title": "Wasabi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Traditional couscous is made of small steamed granules of which wheat product?",
+   "answers": [
+    "Semolina",
+    "Rice flour",
+    "Wheat bran",
+    "Bread crumbs"
+   ],
+   "correct": "Semolina",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Couscous is made from semolina grains, which are the endosperm of durum wheat, rolled and steamed.",
+   "source": {
+    "url": "https://www.britannica.com/topic/couscous",
+    "title": "Couscous"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Couscous is a traditional dish of which part of the world?",
+   "answers": [
+    "North Africa",
+    "Scandinavia",
+    "South America",
+    "East Asia"
+   ],
+   "correct": "North Africa",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Britannica describes couscous as a North African dish of semolina and accompanying foods.",
+   "source": {
+    "url": "https://www.britannica.com/topic/couscous",
+    "title": "Couscous"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which fiery red pepper sauce is traditionally eaten with couscous and its stew?",
+   "answers": [
+    "Harissa",
+    "Tzatziki",
+    "Chimichurri",
+    "Teriyaki"
+   ],
+   "correct": "Harissa",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Couscous and its stew were traditionally eaten with harissa, a fiery sauce of red pepper and other spices.",
+   "source": {
+    "url": "https://britannica.com/EBchecked/topic/140919/couscous",
+    "title": "couscous | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Couscous is traditionally steamed in a special two-part pot. What is it called?",
+   "answers": [
+    "A couscousière",
+    "A tagine",
+    "A tandoor",
+    "A wok"
+   ],
+   "correct": "A couscousière",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "A couscousière has a lower compartment for the stew or broth and an upper perforated part where the couscous steams.",
+   "source": {
+    "url": "https://britannica.com/EBchecked/topic/140919/couscous",
+    "title": "couscous | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A roux, used to thicken sauces and soups, is made by cooking flour with which ingredient?",
+   "answers": [
+    "Butter",
+    "Sugar",
+    "Vinegar",
+    "Egg white"
+   ],
+   "correct": "Butter",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "A roux is flour and fat cooked together in roughly equal parts by weight, and the fat is most often butter.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roux",
+    "title": "Roux"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these classic French sauces is thickened with a roux?",
+   "answers": [
+    "Béchamel",
+    "Hollandaise",
+    "Mayonnaise",
+    "Vinaigrette"
+   ],
+   "correct": "Béchamel",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "Roux is used in three of the five French mother sauces: béchamel, velouté and espagnole.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roux",
+    "title": "Roux"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "As a roux is cooked longer and turns darker, what happens to its thickening power?",
+   "answers": [
+    "It becomes weaker",
+    "It becomes stronger",
+    "It stays exactly the same",
+    "It disappears completely"
+   ],
+   "correct": "It becomes weaker",
+   "difficulty": "easy",
+   "category": "Food",
+   "explain": "The darker the roux, the less thickening power it has. A chocolate-colored roux thickens about one-fourth as much as a white roux.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roux",
+    "title": "Roux"
    },
    "ai_written": true
   }

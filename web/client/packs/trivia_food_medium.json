@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "Food trivia (medium)",
- "description": "28 medium questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 medium questions about dishes, ingredients, cuisines, cooking terms. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -513,6 +513,403 @@
    "source": {
     "url": "https://en.wikipedia.org/wiki/Sofrito",
     "title": "Sofrito"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Traditional masa for tortillas is made by cooking and steeping dried corn in water mixed with which compound?",
+   "answers": [
+    "Calcium hydroxide",
+    "Sodium bicarbonate",
+    "Ammonium chloride",
+    "Acetic acid"
+   ],
+   "correct": "Calcium hydroxide",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Nixtamalization soaks corn in an alkaline solution, most commonly water mixed with calcium hydroxide (slaked lime, or cal). This softens the kernels so they can be ground into masa.",
+   "source": {
+    "url": "https://masienda.com/blogs/learn/nixtamal-guide",
+    "title": "The ABCS of Nixtamal: Your Masa Guide"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Soaking corn in an alkaline solution, as in nixtamalization, helps release which B vitamin from the kernel?",
+   "answers": [
+    "Niacin",
+    "Riboflavin",
+    "Thiamine",
+    "Cobalamin"
+   ],
+   "correct": "Niacin",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The alkaline solution used in nixtamalization releases niacin (vitamin B3) from the corn kernel. This is why traditional tortilla-eating cultures avoided niacin deficiency.",
+   "source": {
+    "url": "https://www.tastingtable.com/1171123/the-process-of-nixtamalization-explained/",
+    "title": "The Process Of Nixtamalization, Explained - Tasting Table"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Wilbur Scoville, who created the scale for measuring the heat of chili peppers, worked as what?",
+   "answers": [
+    "Pharmacist",
+    "Botanist",
+    "Agronomist",
+    "Spice trader"
+   ],
+   "correct": "Pharmacist",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Wilbur Scoville was an American pharmacist who devised his heat test in the early 1900s. He originally wanted to measure capsaicin for use in medicinal preparations.",
+   "source": {
+    "url": "https://www.britannica.com/science/Scoville-scale",
+    "title": "Scoville scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Scoville's original organoleptic test, a pepper extract was diluted in what until tasters could no longer detect any heat?",
+   "answers": [
+    "Sugar water",
+    "Plain milk",
+    "Vegetable oil",
+    "Salted brine"
+   ],
+   "correct": "Sugar water",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The extract was diluted in sugar water until a panel of tasters could no longer detect heat. The degree of dilution gave the pepper's Scoville rating.",
+   "source": {
+    "url": "https://www.hotsauce.com/Scoville-Hot-Sauce-Heat-Scale/",
+    "title": "Scoville Hot Sauce Heat Scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which restaurateur is generally credited with creating the Caesar salad in Tijuana, Mexico, in the 1920s?",
+   "answers": [
+    "Caesar Cardini",
+    "Julius Caesar",
+    "César Ritz",
+    "Auguste Escoffier"
+   ],
+   "correct": "Caesar Cardini",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The salad is credited to Caesar Cardini, an Italian immigrant who ran a restaurant in Tijuana. It is named after him rather than the Roman emperor, though some accounts credit his brother Alex.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Caesar_salad",
+    "title": "Caesar salad"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Liguria, which short, twisted pasta is the traditional choice to serve with pesto alla genovese?",
+   "answers": [
+    "Trofie",
+    "Orecchiette",
+    "Farfalle",
+    "Rigatoni"
+   ],
+   "correct": "Trofie",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Trofie is a short, twisted pasta from Liguria that holds the sauce well. It is the traditional partner for Genoese basil pesto.",
+   "source": {
+    "url": "https://lovetovisititaly.com/authentic-pesto-alla-genovese-how-to-make-italian-basil-pesto/",
+    "title": "Authentic Pesto alla Genovese: How to Make Italian Basil Pesto - Love Italy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name of the Ligurian sauce pesto reflects which kitchen action used to make it?",
+   "answers": [
+    "Pounding",
+    "Simmering",
+    "Whisking",
+    "Folding"
+   ],
+   "correct": "Pounding",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Pesto takes its name from the idea of pounding. The traditional sauce is made by crushing basil, garlic, pine nuts and cheese in a mortar with a pestle.",
+   "source": {
+    "url": "https://www.zafferanoandco.com/post/2016/10/16/chef-gianluca-deiana-abis-pesto-alla-genovese",
+    "title": "Pesto alla Genovese (Italian Ligurian Basil Pesto)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Under the 1980 Bouillabaisse Charter, an authentic Marseille bouillabaisse must include which bony rockfish?",
+   "answers": [
+    "Rascasse",
+    "Turbot",
+    "Dover sole",
+    "Atlantic cod"
+   ],
+   "correct": "Rascasse",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The 1980 charter, drawn up by 11 Marseille restaurateurs, requires rascasse (Scorpaena scrofa). This bony rockfish lives in the calanques and reefs close to shore.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bouillabaisse",
+    "title": "Bouillabaisse"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In a traditional Marseille bouillabaisse, which sauce is spread on garlic-rubbed bread served with the hot broth?",
+   "answers": [
+    "Rouille",
+    "Rémoulade",
+    "Pistou",
+    "Gribiche"
+   ],
+   "correct": "Rouille",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Traditional Marseille service brings the broth first, with rouille spread on thick slices of bread rubbed with garlic. The fish is then served as a separate course.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bouillabaisse",
+    "title": "Bouillabaisse"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Peruvian cevicherías often serve the citrus marinade as a drink called \"leche de\" which animal, literally \"milk of\" that animal?",
+   "answers": [
+    "Tiger",
+    "Llama",
+    "Condor",
+    "Vicuña"
+   ],
+   "correct": "Tiger",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The marinade of lime juice, fish, onion, garlic and other seasonings is called leche de tigre, or \"tiger's milk\". It is often served in a small glass alongside the ceviche.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Peruvian_ceviche",
+    "title": "Peruvian ceviche"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The cooking term \"blanching\" is named for the way the technique originally turned meat which color?",
+   "answers": [
+    "White",
+    "Golden",
+    "Pink",
+    "Green"
+   ],
+   "correct": "White",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Blanching was once used mainly on meat, which takes on a white hue when briefly soaked in boiling water. That effect gave the technique its name.",
+   "source": {
+    "url": "https://fooby.ch/en/cookery-school/cooking-knowledge/blanching.html",
+    "title": "Blanching"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Blanching vegetables before freezing them helps deactivate what, which would otherwise degrade their flavor, color and texture?",
+   "answers": [
+    "Enzymes",
+    "Vitamins",
+    "Minerals",
+    "Starches"
+   ],
+   "correct": "Enzymes",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Briefly boiling produce deactivates enzymes that affect flavor, color and texture. This is why almost all vegetables are blanched before freezing.",
+   "source": {
+    "url": "https://www.foodnetwork.com/how-to/packages/food-network-essentials/what-is-blanching",
+    "title": "What Is Blanching?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Because its natural pollinators live only in Central and South America, how must most of the world's vanilla orchids be pollinated?",
+   "answers": [
+    "By workers, using small tools",
+    "By wind in open fields",
+    "By fruit flies in greenhouses",
+    "By self-pollination after harvest"
+   ],
+   "correct": "By workers, using small tools",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Vanilla planifolia is pollinated naturally only by certain bees native to the Americas. Elsewhere, such as in Madagascar, hand pollination is required, which helps make vanilla one of the most expensive spices.",
+   "source": {
+    "url": "https://gardens.si.edu/exhibitions/connective-power-of-orchids/section-4-orchid-innovation-the-vanilla-orchid/",
+    "title": "Section 4: Orchid Innovation: The Vanilla Orchid - Smithsonian Gardens"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roquefort cheese is made entirely from the milk of which breed of sheep?",
+   "answers": [
+    "Lacaune",
+    "Merino",
+    "Manchega",
+    "East Friesian"
+   ],
+   "correct": "Lacaune",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Roquefort is made only from the milk of Lacaune sheep. It is then aged in the caves of Roquefort-sur-Soulzon in southern France.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roquefort",
+    "title": "Roquefort"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to legend, a shepherd discovered Roquefort after leaving his lunch of bread and cheese in a cave to do what?",
+   "answers": [
+    "Follow a girl he glimpsed far away",
+    "Chase a stray lamb across the hills",
+    "Shelter from a sudden mountain storm",
+    "Answer a bell ringing in the village"
+   ],
+   "correct": "Follow a girl he glimpsed far away",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "The legend says the shepherd left his lunch to chase a beautiful girl he saw in the distance. When he returned months later, mold had transformed his cheese into Roquefort.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Roquefort",
+    "title": "Roquefort"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The pastry used in baklava is called phyllo, from a Greek word meaning what?",
+   "answers": [
+    "Leaf",
+    "Honey",
+    "Flour",
+    "Silk"
+   ],
+   "correct": "Leaf",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Phyllo (or filo) comes from the Greek word for \"leaf\", describing the paper-thin sheets of dough that are layered to make baklava.",
+   "source": {
+    "url": "https://baklavabywilma.com/history-of-baklava/",
+    "title": "History of Baklava - Baklava by Wilma"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the French cooking term \"bain-marie\" literally mean?",
+   "answers": [
+    "Mary's bath",
+    "Marie's kettle",
+    "Maiden's pot",
+    "Marine bath"
+   ],
+   "correct": "Mary's bath",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Bain-marie comes from the medieval Latin balneum Mariae, meaning \"Mary's bath\". In the kitchen it is a pan of hot water that gently heats another container of food.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bain-marie",
+    "title": "Bain-marie"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many gallons of maple sap must be boiled down to produce one gallon of maple syrup?",
+   "answers": [
+    "About 10",
+    "About 20",
+    "About 40",
+    "About 100"
+   ],
+   "correct": "About 40",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Maple sap is mostly water, so it takes approximately 40 gallons of sap to make one gallon of syrup. The ratio varies with the sap's sugar content.",
+   "source": {
+    "url": "https://employees.csbsju.edu/ssaupe/biol327/Lab/maple/maple-sap.htm",
+    "title": "Biology of Maple Sap Flow"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which tropical fruit ingredient is listed among the main components of Worcestershire sauce, alongside anchovies and malt vinegar?",
+   "answers": [
+    "Tamarind",
+    "Mango",
+    "Pomegranate",
+    "Guava"
+   ],
+   "correct": "Tamarind",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Worcestershire sauce is traditionally made with vinegar, anchovies, tamarind, garlic, onions and molasses. The tamarind adds a fruity tartness.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Worcestershire_sauce",
+    "title": "Worcestershire sauce"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which fungus is used as the kōji mold to ferment soybeans into miso?",
+   "answers": [
+    "Aspergillus oryzae",
+    "Penicillium roqueforti",
+    "Rhizopus oligosporus",
+    "Saccharomyces cerevisiae"
+   ],
+   "correct": "Aspergillus oryzae",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Miso is made by fermenting soybeans with salt and kōji, which is the fungus Aspergillus oryzae grown on rice, barley or soybeans.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Miso",
+    "title": "Miso"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Traditional haggis is made from sheep's \"pluck\". Which organs make up the pluck?",
+   "answers": [
+    "Heart, liver and lungs",
+    "Tongue, kidneys and brain",
+    "Stomach, spleen and tripe",
+    "Liver, pancreas and tongue"
+   ],
+   "correct": "Heart, liver and lungs",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "Haggis is made from a sheep's heart, liver and lungs, mixed with onion, oatmeal, suet and spices. It is traditionally cooked in a sheep's stomach or a sausage casing.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Haggis",
+    "title": "Haggis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Haggis is traditionally served as \"haggis, neeps and tatties\". What are the \"neeps\"?",
+   "answers": [
+    "Mashed turnip or swede",
+    "Creamed potatoes",
+    "Boiled cabbage",
+    "Pickled beetroot"
+   ],
+   "correct": "Mashed turnip or swede",
+   "difficulty": "medium",
+   "category": "Food",
+   "explain": "In Scottish cooking, neeps are mashed turnip or swede, and tatties are potatoes. Together they are the classic accompaniments to haggis.",
+   "source": {
+    "url": "https://www.europeanwaterways.com/blog/chefs-recipe-haggis/",
+    "title": "Chef's Recipe: Haggis : European Waterways"
    },
    "ai_written": true
   }

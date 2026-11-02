@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "Words trivia (hard)",
- "description": "30 hard questions about word meanings, origins, spelling, idioms, grammar. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 hard questions about word meanings, origins, spelling, idioms, grammar. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -536,6 +536,371 @@
    "source": {
     "url": "https://grammarist.com/usage/contronym-and-auto-antonym/",
     "title": "How to Use Contronym and auto-antonym Correctly"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "William Spooner, the Oxford don who gave his name to the 'spoonerism', reportedly claimed that his only genuine spoonerism involved what?",
+   "answers": [
+    "A hymn he announced",
+    "A toast he proposed",
+    "A sermon he preached",
+    "A lecture he delivered"
+   ],
+   "correct": "A hymn he announced",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Spooner himself said his sole real spoonerism was a garbled reference to a hymn. Most of the others were probably invented by colleagues and students.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Spoonerism",
+    "title": "Spoonerism - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Johannes Hofer coined 'nostalgia' in 1688 to describe the homesickness of which group?",
+   "answers": [
+    "Swiss mercenaries fighting abroad",
+    "English sailors on long voyages",
+    "Crusader knights in the Holy Land",
+    "Pilgrims walking to Santiago"
+   ],
+   "correct": "Swiss mercenaries fighting abroad",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Hofer coined 'nostalgia' from Greek 'nóstos' (homecoming) and 'álgos' (pain). He used it for the condition seen in Swiss mercenaries pining for their homeland.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Nostalgia",
+    "title": "Nostalgia - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Thomas Bowdler's name gave English the verb 'bowdlerize'. Who largely did the work on the first, anonymous 1807 edition of The Family Shakespeare?",
+   "answers": [
+    "His sister Henrietta Maria",
+    "His brother John",
+    "His nephew Thomas",
+    "His father Thomas"
+   ],
+   "correct": "His sister Henrietta Maria",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "The 1807 edition appeared anonymously and was largely the work of Thomas Bowdler's sister, Henrietta Maria Bowdler. Her brother's name later became the eponym.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/bowdler-publishes-family-shakespeare/",
+    "title": "Bowdler Publishes The Family Shakespeare - EBSCO Research Starters"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Karel Čapek popularized the word 'robot' in his play R.U.R. Whom did he always credit as the word's true originator?",
+   "answers": [
+    "His brother Josef",
+    "His friend Jaroslav Hašek",
+    "His wife Olga Scheinpflugová",
+    "His friend Tomáš Masaryk"
+   ],
+   "correct": "His brother Josef",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Karel Čapek had been toying with 'labori' for his artificial workers. His brother Josef, a painter, suggested 'roboti', and Karel always credited him with the coinage.",
+   "source": {
+    "url": "https://www.sciencefocus.com/future-technology/where-does-the-word-robot-come-from",
+    "title": "Where does the word 'robot' come from? - BBC Science Focus Magazine"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In Hebrew, the word 'shibboleth' used as a test in Judges 12 literally refers to which part of a plant?",
+   "answers": [
+    "The ear of a cereal stalk",
+    "The root of a vine",
+    "The leaf of a palm",
+    "The bark of a tree"
+   ],
+   "correct": "The ear of a cereal stalk",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Hebrew 'shibbōleth' means an ear of grain (or possibly a flowing stream). The English sense of a test-word comes from the Gileadites using it against fleeing Ephraimites.",
+   "source": {
+    "url": "https://www.encyclopedia.com/philosophy-and-religion/bible/biblical-proper-names/shibboleth",
+    "title": "Shibboleth - Encyclopedia.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which artist drew the 1812 Boston Gazette cartoon 'The Gerry-mander', which helped fix the word 'gerrymander' in the public mind?",
+   "answers": [
+    "Elkanah Tisdale",
+    "Paul Revere",
+    "Gilbert Stuart",
+    "Amos Doolittle"
+   ],
+   "correct": "Elkanah Tisdale",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Elkanah Tisdale's satirical cartoon turned a Massachusetts district into a salamander-like creature. It popularized the term derived from Governor Elbridge Gerry's name.",
+   "source": {
+    "url": "https://www.britannica.com/topic/gerrymandering",
+    "title": "Gerrymandering - Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In which 1950 book does the word 'nerd' appear in print for the first known time, as the name of a creature?",
+   "answers": [
+    "If I Ran the Zoo",
+    "On Beyond Zebra!",
+    "Scrambled Eggs Super!",
+    "Horton Hears a Who!"
+   ],
+   "correct": "If I Ran the Zoo",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Dr. Seuss's 1950 book If I Ran the Zoo has the earliest known printed 'nerd'. The modern slang sense seems to have developed separately in the early 1950s.",
+   "source": {
+    "url": "https://www.merriam-webster.com/wordplay/word-history-nerd",
+    "title": "The Many Origin Stories of 'Nerd' - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which poet's challenge at a British Association meeting in 1833 led William Whewell to invent the word 'scientist'?",
+   "answers": [
+    "Samuel Taylor Coleridge",
+    "William Wordsworth",
+    "Robert Southey",
+    "Alfred Tennyson"
+   ],
+   "correct": "Samuel Taylor Coleridge",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Coleridge challenged the association over what its members should be called. Whewell proposed 'scientist', by analogy with 'artist'.",
+   "source": {
+    "url": "https://plato.stanford.edu/entries/whewell/",
+    "title": "William Whewell - Stanford Encyclopedia of Philosophy"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In Shakespeare's Love's Labour's Lost, which character speaks the long word 'honorificabilitudinitatibus'?",
+   "answers": [
+    "Costard",
+    "Holofernes",
+    "Don Armado",
+    "Moth"
+   ],
+   "correct": "Costard",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "The clown Costard says the word in Act V, Scene 1, teasing the small page Moth. It appears nowhere else in Shakespeare's works.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Honorificabilitudinitatibus",
+    "title": "Honorificabilitudinitatibus - Wikipedia"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Ernest Vincent Wright's 1939 novel Gadsby, which avoids the letter E entirely, is an example of which constrained-writing form?",
+   "answers": [
+    "Lipogram",
+    "Tautogram",
+    "Acrostic",
+    "Pangram"
+   ],
+   "correct": "Lipogram",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "A lipogram is a text that deliberately avoids one or more letters. Gadsby runs to over 50,000 words without an 'e'.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Gadsby_(novel)",
+    "title": "Gadsby (novel) - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 45-letter word 'pneumonoultramicroscopicsilicovolcanoconiosis' was coined in 1935 by the president of which organization?",
+   "answers": [
+    "National Puzzlers' League",
+    "American Dialect Society",
+    "Linguistic Society of America",
+    "Simplified Spelling Board"
+   ],
+   "correct": "National Puzzlers' League",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Everett M. Smith, then president of the National Puzzlers' League, coined it at the group's meeting as a deliberately long word.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pneumonoultramicroscopicsilicovolcanoconiosis",
+    "title": "Pneumonoultramicroscopicsilicovolcanoconiosis - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The ampersand (&) began as a ligature of which two letters in Roman cursive?",
+   "answers": [
+    "E and T",
+    "A and D",
+    "A and N",
+    "E and N"
+   ],
+   "correct": "E and T",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "The symbol comes from the Latin word 'et', meaning 'and', with the E and T joined together. The English name 'ampersand' is a later corruption of 'and per se and'.",
+   "source": {
+    "url": "https://www.britannica.com/topic/ampersand",
+    "title": "Ampersand - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "J.R.R. Tolkien interpreted his surname as the Low German for 'dull-keen'. That is a literal equivalent of which Greek-derived English word?",
+   "answers": [
+    "Oxymoron",
+    "Paradox",
+    "Antithesis",
+    "Hyperbole"
+   ],
+   "correct": "Oxymoron",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "'Oxymoron' joins Greek 'oxús' (sharp) and 'mōrós' (dull or foolish). Tolkien's reading of his surname as 'dull-keen' matches that structure.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Oxymoron",
+    "title": "Oxymoron - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 'disaster', from Italian 'disastro' (literally 'ill-starred'), what does the prefix 'dis-' contribute?",
+   "answers": [
+    "It adds a sense of 'ill' or 'bad'",
+    "It negates the star, meaning 'no star'",
+    "It separates, meaning 'away from stars'",
+    "It intensifies, meaning 'many stars'"
+   ],
+   "correct": "It adds a sense of 'ill' or 'bad'",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Here 'dis-' is merely pejorative, like English 'mis-', so 'disastro' means 'ill-starred'. The sense is astrological, a calamity blamed on an unfavourable star.",
+   "source": {
+    "url": "https://www.etymonline.com/word/disaster",
+    "title": "Disaster - Etymology, Origin & Meaning - Etymonline"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which century is the first known English use of 'defenestration' recorded?",
+   "answers": [
+    "The 17th century",
+    "The 15th century",
+    "The 16th century",
+    "The 18th century"
+   ],
+   "correct": "The 17th century",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Merriam-Webster dates the first known use to 1619. That was just after the 1618 Defenestration of Prague, the event that gave the word its fame.",
+   "source": {
+    "url": "https://www.merriam-webster.com/dictionary/defenestration",
+    "title": "Defenestration - Merriam-Webster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The English word 'robot' comes from the Czech 'robota'. What did 'robota' mean?",
+   "answers": [
+    "Forced labor or drudgery",
+    "A skilled metalworker's craft",
+    "A clockwork mechanical device",
+    "An artificial human being"
+   ],
+   "correct": "Forced labor or drudgery",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Czech 'robota' meant forced labor, compulsory service or drudgery, from an Old Slavic root related to 'slave'. The word was popularized by R.U.R. in 1920.",
+   "source": {
+    "url": "https://www.etymonline.com/word/robot",
+    "title": "Robot - Etymology, Origin & Meaning - Etymonline"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these words did William Whewell coin at the request of Michael Faraday?",
+   "answers": [
+    "Ion",
+    "Electron",
+    "Photon",
+    "Proton"
+   ],
+   "correct": "Ion",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Whewell invented 'anode', 'cathode' and 'ion' for Faraday. 'Electron', 'photon' and 'proton' were coined by other people.",
+   "source": {
+    "url": "https://plato.stanford.edu/entries/whewell/",
+    "title": "William Whewell - Stanford Encyclopedia of Philosophy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "'Honorificabilitudinitatibus' is said to be the longest English word with which distinctive letter pattern?",
+   "answers": [
+    "Strictly alternating consonants and vowels",
+    "Every vowel in alphabetical order",
+    "A palindromic sequence of letters",
+    "No letter appearing more than once"
+   ],
+   "correct": "Strictly alternating consonants and vowels",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "The 27-letter word alternates consonants and vowels throughout. It is described as the longest English word to do so.",
+   "source": {
+    "url": "https://summershakespeare.org/2015/06/shakespeares-longest-word/",
+    "title": "Shakespeare's Longest Word - Summer Shakespeare"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which university did Johannes Hofer present the 1688 dissertation that coined 'nostalgia'?",
+   "answers": [
+    "University of Basel",
+    "University of Zurich",
+    "University of Geneva",
+    "University of Strasbourg"
+   ],
+   "correct": "University of Basel",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "Hofer coined the term in a dissertation at the University of Basel. He rendered the German 'Heimweh' (homesickness) into Greek-based Modern Latin.",
+   "source": {
+    "url": "https://www.etymonline.com/word/nostalgia",
+    "title": "Nostalgia - Etymology, Origin & Meaning - Etymonline"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1818 Thomas Bowdler published an expanded edition of The Family Shakspeare. How many plays did it cover?",
+   "answers": [
+    "36",
+    "20",
+    "28",
+    "40"
+   ],
+   "correct": "36",
+   "difficulty": "hard",
+   "category": "Words",
+   "explain": "The 1807 first edition covered 20 plays. Bowdler's 1818 expansion covered all 36 plays then available, and gave us 'bowdlerize'.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Thomas_Bowdler",
+    "title": "Thomas Bowdler - Wikipedia"
    },
    "ai_written": true
   }

@@ -35,8 +35,8 @@ export const PACK_LIBRARY = [
     url: '/packs/literary_quotes_trivia.json' },
   { id: 'cleveland_library_facts', kind: 'trivia', label: 'Cleveland Public Library — history facts',
     url: '/packs/cleveland_library_facts.json' },
-  // General trivia, eleven topics at three levels (2026-11-02, row 2.175): 1,448 questions written from cited pages, every
-  // item naming its own, then checked by a second model pass. Of the 36 it flagged, 31 were corrected and four left out
+  // General trivia, eleven topics at three levels (2026-11-02, row 2.175): 1,633 questions written from cited pages, every
+  // item naming its own, then checked by a second model pass. Of the 40 it flagged, 34 were corrected and five left out
   // (their answer is itself disputed); one stands as written. One more is left out because its answer is a word this
   // repo's name check refuses (and the film award is called the Academy Award throughout for the same reason; the
   // installer, in the private repo, does both). "Every question pack", Trivia's default, deals from all of

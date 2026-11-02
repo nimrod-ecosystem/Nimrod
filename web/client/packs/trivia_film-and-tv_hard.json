@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "Film and TV trivia (hard)",
- "description": "43 hard questions about films, television, animation, actors, directors, from any decade. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 hard questions about films, television, animation, actors, directors, from any decade. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -799,6 +799,118 @@
    "source": {
     "url": "https://en.wikipedia.org/wiki/Two_Tonys",
     "title": "Two Tonys – Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which Fawlty Towers episode was Andrew Sachs almost knocked unconscious when John Cleese accidentally grabbed a real frying pan instead of a padded prop?",
+   "answers": [
+    "The Wedding Party",
+    "The Germans",
+    "The Builders",
+    "Gourmet Night"
+   ],
+   "correct": "The Wedding Party",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "In \"The Wedding Party\", Sachs was hit over the head with a genuine frying pan. His other serious injury, second-degree burns from a fire, came in \"The Germans\".",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Manuel_(Fawlty_Towers)",
+    "title": "Manuel (Fawlty Towers)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which actor was Francis Ford Coppola's original Captain Willard in Apocalypse Now, before being replaced by Martin Sheen about a week into filming?",
+   "answers": [
+    "Gene Hackman",
+    "Nick Nolte",
+    "Harvey Keitel",
+    "Jon Voight"
+   ],
+   "correct": "Harvey Keitel",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Coppola replaced his original star Harvey Keitel with Martin Sheen about a week into production, so the scenes already shot had to be shot again.",
+   "source": {
+    "url": "https://www.yahoo.com/entertainment/movies/articles/apocalypse-now-almost-killed-francis-120000000.html",
+    "title": "\"Apocalypse Now\" 'Almost Killed' Francis Ford Coppola as Filming Faced Casting Woes, Natural Disasters and More"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Who won the Academy Award for Best Cinematography (Color) for Lawrence of Arabia at the 35th Academy Awards?",
+   "answers": [
+    "Jack Cardiff",
+    "Freddie Young",
+    "Oswald Morris",
+    "Robert Krasker"
+   ],
+   "correct": "Freddie Young",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Freddie Young, credited as Fred A. Young, won the cinematography Academy Award for David Lean's film. It was one of seven Academy Awards the film won.",
+   "source": {
+    "url": "https://www.classicmoviehub.com/film/lawrence-of-arabia-1962/",
+    "title": "Lawrence of Arabia (1962) : Classic Movie Hub (CMH)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which actor played Death, the chess-playing figure in a black cloak, in Ingmar Bergman's The Seventh Seal?",
+   "answers": [
+    "Max von Sydow",
+    "Gunnar Björnstrand",
+    "Nils Poppe",
+    "Bengt Ekerot"
+   ],
+   "correct": "Bengt Ekerot",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Bengt Ekerot played Death as a white-faced man in a black cloak. Max von Sydow played the knight, Antonius Block, who plays chess against him.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bengt_Ekerot",
+    "title": "Bengt Ekerot"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Early in production of 2001: A Space Odyssey, Kubrick commissioned a score that went unused from which Hollywood composer, known for Spartacus?",
+   "answers": [
+    "Bernard Herrmann",
+    "Elmer Bernstein",
+    "Alex North",
+    "Jerry Goldsmith"
+   ],
+   "correct": "Alex North",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "Kubrick first commissioned Alex North, who had scored Spartacus. He later used classical recordings that he had worked with during filming and editing.",
+   "source": {
+    "url": "https://the-jh-movie-collection-official.fandom.com/wiki/2001:_A_Space_Odyssey_(film)",
+    "title": "2001: A Space Odyssey (film)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Disney approached Pixar to make a computer-animated feature, which became Toy Story, after the success of which 1988 short film?",
+   "answers": [
+    "Luxo Jr.",
+    "Tin Toy",
+    "Knick Knack",
+    "Red's Dream"
+   ],
+   "correct": "Tin Toy",
+   "difficulty": "hard",
+   "category": "Film and TV",
+   "explain": "After the success of the 1988 short Tin Toy, Disney asked Pixar to make a feature told from a small toy's perspective. That feature became Toy Story (1995).",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Toy_Story",
+    "title": "Toy Story"
    },
    "ai_written": true
   }

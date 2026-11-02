@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "Science trivia (medium)",
- "description": "38 medium questions about physics, chemistry, biology, astronomy, the human body, inventions. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 medium questions about physics, chemistry, biology, astronomy, the human body, inventions. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -695,6 +695,225 @@
    "source": {
     "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11450354/",
     "title": "Jenner's Legacy: How Edward Jenner's Smallpox Vaccine Changed Public Health"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which tiny bone in the middle ear, shaped like a stirrup, is the smallest bone in the human body?",
+   "answers": [
+    "Stapes",
+    "Incus",
+    "Malleus",
+    "Pisiform"
+   ],
+   "correct": "Stapes",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The stapes is one of the three ossicles of the middle ear and measures only a few millimetres. It passes sound vibrations to the inner ear.",
+   "source": {
+    "url": "https://my.clevelandclinic.org/health/body/ossicles",
+    "title": "Ossicles: Function & Anatomy - Cleveland Clinic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which planet does one full rotation on its axis take longer than one orbit of the Sun?",
+   "answers": [
+    "Mercury",
+    "Venus",
+    "Mars",
+    "Neptune"
+   ],
+   "correct": "Venus",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Venus spins once in about 243 Earth days but orbits the Sun in about 225 Earth days. Its day is therefore longer than its year.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/all-about-venus/en/",
+    "title": "All About Venus - NASA Space Place"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1800 Alessandro Volta announced a stack of zinc and copper discs separated by brine-soaked card. What is this first true electric battery called?",
+   "answers": [
+    "Leyden jar",
+    "Daniell cell",
+    "Voltaic pile",
+    "Tesla coil"
+   ],
+   "correct": "Voltaic pile",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The voltaic pile was the first battery to give a continuous electric current. Earlier devices such as the Leyden jar only stored a charge.",
+   "source": {
+    "url": "https://www.rigb.org/explore-science/explore/collection/alessandro-voltas-voltaic-pile",
+    "title": "Alessandro Volta's voltaic pile - Royal Institution"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Austrian monk's experiments on roughly 30,000 pea plants laid the foundations of genetics?",
+   "answers": [
+    "Charles Darwin",
+    "Louis Pasteur",
+    "Gregor Mendel",
+    "Thomas Hunt Morgan"
+   ],
+   "correct": "Gregor Mendel",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Mendel crossed pea plants and tracked traits such as seed shape and flower colour. He found that traits are inherited as distinct units rather than blended.",
+   "source": {
+    "url": "https://bio.libretexts.org/Bookshelves/Genetics/Classical_Genetics_(Khan_Academy)/01:_Introduction_to_heredity/1.04:_Mendel_and_his_peas",
+    "title": "Mendel and his peas - Biology LibreTexts"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which German physicist discovered X-rays in November 1895 and later received the first Nobel Prize in Physics?",
+   "answers": [
+    "Max Planck",
+    "Wilhelm Röntgen",
+    "Heinrich Hertz",
+    "Philipp Lenard"
+   ],
+   "correct": "Wilhelm Röntgen",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Röntgen noticed a glowing screen near a covered discharge tube and named the unknown rays X-rays. He won the first Nobel Prize in Physics in 1901.",
+   "source": {
+    "url": "https://www.nobelprize.org/prizes/physics/1901/rontgen/biographical/",
+    "title": "Wilhelm Conrad Röntgen - Biographical - NobelPrize.org"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which metallic element at the centre of each heme group in hemoglobin binds oxygen in red blood cells?",
+   "answers": [
+    "Copper",
+    "Zinc",
+    "Magnesium",
+    "Iron"
+   ],
+   "correct": "Iron",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Each hemoglobin molecule holds four iron atoms, and each one can reversibly bind oxygen. That is how blood carries oxygen from the lungs to the tissues.",
+   "source": {
+    "url": "https://www.britannica.com/science/blood-biochemistry/Red-blood-cells-erythrocytes",
+    "title": "Blood - Oxygen Transport, Hemoglobin, Erythrocytes - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Diamond and graphite are both pure carbon but with different atomic arrangements. What term describes such different structural forms of one element?",
+   "answers": [
+    "Isotopes",
+    "Isomers",
+    "Polymers",
+    "Allotropes"
+   ],
+   "correct": "Allotropes",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Allotropes are different structural forms of the same element. In diamond each carbon atom bonds to four others, while in graphite it bonds to three in layers.",
+   "source": {
+    "url": "https://www.thenational.academy/teachers/programmes/combined-science-secondary-ks4-higher-aqa/units/chemistry-of-carbon/lessons/diamond-and-graphite",
+    "title": "Diamond and graphite GCSE - Oak National Academy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Chlorophyll in plant chloroplasts looks green because it absorbs mostly which colours of light?",
+   "answers": [
+    "Mostly green and yellow",
+    "Mostly yellow and orange",
+    "Mostly blue and red",
+    "Mostly green and white"
+   ],
+   "correct": "Mostly blue and red",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Chlorophyll absorbs blue and red light most efficiently for photosynthesis. It reflects green light, so plants look green.",
+   "source": {
+    "url": "https://www.britannica.com/science/Why-Are-Plants-Green",
+    "title": "Why Are Plants Green? - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how hot is the core of the Sun, where hydrogen nuclei fuse into helium?",
+   "answers": [
+    "About 5,500 °C",
+    "About 150,000 °C",
+    "About 15 million °C",
+    "About 1.5 billion °C"
+   ],
+   "correct": "About 15 million °C",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Fusion needs extreme heat and density, and the Sun's core reaches about 15 million degrees Celsius. The visible surface is far cooler, at roughly 5,500 °C.",
+   "source": {
+    "url": "https://www.iter.org/fusion-energy/what-fusion",
+    "title": "What is Fusion? - ITER"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which astronomer's 1929 work on galaxy distances and redshifts provided key evidence that the universe is expanding?",
+   "answers": [
+    "Harlow Shapley",
+    "Fred Hoyle",
+    "Arno Penzias",
+    "Edwin Hubble"
+   ],
+   "correct": "Edwin Hubble",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "Hubble found that the farther away a galaxy is, the greater its redshift and the faster it recedes. This relationship is now called Hubble's law.",
+   "source": {
+    "url": "https://science.nasa.gov/people/edwin-hubble/",
+    "title": "Edwin Hubble - NASA Science"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The discovery of the Higgs boson was announced in July 2012 at which research laboratory?",
+   "answers": [
+    "CERN",
+    "Fermilab",
+    "SLAC",
+    "DESY"
+   ],
+   "correct": "CERN",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The ATLAS and CMS experiments at CERN's Large Hadron Collider announced the new particle on 4 July 2012. It confirmed the mass-giving mechanism predicted in the 1960s.",
+   "source": {
+    "url": "https://home.cern/science/physics/higgs-boson/",
+    "title": "The Higgs boson - CERN"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Since 1983 the metre has been defined using which fixed natural quantity?",
+   "answers": [
+    "Earth's polar circumference",
+    "Wavelength of sodium light",
+    "Length of a one-second pendulum",
+    "Speed of light in a vacuum"
+   ],
+   "correct": "Speed of light in a vacuum",
+   "difficulty": "medium",
+   "category": "Science",
+   "explain": "The metre is defined as the distance light travels in a vacuum in 1/299,792,458 of a second. That fixes the speed of light at exactly 299,792,458 metres per second.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Speed_of_light",
+    "title": "Speed of light - Wikipedia"
    },
    "ai_written": true
   }

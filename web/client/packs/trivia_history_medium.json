@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "History trivia (medium)",
- "description": "41 medium questions about world and US history, from ancient times to about 2000. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 medium questions about world and US history, from ancient times to about 2000. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -759,6 +759,173 @@
    "source": {
     "url": "https://www.worldhistory.org/Meiji_Restoration/",
     "title": "Meiji Restoration | World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which East German official mistakenly announced at a televised news conference on 9 November 1989 that citizens could cross the border to the West \"immediately\"?",
+   "answers": [
+    "Günter Schabowski",
+    "Egon Krenz",
+    "Hans Modrow",
+    "Erich Honecker"
+   ],
+   "correct": "Günter Schabowski",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Schabowski, a Politburo spokesman, misread the intended timing of the new travel rules. Crowds rushed the border crossings that night, and the Berlin Wall fell.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/place/Germany/The-reunification-of-Germany",
+    "title": "Germany - Reunification, Berlin Wall, Cold War | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On 28 October 1962, Nikita Khrushchev ordered Soviet missiles withdrawn from Cuba in return for which U.S. guarantee?",
+   "answers": [
+    "A pledge not to invade Cuba",
+    "An end to the trade embargo on Cuba",
+    "Recognition of Castro's government",
+    "Withdrawal from Guantánamo Bay"
+   ],
+   "correct": "A pledge not to invade Cuba",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The public deal ending the Cuban Missile Crisis was that the Soviets would remove their missiles and the U.S. would promise not to invade Cuba. A separate secret understanding covered U.S. missiles in Turkey.",
+   "source": {
+    "url": "https://nsarchive.gwu.edu/briefing-book/cuba-cuban-missile-crisis-russia-programs/2022-12-13/cuban-missile-crisis-60",
+    "title": "The Cuban Missile Crisis @ 60 POSTMORTEMS - National Security Archive, George Washington University"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "When a Parisian crowd stormed the Bastille on 14 July 1789, how many prisoners were being held inside?",
+   "answers": [
+    "Seven",
+    "Forty",
+    "About 200",
+    "More than 800"
+   ],
+   "correct": "Seven",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The Bastille was nearly obsolete as a prison and held only seven inmates. The crowd attacked it mainly as a symbol of royal tyranny and to seize the gunpowder stored there.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Bastille",
+    "title": "Bastille | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Treaty of Versailles was signed on 28 June 1919, exactly five years after which event?",
+   "answers": [
+    "The assassination of Archduke Franz Ferdinand",
+    "The sinking of the RMS Lusitania",
+    "The German invasion of Belgium",
+    "The abdication of the Russian Tsar"
+   ],
+   "correct": "The assassination of Archduke Franz Ferdinand",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Franz Ferdinand was assassinated in Sarajevo on 28 June 1914, the proximate cause of World War I. The peace treaty with Germany was signed on the same date five years later.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Treaty_of_Versailles",
+    "title": "Treaty of Versailles - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Apollo 11 astronaut stayed in lunar orbit aboard the command module Columbia while his two crewmates landed on the Moon in July 1969?",
+   "answers": [
+    "Michael Collins",
+    "Frank Borman",
+    "Jim Lovell",
+    "Pete Conrad"
+   ],
+   "correct": "Michael Collins",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Collins was the command module pilot and orbited the Moon alone while Neil Armstrong and Buzz Aldrin descended in the lunar module Eagle.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.lpi.usra.edu/lunar/missions/apollo/apollo_11/",
+    "title": "Lunar - Missions - Apollo 11 Mission | Lunar and Planetary Institute"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ruler, having eliminated the last rival states in 221 BCE, took a title meaning \"First Emperor\" and unified China for the first time?",
+   "answers": [
+    "Qin Shi Huang",
+    "Liu Bang",
+    "Kublai Khan",
+    "Emperor Taizong"
+   ],
+   "correct": "Qin Shi Huang",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "King Zheng of Qin conquered the six remaining rival states by 221 BCE and proclaimed himself Qin Shi Huang. He was later buried with the famous terracotta army.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/biography/Qin-Shi-Huang",
+    "title": "Qin Shi Huang | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the last British Viceroy of India, who announced the plan to partition the country into India and Pakistan in 1947?",
+   "answers": [
+    "Lord Louis Mountbatten",
+    "Lord Archibald Wavell",
+    "Lord George Curzon",
+    "Lord Charles Cornwallis"
+   ],
+   "correct": "Lord Louis Mountbatten",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Mountbatten arrived as viceroy in March 1947 and announced in June that British India would be divided. Independence followed on 15 August 1947.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.nam.ac.uk/explore/independence-and-partition-1947",
+    "title": "Independence and Partition, 1947 - National Army Museum"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After Ferdinand Magellan was killed in the Philippines in 1521, which Basque navigator captained the Victoria home to Spain, completing the first circumnavigation of the globe?",
+   "answers": [
+    "Juan Sebastián Elcano",
+    "Vasco da Gama",
+    "Francisco Pizarro",
+    "Amerigo Vespucci"
+   ],
+   "correct": "Juan Sebastián Elcano",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "Elcano took command after Magellan's death and brought the Victoria back to Spain in September 1522 with 18 survivors. This completed the first known circumnavigation of the world.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.nationalgeographic.com/history/history-magazine/article/this-man-was-actually-first-to-sail-around-the-world",
+    "title": "Magellan got the credit, but this man was first to sail around the world | National Geographic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The basalt stele inscribed with the Babylonian Code of Hammurabi, rediscovered by French archaeologists in 1901, is now displayed in which museum?",
+   "answers": [
+    "The Louvre in Paris",
+    "The British Museum in London",
+    "The Pergamon Museum in Berlin",
+    "The Metropolitan Museum in New York"
+   ],
+   "correct": "The Louvre in Paris",
+   "difficulty": "medium",
+   "category": "History",
+   "explain": "The stele was found at Susa, where it had been carried off after Babylon was sacked. It was then taken to Paris and is now in the Louvre's Richelieu wing.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Code_of_Hammurabi",
+    "title": "Code of Hammurabi - Wikipedia"
    },
    "ai_written": true
   }

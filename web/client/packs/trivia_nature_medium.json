@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "Nature trivia (medium)",
- "description": "23 medium questions about animals, plants, weather, ecosystems. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "39 medium questions about animals, plants, weather, ecosystems. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -422,6 +422,294 @@
    "source": {
     "url": "https://www.nationalgeographic.com/animals/amphibians/facts/axolotl",
     "title": "Axolotl | National Geographic"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Emperor penguins build no nest, so how does the male keep the single egg warm through the Antarctic winter?",
+   "answers": [
+    "He balances it on his feet beneath a belly flap",
+    "He buries it in a sheltered snow burrow",
+    "He wedges it between rocks at the ice edge",
+    "He tucks it into a pit lined with feathers"
+   ],
+   "correct": "He balances it on his feet beneath a belly flap",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Emperor penguins do not build nests. The male stands upright and incubates a single egg on top of his feet under a loose fold of abdominal skin.",
+   "source": {
+    "url": "https://seaworld.org/animals/facts/birds/emperor-penguin/",
+    "title": "Emperor Penguin Facts and Information"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In seahorses, the developing embryos are carried by the male inside which specialised structure?",
+   "answers": [
+    "A gill chamber behind his head",
+    "A mouth cavity lined with soft tissue",
+    "A brood pouch on his abdomen or tail",
+    "A fold of skin along his dorsal fin"
+   ],
+   "correct": "A brood pouch on his abdomen or tail",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Male seahorses, not females, incubate the embryos in a specialised structure called a brood pouch, which forms on either the abdomen or the tail.",
+   "source": {
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5646163/",
+    "title": "Morphology of brood pouch formation in the pot-bellied seahorse Hippocampus abdominalis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Pando, a giant clonal grove of quaking aspen in Utah, has a name that means what in Latin?",
+   "answers": [
+    "I tremble",
+    "I endure",
+    "I spread",
+    "I rise"
+   ],
+   "correct": "I spread",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Pando is Latin for \"I spread\". The colony is made of about 47,000 genetically identical stems connected to a vast underground root system.",
+   "source": {
+    "url": "https://www.livescience.com/planet-earth/plants/pando-the-worlds-largest-tree-and-heaviest-living-organism",
+    "title": "Pando: The world's largest tree and heaviest living organism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A lichen is not a single organism but a partnership between a fungus and which kind of partner?",
+   "answers": [
+    "A tiny moss or liverwort",
+    "A slime mould or amoeba",
+    "A soil-dwelling bacterium",
+    "A green alga or cyanobacterium"
+   ],
+   "correct": "A green alga or cyanobacterium",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "A lichen is the result of a mutualistic symbiosis between a fungus and an alga or cyanobacteria.",
+   "source": {
+    "url": "https://artsci.usu.edu/herbarium/activities_fun-stuff/fun-facts-about-fungi/lichens",
+    "title": "Lichens"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On the Saffir-Simpson scale, hurricanes are classed as 'major' starting at which category?",
+   "answers": [
+    "Category 1",
+    "Category 2",
+    "Category 4",
+    "Category 3"
+   ],
+   "correct": "Category 3",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Hurricanes rated Category 3 and higher are known as major hurricanes.",
+   "source": {
+    "url": "https://www.nhc.noaa.gov/aboutsshws.php",
+    "title": "Saffir-Simpson Hurricane Wind Scale"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A camel's hump is popularly believed to hold water. What does it actually store?",
+   "answers": [
+    "Reserve water",
+    "Fatty tissue",
+    "Spare blood",
+    "Stomach fluid"
+   ],
+   "correct": "Fatty tissue",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Although commonly believed to store water, a camel's hump actually stores fatty tissue. This fat is a source of nourishment when food is scarce.",
+   "source": {
+    "url": "https://www.britannica.com/science/hump-animal-anatomy",
+    "title": "Hump"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Despite its name, the electric eel is actually which type of fish?",
+   "answers": [
+    "A true moray eel",
+    "A jawless lamprey",
+    "A type of ray",
+    "A knifefish"
+   ],
+   "correct": "A knifefish",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The electric eel is a South American knifefish and is not a true eel.",
+   "source": {
+    "url": "https://www.britannica.com/animal/Electrophorus-fish-genus",
+    "title": "Electric eel"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The reintroduction of which predator to Yellowstone in the 1990s set off a well-studied trophic cascade involving elk and woody plants?",
+   "answers": [
+    "Gray wolf",
+    "Cougar",
+    "Grizzly bear",
+    "Coyote"
+   ],
+   "correct": "Gray wolf",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "After wolves were reintroduced, elk numbers fell and browse plants such as willow and aspen grew taller in some places.",
+   "source": {
+    "url": "https://www.sciencedirect.com/science/article/abs/pii/S0006320711004046",
+    "title": "Trophic cascades in Yellowstone: The first 15 years after wolf reintroduction"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Brood X periodical cicadas spend how many years underground as nymphs before they emerge to mate?",
+   "answers": [
+    "7 years",
+    "11 years",
+    "17 years",
+    "21 years"
+   ],
+   "correct": "17 years",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Brood X is a regional population of periodical cicadas that have lived underground for 17 years awaiting their emergence to the surface to mate.",
+   "source": {
+    "url": "https://www.ncei.noaa.gov/news/brood-x-cicada-emergence",
+    "title": "Brood X Cicada Emergence"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "During their long years underground, periodical cicada nymphs feed on what?",
+   "answers": [
+    "Decaying leaf litter",
+    "Sap from tree roots",
+    "Fungal threads in the soil",
+    "Earthworms and grubs"
+   ],
+   "correct": "Sap from tree roots",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Periodical cicadas in Brood X spend their years underground feeding on juices from tree roots.",
+   "source": {
+    "url": "https://blog.nwf.org/2021/04/return-of-brood-x-cicadas/",
+    "title": "Return of Brood X Cicadas - The National Wildlife Federation Blog"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Pangolins are the only mammals covered in scales. What are those scales made of?",
+   "answers": [
+    "Chitin",
+    "Keratin",
+    "Collagen",
+    "Enamel"
+   ],
+   "correct": "Keratin",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Pangolins are the only mammals with scales covering the whole body, and the scales are made of keratin, the same protein as human fingernails.",
+   "source": {
+    "url": "https://www.aaas.org/news/weird-and-wonderful-creatures-pangolin",
+    "title": "Weird and Wonderful Creatures: The Pangolin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How do the above-ground roots of mangrove trees help reduce coastal erosion?",
+   "answers": [
+    "They draw groundwater away from the shore",
+    "They slow water flow so sediment settles",
+    "They harden the sand with salty secretions",
+    "They break up waves by floating offshore"
+   ],
+   "correct": "They slow water flow so sediment settles",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Mangroves' unique above-ground roots slow down water flows and encourage sediment deposits, which reduces coastal erosion.",
+   "source": {
+    "url": "https://www.nature.org/en-us/what-we-do/our-priorities/protect-water-and-land/land-and-water-stories/us-mangroves-conservation/",
+    "title": "Ensuring a Future for Mangroves in the U.S."
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why can only mosses, lichens and low shrubs grow in the Arctic tundra?",
+   "answers": [
+    "The soil is far too salty",
+    "Roots cannot penetrate the frozen soil",
+    "Sunlight is absent all year round",
+    "Grazers eat every taller plant"
+   ],
+   "correct": "Roots cannot penetrate the frozen soil",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Roots can't penetrate the frozen soil, so only moss, lichen, and low shrubs can grow there.",
+   "source": {
+    "url": "http://icestories.exploratorium.edu/dispatches/big-ideas/tundra-and-permafrost/index.html",
+    "title": "Tundra and Permafrost"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which layer of a tropical rainforest is home to an estimated 70 to 90 percent of the forest's species?",
+   "answers": [
+    "The emergent layer",
+    "The understory",
+    "The forest floor",
+    "The canopy"
+   ],
+   "correct": "The canopy",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "An estimated 70-90% of all rainforest species live in the canopy, making it the most biodiverse part of the rainforest.",
+   "source": {
+    "url": "https://populationeducation.org/rainforest-biodiversity-a-layer-by-layer-look/",
+    "title": "Rainforest Biodiversity: Layer by Layer - Population Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bats use echolocation to hunt in the dark. In which range of sound do they call?",
+   "answers": [
+    "Ultrasound, above human hearing",
+    "Infrasound, below human hearing",
+    "Audible chirps, within human hearing",
+    "Seismic thumps sent through the ground"
+   ],
+   "correct": "Ultrasound, above human hearing",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Bats produce sound waves at frequencies above human hearing, called ultrasound, and these waves bounce off objects in their environment.",
+   "source": {
+    "url": "https://www.nps.gov/subjects/bats/echolocation.htm",
+    "title": "Echolocation - Bats (U.S. National Park Service)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How do dolphins manage to rest while still surfacing to breathe?",
+   "answers": [
+    "By sleeping only in tidal shallows",
+    "By floating motionless for hours at depth",
+    "By dropping their metabolism into torpor",
+    "By resting one half of the brain at a time"
+   ],
+   "correct": "By resting one half of the brain at a time",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Dolphins use unihemispheric sleep, shutting down half the brain at a time, which is thought to have evolved so they can breathe at the surface even while snoozing.",
+   "source": {
+    "url": "https://www.smithsonianmag.com/smart-news/dolphins-sleep-with-only-half-their-brain-at-a-time-81426439/",
+    "title": "Dolphins Sleep With Only Half Their Brain at a Time"
    },
    "ai_written": true
   }
