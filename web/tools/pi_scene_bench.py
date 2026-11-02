@@ -83,6 +83,21 @@ const host = document.getElementById('host');
 const info = { scene, variant };
 const addCss = (t) => { const st = document.createElement('style'); st.textContent = t; document.head.append(st); };
 try {
+  // `pictures` (2026-11-02, row 2.146): a full AAC board of Design's themed pictures, 16 cards as the board draws them
+  // (an <img> per card, the SVG as a data: URL). ?theme=winter; variant `still` draws them without their movement.
+  if (scene === 'pictures') {
+    const { symbolSvg, GLYPHS } = await import('./aac_themed.js');
+    const theme = p.get('theme') || 'winter', words = Object.keys(GLYPHS).slice(0, 16);
+    host.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:1.5vh;padding:2vh;background:#1b1f2a';
+    for (const w of words) {
+      const img = document.createElement('img');
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(symbolSvg(w, theme, { animated: variant !== 'still' }));
+      img.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#2a3040;border-radius:12px';
+      host.append(img);
+    }
+    info.pictures = { theme, cards: words.length, moving: variant !== 'still',
+      reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches };
+  } else
   if (scene !== 'blank') mountScene(host, { scene, motion: 'gentle', flashLimit: p.has('flash') ? p.get('flash') : undefined });
   const css = { noglow: '.ls *{filter:none!important;box-shadow:none!important}', nofilter: '.ls *{filter:none!important}',
                 paused: '.ls *{animation-play-state:paused!important}' }[variant];
@@ -136,7 +151,7 @@ def sh(cmd):
 def fetch_modules():
     """livescene.js and everything it imports, followed from the import lines so it never goes stale."""
     os.makedirs(WWW, exist_ok=True)
-    todo, seen = ['livescene.js'], set()
+    todo, seen = ['livescene.js', 'aac_themed.js'], set()
     while todo:
         name = todo.pop()
         if name in seen:
@@ -346,6 +361,13 @@ async def window(label, mine_root, cdp=None, seconds=MEASURE):
         res['main_thread_ms_per_s'] = {k: round(1000 * (m1.get(k, 0) - m0.get(k, 0)) / span, 1)
                                        for k in ('TaskDuration', 'ScriptDuration', 'LayoutDuration', 'RecalcStyleDuration')}
         res['census'] = json.loads(await cdp.js('JSON.stringify(window.__info)') or 'null')
+        # Does anything on screen still move? Two screenshots 1.5 s apart, compared. An animation inside an <img> is
+        # invisible to document.getAnimations(), so this is the only way to see whether the pictures move (and stop
+        # under reduced motion: REDUCED=1).
+        a1 = (await cdp.send('Page.captureScreenshot', format='png')).get('data')
+        await asyncio.sleep(1.5)
+        a2 = (await cdp.send('Page.captureScreenshot', format='png')).get('data')
+        res['screen_changes'] = bool(a1 and a2 and a1 != a2)
     t = [x for x in temps if x is not None]
     res['temp_c'] = {'start': t[0], 'end': t[-1], 'max': max(t)} if t else None
     res['throttled'] = sh('vcgencmd get_throttled')
@@ -376,7 +398,9 @@ async def main():
                 '--ozone-platform=wayland', '--use-angle=gles', '--enable-gpu-rasterization',   # the kiosk's own GPU flags
                 '--kiosk', '--start-maximized', '--noerrdialogs', '--disable-infobars',
                 '--disable-session-crashed-bubble', '--no-first-run', '--no-default-browser-check',
-                '--password-store=basic', url('blank')]
+                '--password-store=basic',
+                *(['--force-prefers-reduced-motion'] if os.environ.get('REDUCED') else []),   # REDUCED=1: the device asks for less motion
+                url('blank')]
         browser = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                    start_new_session=True, env=ENV)
         targets = []
