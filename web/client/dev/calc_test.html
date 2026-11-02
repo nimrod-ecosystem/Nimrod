@@ -205,6 +205,55 @@ try {
     check('calcPress is the SAME function', alg.calcPress === calcPress);
     check('calcValue is the SAME function', alg.calcValue === calcValue);
     check('CALC_KEYS is the SAME array', alg.CALC_KEYS === CALC_KEYS);
+
+    // ===================================================================================
+    // Row 2.190 (2026-11-02): the scientific keys. `sciPress` must be calcPress for every basic key, or turning the
+    // calculator's page in the middle of a sum would change what the sum means.
+    section('sciPress: the basic keys mean exactly what calcPress says');
+    const { sciPress, SCI_KEYS } = mod;
+    const BASIC = [...CALC_KEYS, 'C', '<', '='];
+    let x = 20261102 >>> 0;
+    const rnd = () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; };
+    let same = true, firstDiff = '';
+    for (let n = 0; n < 500 && same; n++) {
+      let a = calcInit(), b = calcInit();
+      const seq = [];
+      for (let i = 0; i < 14; i++) {
+        const k = BASIC[Math.floor(rnd() * BASIC.length)];
+        seq.push(k);
+        a = calcPress(a, k); b = sciPress(b, k);
+        if (a.entry !== b.entry || a.acc !== b.acc || a.op !== b.op || a.fresh !== b.fresh) {
+          same = false; firstDiff = `${seq.join(' ')}: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`; break;
+        }
+      }
+    }
+    check('*** 500 random sequences of basic keys: the same entry, total, operator and freshness at every step ***',
+      same, firstDiff);
+
+    section('sciPress: the function keys');
+    const sci = (keys, opts) => keys.reduce((st, k) => sciPress(st, k, opts), calcInit());
+    const show = (keys, opts) => sci(keys, opts).entry;
+    check('twelve function keys', SCI_KEYS.length === 12 && new Set(SCI_KEYS).size === 12, SCI_KEYS.join());
+    check('9 √ is 3', show(['9', 'sqrt']) === '3');
+    check('*** a function\'s answer counts as typed: 2 + 9 √ = is 5 ***', show(['2', '+', '9', 'sqrt', '=']) === '5');
+    check('...and a digit after it starts a new number: 9 √ 4 shows 4', show(['9', 'sqrt', '4']) === '4');
+    check('sin 30 is 0.5 in degrees (the default)', show(['3', '0', 'sin']) === '0.5');
+    check('sin 180 is 0, not a rounding speck', show(['1', '8', '0', 'sin']) === '0');
+    check('in radians, π cos is -1', show(['pi', 'cos'], { angle: 'rad' }) === '-1');
+    check('tan 90 (degrees) is an error, not 16331239353195370', show(['9', '0', 'tan']) === 'error');
+    check('2 xʸ 10 = 1024', show(['2', 'pow', '1', '0', '=']) === '1024');
+    check('xʸ chains like the other operators: 2 xʸ 3 + 1 = 9', show(['2', 'pow', '3', '+', '1', '=']) === '9');
+    check('5 x² is 25, 4 1/x is 0.25', show(['5', 'sq']) === '25' && show(['4', 'inv']) === '0.25');
+    check('e ln is 1, 1000 log is 3', show(['e', 'ln']) === '1' && show(['1', '0', '0', '0', 'log']) === '3');
+    check('5 n! is 120; 2.5 n!, a negative √, 0 1/x and 0 ln are errors', show(['5', 'fact']) === '120'
+      && show(['2', '.', '5', 'fact']) === 'error' && show(['4', '±', 'sqrt']) === 'error'
+      && show(['0', 'inv']) === 'error' && show(['0', 'ln']) === 'error');
+    check('a function on an error leaves the error, and C gets back from it',
+      show(['0', 'inv', 'sin']) === 'error' && show(['0', 'inv', 'C', '7']) === '7');
+    check('an overflowing power is an error: 10 xʸ 400 =', show(['1', '0', 'pow', '4', '0', '0', '=']) === 'error');
+    const pre = sci(['1', '2', '+']); const snap = JSON.stringify(pre);
+    sciPress(pre, 'sin'); sciPress(pre, 'pow'); sciPress(pre, '=');
+    check('sciPress never mutates the state it was given', JSON.stringify(pre) === snap);
   }
 } catch (err) {
   check('unexpected error', false, String((err && err.stack) || err));

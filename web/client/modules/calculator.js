@@ -45,25 +45,57 @@
 // eighteen presses. Nothing in the verb vocabulary says "next row", so a shorter scan is a design
 // question (a row/column scan, or answering `up`/`down`), not something to invent here.
 //
-// NOTHING IS STORED and nothing is asked of the platform: no settings, no state, no events, no
-// timers. `dependsOn: 'local'` was checked by mounting it with every handle rejecting
-// (`calculator_test.html`), not guessed.
+// TWO FACES, ONE CALCULATOR (row 2.190, 2026-11-02). Mike: *"There should probably be different types of
+// calculators like scientific that you can swap between the same way you can swap between AAC boards."* The face
+// is a setting (Basic or Scientific) and the calculator's PAGES (`impl.pages`), so the bar's Previous page / Next
+// page turn it like a board's boards. Every key goes through `sciPress` (calc.js), a superset of the four-function
+// `calcPress`, so turning the page in the middle of a sum keeps the sum: a face only decides which keys are drawn.
+// The `key` port takes a scientific token ('sin', 'sqrt', ...) only while the scientific face is showing, so a
+// linked module cannot press a key nobody can see.
+//
+// TWO SETTINGS and nothing else stored: the face, and degrees or radians. Saved in the panel's settings row when
+// there is one; with every platform handle rejecting (`dependsOn: 'local'`, `calculator_test.html`) they still
+// change here and the calculator still works. No events, no timers.
 
 import { registerModule } from '../module.js';
-import { CALC_KEYS, calcInit, calcPress, calcValue } from '../calc.js';
+import { CALC_KEYS, SCI_KEYS, calcInit, sciPress, calcValue } from '../calc.js';
 import { createPorts } from '../ports.js';
 
-// The order the keys are drawn in, and therefore the order `next`/`prev` walk them.
+// The order the keys are drawn in, and therefore the order `next`/`prev` walk them: the basic pad, and the
+// scientific one, whose twelve function keys sit above the same pad.
 export const READING_ORDER = [...CALC_KEYS, 'C', '<', '='];
-const KEY_SET = new Set(READING_ORDER);
+export const SCI_READING_ORDER = [...SCI_KEYS, ...READING_ORDER];
+export const CALC_FACES = Object.freeze([
+  { value: 'basic', label: 'Basic', order: READING_ORDER },
+  { value: 'scientific', label: 'Scientific', order: SCI_READING_ORDER },
+]);
+const faceOf = (v) => CALC_FACES.find((f) => f.value === v) || CALC_FACES[0];
 
 // What is printed on a key, and what a screen reader says for it. Digits are their own name.
-const FACE = { '/': '÷', '*': '×', '<': '⌫', '-': '−' };
+const FACE = { '/': '÷', '*': '×', '<': '⌫', '-': '−',
+  sin: 'sin', cos: 'cos', tan: 'tan', sqrt: '√', sq: 'x²', pow: 'xʸ', inv: '1/x', pi: 'π', ln: 'ln', log: 'log',
+  e: 'e', fact: 'n!' };
 const SPOKEN = {
   '/': 'divided by', '*': 'times', '-': 'minus', '+': 'plus', '.': 'point', '±': 'plus or minus',
   'C': 'clear', '<': 'delete last digit', '=': 'equals',
+  sin: 'sine', cos: 'cosine', tan: 'tangent', sqrt: 'square root', sq: 'squared', pow: 'to the power of',
+  inv: 'one over', pi: 'pi', ln: 'natural log', log: 'log', e: 'the number e', fact: 'factorial',
 };
-const kindOf = (k) => (k === '=' ? 'is-eq' : k === 'C' || k === '<' ? 'is-fn' : '+-*/'.includes(k) ? 'is-op' : '');
+const SCI_SET = new Set(SCI_KEYS);
+const kindOf = (k) => (k === '=' ? 'is-eq' : k === 'C' || k === '<' ? 'is-fn'
+  : k === 'pow' || '+-*/'.includes(k) ? 'is-op' : SCI_SET.has(k) ? 'is-sci' : '');
+
+// Basic first: the calculator most people want, and the shorter walk for a switch. Degrees: the unit most people
+// learned; radians for anybody doing calculus.
+const CALC_SETTINGS = [
+  { key: 'face', label: 'Which calculator', kind: 'choice', default: 'basic', level: 'standard',
+    options: CALC_FACES.map(({ value, label }) => ({ value, label })),
+    note: 'Previous page and Next page on the bar switch between them too. A sum in progress is kept.' },
+  { key: 'angle', label: 'Angles in', kind: 'choice', default: 'deg', level: 'standard',
+    options: [{ value: 'deg', label: 'Degrees' }, { value: 'rad', label: 'Radians' }],
+    note: 'For sin, cos and tan on the scientific calculator.' },
+];
+const DEFAULTS = Object.fromEntries(CALC_SETTINGS.map((s) => [s.key, s.default]));
 
 const CALC_PORTS = [
   { id: 'key', direction: 'in', class: 'event', type: 'text', label: 'Key' },
@@ -78,17 +110,76 @@ registerModule(
   { type: 'calculator', title: 'Calculator', core: 'new',
     // `local`, MEASURED: it renders and works with every platform handle rejecting.
     dependsOn: 'local',
-    description: 'A calculator that adds, subtracts, multiplies and divides. Press the keys. Another module can also press its keys and read its answer.',
-    ports: CALC_PORTS },
+    description: 'A calculator that adds, subtracts, multiplies and divides, or a scientific one with sin, cos, square roots and powers. Press the keys. Another module can also press its keys and read its answer.',
+    ports: CALC_PORTS, settings: CALC_SETTINGS },
   (ctx) => {
-  const { mount } = ctx;
+  const { mount, state } = ctx;
   let calc = calcInit();
-  let lit = -1;                    // index into READING_ORDER, or -1 = nothing lit (yet)
+  let cfg = { ...DEFAULTS };
+  let order = READING_ORDER;       // the face's keys, in reading order
+  let keySet = new Set(order);
+  let lit = -1;                    // index into `order`, or -1 = nothing lit (yet)
   let lastDisplay = null;
   let torn = false;
   let ports = null;
   let displayEl = null;
+  let angleEl = null;
+  let padEl = null;
   let keyEls = [];
+
+  function readCfg() {
+    let saved = null;
+    try { saved = state?.get?.() || null; } catch { saved = null; }
+    return { ...DEFAULTS, ...(saved && typeof saved === 'object' ? saved : {}) };
+  }
+
+  // Draw the face's keys. The lit key stays lit if the new face has it, so turning the page does not lose a
+  // switch user's place; otherwise nothing is lit until the next verb.
+  function drawPad() {
+    if (!padEl) return;
+    const face = faceOf(cfg.face);
+    const litKey = lit >= 0 ? order[lit] : null;
+    order = face.order;
+    keySet = new Set(order);
+    lit = litKey ? order.indexOf(litKey) : -1;
+    padEl.dataset.face = face.value;
+    padEl.setAttribute('aria-label', `${face.label} calculator keys`);
+    padEl.innerHTML = order.map((k) => `<button type="button" class="calc-key ${kindOf(k)}" data-key="${k}"
+      aria-label="${SPOKEN[k] || k}">${FACE[k] || k}</button>`).join('');
+    keyEls = [...padEl.querySelectorAll('[data-key]')];
+    if (angleEl) {
+      angleEl.hidden = face.value !== 'scientific';
+      angleEl.textContent = cfg.angle === 'rad' ? 'RAD' : 'DEG';
+    }
+    paint();
+  }
+
+  function applyCfg(next) {
+    const faceChanged = faceOf(next.face).value !== faceOf(cfg.face).value;
+    cfg = next;
+    if (faceChanged || !keyEls.length) drawPad();
+    else if (angleEl) angleEl.textContent = cfg.angle === 'rad' ? 'RAD' : 'DEG';
+  }
+
+  // Write one setting to the panel's settings row (the row the menu writes), and apply it here too, so an
+  // offline or throwaway state handle never leaves somebody pressing a page button that does nothing.
+  function saveSetting(key, value) {
+    try { state?.set?.({ ...(state.get?.() || {}), [key]: value }); }
+    catch (err) { console.error('calculator: could not save', key, err); }
+    applyCfg({ ...cfg, [key]: value });
+  }
+
+  /** The calculator's pages for the bars (row 2.190): { count, at, label }. */
+  function pageInfo() {
+    const at = Math.max(0, CALC_FACES.findIndex((f) => f.value === faceOf(cfg.face).value));
+    return { count: CALC_FACES.length, at, label: CALC_FACES[at].label, locked: false };
+  }
+  function turnPage(d) {
+    if (torn) return false;
+    const i = pageInfo().at;
+    saveSetting('face', CALC_FACES[(i + d + CALC_FACES.length) % CALC_FACES.length].value);
+    return true;
+  }
 
   function paint() {
     if (!displayEl) return;
@@ -104,8 +195,8 @@ registerModule(
   // test, so an empty string or '+-' reads as an operator (calc_test.html, KNOWN QUIRK). Nothing on
   // the pad can produce either, but a `key` port carries whatever text somebody links to it.
   function press(token) {
-    if (torn || typeof token !== 'string' || !KEY_SET.has(token)) return false;
-    calc = calcPress(calc, token);
+    if (torn || typeof token !== 'string' || !keySet.has(token)) return false;
+    calc = sciPress(calc, token, { angle: cfg.angle });
     paint();
     // The display first, then the result: the state changed before the calculation was announced.
     if (calc.entry !== lastDisplay) {
@@ -123,7 +214,7 @@ registerModule(
   // scoped alias (bus.js `scope`), which is the one the router publishes to.
   function moveLit(delta) {
     if (torn) return;
-    const n = READING_ORDER.length;
+    const n = order.length;
     if (lit < 0) lit = delta > 0 ? 0 : n - 1;
     else lit = ((lit + delta) % n + n) % n;
     paint();
@@ -131,22 +222,26 @@ registerModule(
   function selectLit() {
     if (torn) return;
     if (lit < 0) { lit = 0; paint(); return; }      // reveal first; never press a key nobody saw lit
-    press(READING_ORDER[lit]);
+    press(order[lit]);
   }
 
   return {
     init() {
       mount.innerHTML = `
         <div class="calc" data-calc role="group" aria-label="Calculator">
-          <div class="calc-display" data-display role="status" aria-live="polite" aria-atomic="true">0</div>
-          <div class="calc-pad" role="group" aria-label="Calculator keys">
-            ${READING_ORDER.map((k) => `<button type="button" class="calc-key ${kindOf(k)}" data-key="${k}"
-              aria-label="${SPOKEN[k] || k}">${FACE[k] || k}</button>`).join('')}
+          <div class="calc-top">
+            <span class="calc-angle" data-angle hidden></span>
+            <div class="calc-display" data-display role="status" aria-live="polite" aria-atomic="true">0</div>
           </div>
+          <div class="calc-pad" role="group" aria-label="Calculator keys"></div>
         </div>`;
       displayEl = mount.querySelector('[data-display]');
-      keyEls = [...mount.querySelectorAll('[data-key]')];
-      mount.querySelector('.calc-pad').addEventListener('click', (e) => {
+      angleEl = mount.querySelector('[data-angle]');
+      padEl = mount.querySelector('.calc-pad');
+      cfg = readCfg();
+      drawPad();
+      try { state?.subscribe?.(() => { if (!torn) applyCfg(readCfg()); }); } catch { /* no settings row: local only */ }
+      padEl.addEventListener('click', (e) => {
         const b = e.target instanceof Element ? e.target.closest('[data-key]') : null;
         if (b) press(b.dataset.key);
       });
@@ -156,6 +251,8 @@ registerModule(
       ctx.bus.subscribe('calculator/next', () => moveLit(1));
       ctx.bus.subscribe('calculator/prev', () => moveLit(-1));
       ctx.bus.subscribe('calculator/select', () => selectLit());
+      ctx.bus.subscribe('calculator/page-next', () => turnPage(1));
+      ctx.bus.subscribe('calculator/page-prev', () => turnPage(-1));
 
       paint();
       // Say what is showing, so a sink linked to `display` starts from a real value.
@@ -164,6 +261,7 @@ registerModule(
     },
     onResize() {},
     onHide() {},
+    pages: () => pageInfo(),
     destroy() {
       torn = true;
       ports?.dispose();      // the scoped bus releases the verb subscriptions itself (module.js)

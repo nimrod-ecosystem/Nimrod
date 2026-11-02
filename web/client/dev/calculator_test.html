@@ -103,7 +103,10 @@ try {
       by.display.direction === 'out' && by.display.class === 'continuous' && by.display.type === 'text');
     check('every declared port survived normalization (nothing silently dropped)',
       (m.ports || []).length === ports.length);
-    check('it declares no settings (nothing to change that is not already a key on the pad)', !m.settings);
+    // (row 2.190, 2026-11-02) It used to declare none. Two now: which face, and degrees or radians.
+    check('it declares two settings: the face (Basic first) and the angle unit (degrees first)',
+      (m.settings || []).map((s) => `${s.key}:${s.default}`).join() === 'face:basic,angle:deg',
+      JSON.stringify((m.settings || []).map((s) => s.key)));
     check('the description is plain words and names no person', typeof m.description === 'string'
       && m.description.length > 10 && !/\bher\b/i.test(m.description));
   }
@@ -288,8 +291,9 @@ try {
   section('switch verbs — next, prev, select, on the instance-scoped topics the router publishes');
   {
     check('calculator is in MODULE_VERBS', !!MODULE_VERBS.calculator);
-    check('it answers next, prev and select and NOTHING else (no back, menu, up/down, focus)',
-      JSON.stringify(verbsFor('calculator').sort()) === JSON.stringify(['next', 'prev', 'select']),
+    // (row 2.190, 2026-11-02) plus the page pair, which turns its face.
+    check('it answers next, prev, select and the page pair, and NOTHING else (no back, menu, up/down, focus)',
+      JSON.stringify(verbsFor('calculator').sort()) === JSON.stringify(['next', 'page-next', 'page-prev', 'prev', 'select']),
       JSON.stringify(verbsFor('calculator')));
     check('so a switch can focus it at all (respondsToVerbs)', respondsToVerbs('calculator'));
     check('each verb resolves to a real topic', ['next', 'prev', 'select'].every((v) => {
@@ -365,6 +369,58 @@ try {
     check('the bare topic still reaches every instance (existing convention unchanged)',
       Z.lit() === '9' && X.lit() === '8' && Y.lit() === '7');
     for (const m of [V, W, X, Y, Z]) m.inst.destroy();
+  }
+
+  // =============================================================================================
+  // Row 2.190 (2026-11-02): a scientific face, turned like an AAC board's boards.
+  section('two faces: Basic and Scientific, the calculator\'s pages');
+  {
+    const { SCI_KEYS } = await import('../calc.js');
+    const { SCI_READING_ORDER } = await import('../modules/calculator.js');
+    // A settings row that keeps what it is given and tells its subscribers, like the kiosk's.
+    const row = () => { let v = {}; const subs = new Set();
+      return { get: () => v, set: (n) => { v = n; for (const f of subs) f(); }, subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+        load: () => Promise.resolve(), flush: () => Promise.resolve(), destroy: () => {} }; };
+    const st = row();
+    const S = mount('calc-sci', { state: st });
+    const keys = () => [...S.host.querySelectorAll('[data-key]')].map((b) => b.dataset.key);
+    check('it starts on Basic: the nineteen keys, no function keys', keys().join() === READING_ORDER.join());
+    const pg = S.inst.impl.pages();
+    check('*** it has two pages, Basic and Scientific, for the bar\'s Previous page / Next page ***',
+      pg.count === 2 && pg.at === 0 && pg.label === 'Basic' && !pg.locked, JSON.stringify(pg));
+    check('MODULE_VERBS carries the page verbs for it', MODULE_VERBS.calculator['page-next'] === 'calculator/page-next'
+      && MODULE_VERBS.calculator['page-prev'] === 'calculator/page-prev');
+    S.click('2+');
+    S.keyBtn('9').click();
+    verb('calc-sci', 'page-next');
+    check('Next page turns it to Scientific: the twelve function keys above the same pad',
+      keys().join() === SCI_READING_ORDER.join() && SCI_KEYS.every((k) => !!S.keyBtn(k)) && S.inst.impl.pages().label === 'Scientific');
+    check('...and saves that in the panel\'s settings row, as the menu would', st.get().face === 'scientific');
+    check('*** the sum in progress is kept across the page turn: 2 + 9 still shows 9 ***', S.display() === '9', S.display());
+    S.keyBtn('sqrt').click(); S.keyBtn('=').click();
+    check('2 + 9 √ = gives 5 on the scientific face', S.display() === '5', S.display());
+    const angle = S.host.querySelector('[data-angle]');
+    check('the display says DEG on the scientific face', !angle.hidden && angle.textContent === 'DEG');
+    st.set({ ...st.get(), angle: 'rad' });
+    check('changing the setting to radians says RAD', angle.textContent === 'RAD');
+    S.click('C'); S.keyBtn('pi').click(); S.keyBtn('cos').click();
+    check('...and works in radians: π cos is -1', S.display() === '-1', S.display());
+    check('every function key has its own spoken name', SCI_KEYS.every((k) => (S.keyBtn(k).getAttribute('aria-label') || '').length > 1)
+      && S.keyBtn('sqrt').getAttribute('aria-label') === 'square root');
+    // The lit key keeps its place when the page turns, if the other face has it.
+    verb('calc-sci', 'next');                     // reveals the first key: sin
+    for (let i = 0; i < 12; i++) verb('calc-sci', 'next');   // past the twelve function keys, onto '7'
+    check('a switch walks the function keys first, then the pad', S.lit() === '7', S.lit());
+    verb('calc-sci', 'page-prev');
+    check('*** Previous page back to Basic keeps \'7\' lit ***', S.lit() === '7' && keys().length === 19, S.lit());
+    sendKey('calc-sci', 'sin');
+    check('on Basic, the key port ignores a function key nobody can see', S.display() !== 'error' && st.get().face === 'basic');
+    S.inst.destroy();
+    const D2 = mount('calc-sci-dead');
+    verb('calc-sci-dead', 'page-next');
+    check('with a settings row that never saves (a dead platform), the page still turns here',
+      D2.inst.impl.pages().label === 'Scientific' && !!D2.keyBtn('sin'));
+    D2.inst.destroy();
   }
 
   section('the key port is addressed to one instance');

@@ -1110,6 +1110,12 @@
 .calc .calc-key.is-eq[data-on="1"]{outline-color:var(--text-strong)}
 .calc .calc-key[data-on="1"]::before{content:"\25B8";position:absolute;left:5px;top:50%;transform:translateY(-50%);
   font-size:.8em;line-height:1}
+/* The scientific face (row 2.190): its twelve function keys sit above the same pad, a little smaller and in the
+   muted ink so the digits stay the strongest thing on it. DEG or RAD sits in the display's corner. */
+.calc .calc-top{flex:none;position:relative}
+.calc .calc-angle{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.75rem;font-weight:700;
+  color:var(--text-muted);letter-spacing:.04em}
+.calc .calc-pad[data-face="scientific"] .calc-key.is-sci{font-size:.95em;color:var(--text-muted)}
 /* Fit the pad to the box rather than overflow it, the same way the game's keypad does: the type
    scales with the panel's height, and the upper bounds are the sizes above. */
 @container cell (min-height: 1px){

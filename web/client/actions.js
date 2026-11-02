@@ -200,6 +200,16 @@ export const SYSTEM_ACTIONS = [
   // SYSTEM_TOPICS equal to room_scene's ROOM_ACTIONS), and not on the remote-drive allowlist, for the reason the rest
   // of this list is not.
   { id: 'system/bar-toggle', label: 'Show or hide the bar', topic: 'system/bar-toggle', group: 'System' },
+  // *** HUSH, MIRROR AND SAVE, ON A SWITCH (row 2.191, 2026-11-02). *** The three bar buttons with no other way to press
+  // them (the Goldfish gate on the transport bar proposal found it: "turn a button off the bar, it can still be pressed
+  // some other way" was false for exactly these). The same shell/* topics a placed bar's buttons say (shell_verbs.js
+  // SHELL_HUSH, SHELL_MIRROR, SHELL_SAVE, written out here so this file imports nothing; transport_test checks they
+  // agree), so each is one press however it is reached. Save keeps the switches since the dashboard was saved, as the
+  // bar's Save does; on Home, Home's own Save above is the one. Not on the remote-drive allowlist, for the reason the
+  // rest of this list is not.
+  { id: 'shell/hush', label: 'Hush on or off (music and video pause; voices are still heard)', topic: 'shell/hush', group: 'System' },
+  { id: 'shell/mirror', label: 'Mirror: the camera full screen, on or off', topic: 'shell/mirror', group: 'System' },
+  { id: 'shell/save', label: 'Save this dashboard (keep the modules switched since it was saved)', topic: 'shell/save', group: 'System' },
 ];
 
 // *** HOLDING ON A ROOM OBJECT (pet an animal, room-add-ons §9) IS ITS OWN ACTION, NOT A LONG PRESS. ***
@@ -607,7 +617,9 @@ export const MODULE_VERBS = {
   // order they are drawn in, wrapping) and `select` presses whichever is lit. Deliberately NO `back`,
   // `menu` or the arrow verbs: a calculator has nowhere to go back to and no menu, and a verb that
   // does nothing is a press somebody spent effort on for no result (see `call` below).
-  calculator:    { next: 'calculator/next', prev: 'calculator/prev', select: 'calculator/select' },
+  // (row 2.190, 2026-11-02) Previous page / Next page turn its face: Basic or Scientific.
+  calculator:    { next: 'calculator/next', prev: 'calculator/prev', select: 'calculator/select',
+                   'page-next': 'calculator/page-next', 'page-prev': 'calculator/page-prev' },
   // THE BUTTON (2026-09-28, change list row 2.26 — the game's name sign and picture). One face,
   // so one verb: `select` presses it, exactly as a click does. No `next`/`prev`: there is nothing
   // inside it to walk, and a verb that does nothing is a press spent for no result.
