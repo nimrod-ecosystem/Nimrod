@@ -325,6 +325,10 @@ export const ACTION_VERBS = [
   { id: 'launch', label: 'Launch', hint: 'start the ball (or whatever goes)' },
   { id: 'stop',   label: 'Stop moving', hint: 'stop what is moving, without pausing the game' },
   { id: 'close',  label: 'Close the menu', hint: 'closes it; never opens it' },
+  // (row 2.190; Mike, 2026-11-02: "Maybe it should be previous/next page and keep back and next for highlighting buttons on
+  // the board.") A module's PAGES: its boards, its faces. Back and Next keep moving through what is on the page.
+  { id: 'page-next', label: 'Next page', hint: 'the next board or view of the panel you picked' },
+  { id: 'page-prev', label: 'Previous page', hint: 'the board or view before it' },
 ];
 
 export const verbTopic = (id) => `verb/${id}`;
@@ -561,7 +565,7 @@ export const MODULE_VERBS = {
   // does nothing is a press somebody spent effort on for no result (see `call` below for the
   // same reasoning). `board/aim` and `board/pick` are not here either - they carry a position
   // or an index, which is not something a verb can supply.
-  board:         { next: 'board/next', select: 'board/select' },
+  board:         { next: 'board/next', select: 'board/select', 'page-next': 'board/page-next', 'page-prev': 'board/page-prev' },
   // PLAY AND PAUSE (2026-10-02): a slideshow can wait for Start (its "When it opens" row) and be paused, so
   // the bar's one Pause / Play, Space and a switch reach it as they reach a video.
   photos:        { next: 'photos/next', prev: 'photos/prev', play: 'photos/play', pause: 'photos/pause' },

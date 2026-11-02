@@ -47,7 +47,7 @@ import {
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
-  SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE,
+  SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC, QUICK_SWAP_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
@@ -72,6 +72,9 @@ const BUTTONS = [
   // shell says whether it can and which way it is (SHELL_STATE `playPause`); dimmed until it says so.
   { act: 'playpause', verb: SHELL_PLAY_PAUSE, label: '⏸ Pause', title: 'pause or play the panel you picked' },
   { act: 'next', verb: SHELL_NEXT, label: 'Next ▸', title: 'next' },
+  // Previous page / Next page (row 2.190): only while the picked panel has more than one page (SHELL_STATE `pages`).
+  { act: 'pageprev', verb: SHELL_PAGE_PREV, label: '◂ Previous page', title: 'the board or view before this one' },
+  { act: 'pagenext', verb: SHELL_PAGE_NEXT, label: 'Next page ▸', title: 'the next board or view' },
   { act: 'panel', verb: SHELL_PANEL, label: 'Panel ▸', title: 'move to the next panel' },
   // "Switch module" (2026-10-02, Mike: "Maybe a switch module button on the transport bar for the
   // selected module"): the Modules library in the selected panel's place (kiosk.js `openLibraryAt`). Dimmed,
@@ -116,6 +119,8 @@ registerModule(
     let hostEl = null;
     // Pause / Play: the shell's word on the selected panel (its getter at mount, then SHELL_STATE).
     let playPause = (() => { try { return ctx.shell?.playPause?.() || null; } catch { return null; } })();
+    // (row 2.190) the picked panel's pages, or null (the shell's getter at mount, then SHELL_STATE `pages`).
+    let pages = (() => { try { return ctx.shell?.pages?.() || null; } catch { return null; } })();
     // Bigger / Smaller (2026-10-02 evening): the same, for the selected panel's corner press.
     let bigger = (() => { try { return ctx.shell?.bigger?.() || null; } catch { return null; } })();
     // Save and ⇄ Swap (row 2.109): the same.
@@ -307,6 +312,13 @@ registerModule(
       }
       if (helpEl) helpEl.hidden = !helpShown;
       paintPlayPause(root.querySelector('.tb-actions:not(.tb-host) [data-act="playpause"]'), playPause || {});
+      // (row 2.190) the page pair: shown only for a panel with more than one page, dimmed while it is locked.
+      for (const act of ['pageprev', 'pagenext']) {
+        const pb = shell?.querySelector(`[data-act="${act}"]`);
+        if (!pb) continue;
+        pb.hidden = !pages;
+        pb.disabled = !!pages?.locked;
+      }
       paintBigger(root.querySelector('.tb-actions:not(.tb-host) [data-act="bigger"]'), bigger || {});
       paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
       paintSave(shell?.querySelector('[data-act="save"]'), saveS || {});
@@ -388,7 +400,8 @@ registerModule(
           if ('bigger' in s) bigger = s.bigger || null;
           if ('save' in s) saveS = s.save || null;
           if ('swap' in s) swapS = s.swap || null;
-          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s) draw();
+          if ('pages' in s) pages = s.pages || null;
+          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s || 'pages' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
           // bar toggle: the key put the bar away (tucked, whether or not in full screen) or brought it back.
           if (BAR_KEY_HIDDEN in s) {

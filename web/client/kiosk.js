@@ -63,7 +63,7 @@ import {
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME, SHELL_MIRROR,
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
-  PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE,
+  PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, QUICK_SWAP_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
@@ -628,6 +628,11 @@ export async function mountKiosk(root, {
           <button data-act="back" title="back — the one before this (↑)">◂ Back</button>
           <button data-act="playpause" title="pause or play the panel you picked" disabled>⏸ Pause</button>
           <button data-act="next" title="next (→ / ↓)">Next ▸</button>
+          <!-- ROW 2.190 (Mike, 2026-11-02): Previous page / Next page switch the picked panel's boards or views; Back and
+               Next keep moving through what is on the page. Shown only while that panel has more than one page; dimmed
+               while it is locked. See syncPages. -->
+          <button data-act="pageprev" title="the board or view before this one" hidden>◂ Previous page</button>
+          <button data-act="pagenext" title="the next board or view" hidden>Next page ▸</button>
           <!-- Only on an arranged screen; hidden below when there is no layout. See panelNext. -->
           <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
           <!-- SWITCH MODULE (2026-10-02): the Modules library in the selected panel's place - see openLibraryAt. -->
@@ -3828,6 +3833,8 @@ export async function mountKiosk(root, {
   renderHush();
   // Pause / Play (2026-10-02; `playPauseSelected` argues it): the selected panel's.
   controlsEl.querySelector('[data-act="playpause"]')?.addEventListener('click', () => { playPauseSelected(); });
+  controlsEl.querySelector('[data-act="pageprev"]')?.addEventListener('click', () => { turnPagePanel(-1); });
+  controlsEl.querySelector('[data-act="pagenext"]')?.addEventListener('click', () => { turnPagePanel(1); });
   controlsEl.querySelector('[data-act="bigger"]')?.addEventListener('click', () => { promotePanel(); });
   controlsEl.querySelector('[data-act="save"]')?.addEventListener('click', () => { saveDashboard(); });
   controlsEl.querySelector('[data-act="swap"]')?.addEventListener('click', () => { quickSwap(); });
@@ -5679,9 +5686,41 @@ export async function mountKiosk(root, {
     syncPlayPause();
     return verb;
   }
+  // *** PAGES (row 2.190). *** The picked panel's pages (its boards or views), from its own `pages()`: { count, at, label,
+  // locked }, or null for a module with one face. The bars show Previous page / Next page only for count > 1 (so the bar
+  // and a switch walk stay short everywhere else), dimmed while locked. A press goes to the panel as `page-next` /
+  // `page-prev` (actions.js MODULE_VERBS), the same topic a bound switch sends.
+  function pagesState() {
+    let rec = null;
+    try { rec = voiceOpen.rec() || panelSubject(); } catch { rec = null; }
+    let p = null;
+    try { p = rec?.instance?.impl?.pages?.() || null; } catch { p = null; }
+    return p && p.count > 1 ? { count: p.count, at: p.at, label: p.label || '', locked: !!p.locked, id: rec.id } : null;
+  }
+  function turnPagePanel(d) {
+    if (torn) return false;
+    let rec = null;
+    try { rec = voiceOpen.rec() || panelSubject(); } catch { rec = null; }
+    if (!rec) return false;
+    const ok = sendPanelVerb(rec, d > 0 ? 'page-next' : 'page-prev');
+    setTimeout(() => { try { syncPlayPause(); } catch { /* gone */ } }, 0);
+    return ok;
+  }
+  function paintPages(s) {
+    for (const [act, say] of [['pageprev', 'the board or view before this one'], ['pagenext', 'the next board or view']]) {
+      const b = controlsEl?.querySelector?.(`[data-act="${act}"]`);
+      if (!b) continue;
+      b.hidden = !s;
+      b.disabled = !!s?.locked;
+      b.title = s ? (s.locked ? 'locked: unlock it to change its page' : `${say} (now: ${s.label}, ${s.at + 1} of ${s.count})`) : say;
+    }
+  }
   function syncPlayPause() {
     const s = playPauseState();
     try { paintPlayPause(controlsEl.querySelector('[data-act="playpause"]'), s); } catch { /* not drawn yet */ }
+    let pg = null;
+    try { pg = pagesState(); paintPages(pg); } catch { pg = null; /* not drawn yet */ }
+    if (useDashboard) { try { bus.publish(SHELL_STATE, { pages: pg }); } catch { /* not load-bearing */ } }
     // Bigger / Smaller follows the same selection (2026-10-02 evening; transport_bar.js paintBigger).
     let b = null;
     try {
@@ -8740,6 +8779,9 @@ export async function mountKiosk(root, {
   offsScreen.push(bus.subscribe(SHELL_PLAY_PAUSE, (p) => { claimed(p); playPauseSelected(p && p.id ? p.id : null); }));
   offsScreen.push(bus.subscribe(SHELL_PROMOTE, (p) => { claimed(p); promotePanel(p && p.id ? p.id : null); }));
   offsScreen.push(bus.subscribe(SHELL_DEMOTE, (p) => { claimed(p); demotePanel(); }));
+  // Previous page / Next page from a placed bar (row 2.190).
+  offsScreen.push(bus.subscribe(SHELL_PAGE_NEXT, (p) => { claimed(p); turnPagePanel(1); }));
+  offsScreen.push(bus.subscribe(SHELL_PAGE_PREV, (p) => { claimed(p); turnPagePanel(-1); }));
   // A spoken or switched pause / play reached the selected panel through the router: the button follows.
   const notePause = (verb) => () => {
     // Only when the verb went to the PANEL: with the menu open when it arrived, the router held it.
@@ -9133,6 +9175,7 @@ export async function mountKiosk(root, {
           isBarToggleKey: (e) => isBarToggleKey(e), isBarToggleEdge: (device, control) => isBarToggleEdge(device, control),
           // 2026-10-02: what the placed bar's Pause / Play and a live call's controls show at mount.
           playPause: () => playPauseState(), callControls: () => callState,
+          pages: () => pagesState(),   // row 2.190: Previous page / Next page at mount (then SHELL_STATE `pages`)
           bigger: () => biggerState(),
           // row 2.109: what its Save and ⇄ Swap show at mount (then SHELL_STATE `save` / `swap`).
           save: () => saveState(), swap: () => swapState(),

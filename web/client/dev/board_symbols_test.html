@@ -321,6 +321,32 @@ try {
       SETTINGS.find((s) => s.key === 'movingPictures').default === 'auto' && SETTINGS.find((s) => s.key === 'themedPictures').default === true);
   }
 
+  // (row 2.190, Mike 2026-11-02: "previous/next page and keep back and next for highlighting buttons on the board")
+  section('*** pages: Next page / Previous page move through the boards; Back and Next do not ***');
+  {
+    const b = await mountBoard({ boardId: 'yesno', movingPictures: 'off' });
+    const pg = () => b.inst.impl.pages();
+    const n = pg().count;
+    check('the board reports its pages: every board it offers, and which one is up', n >= 5 && pg().at === 0 && /Yes/.test(pg().label), JSON.stringify(pg()));
+    b.bus.publish('board/page-next', {});
+    await tick();
+    check('*** Next page: the next board ***', b.state.get().boardId === 'core' && b.inst.impl.pages().at === 1, JSON.stringify(b.state.get()));
+    b.bus.publish('board/page-prev', {});
+    b.bus.publish('board/page-prev', {});
+    await tick();
+    check('...and Previous page goes round, from the first to the last', b.inst.impl.pages().at === n - 1, JSON.stringify(b.inst.impl.pages()));
+    b.bus.publish('board/next', {});
+    await tick();
+    check('Back and Next stay what they were: Next does not change the board', b.inst.impl.pages().at === n - 1);
+    b.state.set({ locked: true });
+    await tick();
+    const before = b.state.get().boardId;
+    b.bus.publish('board/page-next', {});
+    await tick();
+    check('*** a LOCKED board does not change its page, and says it is locked ***', b.state.get().boardId === before && b.inst.impl.pages().locked === true);
+    b.inst.destroy();
+  }
+
   section('*** "Lock to one set": pinned, whatever the theme ***');
   {
     const b = await mountBoard({ boardId: 'care', symbols: 'winter' });

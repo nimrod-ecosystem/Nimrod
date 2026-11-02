@@ -21,6 +21,9 @@ export const SHELL_HOME = 'shell/home';            // the screen picker (the bar
 // ⌂ Home (row 2.172, Mike 2026-11-01: "There should be a new home button that actually takes you to your home page"):
 // signed in in a browser, your Home page; a screen let in by its own key, or signed out, its first dashboard. kiosk.js.
 export const SHELL_GO_HOME = 'shell/go-home';
+// Previous page / Next page (row 2.190): the picked panel's boards or views. kiosk.js turnPagePanel.
+export const SHELL_PAGE_NEXT = 'shell/page-next';
+export const SHELL_PAGE_PREV = 'shell/page-prev';
 export const SHELL_MIRROR = 'shell/mirror';        // the camera full screen
 // Nimrod, the context help (row 2.37): the shell's one cat explains whatever is picked. One cat per
 // screen, whichever bar was pressed -- two bars each bringing their own would be two cats.

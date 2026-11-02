@@ -753,6 +753,22 @@ registerModule(
       return out;
     }
 
+    /** The board's pages for the bars (row 2.190): { count, at, label, locked }. */
+    function pageInfo() {
+      const list = boardChoices();
+      const at = Math.max(0, list.findIndex((c) => c.id === board?.id));
+      return { count: list.length, at, label: list[at]?.label || '', locked: !!cfg.locked };
+    }
+    function turnPage(d) {
+      if (cfg.locked) return false;
+      const list = boardChoices();
+      if (list.length < 2) return false;
+      const i = Math.max(0, list.findIndex((c) => c.id === board?.id));
+      const next = list[(i + d + list.length) % list.length];
+      saveSetting('boardId', next.id);
+      return true;
+    }
+
     function drawBoards() {
       const bar = el('[data-boards]');
       if (!bar) return;
@@ -1702,6 +1718,12 @@ registerModule(
         // with no change here. A single-switch setup binds only `board/select` and lets the
         // clock do the advancing.
         bus?.subscribe?.('board/next', () => { if (scan) scan.next(); });
+        // *** PAGES: THE BOARD'S BOARDS (row 2.190; Mike, 2026-11-02: "previous/next page and keep back and next for
+        // highlighting buttons on the board"). *** Next page / Previous page (the bar's pair, or a switch bound to them)
+        // move through the same list as the board's own row of boards, round and round. A LOCKED board does not change
+        // (Mike, 2026-09-06: a stray press "can hit it and lose their board"; the bar dims the pair while locked).
+        bus?.subscribe?.('board/page-next', () => { turnPage(1); });
+        bus?.subscribe?.('board/page-prev', () => { turnPage(-1); });
         // *** `select` USED TO BE GATED ON `scan`, AND THAT WAS A HOLE. *** With scanning off,
         // a switch press reached this line and did nothing at all — so a single-switch user
         // who did not want the scan clock had no way to choose anything. What it must NOT do
@@ -1737,6 +1759,8 @@ registerModule(
       // so without this the menu offers two boards while the panel offers three, and the one
       // missing is the person's own.
       settingsChoices: () => ({ boardId: boardChoices().map((c) => ({ value: c.id, label: c.label })) }),
+      // (row 2.190) Its pages, for the bars' Previous page / Next page: shown only when there is more than one.
+      pages: () => pageInfo(),
 
       // *** THE EDITOR, FROM THE ONE MENU (row 2.95). *** What the board's own panel offered. `closesMenu`: the
       // editor opens over the board, so the menu gets out of its way (kiosk.js). A locked board offers them
