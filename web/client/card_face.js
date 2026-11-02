@@ -43,6 +43,52 @@ export function cardFaceHTML({ word = '', symbol = '', image = false } = {}) {
     + `<span class="ab-word">${escapeHtml(word)}</span>`;
 }
 
+/**
+ * A GIF's FRAME DELAYS, in ms, read from its own bytes (row 2.184 stage 3; no library: the format's blocks are walked).
+ * Null when it is not a GIF. A delay of 10 ms or less is counted as 100 ms, which is what Chromium plays it at.
+ */
+export function gifFrameDelays(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  if (b.length < 13 || b[0] !== 0x47 || b[1] !== 0x49 || b[2] !== 0x46) return null;      // "GIF"
+  let p = 13;
+  if (b[10] & 0x80) p += 3 * (1 << ((b[10] & 7) + 1));                                     // the global colour table
+  const delays = [];
+  let pending = null;
+  const skipSub = () => { while (p < b.length) { const n = b[p++]; if (n === 0) return; p += n; } };
+  while (p < b.length) {
+    const t = b[p++];
+    if (t === 0x3B) break;                                                                 // the end
+    if (t === 0x21) {                                                                      // an extension
+      const label = b[p++];
+      if (label === 0xF9 && b[p] === 4) pending = (b[p + 2] | (b[p + 3] << 8)) * 10;      // its delay, in 1/100 s
+      skipSub();
+      continue;
+    }
+    if (t === 0x2C) {                                                                      // a frame
+      const packed = b[p + 8];
+      p += 9;
+      if (packed & 0x80) p += 3 * (1 << ((packed & 7) + 1));                               // its own colour table
+      p += 1;                                                                              // LZW minimum code size
+      skipSub();
+      const d = pending == null ? 0 : pending;
+      delays.push(d <= 10 ? 100 : d);
+      pending = null;
+      continue;
+    }
+    break;                                                                                 // not a block we know: stop
+  }
+  return delays;
+}
+
+/** Could this GIF change faster than a flash limit allows? `periodMs`: flash_limit.js minFlashPeriodMs (0 = no limit). A
+ *  GIF that is one frame never flashes; its quickest frame decides. Counting every frame change as a flash is stricter
+ *  than WCAG (a flash is a PAIR of opposing changes, and only a bright or large enough one), on purpose: no module can
+ *  measure brightness or area yet (flash_limit.js), so this errs to the still side. */
+export function gifMayFlash(delays, periodMs) {
+  if (!(periodMs > 0) || !Array.isArray(delays) || delays.length < 2) return false;
+  return Math.min(...delays) < periodMs;
+}
+
 /** A GIF's first frame, drawn on a canvas; null for anything that is not a GIF, or where the browser cannot (row 2.184). */
 export async function gifStill(url) {
   if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return null;
@@ -82,7 +128,10 @@ export function createCardImages({ sources = null, user = null, personId = null,
   // cannot be paused here, and is shown as it is.
   const stillOf = gifStill;
 
-  async function load(cardEl, ref, { alt = '', still = false } = {}) {
+  // `still`: the owner's pictures may not move. `flashPeriodMs`: the screen's flash limit as a shortest period
+  // (flash_limit.js minFlashPeriodMs; 0 = none) - a GIF that changes faster than it is shown still, on THIS screen, when it
+  // is drawn (a screen set up later, or another screen, judges it by its own limit). Unreadable with a limit set: still.
+  async function load(cardEl, ref, { alt = '', still = false, flashPeriodMs = 0 } = {}) {
     try {
       if (!ref || !ref.sourceId || !ref.path) return false;
       if (!sourcesP) {
@@ -100,7 +149,13 @@ export function createCardImages({ sources = null, user = null, personId = null,
       const frame = cardEl.querySelector('[data-img]');
       if (!frame) { got.release(); return false; }
       releases.push(got.release);
-      if (still && /\.gif$/i.test(String(ref.path))) {
+      const isGif = /\.gif$/i.test(String(ref.path));
+      let keepStill = still && isGif;
+      if (!keepStill && isGif && flashPeriodMs > 0) {
+        try { keepStill = gifMayFlash(gifFrameDelays(new Uint8Array(await (await fetch(got.url)).arrayBuffer())), flashPeriodMs); }
+        catch { keepStill = true; }
+      }
+      if (keepStill) {
         let c = null;
         try { c = await stillOf(got.url); } catch (err) { console.warn('card: no still frame for a GIF', err); c = null; }
         if (c && alive() && cardEl.isConnected) {

@@ -1035,7 +1035,12 @@ registerModule(
 
     // The word beside the picture is the label, so the image itself is decoration: alt ''.
     // (row 2.184 stage 3) A GIF on a card is drawn still (its first frame) whenever this board's pictures may not move.
-    function loadImage(cardEl, ref) { return images().load(cardEl, ref, { alt: '', still: !picturesMove() }); }
+    // ...and, moving, a GIF whose frames change faster than this screen's flash limit allows is drawn still here.
+    function loadImage(cardEl, ref) {
+      let period = 0;
+      try { period = minFlashPeriodMs(flashLimit(ctx)); } catch { period = 0; }
+      return images().load(cardEl, ref, { alt: '', still: !picturesMove(), flashPeriodMs: period });
+    }
 
     function paint() {
       const showOne = cfg.reveal === 'one' && !!scan;
