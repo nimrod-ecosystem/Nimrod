@@ -111,9 +111,43 @@ function checkTriviaItem(it) {
   if (it.answerKind !== undefined && !ANSWER_KINDS.includes(it.answerKind)) {
     bad.push(`answerKind, if present, must be one of ${ANSWER_KINDS.join(', ')}`);
   }
+  bad.push(...pictureProblems(it));
   return bad;
 }
 export const ANSWER_KINDS = Object.freeze(['person', 'character']);
+
+// *** PICTURES ON QUESTIONS (row 2.175; docs/for_chat/proposal_pack_pictures_20261101.md, Mike: "go", 2026-11-02). ***
+//   picture       { url, alt, credit, licence, creditBefore?, page?, width?, height? }, optional on any trivia item
+//     url         a path inside the pack's own picture folder ("pictures/<pack>/<file>"), or an https: address. A built-in
+//                 pack copies its pictures in (the build tool), so a screen never asks a museum's server; https: is for a
+//                 person's own pack.
+//     alt         REQUIRED: what a screen reader says. It must not give the answer away (the check pass reads it).
+//     credit      REQUIRED: the full credit (artist, title, date, collection), shown AFTER the answer.
+//     creditBefore  the short credit shown WITH the question (collection and licence only), so it gives nothing away.
+//     licence     REQUIRED. Which licences a SHIPPED pack may carry (CC0, public domain, CC BY) is the build tool's and
+//                 packs_test's check: this function sees a pack, not the folder it ships from.
+//     page        where the picture came from, for the credit link and for checking it later.
+//     width, height  the picture's size, so its space is kept before it loads and the answers never move.
+//   needsPicture  true when the question cannot be answered without its picture ("Who painted this?"). A trivia panel
+//                 set to "Questions that need a picture: Leave them out" never deals it.
+const PICTURE_URL = /^(pictures\/[\w./-]+|https:\/\/\S+)$/;
+export function pictureProblems(it) {
+  const bad = [];
+  if (!it || typeof it !== 'object') return bad;
+  if (it.needsPicture !== undefined && typeof it.needsPicture !== 'boolean') bad.push('needsPicture, if present, must be true or false');
+  const p = it.picture;
+  if (p === undefined || p === null) {
+    if (it.needsPicture === true) bad.push('needsPicture is true but there is no picture');
+    return bad;
+  }
+  if (typeof p !== 'object' || Array.isArray(p)) { bad.push('picture must be an object'); return bad; }
+  if (typeof p.url !== 'string' || !PICTURE_URL.test(p.url) || p.url.includes('..')) bad.push('picture.url must be a pictures/ path in the pack or an https: address');
+  for (const f of ['alt', 'credit', 'licence']) if (typeof p[f] !== 'string' || !p[f].trim()) bad.push(`picture.${f} is required`);
+  for (const f of ['creditBefore', 'page']) if (p[f] !== undefined && (typeof p[f] !== 'string' || !p[f].trim())) bad.push(`picture.${f}, if present, must be text`);
+  if (p.page !== undefined && typeof p.page === 'string' && !/^https?:\/\//.test(p.page)) bad.push('picture.page must be a link');
+  for (const f of ['width', 'height']) if (p[f] !== undefined && !(Number.isFinite(p[f]) && p[f] > 0)) bad.push(`picture.${f}, if present, must be a number above 0`);
+  return bad;
+}
 
 // *** A PACK'S `difficulty` AS A LEVEL (2026-10-05). *** The ladder (rating.js / adaptive_play.js) counts
 // levels from 1, the easiest; a question's level is where its rating STARTS, and play moves it from there.

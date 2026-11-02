@@ -690,6 +690,23 @@ Shared Q | Shared A` });
     check('correct becomes answer', mapped[0].answer === '4', JSON.stringify(mapped[0]));
     check('everything else becomes wrong, in order, correct excluded',
       JSON.stringify(mapped[0].wrong) === JSON.stringify(['3', '5', '6']), JSON.stringify(mapped[0]));
+    // (row 2.175, 2026-11-02) Pictures: carried, the pack path read against the pack's folder; a picture question has its
+    // own id; and one that needs its picture is not dealt until Trivia draws pictures.
+    {
+      const { playableWithoutPictures, PICTURES_DRAWN } = await import('../modules/trivia.js');
+      const pic = (url) => ({ url, alt: 'a painting', credit: 'C', licence: 'CC0' });
+      const rows = packToTriviaBank({ items: [
+        { question: 'Who painted this?', answers: ['A', 'B', 'C'], correct: 'A', picture: pic('pictures/art/1.webp'), needsPicture: true },
+        { question: 'Who painted this?', answers: ['A', 'B', 'C'], correct: 'A', picture: pic('pictures/art/2.webp'), needsPicture: true },
+        { question: 'Which colour is the sky here?', answers: ['Blue', 'Red', 'Green'], correct: 'Blue', picture: pic('https://example.org/s.webp') },
+      ] });
+      check('*** a picture is carried, its pack path read against /packs/; an https: address kept as it is ***',
+        rows[0].picture.url === '/packs/pictures/art/1.webp' && rows[0].needsPicture === true && rows[2].picture.url === 'https://example.org/s.webp', JSON.stringify(rows.map((x) => x.picture?.url)));
+      check('*** two "Who painted this?" with the same answer and different paintings are two questions ***', triviaId(rows[0]) !== triviaId(rows[1]));
+      check('...and a question with no picture keeps the id it always had', triviaId({ question: '2 + 2', answer: '4' }) === triviaId(mapped[0]));
+      check(`*** until Trivia draws pictures (PICTURES_DRAWN ${PICTURES_DRAWN}), a question that needs one is never dealt; a helper picture's is ***`,
+        PICTURES_DRAWN || (playableWithoutPictures(rows).length === 1 && playableWithoutPictures(rows)[0] === rows[2]));
+    }
 
     // The real, shipped pack — fetched for real against this suite's own server, the same way
     // the module itself will. Not mocked: if the URL, the schema, or the mapping is wrong, this

@@ -226,7 +226,7 @@ export function parseBank(text) {
 // `sources` (2026-10-04): the item's own source (packs.js PER-ITEM SOURCES), normalised, for "Show where the
 // answer comes from". Only when it names one — an item from a pack written before per-item sources carries
 // nothing, and shows nothing. NOT `source`: that field is a lesson question's transcript line (below).
-export function packToTriviaBank(pack) {
+export function packToTriviaBank(pack, { base = '/packs/' } = {}) {
   return (pack.items || []).map((it) => {
     const row = {
       question: it.question,
@@ -247,9 +247,24 @@ export function packToTriviaBank(pack) {
     if (it.spell === true) row.spell = true;
     // `answerKind` (2026-10-07, row 2.63): 'person' or 'character' when the answer is one (Name that person draws these).
     if (it.answerKind) row.answerKind = it.answerKind;
+    // `picture` / `needsPicture` (row 2.175, packs.js PICTURES ON QUESTIONS): a pack path is read against the pack's own
+    // folder (`base`, default /packs/, where every built-in pack lives), so a row carries an address a page can load.
+    if (it.picture && typeof it.picture === 'object' && typeof it.picture.url === 'string') {
+      const url = /^https:\/\//.test(it.picture.url) ? it.picture.url : `${base}${it.picture.url}`;
+      row.picture = { ...it.picture, url };
+    }
+    if (it.needsPicture === true) row.needsPicture = true;
     return row;
   });
 }
+
+// *** A QUESTION THAT NEEDS ITS PICTURE IS NOT DEALT UNTIL TRIVIA DRAWS PICTURES (2026-11-02). *** The pack fields and their
+// checks landed first (packs.js); drawing the picture above the question, the credit after the answer and the
+// "Questions that need a picture: Ask them / Leave them out" row come next (the proposal's order). Until then "Who painted
+// this?" without the painting is a question nobody can answer, so every place that deals pack rows leaves these out.
+// A question whose picture is only a help is dealt as it is: it stands on its own.
+export const PICTURES_DRAWN = false;
+export const playableWithoutPictures = (rows) => (PICTURES_DRAWN ? rows : rows.filter((r) => !r.needsPicture));
 
 // ---------------------------------------------------------------------------------------
 // *** QUESTIONS AT EVERY LEVEL (Mike, 2026-10-05: "a lot of questions at pretty much every level") ***
@@ -365,7 +380,10 @@ export function upgradeTriviaRow(row) {
   const f = Math.max(1, Math.floor(Number(row.floor) || 1));
   return { ...row, floor: f + (DIFFICULTY_LEVELS.easy - 1) };
 }
-export const triviaId = (item) => `trivia:${contestKey(item?.question, item?.answer)}`;
+// (row 2.175, 2026-11-02) A question with a picture adds the picture's address: "Who painted this?" asked of two paintings
+// by the same painter is two questions (one rating, one "asked" mark each), not one. Text questions keep today's ids, so
+// no stored rating moves.
+export const triviaId = (item) => `trivia:${contestKey(item?.question, item?.answer)}${item?.picture?.url ? `|${item.picture.url}` : ''}`;
 
 /** The level an item was written for: its `level`, else its `difficulty` (packs.js), else null. */
 export function itemLevel(item) {
@@ -534,7 +552,7 @@ function loadPackCached(id) {
  */
 export async function triviaPackRows({ reviews = null, includeUnreviewed = false } = {}) {
   const built = await Promise.all(packsFor('trivia').map((p) => loadPackCached(p.id)
-    .then((pack) => packToTriviaBank(pack).map((r) => ({ ...r, pool: p.id })))
+    .then((pack) => playableWithoutPictures(packToTriviaBank(pack)).map((r) => ({ ...r, pool: p.id })))
     .catch((err) => { console.error(`trivia: pack "${p.id}" did not load`, err); return []; })));
   const out = built.flat();
   if (reviews) {
@@ -1545,7 +1563,7 @@ registerModule(
         try {
           const pack = await loadPackCached(cfg.packId);
           if (gen !== bankGen || dead) return; // superseded while the fetch was in flight
-          applyBank([...packToTriviaBank(pack), ...lessonItems()]);
+          applyBank([...playableWithoutPictures(packToTriviaBank(pack)), ...lessonItems()]);
           return;
         } catch (err) {
           console.error(`trivia: pack "${cfg.packId}" failed to load, falling back to the bank`, err);

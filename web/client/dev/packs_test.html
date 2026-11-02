@@ -91,6 +91,23 @@ try {
   }
 
   // =====================================================================================
+  // (row 2.175, 2026-11-02) Pictures on questions: proposal_pack_pictures_20261101.md's fields.
+  section('*** pictures on trivia questions: the fields, and what is refused ***');
+  {
+    const withPic = (pic, extra = {}) => { const p = clone(GATSBY); p.items[0] = { ...p.items[0], picture: pic, ...extra }; return validatePack(p); };
+    const good = { url: 'pictures/cma_art_trivia/1922.1133.webp', alt: 'A painting of two boxers under bright lights', credit: 'George Bellows, Stag at Sharkey\'s, 1909. Cleveland Museum of Art',
+      creditBefore: 'Cleveland Museum of Art · CC0', licence: 'CC0', page: 'https://www.clevelandart.org/art/1922.1133', width: 800, height: 547 };
+    check('*** a question with a picture and needsPicture validates clean ***', withPic(good, { needsPicture: true }).length === 0, JSON.stringify(withPic(good, { needsPicture: true })));
+    check('...an https: picture too (a person\'s own pack)', withPic({ ...good, url: 'https://example.org/a.webp' }).length === 0);
+    check('needsPicture with no picture is refused', (() => { const p = clone(GATSBY); p.items[0] = { ...p.items[0], needsPicture: true }; return validatePack(p).some((m) => /needsPicture/.test(m)); })());
+    check('a picture with no alt, credit or licence is refused, each said',
+      ['alt', 'credit', 'licence'].every((f) => { const g = { ...good }; delete g[f]; return withPic(g).some((m) => m.includes(`picture.${f}`)); }));
+    check('an address that is neither a pack path nor https: is refused (http:, a climb out of the folder, javascript:)',
+      ['http://x.org/a.png', 'pictures/../secret.json', 'javascript:alert(1)', '/etc/a.png'].every((url) => withPic({ ...good, url }).some((m) => /picture\.url/.test(m))));
+    check('a width that is not a number above 0 is refused', withPic({ ...good, width: 0 }).some((m) => /picture\.width/.test(m)));
+  }
+
+  // =====================================================================================
   section('*** THE RULE ITSELF: no source, no load ***');
   {
     const noSource = clone(GATSBY); delete noSource.source;
