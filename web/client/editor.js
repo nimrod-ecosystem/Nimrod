@@ -109,8 +109,12 @@ export const EDITOR_WORDS = Object.freeze({
   // (Copying furniture is built, 2026-11-02; this is now only the cat's case -- there is one of it.)
   copyPiece: 'There is only one of this, so it cannot be copied.',
   cannotCopy: 'This one cannot be copied.',
-  addHere: 'Adding to the dashboard from here is not built yet. Choose a room, a scene or an open Town place to add a piece to it.',
+  // (2026-11-02, stage 2: on a screen of its own Add now opens the library; this is what it says where modules cannot be
+  // added -- a preview, an embed, a page of the site.)
+  addHere: 'Modules are not added to this dashboard from here. Choose a room, a scene or an open Town place to add a piece to it.',
   // (2026-11-02, adding a module, stage 1) What the editor says as a module is added to the dashboard, and taken back.
+  choosing: 'Choose what to add in the list of modules. Cancel adds nothing.',
+  addCancelled: 'Nothing was added.',
   adding: 'Adding it...',
   addBusy: 'One thing is being added already.',
   addFailed: 'It could not be added. Nothing changed.',
@@ -258,7 +262,9 @@ const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', dupl
  *   adder       (row 2.145, adding a module, stage 1; 2026-11-02) the host's way to put a NEW module on this dashboard:
  *               add(type) -> Promise<{ ok, id, where: 'placed'|'corner'|'stage', why }>, the module added and the screen
  *               put together again; remove(id) -> Promise<{ ok, why }>, the same taken back (the editor's Undo). Absent:
- *               nothing is added from here (a preview, an embed, a page). The chooser that calls `addModule` is stage 2.
+ *               nothing is added from here (a preview, an embed, a page). (Stage 2) add(type, { settings }) also takes a
+ *               scene's one choice; choose(nearPanelId) -> Promise<{ ok, type, settings } | { ok: false, cancelled, why }>
+ *               is the chooser the toolbar's Add opens (kiosk.js: the Modules library). No `choose`: Add is off.
  */
 export function openSceneEditor(opts = {}) {
   const { arr = null, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null,
@@ -433,9 +439,14 @@ export function openSceneEditor(opts = {}) {
     else if (node.kind === 'panel') t.duplicate = off(EDITOR_WORDS.copyModule);
     else if (node.kind === 'piece') t.duplicate = off(EDITOR_WORDS.copyPiece);
     else t.duplicate = off(EDITOR_WORDS.cannotCopy);
-    // Add: into the chosen room or scene (its own "Add a piece" row, chosen and put under the cursor).
+    // Add: into the chosen room or scene (its own "Add a piece" row, chosen and put under the cursor). Anything else
+    // (2026-11-02, stage 2): a new module on this dashboard, chosen in the library the host opens (`adder.choose`) in
+    // the chosen panel's place -- or the first panel's, for the dashboard, a cell or a group.
     const into = !group && node.panelId && addTargetOf(node.panelId) ? node.panelId : null;
-    t.add = into ? on(() => addInto(into)) : off(EDITOR_WORDS.addHere);
+    const near = !group && node.panelId ? node.panelId : null;
+    t.add = into ? on(() => addInto(into))
+      : canChoose() ? on(() => { chooseAndAdd(near); })
+        : off(EDITOR_WORDS.addHere);
     return t;
   }
   // =====================================================================================================
@@ -665,20 +676,41 @@ export function openSceneEditor(opts = {}) {
   // the screen together again (`adder.add`); then the placed model is opened again (it is built once, from the panels
   // placed then) and the new panel is chosen, so where it is and its size are what is on show. A corner clock or mirror,
   // or a screen that shows one thing at a time, has nothing here to choose: the status line says where it went. Undo
-  // takes it off the screen again (`adder.remove`), after anything done to the panels since. What CHOOSES the module
-  // (the library, or a row here) is stage 2 and Mike's decision (proposal_editor_add_module_20261102.md); until then
-  // only a host or the suite calls this, and the toolbar's Add says, as before, that it is not built here.
+  // takes it off the screen again (`adder.remove`), after anything done to the panels since. WHAT IS ADDED (stage 2,
+  // 2026-11-02) is chosen in the Modules library the host opens (`adder.choose`, kiosk.js `chooseFromEditor`): the
+  // toolbar's Add, with anything but a room or a scene chosen. Option A of Mike's list 2026-11-02 item 14, built as the
+  // default while he decides (proposal_editor_add_module_20261102.md); B would be a list in the dashboard's row instead.
   // =====================================================================================================
   let addUndo = null;              // { id, where }: the module the last add put on this dashboard
   let adding = false;
-  async function addModule(type) {
+  const canChoose = () => !pageScope && !!adder && typeof adder.choose === 'function' && typeof adder.add === 'function';
+  /** Add: the library opens; a pick is added (`addModule`); Cancel, back or its wait adds nothing. */
+  async function chooseAndAdd(near = null) {
+    if (closed) return { ok: false, why: '' };
+    if (!canChoose()) { note(EDITOR_WORDS.addHere); return { ok: false, why: EDITOR_WORDS.addHere }; }
+    if (adding) { note(EDITOR_WORDS.addBusy); return { ok: false, why: EDITOR_WORDS.addBusy }; }
+    adding = true;
+    note(EDITOR_WORDS.choosing);
+    let pick = null;
+    try { pick = await adder.choose(near); } catch (err) { console.error('editor: choosing a module', err); pick = null; }
+    adding = false;
+    if (closed) return { ok: false, why: '' };
+    if (!pick || !pick.ok || !pick.type) {
+      const why = pick?.cancelled ? EDITOR_WORDS.addCancelled : (pick?.why || EDITOR_WORDS.addFailed);
+      note(why);
+      render();
+      return { ok: false, why };
+    }
+    return addModule(pick.type, pick.settings || null);
+  }
+  async function addModule(type, settings = null) {
     if (closed) return { ok: false, why: '' };
     if (pageScope || !adder || typeof adder.add !== 'function') { note(EDITOR_WORDS.addHere); return { ok: false, why: EDITOR_WORDS.addHere }; }
     if (adding) return { ok: false, why: EDITOR_WORDS.addBusy };
     adding = true;
     note(EDITOR_WORDS.adding);
     let r = null;
-    try { r = await adder.add(type); } catch (err) { console.error('editor: adding a module', err); r = null; }
+    try { r = await adder.add(type, settings ? { settings } : undefined); } catch (err) { console.error('editor: adding a module', err); r = null; }
     adding = false;
     if (closed) return r || { ok: false, why: '' };
     if (!r || !r.ok) { const why = r?.why || EDITOR_WORDS.addFailed; note(why); render(); return { ok: false, why }; }
@@ -694,11 +726,16 @@ export function openSceneEditor(opts = {}) {
   async function undoAdd() {
     const u = addUndo;
     if (closed || !u || !adder || typeof adder.remove !== 'function') return false;
+    if (adding) { note(EDITOR_WORDS.addBusy); return false; }
     addUndo = null;
     const e = editingNow();
     if (e && e.id === u.id) leaveEditMode();
+    // (stage 2) Busy while the screen is put together again: an Add pressed meanwhile would open the library over a panel
+    // that the rebuild then takes away (found by kiosk_test).
+    adding = true;
     let r = null;
     try { r = await adder.remove(u.id); } catch (err) { console.error('editor: taking an added module back', err); r = null; }
+    adding = false;
     if (closed) return !!r?.ok;
     if (!r || !r.ok) { addUndo = u; note(r?.why || EDITOR_WORDS.addUndoFailed); render(); return false; }
     openPlaced();
@@ -1155,7 +1192,8 @@ export function openSceneEditor(opts = {}) {
     const n = e.target;
     const t = n && n.nodeType === 1 ? n : n?.parentElement || null;
     if (!t || !t.isConnected || box.contains(t)) return;
-    if (t.closest?.('.em-card, .em-bar, .em-handles, .k-promote, .k-editc, .k-barc, [role="dialog"], [data-sound-dialog]')) return;
+    // (2026-11-02, stage 2) Nor the library the Add opened in a panel's place (`.k-libslot`): a press there is a pick.
+    if (t.closest?.('.em-card, .em-bar, .em-handles, .k-promote, .k-editc, .k-barc, .k-libslot, [role="dialog"], [data-sound-dialog]')) return;
     if (wordsOn && wordsHit(t)) return;
     let id = null;
     try { id = arr.panelAt?.(t) || null; } catch { id = null; }
@@ -1432,8 +1470,9 @@ export function openSceneEditor(opts = {}) {
     selected: () => selectedId,
     placedModel: () => model(),
     choose,
-    // (2026-11-02) A new module on this dashboard, and its Undo (stage 1; the chooser that calls it is stage 2).
+    // (2026-11-02) A new module on this dashboard, and its Undo (stage 1); the toolbar's Add, chosen in the library (stage 2).
     addModule,
+    chooseAndAdd,
     tools: () => toolsFor(tree?.nodes.get(selectedId) || null, editingNow()),
     // (step 3) The words: shown or not, shown or hidden, and the Words section's three buttons (for a host and the suite).
     words: () => wordsOn,

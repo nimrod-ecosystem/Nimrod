@@ -4680,6 +4680,54 @@ const toTab = (m, id) => {
       check('*** Undo takes it off the screen again: the module and its place ***',
         await pollAsync(async () => !(await modsNow()).some((m) => m.id === added.id) && !(await savedNow())[added.id], 8000),
         JSON.stringify(await savedNow()));
+      // (2026-11-02, stage 2) The toolbar's Add opens the Modules library in a panel's place, in its 'add' mode; it takes the
+      // switch from the editor while it is open; a pick is added and chosen; back adds nothing.
+      const libEl = () => document.querySelector('.k-libslot .lib');
+      const statusNow = () => ed3.el.querySelector('[data-se-status]')?.textContent || '';
+      ed3.choose('dash');
+      ed3.el.querySelector('[data-se="add"]')?.click();
+      check('*** the editor\'s Add opens the Modules library in a panel\'s place, in its add mode: its title, Cancel first, no Bigger ***',
+        await settled(() => libEl()?.dataset?.mode === 'add', 4000)
+          && /Add to this dashboard/.test(libEl().querySelector('[data-lib-head]')?.textContent || '')
+          && libEl().querySelector('[data-lib-head] button')?.dataset?.libAct === 'cancel'
+          && !libEl().querySelector('[data-lib-act="bigger"]') && ed3.isOpen() && k.editScanHeld(),
+        JSON.stringify([libEl()?.dataset?.mode, libEl()?.querySelector('[data-lib-head]')?.textContent, statusNow()]));
+      const edStopBefore = ed3.scan.current();
+      kbus.publish(verbTopic('next'));
+      check('*** while it is open the switch walks the LIBRARY, not the editor ***',
+        await settled(() => !!libEl()?.querySelector('.is-scan'), 2000) && ed3.scan.current() === edStopBefore,
+        JSON.stringify([!!libEl()?.querySelector('.is-scan'), ed3.scan.current()?.dataset?.se]));
+      libEl().querySelector('[data-lib-key="module:button"]')?.click();
+      check('(setup) the button\'s details show "Add it"', await settled(() => libEl()?.querySelector('[data-lib-act="place"]')?.textContent === 'Add it', 2000),
+        libEl()?.querySelector('[data-lib-detail]')?.textContent);
+      const before2 = (await modsNow()).length;
+      libEl().querySelector('[data-lib-act="place"]').click();
+      let picked = null;
+      check('*** a pick is ADDED: a new button on the screen, on top, chosen; the library gone, the clock shown again ***',
+        await pollAsync(async () => { picked = (await modsNow()).find((m) => m.type === 'button') || null;
+          return !!picked && (await modsNow()).length === before2 + 1 && (await savedNow())[picked.id]?.place === 'screen'; }, 8000)
+          && await settled(() => !document.querySelector('.k-libslot') && ed3.selected() === `panel:${picked.id}`, 4000)
+          && ed3.isOpen() && k.editScanHeld(),
+        JSON.stringify([picked, await savedNow(), ed3.selected(), statusNow()]));
+      ed3.el.querySelector('[data-se="undo"]')?.click();
+      ed3.choose('dash');
+      ed3.el.querySelector('[data-se="add"]')?.click();
+      check('*** Add pressed while Undo is still putting the screen together: it waits (busy), no library ***',
+        statusNow() === 'One thing is being added already.' && !document.querySelector('.k-libslot'), JSON.stringify([statusNow(), !!document.querySelector('.k-libslot')]));
+      await pollAsync(async () => !(await modsNow()).some((m) => m.id === picked?.id), 8000);
+      await settled(() => statusNow() === 'Taken away again.', 8000);
+      ed3.el.querySelector('[data-se="add"]')?.click();
+      await settled(() => libEl()?.dataset?.mode === 'add', 4000);
+      const before3 = (await modsNow()).length;
+      kbus.publish(verbTopic('back'));
+      check('*** back in the library adds nothing: it goes, the editor stays open and says so ***',
+        await settled(() => !document.querySelector('.k-libslot') && statusNow() === 'Nothing was added.', 3000)
+          && ed3.isOpen() && (await modsNow()).length === before3,
+        JSON.stringify([!!document.querySelector('.k-libslot'), statusNow(), ed3.isOpen()]));
+      ed3.el.querySelector('[data-se="add"]')?.click();
+      await settled(() => libEl()?.dataset?.mode === 'add', 4000);
+      k.closeEditView();
+      check('...closing the editor puts away the library its Add opened', await settled(() => !document.querySelector('.k-libslot'), 2000));
       k.closeEditView();
       k.destroy();
       // (2026-11-02) A moving theme somebody picked stands still on a screen set to keep movement low.

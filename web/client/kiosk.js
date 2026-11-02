@@ -3579,6 +3579,8 @@ export async function mountKiosk(root, {
   }
   function ownEditorClosed() {
     kEditor = null;
+    // (Row 2.145, stage 2) The library its Add opened goes with it, the panel it stood in for shown as it was.
+    if (libOpen && libOpen.mode === 'add') closeLibrary('keep');
     if (kEditorDoc) { try { kEditorDoc.flush?.()?.finally?.(() => {}); } catch { /* gone */ } try { kEditorDoc.destroy?.(); } catch { /* gone */ } kEditorDoc = null; }
     syncEditScan();
   }
@@ -3699,6 +3701,8 @@ export async function mountKiosk(root, {
       }
       const ed = editorNow();
       if (!ed || !editScanHeld) return;
+      // (Row 2.145, stage 2) The library the editor's Add opened has the switch until it goes (its handler, below).
+      if (libOpen && libOpen.mode === 'add') return;
       // 2026-10-04: back comes out a level first (a row of the Automation window, its picker, the window
       // itself: edit_windows.js createWindowGroup `back`); only when nothing used it does it end the editing.
       if (verb === 'back') {
@@ -5359,14 +5363,17 @@ export async function mountKiosk(root, {
   }
   /** Put the Modules library in panel `id`'s place. `onPick(item)`: a host page's own switch (Home) -- the
    *  library goes and the host does the rest; without it a pick is this screen's `switchPanel`. `onCancel`:
-   *  told when it goes without a pick. `focus` / `autoPlace`: a module asked for by name (the AI). */
-  async function openLibraryAt(id, { onPick = null, onCancel = null, focus = null, autoPlace = false } = {}) {
+   *  told when it goes without a pick. `focus` / `autoPlace`: a module asked for by name (the AI).
+   *  `mode` 'add' (row 2.145, adding a module, stage 2): the one editor's Add -- see `chooseFromEditor`. */
+  async function openLibraryAt(id, { onPick = null, onCancel = null, focus = null, autoPlace = false, mode = 'switch' } = {}) {
     if (torn || typeof document === 'undefined') return false;
+    const adding = mode === 'add';
     const rec = menuPanelRecs().find((r) => r.id === id) || null;
     const host = rec && rec.el;
     if (!rec || !host || !host.parentNode) return false;
-    // A locked panel stays where it is (see `lockedNow`). A host page's own pick asked its own lock first.
-    if (!onPick && lockedNow(rec.id)) { sayLocked(rec); return false; }
+    // A locked panel stays where it is (see `lockedNow`). A host page's own pick asked its own lock first. Adding changes
+    // nothing on the panel the library stands in for, so its lock is not asked.
+    if (!onPick && !adding && lockedNow(rec.id)) { sayLocked(rec); return false; }
     if (libOpen) {
       if (libOpen.id === rec.id && !focus) return true;
       closeLibrary('replaced');
@@ -5377,13 +5384,21 @@ export async function mountKiosk(root, {
     slot.dataset.libraryFor = rec.id;
     host.after(slot);
     const lo = { id: rec.id, host, slot, hiddenStyle: host.style.display, onPick, onCancel, inst: null, state: null,
-      promoted: false, picking: false };
+      promoted: false, picking: false, mode: adding ? 'add' : 'switch' };
     host.style.display = 'none';
     try { rec.instance?.onHide?.({ by: 'auto' }); } catch (err) { console.error('kiosk: hiding a panel for the library', err); }
     libOpen = lo;
     holdLibraryScan(true);
+    // Adding: a press on the library is somebody using the editor too, so the editor's own wait starts again.
+    if (adding) for (const ev of ['pointerdown', 'keydown']) slot.addEventListener(ev, () => armEditIdle());
     const target = { id: rec.id, type: rec.type, title: rec.title || rec.type, base: arr.baseTypeOf?.(rec.id) || rec.type };
-    const libHost = {
+    const libHost = adding ? {
+      // No target (nothing is switched), no Bigger, no "Over the dashboard": a pick is added (library.js LIBRARY_ADD_WORDS).
+      mode: 'add', target: null, focus: null, autoPlace: false,
+      usage: libraryUsage,
+      place: (item) => pickInPlace(lo, item),
+      cancel: (why) => { if (libOpen === lo) closeLibrary(why || 'keep'); },
+    } : {
       mode: 'switch', target, focus, autoPlace,
       usage: libraryUsage,
       place: (item) => pickInPlace(lo, item),
@@ -5587,6 +5602,8 @@ export async function mountKiosk(root, {
     corner: 'This screen has one in a corner already.',
     failed: 'It could not be added. Nothing changed.',
     takeBack: 'It could not be taken away from here.',
+    // (stage 2) Nothing on the screen for the library to stand in for.
+    nowhere: 'There is no panel here for the list of modules to open in.',
   });
   // A call on or ringing: the same test the version hold makes (`versionHold`, 'call') -- the notice object exists all the
   // time, so it is whether it SHOWS; a Call panel's ring counts until the caller's own give-up time and a margin.
@@ -5598,9 +5615,46 @@ export async function mountKiosk(root, {
   };
   function editorAdder() {
     if (embedded || previewLayout) return null;
-    return { add: (type) => addFromEditor(type), remove: (id) => takeBackFromEditor(id) };
+    return { add: (type, opts) => addFromEditor(type, opts), remove: (id) => takeBackFromEditor(id), choose: (near) => chooseFromEditor(near) };
   }
-  async function addFromEditor(type) {
+  // *** STAGE 2 (2026-11-02): WHAT IS ADDED IS CHOSEN IN THE MODULES LIBRARY, the one chooser this site has (Mike's list
+  // 2026-11-02 item 14: A, Code's suggestion, built as the default while Mike decides; B, a list in the dashboard's row, is
+  // the other way). `openLibraryAt` in its 'add' mode, standing in the chosen panel's place (or the first one's, for the
+  // dashboard itself): its own title and Cancel; no Over the dashboard, no Bigger, no lock refusal; it TAKES the switch
+  // from the editor while it is open and gives it back; a press on it starts the editor's wait again; the editor's
+  // "press a panel to choose it" leaves it alone (editor.js); closing the editor closes it. Resolves { ok, type, settings }
+  // on a pick (the library gone first), { ok: false, cancelled: true } on Cancel / back / its own wait, or { ok: false, why }.
+  function chooseFromEditor(nearId = null) {
+    if (torn) return Promise.resolve({ ok: false, why: '' });
+    if ((useDashboard && dash) || !canAddHere()) return Promise.resolve({ ok: false, why: EDITOR_ADD_WORDS.notHere });
+    if (callOnNow()) return Promise.resolve({ ok: false, why: EDITOR_ADD_WORDS.call });
+    const recs = menuPanelRecs().filter((r) => r && r.el && r.el.parentNode);
+    const rec = (nearId && recs.find((r) => r.id === nearId)) || recs[0] || null;
+    if (!rec) return Promise.resolve({ ok: false, why: EDITOR_ADD_WORDS.nowhere });
+    return new Promise((resolve) => {
+      let done = false;
+      const fin = (v) => { if (!done) { done = true; resolve(v); } };
+      openLibraryAt(rec.id, {
+        mode: 'add',
+        onPick: (item) => { fin({ ok: true, type: item.type, settings: item.settings || null }); return true; },
+        onCancel: () => fin({ ok: false, cancelled: true, why: '' }),
+      }).then((ok) => { if (!ok) fin({ ok: false, why: EDITOR_ADD_WORDS.failed }); })
+        .catch(() => fin({ ok: false, why: EDITOR_ADD_WORDS.failed }));
+    });
+  }
+  /** `settings` (stage 2): a scene is a module with one choice made (library.js `sceneItems`), made on the new panel's
+   *  row as a switch does (`doSwitch`). A pick counts toward the library's Recent and Most used, as a switch's does. */
+  async function addFromEditor(type, { settings = null } = {}) {
+    const r = await addFromEditorNow(type);
+    if (r.ok && !torn) {
+      rememberSwitch(type);
+      if (settings && typeof settings === 'object') {
+        try { menuPanelRecs().find((x) => x.id === r.id)?.state?.set?.(settings); } catch (err) { console.error('kiosk: a scene’s setting', err); }
+      }
+    }
+    return r;
+  }
+  async function addFromEditorNow(type) {
     if (torn) return { ok: false, why: '' };
     if (!type || !getManifest(type)) return { ok: false, why: EDITOR_ADD_WORDS.unknown };
     if ((useDashboard && dash) || !canAddHere()) return { ok: false, why: EDITOR_ADD_WORDS.notHere };
@@ -5720,9 +5774,11 @@ export async function mountKiosk(root, {
     ['down', 'down'], ['left', 'left'], ['right', 'right'], ['focus-next', 'next'], ['focus-prev', 'prev']]) {
     offsScreen.push(bus.subscribe(verbTopic(verb), () => {
       // (A call notice or a hosted call over the panels has the scan while it shows: see `holdCallScan`.)
-      if (!libOpen || torn || screensOpen || editScanHeld || callScanHeld) return;
+      // (Row 2.145, stage 2: opened by the one editor's Add, it takes the switch FROM the editor while it is open.)
+      if (!libOpen || torn || screensOpen || (editScanHeld && libOpen.mode !== 'add') || callScanHeld) return;
       try { if (menu?.isOpen?.()) return; } catch { /* not up yet */ }
       try { libOpen.inst?.impl?.verb?.(as); } catch (err) { console.error('kiosk: library verb', err); }
+      if (libOpen?.mode === 'add') armEditIdle();
     }));
   }
 

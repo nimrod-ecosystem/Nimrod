@@ -454,8 +454,11 @@ export const LIBRARY_SETTINGS = Object.freeze([
 // THE GRID (DOM). `mountLibrary(root, opts)` -> { verb, next, prev, select, back, refresh, destroy, __probe }.
 //   items      [] or () => []          what to show (libraryItems)
 //   moreItems  async () => []          added when it resolves (anything a host fetches; the bricks list was, until row 2.76)
-//   host       { mode: 'switch'|'panel', target: { id, type, title, base }, usage(), place(item), cancel(why),
+//   host       { mode: 'switch'|'panel'|'add', target: { id, type, title, base }, usage(), place(item), cancel(why),
 //                bigger(), focus, autoPlace }   — null: browse only (nothing can be put anywhere)
+//              'add' (row 2.145, adding a module, stage 2; 2026-11-02): the one editor's Add. Like 'switch' (in a
+//              panel's place, Cancel first, back and the wait cancel), but a pick ADDS a module; no target, no Bigger,
+//              no "Over the dashboard" (LIBRARY_ADD_WORDS).
 //   gate       an unlocks.js gate handle (or null: everything open)
 //   prefs      { sort, scan, cardSize, idleMs, category, use } ; onPrefs(patch) saves a change
 //   say(text)  reads a detail aloud (optional)
@@ -527,6 +530,19 @@ function ensureCss(doc) {
   (doc.head || doc.documentElement).append(st);
 }
 const RECENT_MAX = 6;   // kiosk.js SWITCH_RECENT_MAX argues six
+// (row 2.145, adding a module, stage 2; 2026-11-02) What the library says when the one editor's Add opens it.
+export const LIBRARY_ADD_WORDS = Object.freeze({
+  title: 'Add to this dashboard',
+  cancel: 'Cancel',
+  cancelTitle: 'nothing is added',
+  place: 'Add it',
+  then: ' and add it',
+  placing: (t) => `Adding ${t}…`,
+  failed: (t) => `${t} could not be added. Nothing changed.`,
+});
+// (A switch's words for the same three moments, as they were.)
+const placingWords = (mode, t) => (mode === 'add' ? LIBRARY_ADD_WORDS.placing(t) : `Putting ${t} here…`);
+const failedWords = (mode, t) => (mode === 'add' ? LIBRARY_ADD_WORDS.failed(t) : `${t} could not be put here. Nothing changed.`);
 
 export function mountLibrary(root, {
   items = [], moreItems = null, host = null, gate = null, prefs = {}, onPrefs = null, say = null, keys = true,
@@ -571,7 +587,9 @@ export function mountLibrary(root, {
   const canPlace = () => !!(host && typeof host.place === 'function');
   // "Over the dashboard" (2026-10-03): a host that can put a module over its dashboard says so with `overlay(item)`.
   const canOverlay = () => !!(host && typeof host.overlay === 'function');
-  const placeWord = mode === 'switch' ? 'Put it here' : 'Use it here';
+  const placeWord = mode === 'switch' ? 'Put it here' : mode === 'add' ? LIBRARY_ADD_WORDS.place : 'Use it here';
+  // In a panel's place for a moment (Switch module, the editor's Add): Cancel / Keep first, back and the wait put it away.
+  const standIn = mode === 'switch' || mode === 'add';
 
   root.innerHTML = '';
   const el = doc.createElement('div');
@@ -644,9 +662,12 @@ export function mountLibrary(root, {
   // ---- drawing ----
   function drawHead() {
     const h = $('[data-lib-head]');
-    const title = mode === 'switch' && target ? `Switch ${target.title || target.type} to…` : LIBRARY_TITLE;
-    h.innerHTML = (mode === 'switch' && target
-      ? `<button type="button" class="lib-btn primary" data-lib-act="cancel" title="put it back as it was">Keep ${esc(target.title || target.type)}</button>` : '')
+    const title = mode === 'add' ? LIBRARY_ADD_WORDS.title
+      : mode === 'switch' && target ? `Switch ${target.title || target.type} to…` : LIBRARY_TITLE;
+    h.innerHTML = (mode === 'add'
+      ? `<button type="button" class="lib-btn primary" data-lib-act="cancel" title="${esc(LIBRARY_ADD_WORDS.cancelTitle)}">${esc(LIBRARY_ADD_WORDS.cancel)}</button>`
+      : mode === 'switch' && target
+        ? `<button type="button" class="lib-btn primary" data-lib-act="cancel" title="put it back as it was">Keep ${esc(target.title || target.type)}</button>` : '')
       + `<h3>${esc(title)}</h3>`
       + (mode === 'switch' && host && typeof host.bigger === 'function'
         ? '<button type="button" class="lib-btn" data-lib-act="bigger" title="more room to look through">Bigger</button>' : '');
@@ -715,7 +736,8 @@ export function mountLibrary(root, {
     const acts = [];
     if (lock) {
       const pts = poolLabel(gm);
-      const then = canPlace() && it.placeable ? (mode === 'switch' ? ' and put it here' : ' and use it here') : '';
+      const then = canPlace() && it.placeable
+        ? (mode === 'switch' ? ' and put it here' : mode === 'add' ? LIBRARY_ADD_WORDS.then : ' and use it here') : '';
       acts.push(`<button type="button" class="lib-btn primary" data-lib-act="buy" ${lock.canBuy ? '' : 'disabled'}
         title="${esc(lock.canBuy ? 'two presses: the second one spends them' : 'not enough points yet')}">${esc(armed === 'buy'
         ? `Press again: use ${lock.cost} ${pts}${then}` : `Use ${lock.cost} ${pts}${then}`)}</button>`);
@@ -860,7 +882,7 @@ export function mountLibrary(root, {
     poke();
     if (detail) { closeDetail(); return; }
     if (scanMode() === 'rows' && inRow >= 0) { inRow = -1; paintCursor(); return; }
-    if (mode === 'switch') cancel('back');
+    if (standIn) cancel('back');
   }
   // A press on a stop: exactly what a click on it does -- except that details opened by a press put the
   // cursor on their first button, where a pointer's click lights nothing.
@@ -894,12 +916,12 @@ export function mountLibrary(root, {
     if (!it || busy || torn) return false;
     if (!canPlace()) { openDetail(it); return false; }
     if (lockOf(it) || !it.placeable) { openDetail(it); return false; }
-    busy = true; note = `Putting ${it.title} here…`; draw();
+    busy = true; note = placingWords(mode, it.title); draw();
     let ok = false;
     try { ok = !!(await host.place(it)); } catch (err) { console.error('library: place', err); ok = false; }
     if (torn) return ok;               // it replaced this library: done
     busy = false;
-    note = ok ? `${it.title} is here now.` : `${it.title} could not be put here. Nothing changed.`;
+    note = ok ? `${it.title} is here now.` : failedWords(mode, it.title);
     if (ok) { detail = null; armed = null; }
     draw();
     return ok;
@@ -939,7 +961,7 @@ export function mountLibrary(root, {
 
   // ---- the idle way out (decision 5) ----
   function poke() {
-    if (mode !== 'switch' || torn) return;
+    if (!standIn || torn) return;
     clearTimer(idleT); idleT = null;
     const ms = Number(p.idleMs) || 0;
     if (ms > 0) idleT = setTimer(() => { idleT = null; if (!torn) cancel('idle'); }, ms);

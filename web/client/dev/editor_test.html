@@ -1032,10 +1032,12 @@ try {
     // screen put together again, the way the kiosk's rebuild does (setProfile, resolve, applyModules).
     const rebuild = async () => { ad.arr.setProfile({ id: 'scr-A', name: 'Test dashboard', modules: mods }); ad.arr.resolve(ad.doc.kiosk.layout); await ad.arr.applyModules(); };
     const calls = [];
+    const addOpts = [];
     let refuse = null;
     const adder = {
-      add: async (type) => {
+      add: async (type, opts) => {
         calls.push(['add', type]);
+        addOpts.push(opts ?? null);
         if (refuse) return { ok: false, why: refuse };
         const id = `n${calls.length}`;
         mods = [...mods, { id, type }];
@@ -1086,6 +1088,48 @@ try {
     check('*** the host refuses (a call on, say): nothing added, its reason on the status line ***',
       !no.ok && no.why === refuse && (e.el.querySelector('[data-se-status]')?.textContent || '') === refuse && mods.length === modsBefore,
       J([no, e.el.querySelector('[data-se-status]')?.textContent, mods.length, modsBefore]));
+    refuse = null;
+    e.choose(ROOT_ID);
+    check('*** no chooser from the host: the toolbar\'s Add stays off on the dashboard, and says why ***',
+      bar(e, 'add').disabled || (bar(e, 'add').click(), (e.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.addHere));
+    e.close();
+
+    // ---- STAGE 2 (2026-11-02): the toolbar's Add opens the host's chooser (kiosk.js: the Modules library) ----
+    let answer = null;
+    const asked = [];
+    let pending = null;
+    adder.choose = (near) => { asked.push(near); return new Promise((res) => { pending = res; if (answer) { res(answer); pending = null; } }); };
+    calls.length = 0;
+    e = ad.open({ adder });
+    e.choose(ROOT_ID);
+    check('*** with a chooser, Add is ON with the dashboard chosen ***', !bar(e, 'add').disabled);
+    answer = { ok: true, type: 'button', settings: { label: 'Hello' } };
+    bar(e, 'add').click();
+    check('*** Add asks the host to choose (near nothing: the dashboard is chosen), and adds the pick with its one setting (a scene\'s) ***',
+      await until(() => calls.some((c) => c[0] === 'add' && c[1] === 'button')) && J(asked) === J([null])
+        && addOpts[addOpts.length - 1]?.settings?.label === 'Hello',
+      J([asked, calls, addOpts]));
+    check('...the new panel is chosen, and said', await until(() => e.selected() === nodeIdFor('n1'))
+      && (e.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.added, J([e.selected(), e.el.querySelector('[data-se-status]')?.textContent]));
+    // From a panel: near that panel.
+    e.choose(nodeIdFor('k2'));
+    answer = null;
+    const addsBefore = calls.filter((c) => c[0] === 'add').length;
+    bar(e, 'add').click();
+    check('*** from a panel: asked near THAT panel, and while it is choosing the line says so ***',
+      await until(() => asked.length === 2) && asked[1] === 'k2' && (e.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.choosing,
+      J([asked, e.el.querySelector('[data-se-status]')?.textContent]));
+    bar(e, 'add').click();
+    check('...a second Add while one is choosing does not ask again', asked.length === 2);
+    pending({ ok: false, cancelled: true, why: '' }); pending = null;
+    check('*** Cancel in the chooser: nothing added, and it says so ***',
+      await until(() => (e.el.querySelector('[data-se-status]')?.textContent || '') === EDITOR_WORDS.addCancelled)
+        && calls.filter((c) => c[0] === 'add').length === addsBefore);
+    answer = { ok: false, why: 'It waits until the call ends.' };
+    bar(e, 'add').click();
+    check('*** the host refuses to open it: its reason on the line, nothing added ***',
+      await until(() => (e.el.querySelector('[data-se-status]')?.textContent || '') === 'It waits until the call ends.')
+        && calls.filter((c) => c[0] === 'add').length === addsBefore);
     e.close();
     ad.arr.destroy();
   }
