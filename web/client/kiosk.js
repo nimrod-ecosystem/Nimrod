@@ -5834,7 +5834,7 @@ export async function mountKiosk(root, {
     try { dodgeClock(); } catch { /* the clock's corner; not load-bearing */ }
     let bars = [];
     try { bars = shownBarRects(); } catch { bars = []; }
-    for (const btn of kioskEl.querySelectorAll('.k-promote, .k-editc')) {
+    for (const btn of kioskEl.querySelectorAll('.k-promote, .k-editc, .k-barc')) {
       const had = parseFloat(btn.style.getPropertyValue('--k-corner-lift')) || 0;
       let lift = 0;
       if (bars.length) {
@@ -8803,10 +8803,42 @@ export async function mountKiosk(root, {
   // when this screen has it, so an unclaimed press lets the room say so instead of doing nothing.
   offsScreen.push(bus.subscribe('system/module', (p) => {
     const type = p?.module;
-    if (!type || !(arr.profile()?.modules || []).some((m) => m.type === type)) return;
+    if (!type) return;
+    if (!(arr.profile()?.modules || []).some((m) => m.type === type)) {
+      // *** A BOOK WHOSE MODULE IS NOT ON THIS DASHBOARD OPENS IT OVER THE ROOM (row 2.187; Mike, 2026-11-02: "It lets me
+      // put modules in the bookcase in that room and then says those modules aren't part of the dashboard when I click on
+      // it." He likes the bookshelf; a book opens its module "over the module"). *** Weighed, as chat asked, against adding
+      // the module to the dashboard when the book is placed: FOR adding, the book then always "works" the old way. AGAINST,
+      // and it decides it: a shelf of twenty books would add twenty panels, and taking a book off would have to remove one
+      // somebody may have arranged since. So the book is a shortcut: its module opens in the box the room is in, through
+      // the same opener a module asked for by voice uses (voice_open.js) -- nothing added, nothing saved, every way back
+      // that one has (Back, Smaller, Escape, "go back", and by itself once quiet). Promote (the bar's Bigger) is the way to
+      // the whole screen, as it is for anything. A room NOT on a screen (the Modules page) still says what to add.
+      if (p.source !== 'room' || embedded) return;
+      const place = roomBoxOf(type);
+      try {
+        const r = voiceOpen.open(type, { place: place || 'full' });
+        if (r && r.ok !== false) claimed(p);
+      } catch (err) { console.error('kiosk: a book', err); }
+      return;
+    }
     claimed(p);
     Promise.resolve(showModule(type)).catch((err) => console.error('kiosk: open module', err));
   }));
+  /** The box (percent of the screen) of the room whose book for `type` was pressed: its panel's box, else the room's own. */
+  function roomBoxOf(type) {
+    try {
+      const book = [...kioskEl.querySelectorAll('[data-book]')].find((b) => b.dataset.book === type && b.isConnected);
+      const box = book?.closest('.k-cell, .k-pcell, .k-stage, .k-room') || null;
+      if (!box) return null;
+      const r = box.getBoundingClientRect(), k = kioskEl.getBoundingClientRect();
+      if (!(k.width > 0 && k.height > 0 && r.width > 0 && r.height > 0)) return null;
+      // A room that fills the screen opens the module full screen (the dashboard's own room is the whole screen).
+      if (r.width / k.width > 0.95 && r.height / k.height > 0.95) return 'full';
+      return { left: ((r.left - k.left) / k.width) * 100, top: ((r.top - k.top) / k.height) * 100,
+        width: (r.width / k.width) * 100, height: (r.height / k.height) * 100 };
+    } catch { return null; }
+  }
   // ...and which modules this screen has, for a library's books (room_scene.js MODULE_LIST_TOPIC).
   offsScreen.push(bus.subscribe('system/module-list', (p) => {
     claimed(p);

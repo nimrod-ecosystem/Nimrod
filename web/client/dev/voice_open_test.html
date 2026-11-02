@@ -86,6 +86,13 @@ const settle = async () => { for (let i = 0; i < 6; i += 1) await tick(); };
   check('the boxes: a quarter, a half, the middle quarter, or all of it',
     J(VO.placeBox('br')) === J({ left: 50, top: 50, width: 50, height: 50 }) && J(VO.placeBox('left')) === J({ left: 0, top: 0, width: 50, height: 100 })
     && J(VO.placeBox('middle')) === J({ left: 25, top: 25, width: 50, height: 50 }) && J(VO.placeBox('zz')) === J(VO.placeBox('full')));
+  // (row 2.187, 2026-11-02) a book opens its module over the room's own box: a box given directly.
+  const roomBox = { left: 50, top: 0, width: 50, height: 60 };
+  check('*** a box given directly (a room panel\'s rectangle) is used as it is, even with voice opening set to "not at all" ***',
+    J(VO.placeFor(roomBox, { where: 'off' })) === J(roomBox) && J(VO.placeBox(roomBox)) === J(roomBox));
+  check('...kept on the screen: a box that would run off the edge is trimmed to it',
+    J(VO.placeBox({ left: 80, top: 90, width: 50, height: 50 })) === J({ left: 80, top: 90, width: 20, height: 10 }));
+  check('...and something that is not a box is not taken for one', !VO.isBox({ left: 1, top: 2, width: 0, height: 5 }) && !VO.isBox('full') && !VO.isBox(null));
   check('every place the speech layer hears has a box and words to say it with',
     Object.keys(PLACE_PHRASES).filter((k) => k !== 'corner').every((k) => VO.PLACE_BOXES[k] && VO.PLACE_WORDS[k]));
 

@@ -188,6 +188,9 @@ export function voiceOpenOptionsFrom(values = {}) {
 /** Where a request goes: a place id of PLACE_BOXES, or null (the setting is 'off' and nothing was named). Pure. */
 export function placeFor(asked, opts = VOICE_OPEN_DEFAULTS) {
   const o = { ...VOICE_OPEN_DEFAULTS, ...(opts || {}) };
+  // (row 2.187, 2026-11-02) A box of its own -- a panel's rectangle, as percentages of the screen -- opens there whatever
+  // the voice setting says: a book pressed in a room opens its module over that room (kiosk.js), not by voice.
+  if (isBox(asked)) return asked;
   if (asked === 'corner') return o.corner;
   if (asked && PLACE_BOXES[asked]) return asked;
   if (o.where === 'full') return 'full';
@@ -197,7 +200,17 @@ export function placeFor(asked, opts = VOICE_OPEN_DEFAULTS) {
 
 /** The box for a place, as CSS percentages of the screen. Unknown: the whole screen. Pure. */
 export function placeBox(place) {
+  if (isBox(place)) {
+    const c = (v, lo, hi) => Math.min(hi, Math.max(lo, Number(v)));
+    const left = c(place.left, 0, 100), top = c(place.top, 0, 100);
+    return { left, top, width: c(place.width, 1, 100 - left), height: c(place.height, 1, 100 - top) };
+  }
   return { ...(PLACE_BOXES[place] || PLACE_BOXES.full) };
+}
+/** A box given directly: { left, top, width, height } in percent of the screen, all numbers. Pure. */
+export function isBox(p) {
+  return !!p && typeof p === 'object' && ['left', 'top', 'width', 'height'].every((k) => Number.isFinite(Number(p[k])))
+    && Number(p.width) > 0 && Number(p.height) > 0;
 }
 
 const fill = (t, vars) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => (vars[k] == null ? '' : String(vars[k])));
@@ -401,7 +414,7 @@ export function createVoiceOpen({
       }
       // SAID BEFORE IT OPENS (Mike: "Opening Trivia."), with where, when that is not the whole screen.
       if (!quiet && o.sayBack) {
-        const w = where === 'full' ? '' : PLACE_WORDS[where];
+        const w = where === 'full' || isBox(where) ? '' : PLACE_WORDS[where];
         speak(line ? (w ? `${String(line).replace(/[.!]\s*$/, '')} ${w}.` : line)
           : w ? fill(L.openAt, { name: nm, where: w }) : fill(L.open, { name: nm }));
       }
@@ -417,7 +430,7 @@ export function createVoiceOpen({
     const b = placeBox(where);
     const box = doc.createElement('div');
     box.className = 'k-voiceview mod-box';
-    box.dataset.voiceView = where;
+    box.dataset.voiceView = isBox(where) ? 'panel' : where;
     box.dataset.kind = type;
     box.setAttribute('role', 'region');
     box.setAttribute('aria-label', `${nm}, opened by voice`);
