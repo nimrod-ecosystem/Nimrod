@@ -15,7 +15,8 @@ import { objectSvg } from './count_objects.js';
  *               { cast: 'merlin', x: 330, y: 830, pose: 'wave' }, … ] }
  * x and y are the piece's FOOT (bottom centre) on a 1600×900 stage. Sky pieces (sun, clouds, birds)
  * draw first, then ground pieces (hills, meadow, river, paths), then everything standing on the
- * ground. Within each band, things lower on the screen draw in front.
+ * ground. Within each band, things lower on the screen draw in front. A piece that sits on another
+ * (loaves on a counter, a dais in a hall) carries `ground`, the line its depth is sorted by.
  *
  * THE TWO LOOKS (the same shapes, two ways of drawing them):
  *   crafted  paper and felt, layered like a diorama. Each shape is a soft offset shadow, the fill,
@@ -107,6 +108,35 @@ export const PIECES = {
   wizardTower: { label: "Merlin's tower", group: 'Village', vb: [190, 520], draw: (P, t) => [[`M50 520L58 200Q60 180 96 178Q130 180 134 206L146 520Z`, P.stone, { side: 'M106 178Q130 180 134 206L146 520H110Z' }], [`M30 214Q60 110 112 6Q100 70 164 214Q96 230 30 214Z`, P.magic, { stitch: true, side: 'M112 6Q100 70 164 214Q130 222 104 222Z', raw: [[80, 140], [110, 100], [120, 180], [70, 196]].map(([x, y]) => `<path transform="translate(${x} ${y})" d="M0 -7L2 -2L7 0L2 2L0 7L-2 2L-7 0L-2 -2Z" fill="${P.gold}"/>`).join('') }], win(80, 260, 30, 46, t, P), win(86, 360, 26, 40, t, P), door(74, 450, 44, 70, P), [E(148, 300, 12), P.gold, { raw: `<path d="M136 300h-24" stroke="${P.wood}" stroke-width="4"/>` }]] },
   windmill: { label: 'Windmill', group: 'Village', vb: [240, 380], draw: (P, t) => [[`M70 380L86 140H154L170 380Z`, P.plaster, { side: 'M120 140H154L170 380H120Z' }], [`M78 146Q120 70 162 146Z`, P.roof, { stitch: true }], door(102, 320, 36, 60, P), win(108, 220, 24, 34, t, P), `<g class="vk-spin" style="transform-origin:120px 128px">${[0, 90, 180, 270].map((a) => `<g transform="rotate(${a} 120 128)"><path d="M116 128V18h8v110Z" fill="${P.wood}"/><path d="M124 24h30v86h-30Z" fill="${P.cloud}" stroke="${P.wood}" stroke-width="3"/></g>`).join('')}<circle cx="120" cy="128" r="10" fill="${P.wood}"/></g>`] },
   marketStall: { label: 'Market stall', group: 'Village', vb: [260, 220], draw: (P) => [[R(30, 80, 8, 140), P.wood, { noShadow: true }], [R(222, 80, 8, 140), P.wood, { noShadow: true }], [R(20, 140, 220, 80), P.wood, { side: R(20, 200, 220, 20) }], [`M10 90L30 40H230L250 90Z`, P.plaster, { stitch: true, raw: [0, 1, 2, 3, 4].map((i) => `<path d="M${30 + i * 40} 40h20l${4 + i * 1} 50h-24Z" fill="${P.banner}" opacity=".9"/>`).join('') + `<path d="M10 90${Array.from({ length: 12 }, (_, i) => `q10 14 20 0`).join('')}" fill="${P.plaster}"/>` }], ...[[60, P.banner], [86, P.gold], [112, P.leaf], [150, P.banner], [176, P.flower[3]], [202, P.gold]].map(([x, c]) => [E(x, 132, 12), c, { noShadow: true, thin: true }])] },
+  /* answer 3 (2026-11-01): the first two extra buildings the stories need, each one piece */
+  bakery: { label: 'Bakery', group: 'Village', vb: [320, 330], draw: (P, t) => [
+    [R(236, 34, 34, 96), P.stoneDk, { raw: `<g class="vk-smoke"><circle cx="253" cy="20" r="11" fill="#fff" opacity=".55"/><circle cx="264" cy="-2" r="14" fill="#fff" opacity=".4"/></g>` }],
+    [R(36, 112, 248, 82), P.plaster, { side: R(206, 112, 78, 82), raw: `<path d="M36 112h248M36 194h248M36 112v82M118 112v82M200 112v82M284 112v82M36 112l82 82M284 112l-84 82" stroke="${P.wood}" stroke-width="7"/>` }],
+    [`M18 124L160 22L302 124Z`, P.roof, { stitch: true, side: 'M160 22L302 124H160Z', raw: [52, 82, 108].map((y) => `<path d="M${160 - (y - 22) * 1.39} ${y}h${(y - 22) * 2.78}" stroke="${dk(P.roof, 0.78)}" stroke-width="3" opacity=".7"/>`).join('') }],
+    [R(30, 192, 260, 138), P.stone, { side: R(210, 192, 80, 138), raw: [[44, 214], [150, 206], [92, 312], [238, 300]].map(([x, y]) => `<path d="M${x} ${y}h34" stroke="${P.stoneDk}" stroke-width="3" opacity=".7"/>`).join('') }],
+    [R(54, 228, 124, 66), t.night ? t.window : '#5a3c26', { noShadow: true, thin: true }],
+    [`M42 212H190L178 236H54Z`, P.banner, { noShadow: true, raw: [0, 1, 2, 3].map((i) => `<path d="M${66 + i * 30} 212h14l-2 24h-14Z" fill="${P.plaster}" opacity=".9"/>`).join('') }],
+    [R(46, 290, 140, 16), P.wood, { side: R(46, 302, 140, 4) }],
+    door(208, 238, 54, 92, P),
+    [E(235, 214, 18, 14), P.plaster, { thin: true, raw: `<path d="M223 219Q223 206 235 206Q247 206 247 219Z" fill="#d9a05a"/><path d="M231 210l3 5M237 209l3 5" stroke="#a8692e" stroke-width="2" stroke-linecap="round"/>` }],
+    win(70, 132, 30, 38, t, P, false), win(150, 132, 30, 38, t, P, false), win(228, 132, 28, 38, t, P, false),
+  ] },
+  /* loaves on a counter or a shelf: their own piece, so any shop, table or stall can hold them */
+  breadLoaves: { label: 'Loaves of bread', group: 'Village', vb: [140, 22], draw: (P, t, it = {}) => Array.from({ length: Math.max(1, Math.min(8, it.count || 4)) }, (_, i, a) => { const x = 14 + i * (112 / Math.max(1, a.length - 1 || 1)); return [`M${x - 14} 20Q${x - 14} 4 ${x} 4Q${x + 14} 4 ${x + 14} 20Z`, '#d9a05a', { noShadow: true, thin: true, raw: `<path d="M${x - 6} 8l4 6M${x + 2} 6l4 6" stroke="#a8692e" stroke-width="2.5" stroke-linecap="round"/>` }]; }) },
+
+  /* THE HALL (answer 3): a throne room is a scene of these pieces, never one drawing. Each piece is
+     its own thing and can furnish any hall, chapel or great room. */
+  hallWall: { ground: true, label: 'Stone hall wall', group: 'Castle', vb: [680, 350], draw: (P) => [[R(0, 0, 680, 350), P.stone, { noShadow: true, raw: [40, 90, 140, 190, 240, 290].map((y, i) => `<path d="M0 ${y}h680" stroke="${P.stoneDk}" stroke-width="2.5" opacity=".55"/>` + [0, 1, 2, 3, 4, 5, 6].map((k) => `<path d="M${30 + k * 96 + (i % 2) * 48} ${y - 50}v50" stroke="${P.stoneDk}" stroke-width="2.5" opacity=".45"/>`).join('')).join('') }]] },
+  hallFloor: { ground: true, label: 'Flagstone floor', group: 'Castle', vb: [760, 84], draw: (P) => [[`M0 84L40 0H720L760 84Z`, P.stoneDk, { noShadow: true, raw: [1, 2, 3, 4].map((i) => `<path d="M${40 - i * 8} ${i * 16.8}H${720 + i * 8}" stroke="${dk(P.stoneDk, 0.85)}" stroke-width="2" opacity=".6"/>`).join('') }]] },
+  archWindow: { label: 'Tall arched window', group: 'Castle', vb: [64, 150], draw: (P, t) => [win(0, 0, 64, 150, t, P)] },
+  pillar: { label: 'Stone pillar', group: 'Castle', vb: [28, 324], draw: (P) => [[R(0, 0, 28, 324), P.stone, { side: R(16, 0, 12, 324) }]] },
+  hangingBanner: { label: 'Hanging banner', group: 'Castle', vb: [62, 156], draw: (P, t, it = {}) => [[`M0 0h62v156l-31-22l-31 22Z`, it.color === 'blue' ? P.banner2 : it.color && it.color[0] === '#' ? it.color : P.banner, { stitch: true, raw: it.emblem === false ? '' : `<circle cx="31" cy="66" r="14" fill="${P.gold}"/>` }]] },
+  dais: { ground: true, label: 'Dais (two steps)', group: 'Castle', vb: [220, 56], draw: (P) => [[R(0, 22, 220, 34), P.stoneDk, { side: R(0, 48, 220, 8) }], [R(26, 0, 168, 24), P.stone, { side: R(26, 18, 168, 6) }]] },
+  throne: { label: 'Throne', group: 'Castle', vb: [136, 168], draw: (P, t, it = {}) => [[`M18 168V50a50 50 0 0 1 100 0V168Z`, P.gold, { stitch: true, raw: `<path d="M34 166V56a34 34 0 0 1 68 0V166Z" fill="${it.cushion === 'blue' ? P.banner2 : P.banner}"/>` }], [R(8, 130, 120, 26), P.gold, { side: R(8, 148, 120, 8) }], [R(0, 100, 22, 64), P.gold, { noShadow: true }], [R(114, 100, 22, 64), P.gold, { noShadow: true }]] },
+  carpet: { ground: true, label: 'Carpet runner', group: 'Castle', vb: [180, 84], draw: (P, t, it = {}) => [[`M56 0H124L180 84H0Z`, it.color === 'blue' ? P.banner2 : P.banner, { noShadow: true, raw: `<path d="M62 4L10 80M118 4L170 80" stroke="${P.gold}" stroke-width="4"/>` }]] },
+  wallTorch: { label: 'Wall torch', group: 'Castle', vb: [52, 64], draw: (P) => [[R(21, 44, 10, 20), P.wood, { noShadow: true, raw: `<g class="vk-shimmer"><circle cx="26" cy="30" r="26" fill="#ffd27a" opacity=".3"/></g><path d="M26 16c6 8 8 13 8 17a8 8 0 0 1-16 0c0-4 2-9 8-17z" fill="#ffc457"/>` }]] },
+  /* the open front of a diorama room: side walls and a crenellated top, drawn in front of the room */
+  cutawayFrame: { label: 'Cutaway frame (open-front room)', group: 'Castle', vb: [760, 462], draw: (P) => [[R(0, 0, 48, 462), P.stone, { side: R(30, 0, 18, 462) }], [R(712, 0, 48, 462), P.stone, { side: R(742, 0, 18, 462) }], [R(0, 0, 760, 40), P.stoneDk, { raw: `<path d="${cren(0, 760, 0, 24, 20)}" fill="${P.stoneDk}"/>` }]] },
   well: { label: 'Well', group: 'Village', vb: [160, 180], draw: (P) => [[R(30, 40, 8, 90), P.wood, { noShadow: true }], [R(122, 40, 8, 90), P.wood, { noShadow: true }], [`M14 52L80 6L146 52Z`, P.roof, { stitch: true }], [`M24 180V120Q80 104 136 120V180Z`, P.stone, { side: 'M100 112Q120 114 136 120V180H100Z', raw: `<path d="M24 140h112M24 160h112" stroke="${P.stoneDk}" stroke-width="3" opacity=".6"/>` }], [R(70, 70, 20, 22), P.wood, { raw: `<path d="M80 40v30" stroke="#5a4a3a" stroke-width="2"/>` }]] },
   cart: { label: 'Cart', group: 'Village', vb: [220, 140], draw: (P) => [[R(20, 50, 160, 50), P.wood, { side: R(20, 86, 160, 14) }], [`M180 80L218 64`, P.wood, { raw: `<path d="M180 80L218 64" stroke="${P.wood}" stroke-width="7" stroke-linecap="round"/>` }], [E(60, 110, 28), dk(P.wood, 0.8), { raw: `<path d="M60 82v56M32 110h56M40 90l40 40M80 90l-40 40" stroke="${P.thatch}" stroke-width="3"/>` }], [E(150, 110, 28), dk(P.wood, 0.8), { raw: `<path d="M150 82v56M122 110h56M130 90l40 40M170 90l-40 40" stroke="${P.thatch}" stroke-width="3"/>` }], ...[[50, P.thatch], [90, P.banner], [130, P.gold]].map(([x, c]) => [E(x, 44, 20, 14), c, { noShadow: true, thin: true }])] },
   haystack: { label: 'Haystack', group: 'Village', vb: [160, 120], draw: (P) => [[`M10 120Q16 20 80 14Q144 20 150 120Z`, P.thatch, { stitch: true, side: 'M80 14Q144 20 150 120H80Z', raw: `<path d="M40 60q20-8 40 0t40 0M30 90q25-8 50 0t50 0" stroke="${dk(P.thatch, 0.78)}" stroke-width="3" fill="none"/>` }]] },
@@ -217,6 +247,31 @@ export const VILLAGE_SCENES = {
       c('kenny', 730, 870), c('rose', 870, 872), c('jack', 1080, 880, { pose: 'wave' }), c('michael', 410, 860), c('gladys', 600, 866, { pose: 'point' }), c('jess', 980, 890, { pose: 'happy' }), c('vince', 660, 892, { pose: 'wave' }), c('nimrod', 1330, 896, { scale: 0.5 }),
     ] },
   },
+  court: {
+    label: 'The throne room',
+    recipe: { look: 'crafted', time: 'day', frame: true, pieces: [
+      p('hallWall', 800, 745.6, 1.88), p('hallFloor', 800, 896, 1.88),
+      p('archWindow', 371.4, 467.4, 1.88), p('archWindow', 1228.6, 467.4, 1.88),
+      p('pillar', 510.5, 738.1, 1.88), p('pillar', 1089.5, 738.1, 1.88),
+      p('hangingBanner', 628.9, 422.2, 1.88), p('hangingBanner', 971.1, 422.2, 1.88, { color: 'blue' }),
+      p('wallTorch', 247.3, 520, 1.88), p('wallTorch', 1352.7, 520, 1.88),
+      p('dais', 800, 738.1, 1.88, { ground: 746 }), p('throne', 800, 632.8, 1.88), p('carpet', 800, 896, 1.88, { ground: 897 }),
+      c('kenny', 730, 690, { pose: 'wave' }), c('rose', 870, 690, { pose: 'talk' }),
+      c('michael', 330, 880, { pose: 'stand' }), c('gladys', 1270, 880, { pose: 'listen' }),
+      c('jess', 640, 892, { pose: 'happy' }), c('vince', 960, 892, { pose: 'point' }), c('player', 800, 896, { pose: 'wave' }),
+      p('cutawayFrame', 800, 896, 1.88, { ground: 2000 }),
+    ] },
+  },
+  bakery: {
+    label: "The baker's street",
+    recipe: { look: 'crafted', time: 'day', frame: true, pieces: [
+      p('sun', 1380, 240, 0.8), p('cloud', 360, 190), p('cloud', 1000, 150, 0.7), p('farHills', 800, 600), p('meadow', 800, 900),
+      p('timberHouse', 230, 720, 0.85), p('bakery', 780, 740, 1.15), p('cottage', 1340, 740, 0.85, { flip: true }),
+      p('path', 760, 880, 1.3), p('well', 1100, 800, 0.75), p('lantern', 470, 870), p('flowers', 980, 892), p('bush', 120, 890),
+      p('breadLoaves', 727.1, 687.1, 1.15, { count: 4, ground: 741 }), p('countTable', 560, 860, 0.85, { object: 'loaf', count: 4 }),
+      c('baker', 640, 870, { pose: 'point' }), c('player', 860, 884, { pose: 'wave' }), c('jess', 1000, 888, { pose: 'happy' }),
+    ] },
+  },
   empty: { label: 'Empty', recipe: { look: 'crafted', time: 'day', frame: true, pieces: [p('meadow', 800, 900)] } },
 };
 
@@ -254,7 +309,7 @@ export function sceneSvg(recipe = {}, { assetBase = '../../assets/', selected = 
   /* draw order: sky, then the ground (hills, meadow, river, paths) back to front, then everything
      standing on it back to front */
   const band = (it) => { const d = it.piece && PIECES[it.piece]; return d && d.sky ? 0 : d && d.ground ? 1 : 2; };
-  items.sort((a, b) => (band(a.it) - band(b.it)) || (a.it.y - b.it.y));
+  items.sort((a, b) => (band(a.it) - band(b.it)) || ((a.it.ground ?? a.it.y) - (b.it.ground ?? b.it.y)));
   const out = [];
   let handles = '';
   out.push(`<defs><linearGradient id="vg-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.sky[0]}"/><stop offset="1" stop-color="${t.sky[1]}"/></linearGradient><pattern id="vg-grain" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r=".8" fill="#fff" opacity=".22"/><circle cx="5" cy="4.5" r=".7" fill="#000" opacity=".1"/></pattern></defs>`);

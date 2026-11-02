@@ -72,6 +72,12 @@ try {
   const own = { pieces: [{ piece: Object.keys(PIECES)[0], x: 800, y: 700 }] };
   check('a panel\'s own recipe (an edited scene, next step) is drawn instead', J(recipeFor({ recipe: own }, noon).pieces) === J(own.pieces));
   check('an unknown scene falls back to the village, never nothing', J(recipeFor({ scene: 'nope' }, noon).pieces) === J(VILLAGE_SCENES.village.recipe.pieces));
+  // (Design, 2026-11-01, Mike's answer 3) the bakery and the throne room, each made of pieces (a hall is walls, a floor, a
+  // dais, a throne... never one drawing), so any piece can furnish another room.
+  check('*** the bakery and the throne room are scenes, built of pieces that exist ***', ['bakery', 'court'].every((s) => VILLAGE_SCENES[s]
+    && VILLAGE_SCENES[s].recipe.pieces.every((p) => !p.piece || PIECES[p.piece])) && ['bakery', 'breadLoaves', 'throne', 'dais', 'hallWall'].every((p) => PIECES[p]),
+    Object.keys(VILLAGE_SCENES).join());
+  check('...offered in the panel\'s "Scene" choice', SETTINGS.find((s) => s.key === 'scene')?.options?.some((o) => o.value === 'court') ?? true);
 
   section('*** drawn on a panel ***');
   const st = fakeRow({ time: 'day' });
