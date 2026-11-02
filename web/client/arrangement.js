@@ -2243,6 +2243,9 @@ export function createArrangement({
         ...(built || arrange ? { actions: [
           ...(arrange ? [
             { id: 'remove', label: 'Take it out', note: 'Undo puts it back', run: () => { removePiece(o.id); } },
+            // (row 2.145) the editor's Duplicate (editor.js maps a part's 'copy' to it); not for the one cat.
+            ...(piece?.kind !== 'cat' ? [{ id: 'copy', label: 'Copy it', note: 'A step to the side; Undo takes it away',
+              run: () => { copyPiece(o.id); } }] : []),
             { id: 'undo', label: 'Undo', run: () => { undoRoom(); } },
           ] : []),
           ...(built ? builtActions(o.build) : []),
@@ -2332,6 +2335,19 @@ export function createArrangement({
       say('This browser would not copy it.');
       return null;
     }
+  }
+  /** (row 2.145, 2026-11-02) Copy a piece: room_edits.js withPieceCopy, how it is drawn too; its door is not copied. */
+  async function copyPiece(id) {
+    const base = roomBase();
+    const got = base && roomEditsLib?.withPieceCopy ? roomEditsLib.withPieceCopy(sceneRecipe(base.scene), id) : null;
+    if (!got || !got.recipe) { say(got?.why || 'That piece cannot be copied.'); return false; }
+    keepUndo(base.scene);
+    let s = { ...clone(base.scene), recipe: got.recipe };
+    const look = (sceneLooks(base.scene) || {})[id];
+    if (look) s = withLook(s, got.id, look) || s;
+    await writeRoomScene(tidyScene(s));
+    try { if (editMode?.active?.()?.id === ROOM_PANEL_ID) editMode.select(got.id); } catch { /* not chosen; it is there */ }
+    return true;
   }
   async function addRoomPiece(part) {
     const base = roomBase();

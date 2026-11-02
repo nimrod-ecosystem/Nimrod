@@ -282,7 +282,17 @@ try {
     && bar(ed, 'redo').title === EDITOR_WORDS.noRedo);
   bar(ed, 'undo').click();
   check('*** Undo puts it back where it was ***', await until(() => t.arr.editSelection()?.values()?.x === x0), J(t.arr.editSelection()?.values()));
-  check('Duplicate says copying furniture is not built', bar(ed, 'duplicate').disabled && bar(ed, 'duplicate').title === EDITOR_WORDS.copyPiece);
+  // (row 2.145, 2026-11-02, DELIBERATELY changed: it said "Copying a piece of furniture is not built yet".)
+  const piecesBefore = (sceneRecipe(t.doc.kiosk.layout.scene)?.items || []).length;
+  const copiedFrom = t.arr.editing()?.target;
+  check('*** Duplicate is live on a piece of furniture ***', !bar(ed, 'duplicate').disabled);
+  bar(ed, 'duplicate').click();
+  check('*** ...and copies it: one more piece in the saved room, the copy chosen ***',
+    await until(() => (sceneRecipe(t.doc.kiosk.layout.scene)?.items || []).length === piecesBefore + 1)
+      && await until(() => !!t.arr.editing()?.target && t.arr.editing().target !== copiedFrom), J(t.arr.editing()));
+  bar(ed, 'undo').click();
+  check('Undo takes the copy away', await until(() => (sceneRecipe(t.doc.kiosk.layout.scene)?.items || []).length === piecesBefore));
+  t.arr.editSelect(copiedFrom);
   bar(ed, 'delete').click();
   check('*** Delete takes the piece out: its row goes, the room is chosen ***',
     await until(() => !ed.tree().nodes.has(pieceNode) && ed.selected() === nodeIdFor(ROOM_PANEL_ID)), ed.selected());

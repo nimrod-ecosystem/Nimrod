@@ -390,7 +390,9 @@ try {
     check(`(${kind}) Look reads Brick-built to begin with`, sel().values().look === 'bricks', J(sel().values()));
     check(`(${kind}) *** "Built from 32 Nimrod parts" and "Open its bricks" → the bricks page for desk_v1 ***`,
       // (row 2.110: a 2D room's piece has Take it out and Undo first.)
-      J(sel().actions) === J([...(kind === 'room' ? [{ id: 'remove', label: 'Take it out', note: 'Undo puts it back' }, { id: 'undo', label: 'Undo', note: '' }] : []),
+      // (row 2.145, 2026-11-02: and Copy it, between them.)
+      J(sel().actions) === J([...(kind === 'room' ? [{ id: 'remove', label: 'Take it out', note: 'Undo puts it back' },
+        { id: 'copy', label: 'Copy it', note: 'A step to the side; Undo takes it away' }, { id: 'undo', label: 'Undo', note: '' }] : []),
         { id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' },
         // brick builder (2026-10-09): the way to build your own, second.
         { id: 'builder', label: 'Build your own in the brick builder', href: '/modules.html?m=brickbuilder', note: '' }]), J(sel().actions));
@@ -463,6 +465,18 @@ try {
       && added.recipe.items.at(-1).y === 92 && withNewPiece(added.recipe, 'plant').id === 'plant-2');
     check('pure: no such piece is said, never added', withNewPiece(base, 'nope').recipe === null && !!withNewPiece(base, 'nope').why);
     check('pure: ids for all leaves a room with ids unchanged', J(withIds(base)) === J(base));
+    // (row 2.145, 2026-11-02) the editor's Duplicate for a piece of furniture.
+    const { withPieceCopy, COPY_STEP } = await import('../room_edits.js');
+    const cp = withPieceCopy(base, 'cab');
+    const orig = cab(base), copy = cp.recipe?.items.find((x) => x.id === cp.id);
+    check('*** pure: a copy is the same piece, a step to the side, under an id of its own, placed after it ***',
+      !!copy && copy.part === orig.part && copy.y === orig.y && copy.x === (orig.x + COPY_STEP <= 97 ? orig.x + COPY_STEP : orig.x - COPY_STEP)
+        && cp.id !== 'cab' && cp.recipe.items.indexOf(copy) === cp.recipe.items.findIndex((x) => x.id === 'cab') + 1, J(cp));
+    const withDoor = { ...base, items: base.items.map((x) => (x.id === 'cab' ? { ...x, opens: 'P' } : x)) };
+    const cpd = withPieceCopy(withDoor, 'cab');
+    check('...its door is not copied (only the original opens P), and the original is untouched',
+      cpd.recipe.items.filter((x) => x.opens === 'P').map((x) => x.id).join() === 'cab' && J(cab(base)) === J(orig));
+    check('pure: no such piece, or a panel\'s place: not copied, and said', withPieceCopy(base, 'nope').recipe === null && !!withPieceCopy(base, 'clock').why);
 
     // On a real dashboard.
     const scene0 = { kind: 'room', preset: 'theRoom' };
@@ -495,9 +509,9 @@ try {
     d.editPanel(ROOM_PANEL_ID, true);
     await until(() => sel()?.target?.id === 'room' && sel().fields.some((f) => f.key === 'addPiece'), 3000);
     host.querySelector('.rs-item[data-id="cab"]').click();
-    check('*** the cabinet chosen: its place, size and facing, then Opens; Take it out and Undo ***',
+    check('*** the cabinet chosen: its place, size and facing, then Opens; Take it out, Copy it (2026-11-02) and Undo ***',
       sel()?.target?.id === 'cab' && J(sel().fields.map((f) => f.key)) === J(['x', 'y', 'size', 'rotate', 'facing', 'opens'])
-        && J(sel().actions.map((a) => a.id)) === J(['remove', 'undo']), J([sel()?.fields?.map((f) => f.key), sel()?.actions]));
+        && J(sel().actions.map((a) => a.id)) === J(['remove', 'copy', 'undo']), J([sel()?.fields?.map((f) => f.key), sel()?.actions]));
     card().querySelector('[data-em-step="1"][data-em-key="x"]').click();
     check('*** › on "Left or right": it moves right one step, saved on the room\'s recipe, and stays chosen ***',
       await until(() => savedCab()?.x === 57, 3000) && await until(() => sel()?.target?.id === 'cab', 3000), J(savedCab()));

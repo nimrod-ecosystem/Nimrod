@@ -106,7 +106,8 @@ export const EDITOR_WORDS = Object.freeze({
   slotDelete: 'A panel in a cell of the layout is not taken out from here yet.',
   cannotTakeOut: 'This one cannot be taken out.',
   copyModule: 'Copying a module is not built yet.',
-  copyPiece: 'Copying a piece of furniture is not built yet.',
+  // (Copying furniture is built, 2026-11-02; this is now only the cat's case -- there is one of it.)
+  copyPiece: 'There is only one of this, so it cannot be copied.',
   cannotCopy: 'This one cannot be copied.',
   addHere: 'Adding to the dashboard from here is not built yet. Choose a room, a scene or an open Town place to add a piece to it.',
   slotTransform: 'Its place is its cell of the layout.',

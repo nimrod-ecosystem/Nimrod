@@ -216,6 +216,34 @@ export function presetText(recipe, { preset = '', from = '', date = '' } = {}) {
 }
 
 /**
+ * A COPY OF PIECE `id` (row 2.145, 2026-11-02: the one editor's Duplicate, which said "Copying a piece of furniture is not
+ * built yet"): the same piece with all its settings, a step to the right (to the left when there is no room on the right),
+ * under a new id of its own. `{ recipe, id }`, or `{ recipe: null, why }` (no such piece, or the room is full). Its door
+ * (which dashboard it opens) is NOT copied: a door belongs to one thing, and two that open the same place would be a
+ * surprise nobody asked for. The step is 6 points of the 0-100 width: far enough to see it is two, near enough to find. PURE.
+ */
+export const COPY_STEP = 6;
+export function withPieceCopy(recipe, id) {
+  const r = withIds(recipe);
+  const i = indexOf(r, id);
+  if (i < 0 || !isEditablePiece(r.items[i])) return { recipe: null, why: 'There is no such piece.' };
+  // One cat per screen (the shell's one Nimrod): the cat is not copied.
+  if (r.items[i].kind === 'cat') return { recipe: null, why: 'There is only one cat.' };
+  if (r.items.filter(isEditablePiece).length >= ROOM_MAX_ITEMS) return { recipe: null, why: 'This room is full. Take something out first.' };
+  const it = JSON.parse(JSON.stringify(r.items[i]));
+  delete it.opens;          // a door carried on the item itself (older recipes) is not copied either
+  const part = it.part || 'piece';
+  const used = new Set(recipeItemIds(r));
+  let n = 1;
+  while (used.has(`${part}-${n}`)) n += 1;
+  it.id = `${part}-${n}`;
+  const x = Number(it.x);
+  if (Number.isFinite(x)) it.x = x + COPY_STEP <= X_RANGE[1] ? x + COPY_STEP : Math.max(X_RANGE[0], x - COPY_STEP);
+  r.items.splice(i + 1, 0, it);
+  return { recipe: r, id: it.id };
+}
+
+/**
  * The recipe with a new `part` in the middle of its wall or floor, and its id: `{ recipe, id }`, or `{ recipe: null,
  * why }` (not a piece, or the room is full). Town's places for a new piece (town_edits.js `addPiece`).
  */
