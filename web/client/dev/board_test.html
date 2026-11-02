@@ -616,6 +616,25 @@ try {
   }
 
   // =====================================================================================
+  // Row 2.184 (2026-11-02, Mike, with a screenshot: "The make an AAC board setup is not useable"): on a see-through board
+  // the board maker took the board's cleared colours and was drawn see-through over the cards.
+  section('*** the board maker is solid on a see-through board ***');
+  {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = '--surface:#101820;--surface-alt:#1c2630;--text:#f0f0f0;--border:#808890';
+    for (const kind of ['ab-clear', 'ab-veil']) {
+      wrap.innerHTML = `<div class="aboard ${kind}"><div class="ab-editor"><div class="bedit"><input type="text"></div></div></div>`;
+      document.body.append(wrap);
+      const cs = (sel) => getComputedStyle(wrap.querySelector(sel));
+      const clear = (c) => c === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(c);
+      check(`*** ${kind}: the form and its fields have a solid background, not the board's see-through one ***`,
+        !clear(cs('.ab-editor').backgroundColor) && !clear(cs('.bedit').backgroundColor) && !clear(cs('.bedit input').backgroundColor),
+        `${cs('.ab-editor').backgroundColor} / ${cs('.bedit').backgroundColor} / ${cs('.bedit input').backgroundColor}`);
+      wrap.remove();
+    }
+  }
+
+  // =====================================================================================
   // Row 2.190 (2026-11-02): the message bar keeps the words while the board changes underneath them.
   section('*** the message bar: words kept across boards, said together ***');
   {

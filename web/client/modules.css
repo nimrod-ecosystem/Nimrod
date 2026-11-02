@@ -1576,6 +1576,15 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
   --ab-lit:var(--board-lit,#8fae63);
 }
 .aboard.ab-clear{--ab-card:transparent}
+/* THE BOARD MAKER STAYS SOLID ON A SEE-THROUGH BOARD (row 2.184, Mike 2026-11-02, with a screenshot: "The make an AAC board
+   setup is not useable" - the form drawn see-through over the cards, unreadable). The see-through surfaces above clear
+   --ab-bg and --ab-card, and the editor and its fields take their colours from those, so they went see-through with the
+   board. A form is read and typed into, not a scene to look through: on a veiled or clear board it wears the page's own
+   solid surface and text instead. (Moving board making into the one editor is the fuller answer; this keeps the form
+   readable meanwhile.) */
+.aboard.ab-veil .ab-editor,.aboard.ab-clear .ab-editor{
+  --ab-bg:var(--surface,#12181c);--ab-card:var(--surface-alt,#1b2429);--ab-ink:var(--text,#e8eef0);
+  --ab-line:var(--border,#7d939d)}
 
 /* THE HALO. Only where there is no card face to read against. It runs whichever way the world
    needs: dark on the dark scenes, light on `cozy` (a dark halo under dark ink just thickens the
