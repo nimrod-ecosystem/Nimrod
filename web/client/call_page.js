@@ -35,6 +35,7 @@ import { createCallTransport, newCallSession } from './call_transport.js';
 import { watchCallOutcome, postCallOutcome } from './call_outcome.js';
 // A call that cannot connect says what to do (chat's note CV; Mike's own-private-network ruling, 2026-09-08).
 import { CALL_BLOCKED_TEXT, CALL_UP_FRONT, PRIVATE_NETWORK_URL } from './private_network.js';
+import { createConnectionCheck, CHECK_WORDS } from './call_check.js';
 import { createCallGroup, MESH_MAX_OTHERS, GROUP_REFUSED_TEXT } from './call_group.js';
 import { createWakeHold } from './phone_mic_show.js';
 import { createSpeechChannel } from './output_channels.js';
@@ -205,6 +206,8 @@ export async function mountCallPage(root, {
   fetchImpl = (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : null),
   connect = connectDrive,
   makeTransport = (o) => createCallTransport(o),
+  // "Check it works" (row 2.167): one test connection to one screen (call_check.js). A seam for the suites.
+  makeCheck = (o) => createConnectionCheck(o),
   // group calls: what makes this page's part in a group call (call_group.js). Returns null on a link with no group
   // messages (an older site, a suite's fake link), and then nothing about the call changes.
   makeGroup = (o) => createCallGroup(o),
@@ -404,7 +407,63 @@ export async function mountCallPage(root, {
     box.hidden = !list.length;
     box.innerHTML = list.length ? `<label class="cp-field"><span>Ring</span><select data-ring>`
       + `<option value="">Every screen</option>${list.map((s) => `<option value="${esc(s.id)}"${s.id === ringPick ? ' selected' : ''}>Only ${esc(s.name)}</option>`).join('')}`
-      + '</select></label>' : '';
+      + '</select></label>'
+      // "CHECK IT WORKS" (row 2.167): the screen picked above, or each of them in turn. Only where this list shows at
+      // all - the account that owns the screens - which is also who the server lets check (call_check.js).
+      + '<button type="button" class="cp-btn" data-check-conn>Check the connection'
+      + ' <span class="cp-sub">(a test with no camera or microphone; the screen shows nothing)</span></button>'
+      + '<p class="cp-note" data-check-result role="status" aria-live="polite" style="white-space:pre-line"></p>' : '';
+  }
+
+  // Wait for the drive socket to open (a check is sent only on an open one), up to `ms`. Resolves whether it did.
+  function whenConnected(l, ms = 8000) {
+    return new Promise((resolve) => {
+      let waited = 0;
+      const look = () => {
+        let st = null;
+        try { st = l?.state?.(); } catch { st = null; }
+        if (st === 'connected') { resolve(true); return; }
+        if (waited >= ms) { resolve(false); return; }
+        waited += 100;
+        setTimer(look, 100);
+      };
+      look();
+    });
+  }
+  let checking = false;
+  async function runCheck(personId) {
+    if (checking || !personId) return;
+    const list = ringLists.get(personId) || [];
+    const targets = ringPick ? list.filter((s) => s.id === ringPick) : list;
+    const outEl = q('[data-check-result]');
+    const btn = q('[data-check-conn]');
+    if (!targets.length || !outEl) return;
+    checking = true;
+    if (btn) btn.disabled = true;
+    outEl.textContent = CHECK_WORDS.checking;
+    const lines = [];
+    let l = null;
+    try {
+      l = connect({ personId, role: 'driver', user, base, idle: true });
+      if (!(await whenConnected(l))) lines.push(CHECK_WORDS['not-on']);
+      else {
+        for (const s of targets) {
+          const r = await makeCheck({ link: l, toScreen: s.id, setTimer, clearTimer }).run();
+          const why = r.outcome === 'failed' ? iceWords(r.offered) : null;
+          lines.push(`${s.name}: ${CHECK_WORDS[r.outcome] || CHECK_WORDS.failed}${why ? `\n${why}` : ''}`);
+        }
+      }
+    } catch (err) {
+      console.error('call page: check', err);
+      lines.push(CHECK_WORDS.failed);
+    } finally {
+      try { l?.close?.(); } catch { /* gone */ }
+      checking = false;
+      const b = q('[data-check-conn]');
+      if (b) b.disabled = false;
+    }
+    const o = q('[data-check-result]');
+    if (o && q('[data-person]')?.value === personId) o.textContent = lines.join('\n');
   }
 
   // "CHECK IN QUIETLY" (2026-10-14, checkin.js), next to the call buttons - shown ONLY for somebody who may ("May check
@@ -1471,6 +1530,7 @@ export async function mountCallPage(root, {
   on(root, 'click', (e) => {
     const s = e.target.closest?.('[data-start]');
     if (s) { start(s.dataset.start); return; }
+    if (e.target.closest?.('[data-check-conn]')) { runCheck(q('[data-person]')?.value); return; }
     if (e.target.closest?.('[data-hangup]')) { finish('The call ended.'); return; }
     if (e.target.closest?.('[data-mute]')) { toggleMic(); return; }
     if (e.target.closest?.('[data-cam]')) { toggleCam(); return; }

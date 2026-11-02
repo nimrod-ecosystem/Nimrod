@@ -202,6 +202,17 @@ with ws_for(OWN, "screen") as S:
     check("...and it is still the owner calling (drop-in is the screen's to refuse for it, not the server's)",
           g.get("byOwner") is True, J(g))
 
+    # row 2.167 (2026-11-02): "Check it works" - a silent test connection, only for somebody who may DRIVE the screen.
+    section("*** a connection check reaches the screen only from somebody who may drive it, stamped so ***")
+    g = ring(S, OWN, {"byDrive": False}, purpose="check")
+    check("*** the owner's check reaches the screen with byDrive True (the page's False is replaced) ***",
+          g.get("purpose") == "check" and g.get("byDrive") is True, J(g))
+    g = ring(S, CALLONLY, {"byDrive": True}, purpose="check")
+    check("*** a call-only login's check never reaches the screen, whatever it claims ***", g == {}, J(g))
+    g = ring(S, CALLONLY)
+    check("...though the same login may still ring an ordinary call, which carries no byDrive",
+          g.get("kind") == "offer" and "byDrive" not in g, J(g))
+
     # row 2.144 (2026-11-01): who is calling, to remember a screen's "Always" / "Never" by (drive.py ask_key).
     section("*** byKey: the same caller, the same key - and never their login ***")
     k_own, k_own2, k_friend = ring(S, OWN).get("byKey"), ring(S, OWN).get("byKey"), ring(S, FRIEND).get("byKey")

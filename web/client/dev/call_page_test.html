@@ -338,6 +338,34 @@ try {
     check('"not here" reads as the screen not being on, and nothing rang', /not on right now/.test(endText('remote', 'not-here')));
   }
 
+  // row 2.167 (2026-11-02): "Check it works", beside "Ring", for the account that owns the screens.
+  section('*** "Check the connection": a test to each screen, words for each ***');
+  {
+    const ran = [];
+    const outcomes = { 'bench-pi-01': { outcome: 'private' }, 'facility-01': { outcome: 'failed', offered: {
+      local: { host: 0, mdns: 0, srflx: 1, relay: 0 }, remote: { host: 1, mdns: 0, srflx: 1, relay: 0 }, pairs: 2, succeeded: 0, failed: 2 } } };
+    const M = await mount({ search: '?person=p1', fetchOpts: { screens: [{ id: 'bench-pi-01', name: 'Bench Pi' }, { id: 'facility-01', name: 'Room 12' }] },
+      extra: { makeCheck: (o) => ({ run: async () => { ran.push({ toScreen: o.toScreen, open: o.link?.state?.() }); return outcomes[o.toScreen]; } }) } });
+    const btn = () => root.querySelector('[data-check-conn]');
+    check('*** the owner sees "Check the connection" beside Ring, and nothing opened yet ***',
+      await settled(() => !!btn()) && M.page.opened().sockets === 0 && ran.length === 0);
+    check('it says it opens no camera or microphone, and shows nothing on the screen', /no camera or microphone/.test(btn().textContent) && /shows nothing/.test(btn().textContent));
+    press('[data-check-conn]');
+    const res = () => root.querySelector('[data-check-result]')?.textContent || '';
+    check('*** "Every screen": each screen is checked in turn, on an open socket ***',
+      await settled(() => ran.length === 2) && ran.map((r) => r.toScreen).join() === 'bench-pi-01,facility-01' && ran.every((r) => r.open === 'connected'), JSON.stringify(ran));
+    check('*** each screen gets its words: private network for one, "can\'t reach" and what each end offered for the other ***',
+      await settled(() => /Bench Pi: Connects through your private network/.test(res()) && /Room 12: Can’t reach the screen/.test(res()) && /What each end offered/.test(res())), res());
+    check('...and the socket it used is closed afterwards', M.connect.made.every((l) => l.closed));
+    const ring = root.querySelector('[data-ring]');
+    ring.value = 'facility-01';
+    ring.dispatchEvent(new Event('change', { bubbles: true }));
+    ran.length = 0;
+    press('[data-check-conn]');
+    check('with "Only Room 12" picked, only that screen is checked', await settled(() => ran.length === 1) && ran[0].toScreen === 'facility-01');
+    M.page.destroy();
+  }
+
   // 2026-10-26 (note CV; Mike's ruling 2026-09-08): no relay of ours, said up front, and an easy way to fix it.
   section('*** a private network between your devices: said up front, and the guide ***');
   {

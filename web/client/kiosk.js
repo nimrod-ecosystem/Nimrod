@@ -174,6 +174,7 @@ import {
 } from './intercom.js';
 // The silent check-in (2026-10-14): a one-way look and/or listen; the room hears nothing; the screen says who it is.
 import { createCheckInReceiver, mountCheckInNotice, checkInOptionsFrom, CHECKIN_ACTIONS, CHECKIN_FIELDS } from './checkin.js';
+import { createCheckAnswerer } from './call_check.js';
 // Status icons (2026-10-14): one small strip saying what sees, hears, sends or controls, the whole time it does.
 import { createStatusIcons, mountStatusStrip, STATUS_ICON_FIELDS, STATUS_ICONS_NOTE, MUSIC_NOW_TOPIC } from './status_icons.js';
 import { aiActivity, onAIActivity } from './ai_activity.js';
@@ -1038,6 +1039,7 @@ export async function mountKiosk(root, {
   let intercomRx = null;         // the room's half of the intercom, once the drive socket exists
   let intercomNote = null;       // "Intercom opening / open: <name>", with End
   let checkInRx = null;          // the room's half of the silent check-in (checkin.js), once the drive socket exists
+  let connCheck = null;          // the screen's half of "Check it works" (call_check.js, row 2.167), the same way
   let checkInNote = null;        // "<name> is checking in (sound and picture)", with End - NO SETTING HIDES IT
   let seeAskNote = null;         // "<name> would like to see this screen" - Allow / Not now, gone by itself (see_ask.js)
   let statusIcons = null;        // status icons (2026-10-14, status_icons.js): what sees, hears, sends or controls
@@ -7790,6 +7792,11 @@ export async function mountKiosk(root, {
             });
             checkInNote = mountCheckInNotice(kioskEl, { receiver: checkInRx, bus, avatars: () => whoAvatars() });
           } catch (err) { console.error('kiosk: check-in', err); }
+          // "CHECK IT WORKS" (row 2.167, 2026-11-02; call_check.js argues it): a test connection from the private-network
+          // and call pages. A data channel only - this half refuses anything with audio or video - answered by itself and
+          // shown nowhere, for nobody but somebody the server says may drive this screen. Closes by itself.
+          try { connCheck = createCheckAnswerer({ link: drive, config: (settings.get() || {}).call || {} }); }
+          catch (err) { console.error('kiosk: connection check', err); }
           // WHO MAY SEE (Mike, 2026-10-12): the server's "may <name> see this screen?" - a corner card, never a dialog,
           // gone by itself; nobody answering means nothing is shared (see_ask.js).
           try { seeAskNote = mountSeeAsk(kioskEl, { link: drive, zIndex: LAYERS.menus + 40 }); }
@@ -9791,6 +9798,7 @@ export async function mountKiosk(root, {
       try { intercomNote?.destroy(); } catch { /* already gone */ } intercomNote = null;
       // A quiet check-in: the room's microphone and camera let go and the checker told (before the socket closes).
       try { checkInRx?.destroy(); } catch { /* already gone */ } checkInRx = null;
+    try { connCheck?.destroy(); } catch { /* already gone */ } connCheck = null;
       try { checkInNote?.destroy(); } catch { /* already gone */ } checkInNote = null;
       try { statusStrip?.destroy(); } catch { /* already gone */ } statusStrip = null;
       try { statusIcons?.destroy(); } catch { /* already gone */ } statusIcons = null;

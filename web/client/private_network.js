@@ -116,6 +116,9 @@ export function privateNetworkHTML({ device = null } = {}) {
     <li><b>Put it on both ends of the call:</b> this device, and the screen or phone you call.</li>
     <li><b>Call with Tailscale on at both ends.</b> That is all: the call finds its way through it.</li>
   </ol>
+  <p data-check-it><b>Check it works</b> before anybody needs a call: on ${link('/call.html', 'the Calls page')}, choose
+    who to call and press <b>Check the connection</b>. It makes a test connection to the screen, with no camera or
+    microphone, and says whether it connects directly, through your private network, or not at all.</p>
   ${here ? `<h2 data-this-device>This device: ${DEVICE_LABELS[here].replace(/^(A|An|The) /, (m) => m.toLowerCase())}</h2>
   <ol data-here>${deviceStepsHTML(here)}</ol>` : ''}
   <details class="pn-more" data-other-devices${here ? '' : ' open'}>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>call_check: "Check it works" (row 2.167)</title>
+<style>
+  body{font:14px/1.4 system-ui,sans-serif;margin:16px;max-width:60rem}
+  .pass{color:#0a6b2c}.fail{color:#a11;font-weight:700}
+  h2{font-size:1rem;margin:1.2em 0 .3em}
+  #summary{font-weight:700;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>call_check: a test connection to one screen</h1>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { CHECK_PURPOSE, CHECK_WORDS, checkOfferOk, pairKind, createConnectionCheck, createCheckAnswerer } from '../call_check.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const settle = async () => { for (let i = 0; i < 8; i++) await tick(); };
+
+// A peer connection that does what it is told: no network. `stats` is what getStats() reports.
+function fakePC(stats = []) {
+  const made = [];
+  class PC {
+    constructor(cfg) { this.cfg = cfg; this.channels = []; this.closed = false; this.iceGatheringState = 'complete';
+      this.connectionState = 'new'; this.remote = null; this.local = null; this.transceivers = []; made.push(this); }
+    createDataChannel(label) { const dc = { label, onopen: null }; this.channels.push(dc); return dc; }
+    addTransceiver(kind, o) { this.transceivers.push({ kind, ...o }); }
+    async createOffer() { return { type: 'offer', sdp: 'v=0\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n' }; }
+    async createAnswer() { return { type: 'answer', sdp: 'v=0\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n' }; }
+    async setLocalDescription(d) { this.local = d; this.localDescription = d; }
+    async setRemoteDescription(d) { this.remote = d; }
+    async getStats() { return new Map(stats.map((s) => [s.id, s])); }
+    close() { this.closed = true; }
+  }
+  return { PC, made };
+}
+function fakeLink() {
+  const sent = [], subs = new Set();
+  return { sent, sendSignal: (s) => { sent.push(s); return true; }, onSignal: (f) => { subs.add(f); return () => subs.delete(f); },
+    deliver: (s) => { for (const f of [...subs]) f(s); }, listeners: () => subs.size };
+}
+function fakeClock() {
+  const armed = [];
+  return { armed, setTimer: (fn, ms) => { armed.push({ fn, ms }); return armed.length; }, clearTimer: (id) => { if (armed[id - 1]) armed[id - 1].fn = null; },
+    fireAll: () => { for (const a of armed.splice(0)) a.fn?.(); } };
+}
+const pairStats = (local, remote, extra = {}) => [
+  { id: 'T', type: 'transport', selectedCandidatePairId: 'P' },
+  { id: 'P', type: 'candidate-pair', state: 'succeeded', nominated: true, localCandidateId: 'L', remoteCandidateId: 'R' },
+  { id: 'L', type: 'local-candidate', ...local }, { id: 'R', type: 'remote-candidate', ...remote }, ...(extra.more || [])];
+
+try {
+  section('what a check offer may carry');
+  const DATA = 'v=0\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\na=sctp-port:5000\r\n';
+  check('*** a data channel only: a check ***', checkOfferOk(DATA));
+  check('*** anything with audio or video in it is refused (a check can never open the room\'s camera or microphone) ***',
+    !checkOfferOk(DATA + 'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=recvonly\r\n') && !checkOfferOk('v=0\r\nm=video 9 X 96\r\n'));
+  check('an empty or sectionless offer is not a check', !checkOfferOk('') && !checkOfferOk('v=0\r\n'));
+
+  section('how it connected, from the stats');
+  check('*** two home addresses: direct ***', pairKind(pairStats({ candidateType: 'host', address: '192.168.1.5' }, { candidateType: 'host', address: '192.168.1.9' })) === 'direct');
+  check('*** an address in Tailscale\'s range (100.64.0.0/10): the private network ***',
+    pairKind(pairStats({ candidateType: 'host', address: '100.97.79.13' }, { candidateType: 'host', address: '100.109.161.5' })) === 'private');
+  check('...and its IPv6 range', pairKind(pairStats({ candidateType: 'host', address: 'fd7a:115c:a1e0::1' }, { candidateType: 'srflx', address: '203.0.113.4' })) === 'private');
+  check('100.128.x is NOT Tailscale\'s (outside the /10)', pairKind(pairStats({ candidateType: 'srflx', address: '100.128.0.1' }, { candidateType: 'srflx', address: '203.0.113.4' })) === 'direct');
+  check('a relay candidate: relay', pairKind(pairStats({ candidateType: 'relay', address: '198.51.100.2' }, { candidateType: 'host', address: '10.0.0.2' })) === 'relay');
+  check('no pair worked: null', pairKind([{ id: 'P', type: 'candidate-pair', state: 'failed' }]) === null);
+  check('no transport record: the nominated succeeded pair is used',
+    pairKind(pairStats({ candidateType: 'host', address: '100.70.0.1' }, { candidateType: 'host', address: '10.0.0.2' }).slice(1)) === 'private');
+  check('every outcome has words, and none says "her screen"', ['checking', 'direct', 'private', 'relay', 'failed', 'not-on', 'refused', 'no-answer']
+    .every((k) => typeof CHECK_WORDS[k] === 'string' && CHECK_WORDS[k].length > 10) && !/her screen/i.test(J(CHECK_WORDS)));
+
+  section('*** the page\'s half ***');
+  {
+    const link = fakeLink(); const { PC, made } = fakePC(pairStats({ candidateType: 'host', address: '100.97.79.13' }, { candidateType: 'host', address: '100.109.161.5' }));
+    const clock = fakeClock();
+    const c = createConnectionCheck({ link, toScreen: 'dev-kitchen', PeerConnection: PC, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const p = c.run();
+    await settle();
+    const offer = link.sent.find((s) => s.kind === 'offer');
+    check('*** it offers a check to the one screen asked for, with a data channel and nothing else ***',
+      offer?.purpose === CHECK_PURPOSE && offer.toScreen === 'dev-kitchen' && made[0].channels.length === 1 && made[0].transceivers.length === 0, J(offer));
+    link.deliver({ kind: 'answer', purpose: CHECK_PURPOSE, session: c.session, sdp: 'A' });
+    await settle();
+    made[0].channels[0].onopen();
+    const r = await p;
+    check('*** the channel opens: "Connects through your private network" ***', r.outcome === 'private', J(r));
+    check('...and it says goodbye and closes its half', link.sent.at(-1)?.kind === 'bye' && made[0].closed && link.listeners() === 0);
+  }
+  {
+    const link = fakeLink(); const { PC } = fakePC(); const clock = fakeClock();
+    const c = createConnectionCheck({ link, toScreen: 'x', PeerConnection: PC, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const p = c.run(); await settle();
+    link.deliver({ kind: 'bye', purpose: CHECK_PURPOSE, session: c.session, reason: 'not-here' });
+    check('*** the server found no such screen online: "The screen isn\'t on" ***', (await p).outcome === 'not-on');
+  }
+  {
+    const link = fakeLink(); const { PC } = fakePC(); const clock = fakeClock();
+    const c = createConnectionCheck({ link, toScreen: 'x', PeerConnection: PC, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const p = c.run(); await settle();
+    link.deliver({ kind: 'bye', purpose: CHECK_PURPOSE, session: c.session, reason: 'not-allowed' });
+    check('refused (not allowed to drive it): "does not allow a check from this account"', (await p).outcome === 'refused');
+  }
+  {
+    const link = fakeLink(); const { PC } = fakePC(); const clock = fakeClock();
+    const c = createConnectionCheck({ link, toScreen: 'x', PeerConnection: PC, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const p = c.run(); await settle();
+    clock.fireAll(); await settle();
+    check('*** nothing comes back in time: "The screen did not answer" (it may need updating) ***', (await p).outcome === 'no-answer');
+  }
+  {
+    const link = fakeLink(); const { PC, made } = fakePC([{ id: 'c1', type: 'local-candidate', candidateType: 'srflx', address: '203.0.113.9' }]);
+    const clock = fakeClock();
+    const c = createConnectionCheck({ link, toScreen: 'x', PeerConnection: PC, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const p = c.run(); await settle();
+    link.deliver({ kind: 'answer', purpose: CHECK_PURPOSE, session: c.session, sdp: 'A' });
+    await settle();
+    made[0].connectionState = 'failed'; made[0].onconnectionstatechange(); await settle();
+    const r = await p;
+    check('*** answered but never connected: "Can\'t reach the screen", with what this end offered ***',
+      r.outcome === 'failed' && r.offered?.local?.srflx === 1, J(r));
+  }
+  {
+    const link = fakeLink(); const { PC } = fakePC(); const clock = fakeClock();
+    const c = createConnectionCheck({ link, toScreen: 'x', PeerConnection: PC, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const p = c.run(); await settle();
+    link.deliver({ kind: 'bye', purpose: 'call', session: c.session, reason: 'not-here' });
+    link.deliver({ kind: 'bye', purpose: CHECK_PURPOSE, session: 'someone-else', reason: 'not-here' });
+    await settle();
+    let done = false; p.then(() => { done = true; }); await settle();
+    check('another purpose or another session is not this check\'s answer', !done);
+    c.stop();
+  }
+
+  section('*** the screen\'s half: silent, and only on the server\'s word ***');
+  {
+    const link = fakeLink(); const { PC, made } = fakePC(); const clock = fakeClock();
+    const a = createCheckAnswerer({ link, PeerConnection: PC, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    link.deliver({ kind: 'offer', purpose: CHECK_PURPOSE, session: 's1', sdp: DATA, by: 'acct' });
+    await settle();
+    check('*** no `byDrive` stamp (an older server, or none at all): refused, nothing opened ***',
+      link.sent.at(-1)?.kind === 'bye' && link.sent.at(-1)?.reason === 'not-allowed' && made.length === 0, J(link.sent));
+    link.deliver({ kind: 'offer', purpose: CHECK_PURPOSE, session: 's2', sdp: DATA + 'm=audio 9 X 111\r\na=recvonly\r\n', by: 'acct', byDrive: true });
+    await settle();
+    check('*** an offer with audio in it is refused, even with the stamp ***', link.sent.at(-1)?.reason === 'not-a-check' && made.length === 0);
+    link.deliver({ kind: 'offer', purpose: CHECK_PURPOSE, session: 's3', sdp: DATA, by: 'acct', byDrive: true });
+    await settle();
+    const ans = link.sent.at(-1);
+    check('*** a real check is answered, by itself: one connection, no tracks handled, an answer sent ***',
+      ans?.kind === 'answer' && ans.session === 's3' && made.length === 1 && a.open() === 1 && !made[0].ontrack, J(ans));
+    clock.fireAll(); await settle();
+    check('*** it closes by itself after its hold time ***', made[0].closed && a.open() === 0);
+    link.deliver({ kind: 'offer', purpose: CHECK_PURPOSE, session: 's4', sdp: DATA, by: 'acct', byDrive: true });
+    link.deliver({ kind: 'offer', purpose: CHECK_PURPOSE, session: 's5', sdp: DATA, by: 'acct', byDrive: true });
+    link.deliver({ kind: 'offer', purpose: CHECK_PURPOSE, session: 's6', sdp: DATA, by: 'acct', byDrive: true });
+    await settle();
+    check('two at once, and a third is told "busy"', a.open() === 2 && link.sent.some((s) => s.session === 's6' && s.reason === 'busy'));
+    link.deliver({ kind: 'bye', purpose: CHECK_PURPOSE, session: 's4' });
+    check('the page\'s goodbye closes its half', a.open() === 1);
+    link.deliver({ kind: 'offer', purpose: 'call', session: 'c1', sdp: DATA, by: 'acct', byDrive: true });
+    await settle();
+    check('a call offer is not this half\'s business', !link.sent.some((s) => s.session === 'c1'));
+    a.destroy();
+    check('destroyed: everything closed, nothing listening', a.open() === 0 && link.listeners() === 0);
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

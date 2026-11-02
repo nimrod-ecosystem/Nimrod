@@ -2322,6 +2322,11 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                             ok, why = _check_in_allowed(user, person_id), "not-allowed"
                         elif purpose == "phone-mic":
                             ok, why = can_drive, "not-allowed"
+                        elif purpose == "check":
+                            # "Check it works" (row 2.167, 2026-11-02; call_check.js argues it): a test connection the
+                            # screen answers by itself, revealing its network addresses with nobody answering - so only
+                            # somebody who may already drive the screen, not everybody who may call it.
+                            ok, why = can_drive, "not-allowed"
                         else:
                             ok, why = _may_call(user, person_id), "not-allowed"
                         if not ok:
@@ -2347,6 +2352,9 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                     # intercom offer - the name the room should show (the list's, else their display name).
                     stamped["signal"]["byOwner"] = user == room_key
                     stamped["signal"]["byScreen"] = from_screen   # row 2.167: placed from a screen, so it rings
+                    # row 2.167 (2026-11-02): a check is answered only on the server's word that its sender may drive.
+                    if sig.get("purpose") == "check":
+                        stamped["signal"]["byDrive"] = bool(can_drive)
                     # row 2.167 (2026-10-31): a CALL's offer says who is calling as the screen knows them - the caller's
                     # card among the owner's people (its name and, for its picture, its id). Before, only the page's own
                     # words for itself reached the screen. A purpose-less offer is a call too (an older caller page).

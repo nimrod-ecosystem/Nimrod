@@ -293,7 +293,7 @@ def stamp_signal(msg: dict, user: str) -> dict:
     return {"type": "signal", "signal": sig}
 
 
-SERVER_STAMPS = ("byOwner", "byName", "byPerson", "byKey", "byScreen")
+SERVER_STAMPS = ("byOwner", "byName", "byPerson", "byKey", "byScreen", "byDrive")
 
 
 # WHO A CALLER IS, TO REMEMBER AN ANSWER BY (row 2.144, 2026-11-01). A screen asked for subtitles of its person's voice
