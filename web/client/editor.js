@@ -1070,6 +1070,32 @@ export function openSceneEditor(opts = {}) {
     }
     choose(hit.id);
   }
+  // *** ANY PANEL, CHOSEN BY PRESSING IT IN THE VIEW (row 2.145, a "not yet" of step 1; 2026-11-02). *** Until now only a
+  // press INSIDE the panel being edited chose anything there; a press on another panel did what that panel does (an AAC
+  // card spoke, a game moved) while the editor was open. Now it chooses that panel, as its row in the list would. Left to
+  // their owners: the panel already being edited (edit mode chooses inside it), the words while they are shown (above),
+  // the editor itself, a panel's corner buttons and handles, a dialog over the page, and anything outside every panel
+  // (the bar). Not on a page of the site (no panels there).
+  function onPanelPick(e) {
+    if (closed || pageScope) return;
+    const n = e.target;
+    const t = n && n.nodeType === 1 ? n : n?.parentElement || null;
+    if (!t || !t.isConnected || box.contains(t)) return;
+    if (t.closest?.('.em-card, .em-bar, .em-handles, .k-promote, .k-editc, .k-barc, [role="dialog"], [data-sound-dialog]')) return;
+    if (wordsOn && wordsHit(t)) return;
+    let id = null;
+    try { id = arr.panelAt?.(t) || null; } catch { id = null; }
+    if (!id) return;
+    const cur = editingNow();
+    if (cur && cur.id === id) return;
+    if (e.type !== 'touchstart') e.preventDefault();
+    e.stopPropagation();
+    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+    if (e.type !== 'click') return;
+    activity();
+    choose(nodeIdFor(id));
+  }
+  if (!pageScope) for (const ev of VIEW_PRESSES) win.addEventListener(ev, onPanelPick, true);
   function setWords(on) {
     const want = !!on;
     if (closed || want === wordsOn) return wordsOn;
@@ -1299,6 +1325,7 @@ export function openSceneEditor(opts = {}) {
     // (step 3) The words' watch and the window's listeners go with it. Words changed in place stay as they are shown (the
     // change is kept to copy), as the wording bar left them; their mark goes with the words being shown.
     for (const ev of VIEW_PRESSES) win.removeEventListener(ev, onViewPress, true);
+    for (const ev of VIEW_PRESSES) win.removeEventListener(ev, onPanelPick, true);
     try { scanner?.destroy(); } catch { /* gone */ }
     scanner = null;
     try { delete doc.documentElement.dataset.seWordsShown; } catch { /* no page */ }

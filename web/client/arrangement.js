@@ -2405,10 +2405,25 @@ export function createArrangement({
     return true;
   }
 
+  const editBoxOf = (id) => (id === ROOM_PANEL_ID ? roomHost : null) || promoteBox(id)?.box || recFor(id)?.el || null;
+  /** (row 2.145, 2026-11-02) The panel a pressed element is in: the SMALLEST panel box holding it (a module in a room's
+   *  slot is inside the room's box too), or null. For the one editor's "press a panel to choose it". */
+  function panelAt(node) {
+    if (!node || typeof node.closest !== 'function') return null;
+    let best = null, bestArea = Infinity;
+    for (const r of editPanels()) {
+      const b = editBoxOf(r.id);
+      if (!b || typeof b.contains !== 'function' || !b.contains(node)) continue;
+      let area = Infinity;
+      try { const rr = b.getBoundingClientRect(); area = rr.width * rr.height; } catch { area = Infinity; }
+      if (area < bestArea || best === null) { best = r.id; bestArea = area; }
+    }
+    return best;
+  }
   const editMode = corners && typeof document !== 'undefined' ? createEditMode({
     bus, doc: document,
     recs: editPanels,
-    boxOf: (id) => (id === ROOM_PANEL_ID ? roomHost : null) || promoteBox(id)?.box || recFor(id)?.el || null,
+    boxOf: editBoxOf,
     settings: () => { try { return settings?.get?.() || {}; } catch { return {}; } },
     onChange: () => {
       try { ensureCorners(); } catch { /* not load-bearing */ }
@@ -2526,6 +2541,7 @@ export function createArrangement({
     // ---- edit any module in place (2026-10-02; edit_mode.js) ----
     editPanel,
     editing: () => editMode?.active() || null,
+    panelAt,
     editSelect: (targetId = null) => editMode?.select(targetId) || null,
     editSelection: () => editMode?.selection() || null,
     // The records edit mode can edit -- the panels, then the room (row 2.145 step 1, 2026-10-31: the one editor's scene

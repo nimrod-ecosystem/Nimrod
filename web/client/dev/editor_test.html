@@ -229,6 +229,18 @@ try {
   row(ed, 'panel:b1').click();
   check('the panel\'s own row chooses the whole sign (edit mode\'s "nothing named")', J(t.arr.editing()) === J({ id: 'b1', target: null })
     && ed.selected() === 'panel:b1');
+  // (row 2.145, 2026-11-02) a press on ANOTHER panel in the view chooses that panel, as its row would.
+  check('the arrangement says which panel a pressed element is in (the smallest box holding it)',
+    t.arr.panelAt(t.arr.recFor('k2').el) === 'k2' && t.arr.panelAt(word) === 'b1' && t.arr.panelAt(document.body) === null);
+  const clockEl = t.arr.recFor('k2').el.querySelector('*') || t.arr.recFor('k2').el;
+  clockEl.click();
+  check('*** a press on the clock in the view, while the sign is being edited, chooses the clock (and the tree follows) ***',
+    t.arr.editing()?.id === 'k2' && ed.selected() === 'panel:k2', J([t.arr.editing(), ed.selected()]));
+  const villageEl = t.arr.recFor('v1').el.querySelector('*') || t.arr.recFor('v1').el;
+  villageEl.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, cancelable: true }));
+  villageEl.click();
+  check('...and on the village, the village', t.arr.editing()?.id === 'v1' && /^panel:v1/.test(ed.selected()), J([t.arr.editing(), ed.selected()]));
+  row(ed, 'panel:b1').click();
 
   // ============================================================================================
   section('the inspector: the same rows as edit mode, written the same way');

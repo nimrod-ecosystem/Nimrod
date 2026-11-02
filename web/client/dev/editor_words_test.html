@@ -156,7 +156,11 @@ try {
   check('Done is still the first button', ed.el.querySelector('button')?.dataset.se === 'done');
   demoPresses = 0;
   t.w('[data-go]').click();
-  check('*** words hidden: a press on words in the view presses as always ***', demoPresses === 1 && ed.selected() === ROOT_ID);
+  // (row 2.145, 2026-11-02, DELIBERATELY changed: it used to "press as always". A press on a panel in the view now
+  // chooses that panel, as its row would, and does not press what is in it: editor.js onPanelPick.)
+  check('*** words hidden: a press on a panel\'s words in the view chooses that panel, and presses nothing ***',
+    demoPresses === 0 && t.arr.editing()?.id === 'w1' && /^panel:w1/.test(ed.selected()), J([demoPresses, t.arr.editing(), ed.selected()]));
+  row(ed, ROOT_ID).click();
 
   // ============================================================================================
   section('*** the words shown: a panel\'s own words tagged, the site\'s words as leaves ***');
@@ -305,7 +309,8 @@ try {
     && !document.documentElement.hasAttribute('data-se-words-shown') && ed.tree().nodes.get('panel:b1/words')?.kind === 'part');
   demoPresses = 0;
   t.w('[data-go]').click();
-  check('*** ...and a press on words presses again ***', demoPresses === 1);
+  // (2026-11-02, DELIBERATELY: with the words hidden again, a press chooses the panel, as above.)
+  check('*** ...and a press on words chooses its panel again, pressing nothing ***', demoPresses === 0 && t.arr.editing()?.id === 'w1');
   ed.close();
 
   // ============================================================================================
