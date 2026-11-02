@@ -30,6 +30,9 @@
 //     at 1.91 to 2.71. Seven of those twelve (cold, help, hot, no, pain, stop, yes) fail the same
 //     way in the board's own drawings on a white card today; five (bedpan, change, suction,
 //     tired, wait) are words the board draws in its ink and Design drew in the amber accent.
+//     2026-11-02 (Design note 57.5): Design lightened that people-and-question blue to #2a8a9e (4.20:1 on #1b1d22,
+//     4.02:1 on white, measured again by Code), so `color` now clears 3:1 on the pinned dark card (worst 3.93). On white
+//     the light accents still hold it to 1.91.
 //
 // (row 2.141, Design item 48, 2026-10-31) A TENTH SET, `halloween`: Design's first set drawn for a
 // HOLIDAY rather than borrowed for one. The 55 core words keep their shapes and change only their tint

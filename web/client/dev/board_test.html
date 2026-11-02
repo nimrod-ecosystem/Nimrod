@@ -1331,8 +1331,10 @@ try {
     check(`*** MEASURED: a core-set card at 1080p is ${Math.round(r.width)}x${Math.round(r.height)}px `
       + `(short side ${Math.round(short)}px, floor is ${72}) ***`, short > 72 * 2);
     check(`...and its word renders at ${Math.round(wordPx)}px`, wordPx >= 24);
+    // A set's drawing is an <img>, the board's own is inline <svg>; either counts (since 2026-11-02 the default
+    // theme's `color` drawing of the first word reads on this card and is used, note 57.5).
     check('...with the symbol still drawn, not dropped',
-      !!cards[0].querySelector('.ab-sym svg')
+      !!cards[0].querySelector('.ab-sym svg, .ab-sym img')
         && !host.querySelector('.ab-grid').classList.contains('ab-tight'));
 
     // AND THE COMPARISON THAT MAKES THE NUMBER MEAN SOMETHING: the 16-card care board on the

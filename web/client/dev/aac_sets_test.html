@@ -133,10 +133,12 @@ try {
     check('the themes with no set of their own: dusk -> night, contrast -> mono, warm -> cozy, forge -> cozy',
       setForTheme('dusk') === 'night' && setForTheme('contrast') === 'mono'
         && setForTheme('warm') === 'cozy' && setForTheme('forge') === 'cozy');
-    check('the default theme gets `color`, drawn in its own accent and link',
+    // Its people and questions were drawn in the theme's link colour (#105666) until 2026-11-02, when Design lightened
+    // them to #2a8a9e so they read on a dark card too (note 57.5).
+    check('the default theme gets `color`, drawn in its own accent, with people and questions in #2a8a9e',
       setForTheme('default') === 'color'
         && setColours('color', 'do').includes(THEMES.default.vars['--accent'].toLowerCase())
-        && setColours('color', 'you').includes(THEMES.default.vars['--link'].toLowerCase()));
+        && setColours('color', 'you').includes('#2a8a9e'));
     // 2026-10-10: 71a3fa1 added 13 season/holiday themes with no line in the map, and the check above
     // failed from then on, as it was written to. Decided in aac_sets.js (best guess, on Mike's list):
     // keep the season's set through its holidays where it reads, else the nearest that reads. Pinned
@@ -225,8 +227,10 @@ try {
       && table[id].highContrast >= 3));
     check('KNOWN, recorded: every single-family set FAILS on the other kind of card',
       DARK.every((id) => table[id].highContrast < 3) && table.cozy.pinned < 3 && table.mono.pinned < 3);
-    check('KNOWN, recorded: `color` clears 3:1 on NO card (1.91 on the pinned card and on white)',
-      Object.values(table.color).every((v) => v < 3), JSON.stringify(table.color));
+    // Since the new blue (2026-11-02) it clears 3:1 on the pinned card (3.93, was 1.91); white is still held down to
+    // 1.91 by the light accents.
+    check('`color` clears 3:1 on the pinned card; KNOWN, recorded: not on white (1.91)',
+      table.color.pinned >= 3.9 && table.color.highContrast < 3, JSON.stringify(table.color));
     // Each theme's own set on that theme's own card: the combination "follow the theme" produces
     // when the board also follows the theme's colours.
     // 2026-10-10: a theme with no set used to throw here (table[null]) and the throw skipped every
@@ -242,10 +246,14 @@ try {
       drawingContrast(setColours('color', n), '#ffffff', null) < 3);
     info(`  color fails on the pinned card (${colorDark.length}): ${colorDark.join(', ')}`);
     info(`  color fails on white (${colorLight.length}): ${colorLight.join(', ')}`);
-    // 15 since the nine words (2026-11-01): `bye` and `please` are drawn in the same people blue (#105666, the colour
-    // Design itself called dim on the dark card, note DU 5).
-    check('color: the 15 words in the default theme’s link colour are the ones that fail on the pinned card',
-      colorDark.length === 15 && colorDark.every((n) => setColours('color', n).includes('#105666')));
+    // Until 2026-11-02 the 15 people-and-question words (#105666, the colour Design itself called dim on the dark card,
+    // note DU 5) were exactly the ones that failed here. Design lightened them to #2a8a9e (note 57.5; 4.20:1 on #1b1d22
+    // and 4.02:1 on white, both measured again by Code), and now none fails.
+    const blue = core('color').filter((n) => setColours('color', n).includes('#2a8a9e'));
+    check('color: no word fails on the pinned card now, the 15 people-and-question words in #2a8a9e included',
+      colorDark.length === 0 && blue.length === 15, `${colorDark.join()} / ${blue.length}`);
+    check('...and that blue clears 3:1 on white as well, so it is not what holds the set down there',
+      blue.every((n) => drawingContrast(setColours('color', n), '#ffffff', null) >= 4));
     // On white, some of those 12 fail in the board's own drawings too (the same light accent in
     // the same word), and some are words the board draws in its ink but Design drew in an accent.
     const alsoOwn = colorLight.filter((n) => drawingContrast(ownColours(n), '#ffffff', '#0a3323')
@@ -311,9 +319,10 @@ try {
       pickSymbol({ name: 'you', setId: 'cozy', guard: true, bg: PINNED_CARD, ink: PINNED_INK }).from === 'own');
     check('...and one that reads is used', pickSymbol({ name: 'you', setId: 'night', guard: true,
       bg: PINNED_CARD, ink: PINNED_INK }).from === 'set');
-    check('...per word: color on the pinned card keeps its green words and gives up its blue ones',
+    // Until 2026-11-02 `you` gave way here; its blue now reads on this card (note 57.5).
+    check('...per word: color on the pinned card keeps its green words and, since the lighter blue, its blue ones',
       pickSymbol({ name: 'do', setId: 'color', guard: true, bg: PINNED_CARD, ink: PINNED_INK }).from === 'set'
-        && pickSymbol({ name: 'you', setId: 'color', guard: true, bg: PINNED_CARD, ink: PINNED_INK }).from === 'own');
+        && pickSymbol({ name: 'you', setId: 'color', guard: true, bg: PINNED_CARD, ink: PINNED_INK }).from === 'set');
     check('a failing drawing that is NO WORSE than the board’s own is kept (it is not a downgrade)',
       pickSymbol({ name: 'help', setId: 'color', guard: true, bg: '#ffffff', ink: '#0a3323' }).from === 'set');
     check('*** a card that cannot be measured keeps the board’s own — unmeasured is "as it was" ***',

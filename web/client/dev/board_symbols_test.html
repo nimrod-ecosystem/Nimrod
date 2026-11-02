@@ -192,11 +192,12 @@ try {
     await theme('default');
     p = b.p();
     const split = CARE.cells.filter(Boolean).map((c, i) => [c.symbol, p.symbolFrom[CARE.cells.indexOf(c)]]);
-    const linkWords = split.filter(([s]) => setColours('color', s).includes('#105666'));
-    check('*** default theme on the pinned card: PER WORD, color’s dark-blue words give way, the rest are used ***',
-      linkWords.length > 0 && linkWords.every(([, f]) => f === 'own')
-        && split.filter(([s]) => !setColours('color', s).includes('#105666')).every(([, f]) => f === 'set:color'),
-      JSON.stringify(split));
+    // 2026-11-02 (Design note 57.5): the people-and-question blue is now #2a8a9e, which reads on the pinned card (it
+    // was #105666 at 2.04:1, and those words gave way to the board's own). Giving way word by word is still checked in
+    // aac_sets_test ("a drawing that would vanish on this card gives way").
+    const blueWords = split.filter(([s]) => setColours('color', s).includes('#2a8a9e'));
+    check('*** default theme on the pinned card: every color word is used, its people-and-question blue ones included ***',
+      blueWords.length > 0 && split.every(([, f]) => f === 'set:color'), JSON.stringify(split));
     b.inst.destroy();
   }
 
