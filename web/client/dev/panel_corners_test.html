@@ -219,7 +219,11 @@ async function tap(el, detail = 1) {
     const arrSrc = await (await fetch('../arrangement.js')).text();
     const editCss = document.getElementById('em-css')?.textContent || [...document.querySelectorAll('style')].map((x) => x.textContent).join('\n');
     check('*** both corners drop their fade under prefers-reduced-motion ***',
-      /prefers-reduced-motion: reduce\)\{\.k-promote\{transition:none\}\}/.test(arrSrc) && /prefers-reduced-motion: reduce\)\{\.k-editc\{transition:none\}\}/.test(editCss));
+      /prefers-reduced-motion: reduce\)\{\.k-promote\{transition:none\}\}/.test(arrSrc)
+        // (row 2.171, 2026-11-02) the bar's corner button .k-barc shares the edit corner's rule
+        && /prefers-reduced-motion: reduce\)\{\.k-editc(,\.k-barc)?\{transition:none\}\}/.test(editCss));
+    check('...and the bar\'s corner button (row 2.171) drops it too, and shows by the same rule',
+      /prefers-reduced-motion: reduce\)\{\.k-editc,\.k-barc\{transition:none\}\}/.test(editCss) && /\.k-barc\{position:absolute/.test(editCss));
     check('arrangement.js draws ⤢ through the same rule (cornerShowCss)', /\$\{cornerShowCss\('\.k-promote'\)\}/.test(arrSrc));
 
     section('stop');

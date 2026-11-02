@@ -1344,7 +1344,7 @@ export function createArrangement({
     if (promoted === id) unmarkPromoted();
     // Out of the slot: the cell is left empty, with nothing of this panel on it.
     slotRecs.splice(at, 1);
-    cell.querySelectorAll(':scope > .k-promote, :scope > .k-editc').forEach((b) => b.remove());
+    cell.querySelectorAll(':scope > .k-promote, :scope > .k-editc, :scope > .k-barc').forEach((b) => b.remove());
     cell.removeAttribute('data-kind');
     delete cell.dataset.focused;
     layout = { ...layout, slots: layout.slots.map((s) => (s === id ? null : s)), placed: [...(layout.placed || []), entry] };
@@ -1988,7 +1988,7 @@ export function createArrangement({
       // THE ✎ CORNER (2026-10-02, edit_mode.js): beside ⤢, shown when it is; pressing it edits this panel
       // (or stops). It SAYS what was pressed on the bus, so the corner, a menu row and a switch are one press.
       let e = pb.box.querySelector(':scope > .k-editc');
-      if (!editCornerOn()) { e?.remove(); continue; }
+      if (!editCornerOn()) { e?.remove(); pb.box.querySelector(':scope > .k-barc')?.remove(); continue; }
       if (!e) {
         ensureEditCss(document);
         e = document.createElement('button');
@@ -2007,6 +2007,24 @@ export function createArrangement({
       e.setAttribute('aria-label', sayE);
       e.setAttribute('aria-pressed', String(editing));
       e.title = sayE;
+      // THE BAR'S CORNER BUTTON (row 2.171; Mike, 2026-11-02: "Maybe show/hide transport bar should have a button by
+      // edit/promote."). Beside ✎, shown when the corner is: the same press as the bar's own "▾ Hide" and the T key
+      // (bar_toggle.js `system/bar-toggle`), so its quiet period and every way back are the same. Only where the ✎ is.
+      let h = pb.box.querySelector(':scope > .k-barc');
+      if (!h) {
+        h = document.createElement('button');
+        h.type = 'button';
+        h.className = 'k-barc';
+        h.textContent = '▾';
+        const sayH = 'Hide or show the bar (the T key does the same)';
+        h.setAttribute('aria-label', sayH);
+        h.title = sayH;
+        h.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          try { bus?.publish?.('system/bar-toggle', { from: 'corner' }); } catch (err) { console.error('arrangement: bar', err); }
+        });
+        pb.box.append(h);
+      }
     }
   }
 

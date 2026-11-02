@@ -532,7 +532,11 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
 ${cornerShowCss('.k-editc')}
 [data-editing]>.k-editc{opacity:1;pointer-events:auto}
 .k-room>.k-editc{right:6px}
-@media (prefers-reduced-motion: reduce){.k-editc{transition:none}}`;
+.k-barc{position:absolute;right:106px;bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
+  margin:0;padding:0;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font:600 20px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;pointer-events:none;transition:opacity .15s}
+${cornerShowCss('.k-barc')}
+@media (prefers-reduced-motion: reduce){.k-editc,.k-barc{transition:none}}`;
   (doc.head || doc.documentElement).append(s);
 }
 
@@ -622,7 +626,7 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     const node = e.target instanceof Element ? e.target : null;
     // Its own controls, and the corners, work as themselves.
     // (row 2.110: and a room piece's handles, room_handles.js, which drag, scale and turn the chosen piece.)
-    if (!node || node.closest('.em-card, .em-bar, .k-promote, .k-editc, .em-handles')) { armIdle(); return; }
+    if (!node || node.closest('.em-card, .em-bar, .k-promote, .k-editc, .k-barc, .em-handles')) { armIdle(); return; }
     // A panel nested in this one (a module in a room's slot) works as itself (`passThrough`, above).
     const pass = typeof active.rec?.passThrough === 'string' && active.rec.passThrough ? node.closest(active.rec.passThrough) : null;
     if (pass && pass !== active.box && active.box.contains(pass)) { armIdle(); return; }

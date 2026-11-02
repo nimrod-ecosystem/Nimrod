@@ -57,7 +57,7 @@
 // Pure DOM, no imports: the CSS rule both corner files use (`cornerShowCss`) and the watcher kiosk.js runs.
 
 export const CORNER_BOXES = Object.freeze(['.k-cell', '.k-pcell', '.k-stage', '.k-room']);
-export const CORNER_BUTTONS = '.k-promote, .k-editc';
+export const CORNER_BUTTONS = '.k-promote, .k-editc, .k-barc';   // .k-barc: hide or show the bar (row 2.171, 2026-11-02)
 export const CORNER_GRACE_MS = 600;
 export const CORNER_ZONE_PX = 48;           // row 2.155: how near the corner's buttons a mouse has to be
 export const CORNER_TAP_MS = 3000;          // the bar's own time (dashboard_nest.js BAR_HIDE_MS); kiosk.js passes that
@@ -76,7 +76,7 @@ export function cornerShowCss(btn) {
 /** Whether the point (x, y) is within `pad` px of `box`'s corner buttons, where they sit now (row 2.155). */
 export function nearCorner(box, x, y, pad = CORNER_ZONE_PX) {
   let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
-  for (const btn of box.querySelectorAll(':scope > .k-promote, :scope > .k-editc')) {
+  for (const btn of box.querySelectorAll(':scope > .k-promote, :scope > .k-editc, :scope > .k-barc')) {
     const q = btn.getBoundingClientRect();
     if (!q.width && !q.height) continue;
     l = Math.min(l, q.left); t = Math.min(t, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom);
@@ -89,7 +89,7 @@ export function nearCorner(box, x, y, pad = CORNER_ZONE_PX) {
 export function cornerBoxesAt(el, stop = null) {
   const out = [];
   for (let n = el instanceof Element ? el : null; n && n !== stop; n = n.parentElement) {
-    if (n.matches(BOX_SEL) && n.querySelector(`:scope > .k-promote, :scope > .k-editc`)) out.push(n);
+    if (n.matches(BOX_SEL) && n.querySelector(`:scope > .k-promote, :scope > .k-editc, :scope > .k-barc`)) out.push(n);
   }
   return out;
 }

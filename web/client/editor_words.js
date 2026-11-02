@@ -55,7 +55,7 @@ export const WORDS_KINDS = Object.freeze({ own: 'words', site: 'sitewords', grou
 const safe = (fn, fallback = null) => { try { const v = fn(); return v === undefined ? fallback : v; } catch { return fallback; } };
 const HAS_LETTER = /\p{L}/u;
 // Never the site's words: the editor, the bar, edit mode's own controls and a panel's corners, live and hidden things.
-const NOT_WORDS = '[data-scene-editor], [data-page-editor], .em-bar, .em-card, .em-handles, .k-editc, .k-promote, '
+const NOT_WORDS = '[data-scene-editor], [data-page-editor], .em-bar, .em-card, .em-handles, .k-editc, .k-barc, .k-promote, '
   + '[data-live-words], [role="timer"], [aria-live], [contenteditable="true"], [contenteditable=""], [hidden], svg';
 const NOT_WORDS_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'INPUT', 'TEXTAREA', 'SELECT', 'OPTION']);
 

@@ -259,6 +259,20 @@ const mouseNearBar = async (bar) => {
     check('*** the quiet period over (400 ms here), a touch brings it back as before ***', shown(), J(k.barToggle()));
     up();
 
+    // (row 2.171, Mike 2026-11-02: "Maybe show/hide transport bar should have a button by edit/promote.")
+    {
+      const corner = await until(() => !!root.querySelector('.k-barc')) && root.querySelector('.k-barc');
+      check('*** each panel\'s corner has the bar\'s button, beside ✎ and ⤢ ***', !!corner && !!corner.parentElement.querySelector(':scope > .k-editc')
+        && !!corner.parentElement.querySelector(':scope > .k-promote') && /bar/.test(corner.getAttribute('aria-label') || ''));
+      const was = shown();
+      corner.click();
+      await sleep(40);
+      check('*** pressing it hides or shows the bar, as T does ***', shown() !== was, `${was} -> ${shown()} ${bar().className}`);
+      corner.click();
+      await sleep(40);
+      check('...and pressing it again puts it back', shown() === was, `${shown()} ${bar().className}`);
+    }
+
     // H no longer opens the screen picker; S does. (T for the bar, row 2.72: and H no longer toggles the bar -- freed.)
     const picker = () => root.querySelector('[data-screens]');
     const shownBeforeH = shown();
