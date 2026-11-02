@@ -2238,6 +2238,11 @@ export async function mountKiosk(root, {
   // the edit that gives way must be the one whose author can be told, and only this screen can tell anyone.
   // Used for this doc, a swapped-in screen's, and a dashboard's own (handed to view.js as `ctx.conflictPrefer`).
   const CONFLICT_PREFER = 'theirs';
+  // *** A LAYOUT SAVE MERGES THE PLACED LIST BY ID (2026-11-02; the widening doc_merge.js `keyPlaced` left open). ***
+  // Merged by position, a panel added or taken out on another device made ANY change here a clash, so this screen's
+  // move was dropped (the one editor's model, built once, made that certain after an add). Home and the composer
+  // already merge by id; now every layout save here and in view.js does, so the rule does not depend on the host.
+  const LAYOUT_MERGE = Object.freeze({ prefer: CONFLICT_PREFER, byId: true });
   const settings = stateFor('settings', {
     merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: CONFLICT_PREFER }),
     onLost: (lost) => sayLostEdit(bootProfileId, lost),
@@ -2325,7 +2330,7 @@ export async function mountKiosk(root, {
           // 2026-10-04: the change waited on the screen before saving, and the doc moved on meanwhile (another
           // device, heard by the poll): merged onto it, never laid over it -- the same rule as a refused write.
           // The doc's echo then carries the merge to the screen (`applySwapLayout`).
-          const m = mergeLayoutSave(base, next, was.layout ?? null, { prefer: CONFLICT_PREFER });
+          const m = mergeLayoutSave(base, next, was.layout ?? null, LAYOUT_MERGE);
           if (m.lost.length) sayLostEdit(swapDoc.id, m.lost);
           d.set({ kiosk: { ...was, layout: m.layout } });
           return;
@@ -2340,7 +2345,7 @@ export async function mountKiosk(root, {
         // `next` (what the edit drew) to the merge here, the least disruptive way (`applySaved`), else rebuilt in
         // place as a swapped-in screen's is (`applySwapLayout`). Never a reload under the person editing.
         const cur = (settings.get() || {}).kiosk || {};
-        const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: CONFLICT_PREFER });
+        const m = mergeLayoutSave(base, next, cur.layout ?? null, LAYOUT_MERGE);
         expectLayoutSig = JSON.stringify(m.layout ?? null);
         settings.set({ kiosk: { ...cur, layout: m.layout } });
         if (m.lost.length) sayLostEdit(bootProfileId, m.lost);
@@ -3550,7 +3555,7 @@ export async function mountKiosk(root, {
       save: savable ? (next, base) => {
         if (!own && swapRec && swapDoc !== swapRec) return undefined;     // swapped away: that doc is closed
         const cur = (doc.get?.() || {}).kiosk || {};
-        const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: CONFLICT_PREFER });
+        const m = mergeLayoutSave(base, next, cur.layout ?? null, LAYOUT_MERGE);
         if (own) { if (JSON.stringify(m.layout ?? null) !== JSON.stringify(cur.layout ?? null)) expectLayoutSig = JSON.stringify(m.layout ?? null); }
         else if (swapRec) swapRec.shown = m.layout ?? null;
         doc.set({ kiosk: { ...cur, layout: m.layout } });

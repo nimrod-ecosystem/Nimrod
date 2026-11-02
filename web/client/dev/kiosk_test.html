@@ -4609,6 +4609,19 @@ const toTab = (m, id) => {
         await pollAsync(() => /not kept/.test(k.note() || '') && /the layout/.test(k.note() || '') && /another device/.test(k.note() || ''), 4000),
         String(k.note()));
       check(`...(${c.tag}) and the screen never reloaded`, reloads === 0, `reloads=${reloads}`);
+
+      // 1d. (2026-11-02, kiosk.js LAYOUT_MERGE) The other device TAKES A OUT; here, the windows move B. Merged by position
+      // the list's new shape made this a clash and B's move was dropped; merged by id, both stand.
+      await remote(S.id, (d) => ({ ...d, kiosk: { ...(d.kiosk || {}), layout: { ...(d.kiosk?.layout || {}),
+        placed: (d.kiosk?.layout?.placed || []).filter((e) => e && e.id !== a.id) } } }));
+      check(`(setup, ${c.tag}) the screen heard A taken out`, await pollAsync(() => !placedOf(docNow())[a.id]), JSON.stringify(docNow()));
+      ed.model.select(b.id);
+      ed.model.set('x', 25);
+      check(`*** ${c.name}: A taken out there, B moved here -- both are saved (merged by id) ***`,
+        await pollAsync(async () => { const p = await savedPlaced(); return !p[a.id] && p[b.id]?.x === 25; }),
+        JSON.stringify(await savedPlaced()));
+      check(`...(${c.tag}) and B is where it was put, on the screen`, await pollAsync(() => shownX(b.id) === 25), String(shownX(b.id)));
+      check(`...(${c.tag}) and the screen still never reloaded`, reloads === 0, `reloads=${reloads}`);
       try { k.closeEditView(); } catch { /* gone */ }
       k.destroy();
       root.remove();

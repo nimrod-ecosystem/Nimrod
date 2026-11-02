@@ -172,6 +172,8 @@ export function mergeLayoutSave(base, next, nowSaved, { prefer = 'theirs', byId 
  * with entries only this side has after it, in this side's order.
  *   Opt-in, not the rule for every writer: the kiosk's and view.js's writers were proved against the positional rule
  *   (kiosk_test), and widening it under them is its own change -- on Mike's list (2026-10-04).
+ *   (2026-11-02: that change is made -- kiosk.js LAYOUT_MERGE and view.js `saveMerged` pass `byId` too. The flag stays
+ *   for any writer whose list is not a set of entries by id.)
  * A list whose entries do not all carry a distinct string `id` is left to the positional rule.
  */
 function keyPlaced(sides) {

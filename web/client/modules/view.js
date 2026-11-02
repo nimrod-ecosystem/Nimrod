@@ -596,7 +596,8 @@ function dashboardFactory(ctx) {
     }
     function saveMerged(next, base) {
       const cur = settingsHandle.get?.()?.kiosk || {};
-      const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: conflictPrefer });
+      // (2026-11-02: the placed list by id, as the kiosk's own saves -- kiosk.js LAYOUT_MERGE says why.)
+      const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: conflictPrefer, byId: true });
       rawLayout = m.layout;
       ctx.expectLayout?.(m.layout);
       settingsHandle.set({ kiosk: { ...cur, layout: m.layout } });
