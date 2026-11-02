@@ -4635,6 +4635,15 @@ const toTab = (m, id) => {
       kbus.publish(verbTopic('back'));
       check('*** back with nothing chosen closes it, and the scan is the panels\' again ***',
         await settled(() => !ed2.isOpen() && !k.editView() && !k.editScanHeld() && !k.runtime.router.isPaused(), 2000));
+      // (row 2.145, Mike 2026-11-02: "I should be able to get to this editor by pressing that button.") The ✎ corner.
+      kbus.publish('shell/edit-panel', { id: a.id, from: 'corner' });
+      check('*** the ✎ corner opens the one editor, on its panel ***',
+        await settled(() => !!k.sceneEditor() && k.arrangement?.()?.editing?.()?.id === a.id, 2000)
+          || await settled(() => !!k.sceneEditor(), 500), JSON.stringify({ scene: !!k.sceneEditor(), view: k.editView()?.kind }));
+      kbus.publish('shell/edit-panel', { id: a.id, from: 'corner' });
+      await sleep(50);
+      check('...a second press (stop editing) does not open it again or close it by itself', !!k.sceneEditor() || !k.editView());
+      k.closeEditView();
       k.destroy();
       root.remove();
 

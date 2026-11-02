@@ -67,7 +67,7 @@ import {
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, QUICK_SWAP_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
-  PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC, CALL_HANGUP_TOPIC, CALL_OUTGOING_TOPIC,
+  PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC, CALL_HANGUP_TOPIC, CALL_OUTGOING_TOPIC, EDIT_PANEL_TOPIC,
 } from './actions.js';
 // 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
 // over the panels by the Call module (`openCallView`). `CALL_ENDED` is that module's own "the call is over".
@@ -8764,6 +8764,27 @@ export async function mountKiosk(root, {
   // Row 2.38: the edit view (open / close) and the map (open / close) -- see openEditView above. The map
   // is not offered on an embed: it has no other dashboards to show or go to.
   offsScreen.push(bus.subscribe(SYSTEM_TOPICS.edit, (p) => { claimed(p); toggleEditView(); }));
+  // *** THE ✎ CORNER OPENS THE ONE EDITOR ON ITS PANEL (row 2.145; Mike, 2026-11-02: "The put back button worked. It seems
+  // like this is what the edit button next to the promote button is for. I should be able to get to this editor by
+  // pressing that button."). *** The corner says "edit this panel" on the bus (arrangement.js, `from: 'corner'`), and
+  // edit mode starts on it as before; where the one editor exists (this screen's own dashboards: not a dashboard
+  // module's own path, which has its windows, and not an embed, which has Home's edit bar) the editor opens too, and
+  // since its chosen row follows edit mode, it opens on that panel. A press that turns editing OFF only does that.
+  // At every menu level: the corner is a deliberate press on one panel, not a stop on the menu's switch walk.
+  offsScreen.push(bus.subscribe(EDIT_PANEL_TOPIC, (p) => {
+    if (!p || p.from !== 'corner' || !p.id || p.on === false || embedded || dash?.impl?.edit) return;
+    const ed = editorNow();
+    if (ed && ed.kind === SCENE_EDITOR_KIND) return;     // already open: edit mode's own change moves its choice
+    setTimeout(() => {
+      if (torn) return;
+      // The corner's press toggled edit mode ON (arrangement.js); if it toggled it off, it was a "stop" press.
+      let on = false;
+      try { on = arr?.editing?.()?.id === p.id; } catch { on = false; }
+      if (!on) return;
+      try { openEditView(SCENE_EDITOR_KIND); } catch (err) { console.error('kiosk: the corner and the editor', err); }
+      try { arr?.editPanel?.(p.id, true); } catch { /* the editor shows the dashboard */ }
+    }, 0);
+  }));
   if (!embedded) {
     offsScreen.push(bus.subscribe(SYSTEM_TOPICS.map, (p) => { claimed(p); if (mapWin) closeMap(); else openMap(); }));
   }
