@@ -19,13 +19,15 @@ export const HA_BRIDGE_KEY = 'nimrod:ha-bridge';
 // What a person sees on each action's button, in plain words. The actions are the bridge's (ACTIONS / DOORS there).
 export const ACTION_WORDS = Object.freeze({
   on: 'Turn on', off: 'Turn off', toggle: 'On or off', brighter: 'Brighter', dimmer: 'Dimmer',
-  louder: 'Louder', quieter: 'Quieter', pause: 'Pause or play', lock: 'Lock', unlock: 'Unlock',
+  louder: 'Louder', quieter: 'Quieter', pause: 'Pause or play', next: 'Next song', previous: 'Previous song',
+  lock: 'Lock', unlock: 'Unlock',
   open: 'Open', close: 'Close', stop: 'Stop',
 });
 // Which buttons a thing shows, in this order (a light does not need "Turn on" and "Turn off" beside "On or off").
 export const BUTTONS = Object.freeze({
   light: ['toggle', 'brighter', 'dimmer'], fan: ['toggle'], switch: ['toggle'],
-  media_player: ['on', 'off', 'louder', 'quieter', 'pause'], scene: ['on'], lock: ['lock', 'unlock'], cover: ['open', 'close'],
+  // (row 2.143, 2026-11-02) Music Assistant's speakers are media players in Home Assistant: next and previous song too.
+  media_player: ['on', 'off', 'previous', 'pause', 'next', 'louder', 'quieter'], scene: ['on'], lock: ['lock', 'unlock'], cover: ['open', 'close'],
 });
 
 const defaultStorage = () => { try { return globalThis.localStorage || null; } catch { return null; } };
@@ -53,6 +55,10 @@ export function stateWords(thing = {}) {
   if (s === 'unavailable' || s === 'unknown' || !s) return 'Not answering';
   if (thing.domain === 'scene') return '';
   if (thing.domain === 'light' && s === 'on' && Number.isFinite(thing.brightness)) return `On, ${Math.round((thing.brightness / 255) * 100)}%`;
+  // (row 2.143) A speaker playing says what: "Playing: Clair de Lune, Debussy".
+  if (thing.domain === 'media_player' && (s === 'playing' || s === 'paused') && thing.title) {
+    return `${s === 'playing' ? 'Playing' : 'Paused'}: ${thing.title}${thing.artist ? `, ${thing.artist}` : ''}`;
+  }
   return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
 }
 

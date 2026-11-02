@@ -76,7 +76,15 @@ try {
   section('words and buttons (pure)');
   const lamp = { entity_id: 'light.lamp', domain: 'light', name: 'Lamp', label: 'the lamp by the bed', state: 'on', brightness: 128, actions: ['brighter', 'dimmer', 'off', 'on', 'toggle'] };
   check('*** a light: "On or off", "Brighter", "Dimmer" (not five buttons) ***', J(buttonsFor(lamp).map((b) => b.label)) === J(['On or off', 'Brighter', 'Dimmer']));
-  check('a TV: on, off, louder, quieter, pause or play', J(buttonsFor({ domain: 'media_player', actions: ['on', 'off', 'louder', 'quieter', 'pause'] }).map((b) => b.action)) === J(['on', 'off', 'louder', 'quieter', 'pause']));
+  check('a TV: on, off, louder, quieter, pause or play', J(buttonsFor({ domain: 'media_player', actions: ['on', 'off', 'louder', 'quieter', 'pause'] }).map((b) => b.action)) === J(['on', 'off', 'pause', 'louder', 'quieter']));
+  // (row 2.143, 2026-11-02) a speaker (Music Assistant's are media players) from a bridge that has next and previous too.
+  check('*** a speaker: previous song, pause or play, next song, in that order ***',
+    J(buttonsFor({ domain: 'media_player', actions: ['louder', 'next', 'off', 'on', 'pause', 'previous', 'quieter'] }).map((b) => b.label))
+      === J(['Turn on', 'Turn off', 'Previous song', 'Pause or play', 'Next song', 'Louder', 'Quieter']));
+  check('*** a speaker playing says what: "Playing: Clair de Lune, Debussy" ***',
+    stateWords({ domain: 'media_player', state: 'playing', title: 'Clair de Lune', artist: 'Debussy' }) === 'Playing: Clair de Lune, Debussy'
+      && stateWords({ domain: 'media_player', state: 'paused', title: 'Clair de Lune' }) === 'Paused: Clair de Lune'
+      && stateWords({ domain: 'media_player', state: 'playing' }) === 'Playing');
   check('a lock the bridge offers no actions for (doors off): no buttons', buttonsFor({ domain: 'lock', actions: [] }).length === 0);
   check('states in words: "On, 50%", "Off", "Not answering"; a scene has none', stateWords(lamp) === 'On, 50%' && stateWords({ domain: 'fan', state: 'off' }) === 'Off'
     && stateWords({ domain: 'light', state: 'unavailable' }) === 'Not answering' && stateWords({ domain: 'scene', state: 'scening' }) === '');

@@ -121,6 +121,17 @@ try:
     check('*** the ticked things as they are now: the lamp on, dimmed; nothing unticked ***', set(st) == {'light.lamp', 'media_player.tv'}
           and st['light.lamp']['state'] == 'on' and st['light.lamp']['label'] == 'the lamp by the bed' and st['light.lamp']['brightness'] == 204, s)
 
+    # ---- (row 2.143, 2026-11-02) a speaker (Music Assistant's are media players): next and previous, and what it is playing
+    check('a speaker offers next and previous', {'next', 'previous'} <= set(st['media_player.tv'].get('actions') or []), st['media_player.tv'])
+    code, s, _ = ask('POST', '/ha/call', {'entity_id': 'media_player.tv', 'action': 'next'})
+    check('*** "next": media_player.media_next_track ***', pretend.calls[-1][:2] == ('media_player', 'media_next_track'), (code, s, pretend.calls[-1:]))
+    pretend.devices['media_player.tv']['state'] = 'playing'
+    pretend.devices['media_player.tv']['attributes'].update({'media_title': 'Clair de Lune', 'media_artist': 'Debussy', 'entity_picture': '/secret'})
+    code, s, _ = ask('GET', '/ha/states')
+    tv = {e['entity_id']: e for e in s['states']}['media_player.tv']
+    check('*** what it is playing reaches the page: the title and the artist, and nothing else of Home Assistant\'s ***',
+          tv.get('title') == 'Clair de Lune' and tv.get('artist') == 'Debussy' and 'secret' not in json.dumps(tv), tv)
+
     # ---- doors and locks, a setting (off)
     code, s, _ = ask('POST', '/ha/choose', {'entity_id': 'lock.front_door', 'label': 'front door'})
     code, s, _ = ask('POST', '/ha/call', {'entity_id': 'lock.front_door', 'action': 'unlock'})

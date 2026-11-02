@@ -60,8 +60,9 @@ ACTIONS = {
               'brighter': ('turn_on', {'brightness_step_pct': 20}), 'dimmer': ('turn_on', {'brightness_step_pct': -20})},
     'fan': {'on': ('turn_on', {}), 'off': ('turn_off', {}), 'toggle': ('toggle', {})},
     'switch': {'on': ('turn_on', {}), 'off': ('turn_off', {}), 'toggle': ('toggle', {})},
+    # (row 2.143, 2026-11-02: Music Assistant's speakers are ordinary media players here) the next and previous track too.
     'media_player': {'on': ('turn_on', {}), 'off': ('turn_off', {}), 'louder': ('volume_up', {}), 'quieter': ('volume_down', {}),
-                     'pause': ('media_play_pause', {})},
+                     'pause': ('media_play_pause', {}), 'next': ('media_next_track', {}), 'previous': ('media_previous_track', {})},
     'scene': {'on': ('turn_on', {})},
 }
 DOORS = {
@@ -191,6 +192,13 @@ def entity_row(s, cfg):
            'ticked': bool(chosen), 'label': (chosen or {}).get('label') or '', 'actions': sorted(acts) if acts else []}
     if 'brightness' in attrs:
         row['brightness'] = attrs.get('brightness')
+    # (row 2.143) What a speaker is playing, for the screen to say (a Music Assistant player or any media player). Only
+    # the title and the artist, as short text: nothing else from Home Assistant reaches the page.
+    if domain == 'media_player':
+        for k, out in (('media_title', 'title'), ('media_artist', 'artist')):
+            v = attrs.get(k)
+            if isinstance(v, str) and v.strip():
+                row[out] = v.strip()[:120]
     return row
 
 
