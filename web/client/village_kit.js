@@ -9,6 +9,9 @@ import { objectSvg } from './count_objects.js';
  *   VILLAGE_SCENES   → { village, castle, empty }   starting recipes
  *   LOOKS            → { crafted, toon }             the two art styles, with Pi 400 notes
  *
+ * MOTION (2026-11-02): an item may carry `motion` (a piece motion: enterLeft, comeCloser, goAway) and a
+ * cast item `gesture` (a body motion: nod, shake, waveHello, walk), both from characters/motionKit.js.
+ *
  * A RECIPE IS PLAIN DATA. Nothing is drawn in a fixed position:
  *   { look: 'crafted' | 'toon', time: 'day' | 'evening' | 'night', frame: true,
  *     pieces: [ { piece: 'tower', x: 960, y: 470, scale: 0.8, flip: false },
@@ -25,6 +28,7 @@ import { objectSvg } from './count_objects.js';
  *
  * Every moving part is decoration and sits inside prefers-reduced-motion: no-preference: windmill
  * sails, flags, chimney smoke, water shimmer. Nothing flashes. */
+import { MOTIONS, playOnPiece } from './motion_kit.js';
 
 /* ---------- colour ---------- */
 const hx = (h) => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
@@ -279,7 +283,7 @@ export const VILLAGE_SCENES = {
 const STYLE = `<style>.vk-sel{outline:none}@media (prefers-reduced-motion: no-preference){.vk-spin{animation:vkSpin 16s linear infinite}.vk-flag{animation:vkFlag 3.6s ease-in-out infinite alternate}.vk-smoke{animation:vkSmoke 6s ease-out infinite}.vk-shimmer{animation:vkShim 4s ease-in-out infinite alternate}}@keyframes vkSpin{to{transform:rotate(360deg)}}@keyframes vkFlag{from{transform:skewY(-4deg)}to{transform:skewY(5deg)}}@keyframes vkSmoke{0%{opacity:0;transform:translateY(8px)}30%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}@keyframes vkShim{from{opacity:.35}to{opacity:1}}</style>`;
 
 export function pieceSvg(item, P, t, look, { assetBase, castSvg } = {}) {
-  if (item.cast) return castSvg ? castSvg(item.cast, { pose: item.pose || 'stand', assetBase, look: item.look, outfit: item.outfit }).replace(/<title>[^<]*<\/title>/, '') : '';
+  if (item.cast) return castSvg ? castSvg(item.cast, { pose: item.pose || 'stand', assetBase, look: item.look, outfit: item.outfit, motion: item.gesture, animated: item.animated !== false }).replace(/<title>[^<]*<\/title>/, '') : '';
   const def = PIECES[item.piece];
   if (!def) return '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${look === 'toon' ? '-4 -4' : '-2 -2'} ${def.vb[0] + 8} ${def.vb[1] + 8}" overflow="visible">${draw(def.draw(P, t, item), look)}</svg>`;
@@ -325,7 +329,10 @@ export function sceneSvg(recipe = {}, { assetBase = '../../assets/', selected = 
     const flipT = it.flip ? ` transform="translate(${2 * it.x} 0) scale(-1 1)"` : '';
     /* rotation turns the piece about its centre */
     const rot = it.rot ? ` transform="rotate(${it.rot} ${it.x} ${it.y - h / 2})"` : '';
-    out.push(`<g${rot}><g${editable ? ` data-i="${i}" style="cursor:grab"` : ''}${flipT}>${inner}</g></g>`);
+    const g = `<g${rot}><g${editable ? ` data-i="${i}" style="cursor:grab"` : ''}${flipT}>${inner}</g></g>`;
+    /* an item may carry a piece motion from motionKit.js (enter, come closer, go away), played about its foot */
+    const m = !editable && it.motion && (typeof it.motion === 'string' ? MOTIONS[it.motion] : it.motion);
+    out.push(m ? playOnPiece(g, m, { foot: [it.x, it.y], animated: recipe.animated !== false }) : g);
     if (editable && i === selected) handles = handleSvg(i, x, y, w, h, rot);
   }
   if (t.veil) out.push(`<rect width="1600" height="900" fill="${t.veil}" pointer-events="none"/>`);

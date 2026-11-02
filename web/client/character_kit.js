@@ -5,6 +5,7 @@
  *   figureSvg(look, opts) → '<svg …>'     full body, 200×320
  *   look = { tone, hair, hairColor, beard, glasses }            what a PERSON looks like
  *   opts = { outfit, role, suit, suitColor, pose, emblem, royal } what they WEAR and hold
+ *          + { motion, animated, face }   a motion from motionKit.js plays on the skeleton (2026-11-02)
  *
  * The look belongs to the character. The outfit is a separate choice from the wardrobe: any
  * character can wear any outfit. A ROLE (king, queen, jack, joker) only adds its signature piece:
@@ -14,6 +15,8 @@
  * Same build as Nimrod and the animals: flat fills, no outlines, big eyes with one catchlight. Proportions
  * are friendly and big-headed, so a face stays readable at card size.
  */
+
+import { MOTIONS, motionCss, stillAttrs } from './motion_kit.js';
 
 export const SUIT_PATH = {
   hearts: 'M50 90C20 68 4 50 4 31C4 15 16 5 30 5C40 5 47 11 50 19C53 11 60 5 70 5C84 5 96 15 96 31C96 50 80 68 50 90Z',
@@ -217,64 +220,134 @@ function childBody(look, opts) {
   const b = figureBody(look, { ...opts, child: false }), id = 'kid' + ++KID;
   return `<defs><clipPath id="${id}h"><rect x="-80" y="-90" width="360" height="210"/></clipPath><clipPath id="${id}b"><rect x="-80" y="116" width="360" height="260"/></clipPath></defs><g transform="translate(100 320) scale(.62) translate(-100 -320)"><g clip-path="url(#${id}b)">${b}</g></g><g transform="translate(100 196) scale(.86) translate(-100 -118)"><g clip-path="url(#${id}h)">${b}</g></g>`;
 }
+/* ---------- the skeleton (notes 58 to 60) ----------
+   Rest pivots for the 200×320 figure. Every outfit and every adult shares these proportions, so one
+   motion from motionKit.js plays on all of them. A pose is now data (POSE_DATA), not drawing code. */
+export const FIGURE_PIVOTS = {
+  root: [100, 304], waist: [100, 226], neck: [100, 122],
+  shoulderL: [55, 124], elbowL: [55, 164], wristL: [55, 206],
+  shoulderR: [145, 124], elbowR: [145, 164], wristR: [145, 206],
+  hipL: [84, 226], kneeL: [84, 264], hipR: [116, 226], kneeR: [116, 264],
+};
+const SEG = { shoulderL: 40, elbowL: 42, shoulderR: 40, elbowR: 42 };
+/* The nine poses as joint angles. Each reproduces the hand-drawn pose it replaces (checked side by side, 2026-11-02). */
+export const POSE_DATA = {
+  stand: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: -6 } }, face: 'neutral' },
+  talk: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: -6 } }, face: 'talk' },
+  sleep: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: -6 } }, face: 'sleep', marks: ['zzz'] },
+  wave: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: -158 } }, face: 'neutral' },
+  happy: { joints: { shoulderL: { rot: 158 }, shoulderR: { rot: -158 } }, face: 'happy' },
+  point: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: -90, len: 0.5 }, elbowR: { len: 0.5 } }, face: 'neutral', marks: ['finger'] },
+  think: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: -10 }, elbowR: { rot: 147, len: 1.2 } }, face: 'think', marks: ['bubble'] },
+  listen: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: -157, len: 0.4 }, elbowR: { len: 0.4 } }, face: 'neutral', marks: ['arcs'] },
+  puzzled: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: 178, len: 0.76 }, elbowR: { len: 0.76 } }, face: 'puzzled', marks: ['question'] },
+};
+export const FACES = ['neutral', 'happy', 'talk', 'sleep', 'think', 'puzzled', 'frown'];
+const PARENT = { elbowL: 'shoulderL', wristL: 'elbowL', elbowR: 'shoulderR', wristR: 'elbowR' };
+/* outer group = the pose; inner group = the motion (CSS), so a motion adds to a pose */
+function jointOpen(j, pose, still) {
+  const [px, py] = FIGURE_PIVOTS[j], p = (pose.joints && pose.joints[j]) || {}, par = PARENT[j];
+  const shift = par ? SEG[par] * (((pose.joints && pose.joints[par] && pose.joints[par].len) ?? 1) - 1) : 0;
+  const x = p.x || 0, y = (p.y || 0) + shift, rot = p.rot || 0;
+  const t = x || y || rot ? ` transform="translate(${x} ${y})${rot ? ` rotate(${rot} ${px} ${py})` : ''}"` : '';
+  return `<g class="j-${j}"${t}><g class="m-${j}"${still[j] ? ` transform="${still[j]}"` : ''}>`;
+}
+const CLOSE = '</g></g>';
+function segScale(j, pose, d) {
+  const len = pose.joints && pose.joints[j] && pose.joints[j].len;
+  if (len == null || len === 1) return d;
+  const [px, py] = FIGURE_PIVOTS[j];
+  return `<g transform="translate(${px} ${py}) scale(1 ${len}) translate(${-px} ${-py})">${d}</g>`;
+}
+function arm(side, pose, still, sleeve, handFill, extra = '') {
+  const S = 'shoulder' + side, E = 'elbow' + side, W = 'wrist' + side, [sx, sy] = FIGURE_PIVOTS[S];
+  return jointOpen(S, pose, still) + segScale(S, pose, `<rect x="${sx - 11}" y="${sy - 2}" width="22" height="44" rx="11" fill="${sleeve}"/>`)
+    + jointOpen(E, pose, still) + `<circle cx="${sx}" cy="${sy + 40}" r="11" fill="${sleeve}"/>` + segScale(E, pose, `<rect x="${sx - 11}" y="${sy + 38}" width="22" height="46" rx="11" fill="${sleeve}"/>`)
+    + jointOpen(W, pose, still) + (handFill ? `<circle cx="${sx}" cy="${sy + 82}" r="10" fill="${handFill}"/>` : '') + extra + CLOSE + CLOSE + CLOSE;
+}
+let RIG = 0;
+/* the legs, cut from the outfit's own drawing at the hips and knees, so every outfit bends without redrawing */
+function legs(legArt, pose, still, id) {
+  const half = (side, x0, w) => {
+    const H = 'hip' + side, K = 'knee' + side, ky = FIGURE_PIVOTS[K][1];
+    return `<clipPath id="${id}${side}t"><rect x="${x0}" y="150" width="${w}" height="${ky - 150 + 2}"/></clipPath><clipPath id="${id}${side}s"><rect x="${x0}" y="${ky - 2}" width="${w}" height="120"/></clipPath>`
+      + jointOpen(H, pose, still) + `<g clip-path="url(#${id}${side}t)">${legArt}</g>` + jointOpen(K, pose, still) + `<g clip-path="url(#${id}${side}s)">${legArt}</g>` + CLOSE + CLOSE;
+  };
+  return half('L', -40, 140) + half('R', 100, 140);
+}
 export function figureBody(look = {}, opts = {}) {
   if (opts.child) return childBody(look, opts);
   const L = { tone: '#e8b48a', hair: 'short', hairColor: '#3a2414', ...look };
   const o = OUTFITS[opts.outfit] || OUTFITS.royal, r = opts.royal || {};
   const c = { ...o.c, metal: o.c.metal || r.metal || '#e2b45a', top: o.c.top || r.main, top2: o.c.top2 || r.trim };
-  const tone = L.tone, toneD = shade(tone, 0.86), role = opts.role, pose = opts.pose || 'stand', wave = pose === 'wave' || pose === 'happy';
+  const poseName = POSE_DATA[opts.pose] ? opts.pose : 'stand';
+  const base = opts.poseData || POSE_DATA[poseName];
+  const pose = { ...base, joints: { ...base.joints } };
+  const face = opts.face || base.face || 'neutral', marks = base.marks || [];
+  const still = opts.still || {};
+  const tone = L.tone, toneD = shade(tone, 0.86), role = opts.role;
   const sleeve = sleeveOf(o, r), handFill = o.hands === 'mittens' ? c.mitt : tone;
-  const covered = role || o.hat;
+  const covered = role || o.hat, id = 'rg' + ++RIG;
+  const onStand = poseName === 'stand' && !opts.poseData;
   const s = [];
-  s.push(back(o.back, c));
-  s.push(hairBack(covered && L.hair === 'curly' ? 'short' : L.hair, L.hairColor));
-  s.push(bottom(o), shoes(o));
+  s.push(`<g class="j-root"><g class="m-root"${still.root ? ` transform="${still.root}"` : ''}>`);
+  /* things behind the legs (a cape, long hair) ride on the waist and the neck */
+  s.push(jointOpen('waist', pose, still) + back(o.back, c) + jointOpen('neck', pose, still) + hairBack(covered && L.hair === 'curly' ? 'short' : L.hair, L.hairColor) + CLOSE + CLOSE);
+  s.push(legs(bottom(o) + shoes(o), pose, still, id));
+  s.push(jointOpen('waist', pose, still));
   s.push(`<rect x="90" y="110" width="20" height="16" rx="5" fill="${toneD}"/>`);
   s.push(top(o.top, c, r));
-  /* arms: the left always hangs; the right hangs, or waves */
-  if (pose === 'happy') s.push(`<rect x="44" y="124" width="22" height="80" rx="11" fill="${sleeve}" transform="rotate(158 55 128)"/><circle cx="28" cy="52" r="10" fill="${handFill}"/>`);
-  else s.push(`<rect x="44" y="122" width="22" height="80" rx="11" fill="${sleeve}" transform="rotate(10 55 124)"/><circle cx="45" cy="206" r="10" fill="${handFill}"/>`);
-  if (wave) s.push(`<rect x="134" y="124" width="22" height="80" rx="11" fill="${sleeve}" transform="rotate(-158 145 128)"/><circle cx="172" cy="52" r="10" fill="${handFill}"/>`);
-  else if (pose === 'point') s.push(`<rect x="134" y="128" width="22" height="40" rx="11" fill="${sleeve}" transform="rotate(-90 145 128)"/><circle cx="184" cy="128" r="10" fill="${handFill}"/><rect x="186" y="124" width="13" height="7" rx="3.5" fill="${handFill}"/>`);
-  else if (pose === 'puzzled') s.push(`<rect x="140" y="124" width="22" height="62" rx="11" fill="${sleeve}" transform="rotate(168 151 126)"/>`);
-  else if (pose === 'listen') s.push(`<rect x="140" y="124" width="22" height="40" rx="11" fill="${sleeve}" transform="rotate(196 151 126)"/>`);
-  else if (pose === 'think') s.push(`<rect x="134" y="128" width="22" height="30" rx="11" fill="${sleeve}" transform="rotate(105 145 128)"/>`);
-  else s.push(`<rect x="134" y="122" width="22" height="80" rx="11" fill="${sleeve}" transform="rotate(-10 145 124)"/>${role ? '' : `<circle cx="155" cy="206" r="10" fill="${handFill}"/>`}`);
+  s.push(arm('L', pose, still, sleeve, handFill));
+  /* the right hand: on a court card standing still, the role's held piece replaces the bare hand. It rides
+     in the wrist, counter-turned by the stand angle, so it sits exactly where it always did and follows the arm. */
+  const heldArt = role && onStand ? `<g transform="rotate(6 145 124)">${held(role, opts.suit, opts.suitColor, c.metal, opts.emblem, handFill)}</g>` : '';
+  const finger = marks.includes('finger') ? `<rect x="141.5" y="${206 + 8}" width="7" height="13" rx="3.5" fill="${handFill}"/>` : '';
+  s.push(arm('R', pose, still, sleeve, role && onStand ? '' : handFill, heldArt + finger));
   if (opts.suit && role && role !== 'joker' && o.top !== 'robe') s.push(shape(opts.suit, 72, 150, 14, opts.suitColor));
   s.push(neck(o));
-  /* head */
+  /* the head; the face slides inside it (faceX, faceY) to turn or tip */
+  s.push(jointOpen('neck', pose, still));
   s.push(`<circle cx="58" cy="88" r="8" fill="${toneD}"/><circle cx="142" cy="88" r="8" fill="${toneD}"/><circle cx="100" cy="82" r="44" fill="${tone}"/>`);
-  s.push(`<path d="M76 72q8-5 15 0M109 72q8-5 15 0" stroke="${shade(L.hairColor, 0.8)}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
-  if (pose === 'sleep') s.push(`<path d="M77 87q7 6 14 0M109 87q7 6 14 0" stroke="#1b1d22" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
-  else if (pose === 'happy') s.push(`<path d="M77 89q7-9 14 0M109 89q7-9 14 0" stroke="#1b1d22" stroke-width="4" fill="none" stroke-linecap="round"/>`);
-  else s.push(`<ellipse cx="84" cy="86" rx="6" ry="7.5" fill="#1b1d22"/><circle cx="${pose === 'think' ? 86 : 82}" cy="${pose === 'think' ? 82 : 83}" r="2.1" fill="#fff" opacity=".92"/><ellipse cx="116" cy="86" rx="6" ry="7.5" fill="#1b1d22"/><circle cx="${pose === 'think' ? 118 : 114}" cy="${pose === 'think' ? 82 : 83}" r="2.1" fill="#fff" opacity=".92"/>`);
+  s.push(`<g class="m-face"${still.face ? ` transform="${still.face}"` : ''}>`);
+  if (face === 'puzzled') s.push(`<path d="M74 70q10-6 20-2M108 64q10-2 18 4" stroke="#1b1d22" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
+  else if (face === 'frown') s.push(`<path d="M76 70q8 4 15 1M109 71q7 3 15-1" stroke="${shade(L.hairColor, 0.8)}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
+  else s.push(`<path d="M76 72q8-5 15 0M109 72q8-5 15 0" stroke="${shade(L.hairColor, 0.8)}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
+  if (face === 'sleep') s.push(`<path d="M77 87q7 6 14 0M109 87q7 6 14 0" stroke="#1b1d22" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
+  else if (face === 'happy') s.push(`<path d="M77 89q7-9 14 0M109 89q7-9 14 0" stroke="#1b1d22" stroke-width="4" fill="none" stroke-linecap="round"/>`);
+  else s.push(`<ellipse cx="84" cy="86" rx="6" ry="7.5" fill="#1b1d22"/><circle cx="${face === 'think' ? 86 : 82}" cy="${face === 'think' ? 82 : 83}" r="2.1" fill="#fff" opacity=".92"/><ellipse cx="116" cy="86" rx="6" ry="7.5" fill="#1b1d22"/><circle cx="${face === 'think' ? 118 : 114}" cy="${face === 'think' ? 82 : 83}" r="2.1" fill="#fff" opacity=".92"/>`);
   s.push(`<circle cx="72" cy="100" r="6.5" fill="#e88a8a" opacity=".3"/><circle cx="128" cy="100" r="6.5" fill="#e88a8a" opacity=".3"/><path d="M100 90q-4 8 0 10" stroke="${shade(tone, 0.72)}" stroke-width="3" fill="none" stroke-linecap="round"/>`);
-  if (L.beard) s.push(`<path d="M58 90C58 126 78 138 100 138C122 138 142 126 142 90C134 106 120 112 100 112C80 112 66 106 58 90Z" fill="${L.hairColor}"/><path d="M84 104q16-8 32 0q-8 6-16 2q-8 4-16-2Z" fill="${L.hairColor}"/><path d="M93 116q7 4 14 0" stroke="#7a2e2a" stroke-width="3" fill="none" stroke-linecap="round"/>`);
+  if (L.beard) s.push(`<path d="M58 90C58 126 78 138 100 138C122 138 142 126 142 90C134 106 120 112 100 112C80 112 66 106 58 90Z" fill="${L.hairColor}"/><path d="M84 104q16-8 32 0q-8 6-16 2q-8 4-16-2Z" fill="${L.hairColor}"/>${face === 'frown' ? `<path d="M93 119q7-4 14 0" stroke="#7a2e2a" stroke-width="3" fill="none" stroke-linecap="round"/>` : `<path d="M93 116q7 4 14 0" stroke="#7a2e2a" stroke-width="3" fill="none" stroke-linecap="round"/>`}`);
   else if (role === 'joker') s.push(`<path d="M83 102q17 18 34 0Z" fill="#7a2e2a"/><path d="M87 103h26" stroke="#fff" stroke-width="3"/>${shape('diamonds', 84, 102, 8, opts.suitColor || '#b03a2e')}${shape('diamonds', 116, 102, 8, opts.suitColor || '#b03a2e')}`);
-  else if (pose === 'talk') s.push(`<ellipse cx="100" cy="108" rx="9" ry="7" fill="#7a2e2a"/><ellipse cx="100" cy="111" rx="5" ry="3" fill="#e07a8a"/>`);
-  else if (pose === 'happy') s.push(`<path d="M86 104q14 16 28 0Z" fill="#7a2e2a"/><path d="M90 105h20" stroke="#fff" stroke-width="2.5"/>`);
-  else if (pose === 'sleep') s.push(`<ellipse cx="100" cy="108" rx="4" ry="3" fill="#7a2e2a"/>`);
-  else if (pose === 'puzzled') s.push(`<rect x="140" y="124" width="22" height="62" rx="11" fill="${sleeve}" transform="rotate(168 151 126)"/>`);
-  else if (pose === 'listen') s.push(`<rect x="140" y="124" width="22" height="40" rx="11" fill="${sleeve}" transform="rotate(196 151 126)"/>`);
-  else if (pose === 'puzzled') s.push(`<path d="M88 108q4-4 8 0t8 0t8 0" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
-  else if (pose === 'think') s.push(`<path d="M92 108q8-3 16 1" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
+  else if (face === 'talk') s.push(`<ellipse cx="100" cy="108" rx="9" ry="7" fill="#7a2e2a"/><ellipse cx="100" cy="111" rx="5" ry="3" fill="#e07a8a"/>`);
+  else if (face === 'happy') s.push(`<path d="M86 104q14 16 28 0Z" fill="#7a2e2a"/><path d="M90 105h20" stroke="#fff" stroke-width="2.5"/>`);
+  else if (face === 'sleep') s.push(`<ellipse cx="100" cy="108" rx="4" ry="3" fill="#7a2e2a"/>`);
+  else if (face === 'puzzled') s.push(`<path d="M88 108q4-4 8 0t8 0t8 0" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
+  else if (face === 'think') s.push(`<path d="M92 108q8-3 16 1" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
+  else if (face === 'frown') s.push(`<path d="M90 110q10-7 20 0" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
   else s.push(`<path d="M90 106q10 8 20 0" stroke="#7a2e2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`);
   if (L.glasses) s.push(`<circle cx="84" cy="86" r="12" fill="none" stroke="#2a2d33" stroke-width="3"/><circle cx="116" cy="86" r="12" fill="none" stroke="#2a2d33" stroke-width="3"/><path d="M96 86h8" stroke="#2a2d33" stroke-width="3"/>`);
+  s.push('</g>');
   s.push(hairFront(covered && (L.hair === 'curly' || L.hair === 'bun') ? 'short' : L.hair, L.hairColor));
   if (o.back === 'hood') s.push(`<path d="M50 78Q100 30 150 78" stroke="${c.fur}" stroke-width="10" fill="none" stroke-linecap="round"/>`);
   s.push(role ? signature(role, c, opts.suitColor || '#b03a2e', opts.suit) + (c.goggles ? goggles(c, 58) : '') : hat(o.hat, c));
-  if (role && pose === 'stand') s.push(held(role, opts.suit, opts.suitColor, c.metal, opts.emblem, handFill));
-  /* the thinking hand sits on the chin, over the beard */
-  if (pose === 'think') s.push(`<circle cx="116" cy="124" r="10" fill="${handFill}"/><circle cx="160" cy="40" r="5" fill="#c9cfd8"/><circle cx="172" cy="24" r="7" fill="#c9cfd8"/><circle cx="186" cy="6" r="9" fill="#c9cfd8"/>`);
-  /* listening: a hand cupped at the ear, and three soft arcs coming in toward it */
-  /* puzzled: hand scratching the head, one eyebrow up, a question mark */
-  if (pose === 'puzzled') s.push(`<circle cx="146" cy="62" r="10" fill="${handFill}"/><path d="M74 70q10-6 20-2M108 64q10-2 18 4" stroke="#1b1d22" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M168 18q0-14 14-14t14 14q0 10-14 14v10" stroke="#839958" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="182" cy="56" r="4.5" fill="#839958"/>`);
-  if (pose === 'listen') s.push(`<circle cx="158" cy="94" r="10" fill="${handFill}"/><path d="M176 78q8 16 0 32M186 70q12 24 0 48M196 62q16 32 0 64" stroke="#839958" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/>`);
-  if (pose === 'sleep') s.push(`<path d="M154 40h14l-14 14h14M172 14h10l-10 10h10" stroke="#839958" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+  if (marks.includes('question')) s.push(`<path d="M168 18q0-14 14-14t14 14q0 10-14 14v10" stroke="#839958" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="182" cy="56" r="4.5" fill="#839958"/>`);
+  if (marks.includes('arcs')) s.push(`<path d="M176 78q8 16 0 32M186 70q12 24 0 48M196 62q16 32 0 64" stroke="#839958" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/>`);
+  if (marks.includes('zzz')) s.push(`<path d="M154 40h14l-14 14h14M172 14h10l-10 10h10" stroke="#839958" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+  if (marks.includes('bubble')) s.push(`<circle cx="160" cy="40" r="5" fill="#c9cfd8"/><circle cx="172" cy="24" r="7" fill="#c9cfd8"/><circle cx="186" cy="6" r="9" fill="#c9cfd8"/>`);
+  s.push(CLOSE); // neck
+  s.push(CLOSE); // waist
+  s.push(CLOSE); // root
   return s.join('');
 }
+/* figureSvg(look, opts, label). opts.motion: a motion id from motionKit or a motion object.
+   opts.animated (default true): false draws the motion's still frame only. */
 export function figureSvg(look, opts = {}, label = 'Character') {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320" role="img" aria-label="${label}"><title>${label}</title>${figureBody(look, opts)}</svg>`;
+  const m = typeof opts.motion === 'string' ? MOTIONS[opts.motion] : opts.motion;
+  if (!m) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320" role="img" aria-label="${label}"><title>${label}</title>${figureBody(look, opts)}</svg>`;
+  const scope = 'fg' + ++RIG, animated = opts.animated !== false;
+  const pose = m.pose && POSE_DATA[m.pose] ? m.pose : opts.pose;
+  const body = figureBody(look, { ...opts, pose, face: opts.face || m.face, still: stillAttrs(m, FIGURE_PIVOTS) });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320" role="img" aria-label="${label}, ${m.name}" id="${scope}"><title>${label}, ${m.name}</title>${animated ? motionCss(scope, m, FIGURE_PIVOTS) : ''}${body}</svg>`;
 }
 
 /* ---------- the four default characters ----------

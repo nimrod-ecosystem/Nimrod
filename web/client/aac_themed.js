@@ -1,8 +1,9 @@
 // aac_themed.js - CLAUDE DESIGN'S THEMED AAC SYMBOL SETS (delivered 2026-11-01, row 2.146; credited in ATTRIBUTIONS.md).
 // Copied as delivered from Design's themedSymbols.js (Nimrod_Ecosystem docs/from_design/themed_symbols_20261101/), not edited:
 // to change a picture, change Design's file and copy it again. The board uses it in modules/board.js (THEMED PICTURES).
-// Design's own note below says 'animated: off to start'; Mike ruled it ON by default on 2026-11-02 (row 2.146), and that
-// default lives in the board's setting, not here. The base sets (aac_sets.js) are unchanged.
+// Animated is ON to start (Mike, 2026-11-02, row 2.146); Design's file says so too since its 2026-11-02 copy. The board's
+// own "Moving pictures" setting (auto/on/off) is what turns it off for reduced motion or a needs profile. The base sets
+// (aac_sets.js) are unchanged.
 
 /* themedSymbols.js: themed AAC symbol sets, built from pieces (Mike, 2026-11-01).
  *
@@ -22,7 +23,8 @@
  *   THEME_SET_IDS, PIECES, ACCENTS, THEMES, GLYPHS, ROLES        the data, for an editor or a build script
  *
  * Settings, each with a starting value:
- *   animated   off to start. Motion runs only inside prefers-reduced-motion: no-preference, and the
+ *   animated   ON to start (Mike, 2026-11-02). Off for a needs profile that limits motion or flashing, a screen
+ *              at the lowest detail level, or the device's own reduce-motion. Motion runs only inside prefers-reduced-motion: no-preference, and the
  *              still frame is the finished picture. Nothing flashes.
  *   accents    on to start: a small bat, star or snowflake in a corner the piece leaves free.
  *   per-word   THEMES[theme].words[word] = { piece, art } chooses another piece, or the word's own
@@ -396,7 +398,7 @@ export const THEMES = {
 };
 export const THEME_SET_IDS = Object.keys(THEMES);
 
-export function symbolSvg(word, theme, { animated = false, accents = true } = {}) {
+export function symbolSvg(word, theme, { animated = true, accents = true } = {}) {
   const t = THEMES[theme];
   if (!t) return '';
   const choice = (t.words && t.words[word]) || {};

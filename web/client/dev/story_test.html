@@ -134,7 +134,10 @@ function mount({ host = scratch(), bus = createBus(), saved = {}, timers = fakeT
 }
 const textOf = (story, i, deck = 'nimrod') => pageText(story.pages[i].text, deck);
 // A figure's drawing as the page's DOM writes it back (an SVG string's <path/> reads back as <path></path>).
-const dom = (body) => { const g = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); g.innerHTML = body; return g.innerHTML; };
+// Since the skeleton (2026-11-02) each figure numbers its own clip paths (rg1, rg2...), so two drawings of the same
+// person differ only in those numbers: both sides of a comparison drop them.
+const unnum = (s) => s.replace(/\b(rg|ck|kid|fg)\d+/g, '$1#');
+const dom = (body) => { const g = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); g.innerHTML = body; return unnum(g.innerHTML); };
 
 (async () => {
 try {
@@ -356,19 +359,19 @@ try {
     t.verb('select');   // page 1: everybody standing (on the cover the hero waves)
     const mine = heroParts(fig, 'nimrod');
     check('*** the hero is the full-body character from the avatar maker, as they dressed it ***',
-      t.pic().querySelector('[data-who="hero"]').innerHTML === dom(figureBody(mine.look, mine.opts)) && mine.opts.outfit === 'steampunkAviator');
+      unnum(t.pic().querySelector('[data-who="hero"]').innerHTML) === dom(figureBody(mine.look, mine.opts)) && mine.opts.outfit === 'steampunkAviator');
     t.state.set({ heroOutfit: 'theme' });
     const themed = heroParts(fig, 'nimrod', { outfit: 'theme' });
     check('"Dressed for the theme": the same person, in the theme\'s outfit', themed.opts.outfit === themeOutfit('nimrod')
-      && t.pic().querySelector('[data-who="hero"]').innerHTML === dom(figureBody(themed.look, themed.opts)));
+      && unnum(t.pic().querySelector('[data-who="hero"]').innerHTML) === dom(figureBody(themed.look, themed.opts)));
     t.inst.destroy();
     const d = mount();
     d.verb('select');
     const def = heroParts(null, 'nimrod');
-    check('without one, a default character is the hero', d.pic().querySelector('[data-who="hero"]').innerHTML === dom(figureBody(def.look, def.opts)));
+    check('without one, a default character is the hero', unnum(d.pic().querySelector('[data-who="hero"]').innerHTML) === dom(figureBody(def.look, def.opts)));
     const q = courtParts('queen', 'nimrod');
     check('the cast are Design\'s court characters, dressed for the theme (Queen Rose in the Nimrod cardigan)',
-      d.pic().querySelector('[data-who="queen"]').innerHTML === dom(figureBody(q.look, q.opts)) && q.opts.outfit === 'nimrodCardigan');
+      unnum(d.pic().querySelector('[data-who="queen"]').innerHTML) === dom(figureBody(q.look, q.opts)) && q.opts.outfit === 'nimrodCardigan');
     d.inst.destroy();
   }
 
@@ -387,7 +390,7 @@ try {
     check('a Halloween panel: the King\'s home is the Haunted Hall in the words and the picture', t.words().textContent === textOf(s, 0, 'halloween')
       && /the Haunted Hall/.test(t.words().textContent) && t.pic().getAttribute('aria-label').startsWith('The Haunted Hall'));
     const k = courtParts('king', 'halloween');
-    check('King Kenny in his Halloween outfit', t.pic().querySelector('[data-who="king"]').innerHTML === dom(figureBody(k.look, k.opts)) && k.opts.outfit === 'halloweenVampire');
+    check('King Kenny in his Halloween outfit', unnum(t.pic().querySelector('[data-who="king"]').innerHTML) === dom(figureBody(k.look, k.opts)) && k.opts.outfit === 'halloweenVampire');
     applyTheme(outer, 'christmas');
     await flush();
     check('*** Christmas now: the Feast Hall, redrawn with nothing pressed ***', t.pic().getAttribute('aria-label').startsWith('The Feast Hall'));

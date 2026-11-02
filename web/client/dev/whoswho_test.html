@@ -192,7 +192,10 @@ try {
         const exp = document.createElement('div');
         exp.innerHTML = `<svg viewBox="0 0 200 320">${figureBody(look, { outfit: opts.outfit, royal: opts.royal, pose: 'stand' })}</svg>`;
         const got = r.host.querySelector(`[data-pick="${it.role}"] svg`);
-        check(`level ${L}: no crown, cap or jester's hat: the theme outfit alone`, exp.firstElementChild.innerHTML === got.innerHTML);
+        // Since the skeleton (2026-11-02) each drawing numbers its own clip paths (rg1, rg2...): compare without them.
+        const unnumbered = (s) => s.replace(/\b(rg|ck|kid|fg)\d+/g, '$1#');
+        check(`level ${L}: no crown, cap or jester's hat: the theme outfit alone`,
+          unnumbered(exp.firstElementChild.innerHTML) === unnumbered(got.innerHTML));
       }
       r.inst.destroy();
     }

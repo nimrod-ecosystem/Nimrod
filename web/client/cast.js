@@ -2,10 +2,13 @@
  *
  *   CAST[id]                         → { name, role, look, outfit, child, note }
  *   castSvg(id, { pose, theme })      → '<svg …>' full body, 200×320, standing on the bottom edge
+ *   castSvg(id, { motion, animated }) → the same, playing a motion from motionKit.js (2026-11-02);
+ *                                       animated: false draws the motion's still frame
  *
  * Built on character_kit.js, so every one of them can be dressed in any outfit and any theme, and
  * the avatar maker edits them like anyone else. Nimrod the cat is an image from assets/nimrod-cat/. */
 import { figureSvg, OUTFITS } from './character_kit.js';
+import { catSvg } from './cat_kit.js';
 
 const SUIT = { king: ['hearts', '#b03a2e'], queen: ['diamonds', '#b03a2e'], jack: ['clubs', '#1b1d22'], joker: ['spades', '#1b1d22'] };
 
@@ -31,13 +34,14 @@ export const CAST_IDS = Object.keys(CAST);
 
 /* The player is drawn from their own avatar: pass `look` (and `outfit`) from the avatar maker, or
    the scene item carries them. Without one, a plain stand-in is drawn. */
-export function castSvg(id, { pose = 'stand', outfit, look, assetBase = '../../assets/' } = {}) {
+export function castSvg(id, { pose = 'stand', outfit, look, assetBase = '../../assets/', motion, animated = true } = {}) {
   const p = id === 'player' && look ? { ...CAST.player, look } : CAST[id];
   if (!p) return '';
+  if (p.cat && motion) return catSvg({ motion, animated });
   if (p.cat) {
     const file = { stand: 'idle', wave: 'wave', talk: 'talking', think: 'thinking', happy: 'happy', sleep: 'sleeping', point: 'point-right', listen: 'idle' }[pose] || 'idle';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320" role="img" aria-label="Nimrod the cat"><image href="${assetBase}nimrod-cat/${file}.svg" x="20" y="150" width="170" height="170"/></svg>`;
   }
   const [suit, suitColor] = SUIT[p.role] || [];
-  return figureSvg(p.look, { outfit: outfit && OUTFITS[outfit] ? outfit : p.outfit, role: pose === 'stand' ? p.role : null, suit, suitColor, pose, child: !!p.child }, p.name);
+  return figureSvg(p.look, { outfit: outfit && OUTFITS[outfit] ? outfit : p.outfit, role: pose === 'stand' ? p.role : null, suit, suitColor, pose, child: !!p.child, motion, animated }, p.name);
 }

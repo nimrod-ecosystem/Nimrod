@@ -343,14 +343,25 @@ try {
       const want = document.createElement('div');
       want.innerHTML = cardArt(c, themeId, p.cfg);   // a face has no pattern id, so no per-table suffix to match
       const got = el.querySelector(':scope > svg');
-      return !!got && want.firstElementChild.isEqualNode(got);
+      // Since the skeleton (2026-11-02) a court card's figure numbers its own clip paths (rg1, rg2...), and the table
+      // suffixes every id it draws (-sol1) so two tables never share one: drop both.
+      const unnum = (s) => s.replace(/\b(rg|ck|kid|fg)\d+/g, '$1#').replace(/-sol\d+/g, '');
+      if (!got) return false;
+      want.innerHTML = unnum(want.innerHTML);
+      const back = document.createElement('div');
+      back.innerHTML = unnum(got.outerHTML);
+      if (want.firstElementChild.isEqualNode(back.firstElementChild)) return true;
+      const a = want.firstElementChild.outerHTML, b = back.firstElementChild.outerHTML;
+      let i = 0; while (i < a.length && a[i] === b[i]) i++;
+      same.why = `${el.dataset.card}: want …${a.slice(Math.max(0, i - 40), i + 60)}… got …${b.slice(Math.max(0, i - 40), i + 60)}…`;
+      return false;
     };
     const faces = [...t.host.querySelectorAll('.sol-card[data-up="1"]')];
     const cardOf = (el) => ({ s: el.dataset.suit, r: Number(el.dataset.card.slice(1)), up: true });
     check('the table follows a page with no theme on it as the default theme, and wears the Nimrod deck',
       p.theme === 'default' && deckFor(p.theme) === 'nimrod', p.theme);
     check('*** every face-up card IS Design\'s drawing of that card, in the theme\'s deck and the table\'s settings ***',
-      faces.length > 0 && faces.every((el) => same(el, cardOf(el), p.theme)), String(faces.length));
+      faces.length > 0 && faces.every((el) => same(el, cardOf(el), p.theme)), `${faces.length} ${same.why || ''}`);
     check('every card\'s drawing has its rank as text and its suit as a shape (index top-left and turned bottom-right)',
       faces.every((el) => { const svg = el.querySelector('svg'); const r = el.dataset.card.slice(1);
         const rank = { 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[r] || r;
@@ -853,7 +864,9 @@ try {
     check('and is what a screen reader reads on him; the drawing itself is hidden from it',
       el?.getAttribute('aria-label') === `The King of ${suitName} cheers!` && el?.querySelector('svg')?.getAttribute('aria-hidden') === 'true');
     const svg = el?.querySelector('svg')?.outerHTML || '';
-    check('he is Design\'s King: the crown, and the waving arm', svg.includes('M64 52L62 16L78 32') && svg.includes('rotate(-158 145 128)'));
+    // The waving arm turns about the skeleton's right shoulder (FIGURE_PIVOTS, 145,124) since 2026-11-02; it was drawn
+    // about 145,128 before.
+    check('he is Design\'s King: the crown, and the waving arm', svg.includes('M64 52L62 16L78 32') && svg.includes('rotate(-158 145 124)'));
     check('*** in the theme\'s outfit: on a Halloween panel the King wears the vampire cape (COURT_PICK) ***',
       svg.includes('M58 120L24 304L176 304L142 120Z'), t.probe().theme);
     check('he stands in the empty cell beside the home piles, which did not move', !!el?.closest('.sol-top [data-cheer-slot]')

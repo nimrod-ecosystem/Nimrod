@@ -100,7 +100,10 @@ try {
       // (2026-10-16, DELIBERATELY: Design's lessons handoff (item 41) replaced character_kit.js - the 'listen' pose, and outfits for every theme.)
       // (2026-10-31, DELIBERATELY: Design's village handoff (System19, item 45, shipped in 6f92410) replaced it - new
       // outfits and hats, child proportions, the "puzzled" pose. Byte for byte Design's.)
-      'character_kit.js': '0b336af877250faa37fea7711b9a422c3943744534e5da613383e72e69adf861',
+      // (2026-11-02, DELIBERATELY: Design's characters-that-move delivery (notes 58-60) replaced it - the 13-pivot skeleton,
+      // the nine poses as data, the `frown` face, motions. Design's characterKit.js is 2c4ca7ba...; its one import renamed
+      // from ./motionKit.js to this repo's ./motion_kit.js, and nothing else, gives this one.)
+      'character_kit.js': 'c27374b36084a75e8f076432e2a0e01b079825f3a80a565ed1dd1077110cee74',
       // (2026-10-31, DELIBERATELY: Design's builders handoff (System18, 2026-10-24) - 31 pieces for the fifteen newer
       // worlds, which System19's town.js furnishes its homes with. Marked "ships as it is"; missed until now.)
       'theme_kits.js': '4d5cd05a89914183de2adee802aae1e9f5b84efe7787ece6af5c2ef82a706022',
@@ -109,7 +112,7 @@ try {
       // own file is 41d23a55...; that rename and nothing else gives this one.)
       'town.js': '01ad9db46a0e21b6410df5c119207fa345bc44323a31222c9f5e1e8c857e6876',
     };
-    const IMPORTS = { 'character_kit.js': '', 'theme_kits.js': '', 'town.js': './theme_kits.js' };
+    const IMPORTS = { 'character_kit.js': './motion_kit.js', 'theme_kits.js': '', 'town.js': './theme_kits.js' };
     for (const [f, pin] of Object.entries(PINS)) {
       const text = (await (await fetch(`../${f}`, { cache: 'no-store' })).text()).replace(/\r\n/g, '\n');
       const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))]
@@ -142,7 +145,11 @@ try {
       Object.keys(DEFAULT_CHARACTERS).join() === 'king,queen,jack,joker' && Object.values(DEFAULT_CHARACTERS).every((c) => c.name && c.look && c.look.tone));
     check('what the court wears in each theme with outfits is a real outfit; a theme it does not know falls back to the Royal robe',
       OUTFIT_THEMES.every((t) => ['king', 'queen', 'jack', 'joker'].every((r) => OUTFITS[COURT_PICK[t][r]])) && courtOutfit('queen', 'nope') === 'royal');
-    check('an unknown outfit draws the Royal robe, not nothing', figureBody({}, { outfit: 'nope' }) === figureBody({}, { outfit: 'royal' }));
+    // Since the skeleton (2026-11-02) every figure numbers its own clip paths (rg1, rg2...), so two drawings of the same
+    // thing differ only in those numbers.
+    const unnumbered = (s) => s.replace(/\b(rg|ck|kid|fg)\d+/g, '$1#');
+    check('an unknown outfit draws the Royal robe, not nothing',
+      unnumbered(figureBody({}, { outfit: 'nope' })) === unnumbered(figureBody({}, { outfit: 'royal' })));
   }
 
   section('*** theme_kits: every world\'s pieces draw, each with a label ***');
