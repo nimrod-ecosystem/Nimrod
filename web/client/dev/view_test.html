@@ -30,7 +30,7 @@
 <div id="summary">running…</div>
 
 <script type="module">
-import { mountModule, registerModule } from '../module.js';
+import { mountModule, registerModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
 import { partition, OVERLAY_TYPES, VIEW_DEFAULTS } from '../modules/view.js';
 import '../modules/view.js';
@@ -399,10 +399,14 @@ const PLAIN = {
         impl.chrome?.()?.bar === 'carried' && impl.chrome?.()?.menu === 'carried', JSON.stringify(impl.chrome?.()));
       const bar = r.host.querySelector('.view > .v-dock-bottom .tb-bar');
       check('the placed bar is in the bottom dock of the dashboard', !!bar, r.host.innerHTML.slice(0, 200));
-      check('*** it draws the SAME chips the plain bar draws (transport_bar.js): the panel is named and lit ***',
-        bar?.querySelector('.tb-mods .k-dot.on')?.textContent === 'wordforge'
-        && [...(bar?.querySelectorAll('.tb-mods .k-dot') || [])].map((b) => b.textContent).join() === 'wordforge,photos',
-        [...(bar?.querySelectorAll('.tb-mods .k-dot') || [])].map((b) => b.textContent).join());
+      // (2026-11-02, DELIBERATELY changed: this pinned the code names, 'wordforge,photos', and had failed since the stage's
+      // chips took the module's title on 2026-10-17, transport_bar.js "a page part's chip read Page_people". Checked by
+      // place and title now.)
+      const titleOf = (t) => getManifest(t)?.title || t;
+      check('*** it draws the SAME chips the plain bar draws (transport_bar.js): the panel is named (its title) and lit ***',
+        bar?.querySelector('.tb-mods .k-dot.on')?.dataset.i === '0'
+        && [...(bar?.querySelectorAll('.tb-mods .k-dot') || [])].map((b) => b.textContent).join() === `${titleOf('wordforge')},${titleOf('photos')}`,
+        [...(bar?.querySelectorAll('.tb-mods .k-dot') || [])].map((b) => `${b.dataset.i}=${b.textContent}`).join());
       check('*** the bar and the menu are not panels: no chip, not in the focus ring, not in modules() ***',
         !impl.focusRing().some((m) => /^cv-(bar|menu)$/.test(m.id))
         && !impl.modules().some((m) => /^cv-(bar|menu)$/.test(m.id)));
@@ -418,7 +422,7 @@ const PLAIN = {
         impl.focused()?.id === 'cv-photos' && !!r.host.querySelector('.view .k-stage .photos'),
         JSON.stringify(impl.focused()));
       check('...and the placed bar redraws with it lit (it listens to its dashboard)',
-        r.host.querySelector('.tb-bar .tb-mods .k-dot.on')?.textContent === 'photos');
+        r.host.querySelector('.tb-bar .tb-mods .k-dot.on')?.dataset.i === '1');
       check('*** the menu module asked the shell to dock THE menu into its own box, inside the left dock ***',
         docked[0] instanceof Element && !!docked[0].closest('.view > .v-dock-left'));
       const changes = [];
