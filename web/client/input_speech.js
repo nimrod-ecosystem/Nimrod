@@ -179,6 +179,10 @@ export const PHRASES = {
   launch: ['launch', 'launch it', 'launch the ball'],
   stop:   ['stop moving', 'stay there', 'stay still'],
   close:  ['close', 'close it', 'close the menu', 'close menu', 'close settings', 'close the settings'],
+  // Previous page / Next page (row 2.190, 2026-11-02): the picked module's boards or faces. Whole utterances like every
+  // row here, so "next page" never fires `next`, and "next" never turns a page.
+  'page-next': ['next page', 'turn the page', 'page forward', 'next board'],
+  'page-prev': ['previous page', 'last page', 'page back', 'go back a page', 'previous board'],
 };
 
 /**
