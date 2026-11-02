@@ -616,6 +616,117 @@ try {
   }
 
   // =====================================================================================
+  // Row 2.184 (2026-11-02): making a board in the one editor, on a DRAFT (proposal_board_in_editor_20261102.md).
+  section('*** the board draft: the board maker\'s rules, as pure changes ***');
+  {
+    const D = await import('../board_draft.js');
+    const b0 = normalizeBoard({ id: 'own-x', name: 'Mine', cols: 3, rows: 2, cells: [{ id: 'a', word: 'Yes' }, { id: 'b', word: 'No' }] });
+    const b1 = D.setCell(b0, 0, { word: '   ' });
+    check('emptying a card\'s word takes the card off, and leaves its slot (no other card moves)', b1.cells[0] === null && b1.cells[1]?.word === 'No');
+    check('*** a smaller grid is refused while it would lose cards, in words ***',
+      D.setGrid(b0, 1, 1).note.length > 10 && D.setGrid(b0, 1, 1).board.cols === 3);
+    check('...and allowed when it loses none', D.setGrid(b0, 2, 1).board.cols === 2 && D.setGrid(b0, 2, 1).note === '');
+    const m = D.moveCell(b0, 0, 'right');
+    check('*** moving a card right trades places with what is there ***', m.to === 1 && m.board.cells[0].word === 'No' && m.board.cells[1].word === 'Yes');
+    check('...down into an empty slot', D.moveCell(b0, 0, 'down').to === 3 && D.moveCell(b0, 0, 'down').board.cells[3]?.word === 'Yes');
+    check('...and nowhere off the board', D.moveCell(b0, 0, 'left').to === null && D.moveCell(b0, 0, 'up').to === null);
+    const a = D.addCell(b0);
+    check('a word is added into the first empty slot', a.at === 2 && a.board.cells[2]?.word === 'New word');
+    const full = normalizeBoard({ id: 'f', cols: 1, rows: 1, cells: [{ id: 'z', word: 'Hi' }] });
+    check('a full board says so instead of growing', D.addCell(full).at === -1 && /full/.test(D.addCell(full).note));
+    const u = D.createUndo(3);
+    u.push(b0); u.push(b1);
+    check('undo gives back the board before, newest first', u.back()?.cells[0] === null && u.back()?.cells[0]?.word === 'Yes' && u.back() === null);
+  }
+
+  section('*** making a board in the one editor: a draft, never the live board ***');
+  {
+    const host = document.getElementById('host');
+    const bus = createBus();
+    const said = [];
+    const st = fakeState({ boardId: 'custom', board: { id: 'own-1', name: 'Mine', cols: 3, rows: 2,
+      cells: [{ id: 'a', word: 'Yes' }, { id: 'b', word: 'No' }, { id: 'c', word: 'Help' }] } });
+    const published = [];
+    const sub = bus.subscribe('shell/edit-panel', (p) => published.push(p));
+    const inst = mountModule('board', { mount: host, bus, events: fakeEvents(), state: st, instanceId: 'b-1',
+      output: { say: (t) => said.push(t) } });
+    inst.init();
+    await sleep(20);
+    const p = () => inst.impl.__probe();
+    const items = inst.impl.menuItems();
+    items.find((x) => x.id === 'board-edit').run();
+    check('*** "Edit this board" asks for the one editor on this panel ***', published.at(-1)?.id === 'b-1' && published.at(-1)?.on === true
+      && published.at(-1)?.from === 'board', JSON.stringify(published));
+    check('the old board maker stays a row of its own meanwhile', !!items.find((x) => x.id === 'board-edit-old'));
+    check('asked for when this panel is NOT being edited (the editor\'s list): no draft, no parts',
+      inst.impl.editTargets().length === 0 && inst.impl.__draft() === null);
+    host.dataset.editing = '1';                       // what edit mode does to the panel being edited
+    const ts = inst.impl.editTargets();
+    check('*** being edited: a draft starts, with a part for each card and the board last (the whole part) ***',
+      !!inst.impl.__draft() && ts.filter((t) => /^card-/.test(t.id)).length === 3 && ts.at(-1)?.whole === true && ts.at(-1)?.id === 'board',
+      JSON.stringify(ts.map((t) => t.id)));
+    const card = (w) => inst.impl.editTargets().find((t) => t.label === w);
+    card('Yes').set({ word: 'Yes please' });
+    check('*** a change goes to the draft, kept as boardDraft; the board itself is untouched ***',
+      inst.impl.__draft().draft.cells[0].word === 'Yes please' && st.get().boardDraft?.cells?.[0]?.word === 'Yes please'
+      && st.get().board.cells[0].word === 'Yes', JSON.stringify(st.get().boardDraft?.cells?.[0]));
+    check('the panel shows the draft while it is edited', host.textContent.includes('Yes please'));
+    const before = said.length;
+    bus.publish('board/select'); bus.publish('board/pick', { index: 1 });
+    check('*** over a draft the switch says nothing (nobody speaks from a half-made board) ***', said.length === before && p().scanning !== true);
+    card('No').actions.find((a) => a.id === 'move-right').run();
+    check('a card moves one slot', inst.impl.__draft().draft.cells[2]?.word === 'No' && inst.impl.__draft().draft.cells[1]?.word === 'Help');
+    card('No').set({ say: 'No thank you' });
+    check('*** after a move, the same card\'s rows still change THAT card ***', inst.impl.__draft().draft.cells[2]?.say === 'No thank you'
+      && !inst.impl.__draft().draft.cells[1]?.say, JSON.stringify(inst.impl.__draft().draft.cells));
+    card('Help').actions.find((a) => a.id === 'remove').run();
+    check('removing leaves the slot empty', inst.impl.__draft().draft.cells[1] === null);
+    inst.impl.editTargets().at(-1).actions.find((a) => a.id === 'undo').run();
+    check('*** Undo puts it back ***', inst.impl.__draft().draft.cells[1]?.word === 'Help');
+    inst.impl.editTargets().at(-1).set({ cols: 1, rows: 1 });
+    check('a smaller grid that would lose cards is refused, and the board part says why', inst.impl.__draft().draft.cols === 3
+      && /Empty the last cards first/.test(inst.impl.__draft().note));
+    delete host.dataset.editing;
+    bus.publish('edit/ended', { id: 'b-1', reason: 'idle' });
+    check('*** the editor leaves (idle): the real board is back on the panel, the draft kept for next time ***',
+      inst.impl.__draft() === null && host.textContent.includes('Yes') && !host.textContent.includes('Yes please')
+      && st.get().boardDraft?.cells?.[0]?.word === 'Yes please');
+    host.dataset.editing = '1';
+    inst.impl.editTargets();
+    check('...and opening it again carries on from that draft', inst.impl.__draft()?.draft?.cells?.[0]?.word === 'Yes please');
+    inst.impl.editTargets().at(-1).actions.find((a) => a.id === 'use').run();
+    check('*** "Use this board" makes it the board ***', st.get().board.cells[0].word === 'Yes please' && st.get().boardDraft === null
+      && st.get().boardId === 'custom');
+    delete host.dataset.editing;
+    bus.publish('edit/ended', { id: 'b-1' });
+    said.length = 0;
+    bus.publish('board/pick', { index: 0 });
+    check('...and is what the board says now', said.join() === 'Yes please', JSON.stringify(said));
+    st.set({ locked: true });
+    await sleep(5);
+    host.dataset.editing = '1';
+    check('*** a locked board offers no parts and starts no draft ***', inst.impl.editTargets().length === 0 && inst.impl.__draft() === null);
+    delete host.dataset.editing;
+    st.set({ locked: false, boardId: 'core' });
+    await sleep(5);
+    host.dataset.editing = '1';
+    inst.impl.editTargets();
+    check('*** editing a built-in board says first that it makes your own copy, in place of your own board ***',
+      inst.impl.__draft()?.fromBuiltIn === true && /in place of your own board “Mine”/.test(inst.impl.__draft().note), inst.impl.__draft()?.note);
+    delete host.dataset.editing;
+    bus.publish('edit/ended', { id: 'b-1' });
+    inst.impl.menuItems().find((x) => x.id === 'board-new').run();
+    host.dataset.editing = '1';
+    inst.impl.editTargets();
+    check('*** "Make a new board": the draft starts empty, and the board on the screen is untouched until it is used ***',
+      inst.impl.__draft()?.of === null && inst.impl.__draft().draft.cells.filter(Boolean).length === 0 && st.get().board.cells[0].word === 'Yes please');
+    delete host.dataset.editing;
+    bus.publish('edit/ended', { id: 'b-1' });
+    sub?.();
+    inst.destroy();
+  }
+
+  // =====================================================================================
   // Row 2.184 (2026-11-02, Mike, with a screenshot: "The make an AAC board setup is not useable"): on a see-through board
   // the board maker took the board's cleared colours and was drawn see-through over the cards.
   section('*** the board maker is solid on a see-through board ***');
@@ -1297,10 +1408,12 @@ try {
     inst.init();
     await sleep(30);
 
-    // (row 2.95) From the one menu: the board's own rows.
+    // (row 2.95) From the one menu: the board's own rows. (row 2.184, 2026-11-02: "Edit this board" and "Make a new board"
+    // open the one editor now; the board maker's form keeps rows of its own until the editor does all it does, and
+    // these checks keep it honest meanwhile.)
     const row = (id) => inst.impl.menuItems().find((r) => r.id === id);
-    check('the menu offers a way to make a board', !!row('board-new') && !row('board-new').disabled);
-    row('board-new').run();
+    check('the menu offers a way to make a board', !!row('board-new-old') && !row('board-new-old').disabled);
+    row('board-new-old').run();
     await sleep(30);
     check('*** and it opens the editor ***', inst.impl.__probe().editing === true);
     // It says which it is doing. "Make a new board" hands the editor a BLANK board rather than
@@ -1354,7 +1467,7 @@ try {
     // *** THE ONE THAT MATTERS. *** A caregiver opens the editor and is called away. The
     // person the board is for cannot cancel a form. `CLAUDE.md`: a screen must never enter a
     // state that only an input can leave, when the person in front of it cannot give it.
-    row('board-edit').run();
+    row('board-edit-old').run();
     await sleep(30);
     check('the editor is open again', inst.impl.__probe().editing === true);
     check('...and this time it says it is editing', 
@@ -1376,8 +1489,8 @@ try {
       JSON.stringify(st.get().boardDraft && st.get().boardDraft.name));
 
     // And reopening picks the draft up rather than starting again.
-    check('...and the menu says so before it is pressed', /unsaved/.test(row('board-edit').hint), row('board-edit').hint);
-    row('board-edit').run();
+    check('...and the menu says so before it is pressed', /unsaved/.test(row('board-edit-old').hint), row('board-edit-old').hint);
+    row('board-edit-old').run();
     await sleep(30);
     check('...and reopening carries on from it',
       host.querySelector('[data-name]').value === 'Half a rename',
@@ -1388,7 +1501,7 @@ try {
     st.set({ ...st.get(), locked: true });
     await sleep(40);
     check('*** locking the board closes the editor rather than trapping it open ***',
-      inst.impl.__probe().editing === false && row('board-edit').disabled === true);
+      inst.impl.__probe().editing === false && row('board-edit-old').disabled === true);
     check('...and the cards are there', inst.impl.__probe().words.join(' ').includes('Tea'));
 
     inst.destroy();

@@ -32,6 +32,8 @@
 //             picture, and the clear button over it that takes a press -- and either is "the desk")
 //     whole   this target IS the panel (a room's walls and floor): it is what is chosen to begin with,
 //             and what a press on nothing else chooses. List it LAST (it holds every other target).
+//     redraws (row 2.184, 2026-11-02) true: the module draws this element again on every change (an AAC board's card), so
+//             after a write or one of its buttons the targets are found again; one that is gone chooses the panel.
 //     handles (2026-10-25) drag / scale / turn handles on it while chosen, room_handles.js, drawn by the
 //             dashboard (arrangement.js): `{ el, piece, floor?, movable?, geometry?: 'svg', onCommit(patch) }`.
 //             The village's pieces use them, so a room and a village are moved by the same editor.
@@ -588,7 +590,10 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     // redrawn (arrangement.js syncTargetHandles); a press on a row did not. Now a write from the rows finds the targets
     // again and tells the dashboard, which draws the handles on the new element. The card is NOT drawn again: a person
     // stepping a value by switch keeps their place in it.
-    if (t && t.handles) {
+    // (row 2.184, 2026-11-02) ...and a thing whose module REDRAWS it on every change (`redraws: true`: an AAC board's card,
+    // drawn again from the board's draft). Its BUTTONS change it too (move a card, take it out), so they find it again
+    // the same way; a thing a button took away is gone, and the panel itself is chosen instead.
+    if (t && (t.handles || t.redraws)) {
       const id = t.id;
       const again = () => setTimer(() => {
         if (!active || active.chosen !== id) return;
@@ -596,12 +601,15 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
         active.targets = targetsOf(active.rec);
         markTargets();
         const now = active.targets.find((x) => x.id === id);
+        if (!now && t.redraws) { select(null); return; }
         if (now && !now.whole && now.el) { now.el.dataset.editSelected = ''; now.el.dataset.editHelp = sel.help; now.el.dataset.editLabel = sel.label; }
         tell();
       }, 0);
       const set = sel.set, patch = sel.patch;
       sel.set = (k, v) => { const ok = set(k, v); if (ok) again(); return ok; };
       sel.patch = (p) => { const ok = patch(p); if (ok) again(); return ok; };
+      if (t.redraws) sel.actions = (sel.actions || []).map((a) => (typeof a.run === 'function'
+        ? { ...a, run: () => { const r = a.run(); again(); return r; } } : a));
     }
     if (t && !t.whole) {
       t.el.dataset.editSelected = ''; t.el.dataset.editHelp = sel.help; t.el.dataset.editLabel = sel.label;

@@ -79,6 +79,9 @@ import { createMediaSourcesClient } from '../media_sources.js';
 import { personSources } from '../person_known.js';
 import { cardFaceHTML, createCardImages } from '../card_face.js';
 import { mountBoardEditor, blankBoard } from '../board_editor.js';
+import { draftOf, setCell as draftSetCell, setGrid as draftSetGrid, moveCell as draftMove, addCell as draftAdd,
+  removeCell as draftRemove, createUndo, MAX_DIM as DRAFT_MAX_DIM } from '../board_draft.js';
+import { SYMBOL_NAMES } from '../aac_symbols.js';
 import { speak as speakDefault } from '../voice.js';
 import { mountScene, listScenes, listOverlays } from '../livescene.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
@@ -1261,7 +1264,8 @@ registerModule(
 
     function startScan() {
       stopScan();
-      if (!cfg.scan) return;
+      // (row 2.184) Not over a draft: nobody speaks from a half-made board.
+      if (!cfg.scan || drafting) return;
       scan = createScan({
         items: scanItems(),
         settings: () => ({ stepMs: cfg.stepMs, pauseMs: cfg.pauseMs, restart: 'first' }),
@@ -1560,6 +1564,192 @@ registerModule(
     // into the settings row, and gets out of the way.
     let editor = null;
 
+    // *** MAKING A BOARD IN THE ONE EDITOR (row 2.184, 2026-11-02; docs/for_chat/proposal_board_in_editor_20261102.md, after
+    // its Goldfish gate). *** Mike: "The make an AAC board setup is not useable. We should switch it to the same editor as
+    // everything else." While THIS panel is being edited (edit mode marks its box `data-editing`), the board works on a
+    // DRAFT, exactly as the board maker always did: the panel shows the draft, its cards are the editor's parts, and the
+    // board somebody talks with is written only by "Use this board". Every change is kept as `boardDraft` as it is made,
+    // so nothing is lost when the editor closes by itself; the moment it closes (Done, Escape, idle) the panel shows the
+    // real board again. While the draft shows, the scan is stopped and the switch's board verbs do nothing, so nobody
+    // speaks from a half-made board. A locked board offers no parts at all.
+    let drafting = null;     // { of, fromBuiltIn, draft, undo, note } while the one editor is open on this board
+    let wantNew = false;     // "Make a new board": the next draft starts empty
+
+    const editingMe = () => { try { return !!mount.closest?.('[data-editing]'); } catch { return false; } };
+
+    function keepDraft() {
+      if (!drafting) return;
+      try { state?.set?.({ ...(state.get?.() || {}), boardDraft: { ...drafting.draft, __of: drafting.of } }); }
+      catch (err) { console.error('board: could not keep the draft', err); }
+    }
+    function startDraft() {
+      if (drafting || cfg.locked || !editingMe()) return;
+      const row = state?.get?.() || {};
+      const isNew = wantNew;
+      wantNew = false;
+      const kept = row.boardDraft;
+      const base = isNew ? (kept && !kept.__of ? kept : blankBoard())
+        : (kept && kept.__of === board.id ? kept : board);
+      const { __of, ...clean } = base || {};
+      const fromBuiltIn = !isNew && Object.prototype.hasOwnProperty.call(BUILTIN_BOARDS, board.id);
+      drafting = { of: isNew ? null : board.id, fromBuiltIn, draft: draftOf(clean), undo: createUndo(), note: '' };
+      // A built-in board edited becomes the person's OWN board when it is used (there is one own board per panel): said
+      // first, in words, on the board's own part, before anything of theirs is replaced.
+      if (fromBuiltIn) {
+        drafting.note = row.board && row.board.cells
+          ? `Changes here make your own copy of this board, in place of your own board “${row.board.name || 'Your board'}”, when you press Use this board.`
+          : 'Changes here make your own copy of this board when you press Use this board.';
+      }
+      applyConfig();
+    }
+    function endDraft() {
+      if (!drafting) return;
+      drafting = null;
+      applyConfig();
+    }
+    /** One change to the draft: `fn(draft)` returns { board, note? }. Kept, drawn, and one step for Undo. */
+    function changeDraft(fn) {
+      if (!drafting) return false;
+      const before = drafting.draft;
+      let r = null;
+      try { r = fn(before); } catch (err) { console.error('board: draft change', err); return false; }
+      if (!r || !r.board) return false;
+      drafting.note = r.note || '';
+      if (JSON.stringify(r.board) === JSON.stringify(before)) { applyConfig(); return false; }
+      drafting.undo.push(before);
+      drafting.draft = r.board;
+      keepDraft();
+      applyConfig();
+      return true;
+    }
+    function useDraft() {
+      if (!drafting || cfg.locked) return false;
+      const made = normalizeBoard(drafting.draft);
+      try {
+        const was = state?.get?.() || {};
+        const keep = soundFilesOf(made);
+        const gone = new Set([...soundFilesOf(was.board), ...soundFilesOf(was.boardDraft)]);
+        for (const f of gone) if (!keep.has(f)) soundsNow()?.remove?.(f);
+      } catch (err) { console.error('board: tidying sounds', err); }
+      try { state?.set?.({ ...(state.get?.() || {}), board: made, boardId: CUSTOM_ID, boardDraft: null }); }
+      catch (err) { console.error('board: could not save the board', err); }
+      cfg = { ...cfg, boardId: CUSTOM_ID };
+      // Still editing: carry on from the board just made, with a fresh history.
+      drafting = { of: made.id, fromBuiltIn: false, draft: draftOf(made), undo: createUndo(), note: 'This is your board now.' };
+      applyConfig();
+      return true;
+    }
+    function throwDraft() {
+      if (!drafting) return false;
+      try { state?.set?.({ ...(state.get?.() || {}), boardDraft: null }); } catch (err) { console.error('board: draft', err); }
+      const real = boardFor(cfg.boardId);
+      drafting = { of: real.id, fromBuiltIn: Object.prototype.hasOwnProperty.call(BUILTIN_BOARDS, real.id),
+        draft: draftOf(real), undo: createUndo(), note: 'The changes were thrown away.' };
+      applyConfig();
+      return true;
+    }
+    function openInEditor(isNew) {
+      if (cfg.locked) return;
+      wantNew = !!isNew;
+      try { bus?.publish?.('shell/edit-panel', { id: ctx.instanceId, on: true, from: 'board' }); }
+      catch (err) { console.error('board: open the editor', err); }
+    }
+
+    /** The draft's parts for the one editor: each card, then the board itself (the `whole` part, last). */
+    function draftTargets() {
+      if (!drafting) return [];
+      const d = drafting.draft;
+      const g = gridOf(d);
+      const cols = d.cols || g.cols;
+      const rows = d.rows || g.rows;
+      const out = [];
+      const symbolOptions = [{ value: '', label: 'None' }, ...SYMBOL_NAMES.map((n) => ({ value: n, label: n.replace(/_/g, ' ') }))];
+      d.cells.forEach((c, i) => {
+        if (!c || !cardEls[i]) return;
+        // WHERE THIS CARD IS NOW, found by its id each time: the editor keeps a chosen card's rows and buttons while it is
+        // moved, so a slot number captured here would change the wrong card after the first move.
+        const at = (b) => (b?.cells || []).findIndex((x) => x && x.id === c.id);
+        const move = (dir, label) => ({ id: `move-${dir}`, label, run: () => {
+          changeDraft((b) => {
+            const k = at(b);
+            if (k < 0) return { board: b };
+            const r = draftMove(b, k, dir);
+            return { board: r.board, note: r.to == null ? 'There is no slot that way.' : '' };
+          });
+        } });
+        out.push({
+          id: `card-${c.id}`, label: c.word, el: cardEls[i], redraws: true,
+          help: 'A card on the board. Its word, what it says, and its picture or symbol. Changes go to the draft; the board changes when you press Use this board.',
+          fields: [
+            { key: 'word', label: 'Word', kind: 'text', default: '', note: 'Emptying the word takes the card off.' },
+            { key: 'say', label: 'What it says', kind: 'text', default: '', note: 'Leave it empty to say the word itself.' },
+            { key: 'symbol', label: 'Symbol', kind: 'choice', default: '', options: symbolOptions, picker: true,
+              note: 'A symbol follows the theme and the themed pictures.' },
+            { key: 'picture', label: 'Picture', kind: 'picture', default: null,
+              note: 'A picture you choose stays as it is, whatever the theme.' },
+          ],
+          values: () => {
+            const k = at(drafting?.draft);
+            const now = (k >= 0 && drafting.draft.cells[k]) || c;
+            return { word: now.word || '', say: now.say || '', symbol: now.symbol || '', picture: now.image || null };
+          },
+          set: (patch) => {
+            const p = {};
+            if ('word' in patch) p.word = patch.word;
+            if ('say' in patch) p.say = patch.say ? String(patch.say) : null;
+            if ('symbol' in patch) p.symbol = patch.symbol || null;
+            if ('picture' in patch) {
+              const ref = patch.picture;
+              p.image = ref && ref.path ? { sourceId: String(ref.sourceId || ''), path: String(ref.path) } : null;
+            }
+            changeDraft((b) => { const k = at(b); return { board: k < 0 ? b : draftSetCell(b, k, p) }; });
+          },
+          actions: [
+            move('left', '◂ Move left'), move('right', 'Move right ▸'), move('up', '▴ Move up'), move('down', 'Move down ▾'),
+            { id: 'remove', label: 'Remove this word', note: 'Its slot is left empty; Undo puts it back.',
+              run: () => { changeDraft((b) => { const k = at(b); return { board: k < 0 ? b : draftRemove(b, k) }; }); } },
+          ],
+        });
+      });
+      const grid = el('[data-grid]');
+      out.push({
+        id: 'board', label: d.name || 'This board', el: grid, whole: true, redraws: true,
+        help: drafting.note || 'The board being made. Press a card to change it. Nothing reaches the board until Use this board.',
+        fields: [
+          { key: 'name', label: 'Name', kind: 'text', default: '' },
+          { key: 'cols', label: 'Columns', kind: 'number', min: 1, max: DRAFT_MAX_DIM, step: 1, default: cols },
+          { key: 'rows', label: 'Rows', kind: 'number', min: 1, max: DRAFT_MAX_DIM, step: 1, default: rows,
+            note: 'A smaller size is refused while it would lose cards: empty them first.' },
+        ],
+        values: () => {
+          const now = drafting?.draft || d;
+          const gg = gridOf(now);
+          return { name: now.name || '', cols: now.cols || gg.cols, rows: now.rows || gg.rows };
+        },
+        set: (patch) => {
+          if ('name' in patch) changeDraft((b) => ({ board: normalizeBoard({ ...b, name: String(patch.name || '').trim() || b.name }) }));
+          if ('cols' in patch || 'rows' in patch) {
+            changeDraft((b) => {
+              const gg = gridOf(b);
+              return draftSetGrid(b, 'cols' in patch ? patch.cols : (b.cols || gg.cols), 'rows' in patch ? patch.rows : (b.rows || gg.rows));
+            });
+          }
+        },
+        actions: [
+          { id: 'add', label: 'Add a word', note: 'Into the first empty slot.',
+            run: () => { changeDraft((b) => draftAdd(b)); } },
+          { id: 'undo', label: 'Undo', run: () => {
+            const prev = drafting?.undo?.back();
+            if (!prev) return;
+            drafting.draft = prev; drafting.note = ''; keepDraft(); applyConfig();
+          } },
+          { id: 'use', label: 'Use this board', note: 'It becomes the board, as Save did.', run: () => { useDraft(); } },
+          { id: 'throw', label: 'Throw away these changes', note: 'Back to the board as it is.', run: () => { throwDraft(); } },
+        ],
+      });
+      return out;
+    }
+
     /**
      * Open the editor over the board.
      *
@@ -1630,7 +1820,9 @@ registerModule(
     }
 
     function applyConfig() {
-      board = boardFor(cfg.boardId);
+      // (row 2.184) A lock ends the draft (it is kept); the panel shows the draft only while it is being edited.
+      if (drafting && (cfg.locked || !editingMe())) drafting = null;
+      board = drafting ? drafting.draft : boardFor(cfg.boardId);
       loadOwnSounds();                       // own board clips: the cards' own sounds, ready before a press
       drawBoards();
       // A lock closes an open editor: a form left up over a locked board is a caregiver control on
@@ -1842,6 +2034,8 @@ registerModule(
         // different card while scanning happens to be on is a real, if rare, combination
         // (see `aimAt`), and it has no scan-step prompt of its own to measure against.
         bus?.subscribe?.('board/select', () => {
+          // (row 2.184) Over a draft the switch speaks nothing: the board being made is not a board yet.
+          if (drafting) return;
           // (row 2.190) The scan on one of the message bar's buttons presses it.
           if (scan && litMsg && !pointed) {
             const act = litMsg.slice(4);
@@ -1863,8 +2057,11 @@ registerModule(
           let i = -1;
           if (raw.index != null && Number.isFinite(Number(raw.index))) i = Number(raw.index);
           else if (raw.id != null) i = board.cells.findIndex((c) => c && c.id === raw.id);
-          if (i >= 0 && board.cells[i]) choose(i);
+          if (i >= 0 && board.cells[i] && !drafting) choose(i);
         });
+        // (row 2.184) EDIT MODE LEFT THIS PANEL (Done, Escape, idle, another panel chosen): the real board comes back, and
+        // the draft stays kept for next time. Any panel's leaving is heard; `editingMe` says whether it was this one.
+        bus?.subscribe?.('edit/ended', () => { if (drafting && !editingMe()) endDraft(); });
       },
 
       // LIVE OPTIONS for the shell's settings menu. `boardId`'s declared options are the
@@ -1875,6 +2072,13 @@ registerModule(
       settingsChoices: () => ({ boardId: boardChoices().map((c) => ({ value: c.id, label: c.label })) }),
       // (row 2.190) Its pages, for the bars' Previous page / Next page: shown only when there is more than one.
       pages: () => pageInfo(),
+      // (row 2.184) The board's parts for the one editor: asked for when this panel is being edited, which is when the
+      // draft starts (edit mode marks the box first). Asked for anywhere else (the editor's list of every panel), there
+      // is no draft and no parts: nothing changes on a board nobody opened.
+      editTargets: () => { startDraft(); return draftTargets(); },
+      // For the suites: the draft as it stands, or null.
+      __draft: () => (drafting ? { of: drafting.of, fromBuiltIn: drafting.fromBuiltIn, note: drafting.note,
+        draft: JSON.parse(JSON.stringify(drafting.draft)), undo: drafting.undo.size() } : null),
 
       // *** THE EDITOR, FROM THE ONE MENU (row 2.95). *** What the board's own panel offered. `closesMenu`: the
       // editor opens over the board, so the menu gets out of its way (kiosk.js). A locked board offers them
@@ -1886,11 +2090,20 @@ registerModule(
         const draftNew = !!(row.boardDraft && !row.boardDraft.__of);
         const draftThis = !!(row.boardDraft && row.boardDraft.__of === board.id);
         return [
+          // (row 2.184, 2026-11-02) Both open the ONE EDITOR on this board, working on a draft (`openInEditor`, above).
           { kind: 'item', id: 'board-edit', label: 'Edit this board', closesMenu: true, disabled: locked,
-            hint: locked ? why : (draftThis ? 'carries on from the changes left unsaved' : `“${board.name || board.label || 'this board'}”`),
-            run: () => { if (!cfg.locked) openEditor('edit'); } },
+            hint: locked ? why : (draftThis ? 'carries on from the changes left unsaved' : `“${board.name || board.label || 'this board'}”, in the editor`),
+            run: () => { if (!cfg.locked) openInEditor(false); } },
           { kind: 'item', id: 'board-new', label: 'Make a new board…', closesMenu: true, disabled: locked,
-            hint: locked ? why : (draftNew ? 'carries on from the one left unfinished' : 'starts from an empty board'),
+            hint: locked ? why : (draftNew ? 'carries on from the one left unfinished' : 'starts from an empty board, in the editor'),
+            run: () => { if (!cfg.locked) openInEditor(true); } },
+          // The board maker's own form, until the editor does everything it does (recording a card's sound is the piece
+          // still to come there). Then it goes (the proposal's decision 1, Mike's).
+          { kind: 'item', id: 'board-edit-old', label: 'Edit with the old board maker', closesMenu: true, disabled: locked,
+            hint: locked ? why : (draftThis ? 'the form; carries on from the changes left unsaved' : 'the form, with recording a card’s own sound'),
+            run: () => { if (!cfg.locked) openEditor('edit'); } },
+          { kind: 'item', id: 'board-new-old', label: 'Make a new board with the old board maker', closesMenu: true, disabled: locked,
+            hint: locked ? why : (draftNew ? 'the form; carries on from the one left unfinished' : 'the form, starting from an empty board'),
             run: () => { if (!cfg.locked) openEditor('new'); } },
         ];
       },

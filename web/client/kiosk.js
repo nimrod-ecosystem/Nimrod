@@ -8897,7 +8897,8 @@ export async function mountKiosk(root, {
   // since its chosen row follows edit mode, it opens on that panel. A press that turns editing OFF only does that.
   // At every menu level: the corner is a deliberate press on one panel, not a stop on the menu's switch walk.
   offsScreen.push(bus.subscribe(EDIT_PANEL_TOPIC, (p) => {
-    if (!p || p.from !== 'corner' || !p.id || p.on === false || embedded || dash?.impl?.edit) return;
+    // (row 2.184) 'board': an AAC board's "Edit this board" / "Make a new board", which open the one editor the same way.
+    if (!p || (p.from !== 'corner' && p.from !== 'board') || !p.id || p.on === false || embedded || dash?.impl?.edit) return;
     const ed = editorNow();
     if (ed && ed.kind === SCENE_EDITOR_KIND) return;     // already open: edit mode's own change moves its choice
     setTimeout(() => {
