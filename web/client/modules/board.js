@@ -91,6 +91,16 @@ import { SYMBOL_SETS, setForTheme, symbolSet, pickSymbol, symbolUrl, themeIdFrom
 import { showChoiceCard, createChoiceMemory, CHOICE_TIMEOUT_MS } from '../choice_card.js';
 import { symbolSvg as themedSvg, THEME_SET_IDS, THEMES as THEMED } from '../aac_themed.js';
 import { readDeviceSignals } from '../theme_default.js';
+import { readSymbolPacks, isPackId, packPicture, packLabel } from '../symbol_packs.js';
+import { plateFor } from '../symbol_pack.js';
+
+// *** A PERSON'S OWN SYMBOL SETS (big idea 1; Mike 2026-11-03, row 2.204: option A plus a Symbols folder). ***
+// "Symbols" also offers each set found in this device's Symbols folder (symbol_packs.js argues where they live and how
+// they are checked). The folder is read ONCE PER PAGE and shared by every board on it: a screen with three boards does
+// not walk the folder three times. A board set to a pack this device does not have (another computer's, or a folder
+// whose permission lapsed) draws Nimrod's own drawings, the same as a word the pack has no picture for: never blank.
+let packsOnPage = null;
+const symbolPacksNow = () => (packsOnPage || (packsOnPage = readSymbolPacks().catch(() => ({ packs: [], skipped: [], where: '' }))));
 
 // *** THEMED PICTURES (Design, 2026-11-01; Mike's rulings of 2026-11-01 and 2026-11-02; row 2.146). ***
 // Design's ruling 8: "Themed symbol sets get their own pictures that fit the theme; they may be richer and animated,
@@ -548,7 +558,9 @@ export const SETTINGS = [
     ],
     note: 'When symbols follow the theme, a hard-to-see drawing is swapped for the '
       + 'board’s own. A set chosen here is always used as it is. The words never change. '
-      + 'If somebody finds words by their pictures, choose the board’s own drawings or one set, so the pictures stay put.' },
+      + 'If somebody finds words by their pictures, choose the board’s own drawings or one set, so the pictures stay put. '
+      + 'Symbol sets you already use (put in the Symbols folder of your Nimrod folder, or the folder you point it at) are '
+      + 'listed here too; a word a set has no picture for keeps the board’s own drawing.' },
   // THEMED PICTURES (header). On by default: Design's ruling 8, the themed sets are the theme's pictures. Off is the
   // simple sets, as before 2026-11-02, for a person who needs the plainest drawings.
   { key: 'themedPictures', label: 'Pictures that fit the theme', kind: 'toggle', default: true, level: 'standard',
@@ -960,6 +972,10 @@ registerModule(
       const { bg, ink } = setId ? cardColours() : { bg: null, ink: null };
       const pictures = activePictures();
       const moving = pictures ? picturesMove() : false;
+      // A PERSON'S OWN SET (top of file): its picture where it has one, Nimrod's own drawing where it has not.
+      const pack = activePack();
+      const packBg = pack ? cardColours().bg : null;
+      const missed = [];
       // Every slot in the tier is rendered, including empty ones. A hole is drawn as a hole:
       // the positions after it must not move, which is the whole rule in `aac_vocab.js`.
       for (let i = 0; i < t.cells; i++) {
@@ -977,9 +993,15 @@ registerModule(
           // worse than the board's own on this card, keeps the board's own drawing of it.
           const pick = setId ? pickSymbol({ name: cell.symbol, setId, guard, bg, ink }) : null;
           const themed = pictures && cell.symbol ? themedPictureHTML(pictures, cell.symbol, moving) : '';
-          const sym = themed || (pick && pick.from === 'set'
-            ? designedSymbolHTML(pick.setId, cell.symbol) : symbolSvg(cell.symbol));
-          if (themed) b.dataset.sym = `pictures:${pictures}${moving ? ':moving' : ''}`;
+          // The pack is matched on the board's own name for the picture first, then on the word as shown.
+          const packPic = pack ? (packPicture(pack, cell.symbol) || packPicture(pack, cell.word)) : null;
+          if (pack && !packPic) missed.push(cell.word);
+          const sym = packPic ? '<span data-pack-pic style="width:100%;height:100%;display:block"></span>'
+            : themed || (pick && pick.from === 'set'
+              ? designedSymbolHTML(pick.setId, cell.symbol) : symbolSvg(cell.symbol));
+          if (packPic) b.dataset.sym = `pack:${packPic.how}`;
+          else if (pack || symbolMode() === 'pack') b.dataset.sym = 'own';
+          else if (themed) b.dataset.sym = `pictures:${pictures}${moving ? ':moving' : ''}`;
           else if (pick) b.dataset.sym = pick.from === 'set' ? `set:${pick.setId}` : pick.from;
           else if (pictures) b.dataset.sym = 'own';
           // *** THE PICTURE IS OPTIONAL AND ARRIVES LATE; THE WORD IS NEITHER. ***
@@ -992,6 +1014,17 @@ registerModule(
           // the same markup this line used to write inline.
           b.innerHTML = cardFaceHTML({ word: cell.word, symbol: sym, image: !!cell.image });
           if (cell.image) loadImage(b, cell.image);
+          // The pack's picture arrives late, the way a card's photo does: the word is there at once.
+          if (packPic) {
+            packImage(pack, packPic, packBg).then((got) => {
+              const slot = b.isConnected ? b.querySelector('[data-pack-pic]') : null;
+              if (!slot || destroyed) return;
+              if (!got) { slot.outerHTML = symbolSvg(cell.symbol); b.dataset.sym = 'own'; return; }
+              if (got.plate) { slot.style.background = got.plate; slot.style.borderRadius = '12%'; }
+              slot.innerHTML = `<img src="${escapeHtml(got.url)}" alt="" draggable="false" decoding="async" `
+                + 'style="width:100%;height:100%;display:block;object-fit:contain">';
+            });
+          }
           // pointerdown, and it stops there: a tap IS this card, and letting it bubble would
           // let a global pointer binding ALSO fire a generic select — the same card chosen
           // twice, or worse, a different one. The private build hit this and says so.
@@ -1027,6 +1060,7 @@ registerModule(
         g.append(b);
         cardEls.push(b);
       }
+      packMissed = missed;
       setUnit();
       paint();
     }
@@ -1494,6 +1528,7 @@ registerModule(
      *  the drawings the board has always had, never a guess at a replacement. */
     function symbolMode() {
       if (cfg.symbols === 'theme') return 'theme';
+      if (isPackId(cfg.symbols)) return 'pack';
       if (symbolSet(cfg.symbols) || pinnedPictures()) return 'lock';
       return 'own';
     }
@@ -1526,6 +1561,43 @@ registerModule(
       if (s.detail === 'proxy') return false;
       try { if (s.cpu?.slow) return false; } catch { /* not measurable: as if not slow */ }
       return true;
+    }
+
+    // ---- A PERSON'S OWN SET (top of file) ----
+    // `packs`: this page's reading, once it has arrived (null before). `packUrls`: one object URL per picture this board
+    // has shown, with its plate, kept until the board goes. `packMissed`: the words that kept Nimrod's own drawing at the
+    // last draw, for the editor and the suites.
+    let packs = null;
+    const packUrls = new Map();
+    let packMissed = [];
+    const packSource = () => (typeof ctx.symbolPacks === 'function' ? ctx.symbolPacks() : symbolPacksNow());
+    function activePack() {
+      if (symbolMode() !== 'pack' || !packs) return null;
+      return packs.packs.find((p) => p.id === cfg.symbols) || null;
+    }
+    /** A pack picture's URL and plate, read once: `{ url, plate }` or null when the file cannot be read. */
+    async function packImage(entry, pic, bg) {
+      const key = `${entry.id}|${pic.name}`;
+      if (packUrls.has(key)) return packUrls.get(key);
+      let got = null;
+      try {
+        const file = await pic.handle.getFile();
+        // The plate (Design's plateFor): an SVG's own colours are read from its text, so 'auto' can measure them on this
+        // card. A photo-like picture cannot be measured that cheaply, so 'auto' leaves it without one; 'always' still
+        // gives it one.
+        let colours = [];
+        if (/\.svg$/i.test(pic.name)) {
+          try { colours = [...new Set((await file.text()).match(/#[0-9a-f]{6}\b/gi) || [])]; } catch { colours = []; }
+        }
+        const plate = bg ? plateFor(bg, colours, entry.pack.style) : (entry.pack.style.plate === 'always' ? entry.pack.style.plateColour : null);
+        got = { url: URL.createObjectURL(file), plate };
+      } catch { got = null; }
+      packUrls.set(key, got);
+      return got;
+    }
+    function releasePackUrls() {
+      for (const g of packUrls.values()) { try { if (g) URL.revokeObjectURL(g.url); } catch { /* gone */ } }
+      packUrls.clear();
     }
 
     function activeSet() {
@@ -2053,6 +2125,8 @@ registerModule(
 
       __probe: () => ({
         boardId: board.id, tier: board.tier, cells: board.cells.length,
+        // (row 2.204) a person's own symbol set: the packs this page found, and the words that kept Nimrod's own drawing.
+        packs: packs ? packs.packs.map((p) => p.id) : null, packMissed: [...packMissed],
         message: [...message], litMsg, scanItems: scan ? scan.items() : null,   // (row 2.190) the message bar
         // The shared layers AS DRAWN, so a test asserts the elements rather than the string
         // that made them.
@@ -2091,6 +2165,13 @@ registerModule(
       }),
 
       init() {
+        // (row 2.204) The person's own symbol sets on this device: read once per page, never prompting. A board set to one
+        // draws Nimrod's own drawings until the reading arrives, then its pictures.
+        Promise.resolve().then(packSource).then((r) => {
+          if (destroyed) return;
+          packs = r && Array.isArray(r.packs) ? r : { packs: [], skipped: [], where: '' };
+          if (symbolMode() === 'pack') draw();
+        }).catch(() => { packs = { packs: [], skipped: [], where: '' }; });
         // *** NO PANEL OF ITS OWN ANY MORE (row 2.95). *** It had one (a gear, 2026-09-06) because the
         // shell's menu was then several screens away from the board. The ⚙ menu now opens on this
         // panel's own tab, so the caregiver's controls are still behind a deliberate press and the
@@ -2261,7 +2342,16 @@ registerModule(
       // running. A board somebody BUILT is data, and it only exists on the mounted instance —
       // so without this the menu offers two boards while the panel offers three, and the one
       // missing is the person's own.
-      settingsChoices: () => ({ boardId: boardChoices().map((c) => ({ value: c.id, label: c.label })) }),
+      settingsChoices: () => ({ boardId: boardChoices().map((c) => ({ value: c.id, label: c.label })),
+        // (row 2.204) The person's own symbol sets found on this device join "Symbols", after Nimrod's own. A pack chosen
+        // on another device, not found here, is still listed, saying so, so the menu shows what the board is set to.
+        symbols: (() => {
+          const base = (SETTINGS.find((f) => f.key === 'symbols')?.options || []).map((o) => ({ value: o.value, label: o.label }));
+          const own = (packs?.packs || []).map((p) => ({ value: p.id, label: packLabel(p) }));
+          const here = isPackId(cfg.symbols) && !own.some((o) => o.value === cfg.symbols)
+            ? [{ value: cfg.symbols, label: `${String(cfg.symbols).slice(5)} (your own set, not found on this device: Nimrod’s own drawings meanwhile)` }] : [];
+          return [...base, ...own, ...here];
+        })() }),
       // (row 2.190) Its pages, for the bars' Previous page / Next page: shown only when there is more than one.
       pages: () => pageInfo(),
       // (row 2.184) The board's parts for the one editor: asked for when this panel is being edited, which is when the
@@ -2312,6 +2402,7 @@ registerModule(
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }
         sayItClear();   // (big ideas 2 and 4) a character still showing goes with the board
         releaseImages();
+        releasePackUrls();   // (row 2.204) the person's own set's pictures
         closeEditor();
         // own board clips: the cards' sound URLs go with the board.
         for (const got of ownUrls.values()) { try { got.release?.(); } catch { /* gone */ } }

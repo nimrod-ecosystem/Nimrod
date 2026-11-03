@@ -116,6 +116,9 @@ export const KIND_WORDS = Object.freeze({
   // row 2.111 (2026-10-21): lessons_folder.js.
   lessons: Object.freeze({ title: 'Lessons', what: 'your own lesson files', noun: ['lesson file', 'lesson files'],
     none: 'No lesson files in it yet (.json). A Lessons panel offers each one under “Which lesson”.' }),
+  // row 2.204 (2026-11-03): symbol_packs.js. The sets are folders, so what it finds is counted as folders.
+  symbols: Object.freeze({ title: 'Symbols', what: 'symbol sets', noun: ['file', 'files'],
+    none: 'No symbol sets in it yet: one folder per set. An AAC board offers each one under “Symbols”.' }),
   fonts: Object.freeze({ title: 'Fonts', what: 'fonts',
     none: 'No font files in it yet (.woff2, .woff, .ttf or .otf).' }),
   luts: Object.freeze({ title: 'Color looks (color filter files, called look-up tables or LUTs)', what: 'color looks',
@@ -478,11 +481,13 @@ export const SAVE_WORDS = Object.freeze({
   data: 'Keep your own Nimrod data (play history, exports) in',
   boardSounds: 'The sounds of your own AAC board cards are kept in',     // own board clips (2026-10-09)
   lessons: 'Save your own lesson files (.json) in',                       // row 2.111 (2026-10-21)
+  symbols: 'Put symbol sets (one folder each) in',                         // row 2.204 (2026-11-03)
 });
 // What "Connect it for ..." connects it for: the panels that read a media source of that kind. Artwork (2026-10-07):
 // connected, every picture chooser can browse it (a subfolder at a time) and the Photos panel can show it.
 export const CONNECT_WORDS = Object.freeze({ pictures: 'photos', music: 'music', videos: 'videos', artwork: 'pictures' });
-const POINTER_WORDS = Object.freeze({ pictures: 'your photos are', music: 'your music is', videos: 'your videos are' });
+const POINTER_WORDS = Object.freeze({ pictures: 'your photos are', music: 'your music is', videos: 'your videos are',
+  symbols: 'your symbol sets are' });
 
 /**
  * One kind's place, from its `kindFolder` reading: `{ own, name, path, relative, text }`.

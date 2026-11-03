@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>symbol packs - a person's own symbol sets - test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:80ch;font-size:.92rem}
+  #board{position:relative;width:520px;height:420px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>symbol packs (big idea 1; row 2.204, 2026-11-03)</h1>
+<div class="note">
+  Mike, 2026-11-03: symbol packs "option A, plus a Symbols folder in the Nimrod folder tree". A pack is a folder of
+  pictures with one <code>nimrod.symbols.v1</code> file (Design's format, <code>symbol_pack.js</code>). The Symbols folder
+  is looked in first, and can point at any folder. An AAC board offers each pack under "Symbols"; a word the pack has no
+  picture for keeps Nimrod's own drawing, so a card is never blank. Every check here runs on fake folders, and the
+  suite counts every request it makes: a person's set never leaves the device.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="board"></div>
+
+<script type="module">
+import { checkSymbolPack, readSymbolPacks, packPicture, packLabel, packId, isPackId, SYMBOLS_FORMAT, SYMBOLS_KIND,
+  PACK_FOLDERS_MAX } from '../symbol_packs.js';
+import { resolveSymbol, PACK_DEFAULTS } from '../symbol_pack.js';
+import { SUBFOLDERS, README, POINTER_KINDS, FOLDER_KINDS } from '../user_folders.js';
+import { KIND_WORDS, SAVE_WORDS } from '../user_folders_page.js';
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import '../modules/board.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (x) => JSON.stringify(x);
+
+// *** EVERY REQUEST THIS PAGE MAKES FROM HERE ON IS COUNTED. *** blob: and data: are this browser talking to itself.
+const sent = [];
+const realFetch = window.fetch.bind(window);
+window.fetch = (u, ...rest) => { sent.push(String(u && u.url || u)); return realFetch(u, ...rest); };
+const realOpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function (m, u, ...rest) { sent.push(`xhr ${u}`); return realOpen.call(this, m, u, ...rest); };
+
+// ---- fake folders (the File System Access shapes user_folders.js reads) ----
+const notFound = () => { const e = new Error('not found'); e.name = 'NotFoundError'; return e; };
+const fakeFile = (name, text, type = 'image/svg+xml') => ({ kind: 'file', name,
+  async getFile() { return new File([text], name, { type }); } });
+function fakeDir(name, tree = {}) {
+  const kids = new Map();
+  for (const [k, v] of Object.entries(tree)) {
+    kids.set(k, v && typeof v === 'object' && !(v instanceof String) && !v.__file ? fakeDir(k, v) : fakeFile(k, v.__file ? v.text : v, v.__file ? v.type : undefined));
+  }
+  return { kind: 'directory', name, kids,
+    async getDirectoryHandle(n) { const k = kids.get(n); if (k && k.kind === 'directory') return k; throw notFound(); },
+    async getFileHandle(n) { const k = kids.get(n); if (k && k.kind === 'file') return k; throw notFound(); },
+    async *entries() { for (const e of kids) yield e; },
+  };
+}
+const svg = (fill) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="${fill}"/></svg>`;
+const json = (o) => JSON.stringify(o);
+// verbMarker "_,_to": Mulberry's files are named "drink_,_to". (Design's header example says ",_to", which its own code
+// turns into "drink,_to" and so never matches; told to Design via chat, 2026-11-03.)
+const MULBERRY = { format: SYMBOLS_FORMAT, name: 'Mulberry', source: 'https://mulberrysymbols.org', licence: 'CC BY-SA',
+  credit: 'Mulberry Symbols, Steve Lee', files: 'EN/', naming: { separator: '_', verbMarker: '_,_to', variant: '_2' },
+  words: { all_done: 'finished' } };
+const tree = () => fakeDir('Symbols', {
+  Mulberry: { 'mulberry.json': json(MULBERRY), EN: { 'yes.svg': svg('#2a7a3a'), 'drink_,_to.svg': svg('#1f4a7a'),
+    'finished.svg': svg('#444444'), 'stop_2.svg': svg('#a4243b'), 'notes.txt': 'not a picture' } },
+  Broken: { 'pack.json': json({ format: SYMBOLS_FORMAT, name: 'No licence', files: '' }), 'a.svg': svg('#000000') },
+  Photos: { 'cup.jpg': 'jpeg bytes' },                                   // no pack file: not a pack, and nothing said
+  Empty: { 'pack.json': json({ format: SYMBOLS_FORMAT, name: 'Empty', licence: 'CC0', files: 'pics/' }), pics: {} },
+  Zcopy: { 'set.json': json({ ...MULBERRY, files: '' }), 'yes.png': 'png bytes' },   // the same name twice
+  Lost: { 'set.json': json({ format: SYMBOLS_FORMAT, name: 'Lost', licence: 'CC0', files: 'gone/' }) },
+});
+const findIn = (root, name = 'Symbols') => async () => ({ dir: root, name });
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the format: Design\'s matching, and Code\'s check ***');
+  {
+    check('Design\'s matching is used as written: the override, the exact name, the verb form, the variant',
+      resolveSymbol('all_done', MULBERRY, ['EN/finished.svg'])?.how === 'override'
+      && resolveSymbol('yes', MULBERRY, ['EN/yes.svg'])?.how === 'exact'
+      && resolveSymbol('drink', MULBERRY, ['EN/drink_,_to.svg'])?.how === 'verb'
+      && resolveSymbol('stop', MULBERRY, ['EN/stop_2.svg'])?.how === 'variant'
+      && resolveSymbol('pain', MULBERRY, ['EN/yes.svg']) === null);
+    const good = checkSymbolPack(MULBERRY, ['yes.svg', 'finished.svg']);
+    check('*** a good pack is offered, with its name, licence, credit and source ***', good.pack?.name === 'Mulberry'
+      && good.pack.licence === 'CC BY-SA' && good.pack.credit === 'Mulberry Symbols, Steve Lee' && !good.problems.length, J(good));
+    check('...its style is Design\'s defaults where it says nothing', J(good.pack.style) === J(PACK_DEFAULTS));
+    const bad = (raw, pics = ['a.svg']) => checkSymbolPack(raw, pics);
+    check('*** a pack that cannot be offered says why, in words: format, name, licence, pictures ***',
+      !bad({ ...MULBERRY, format: 'other' }).pack && /format/.test(bad({ ...MULBERRY, format: 'other' }).problems[0])
+      && /name/.test(bad({ ...MULBERRY, name: ' ' }).problems[0])
+      && /licence/.test(bad({ ...MULBERRY, licence: '' }).problems[0])
+      && /no pictures/.test(bad(MULBERRY, ['notes.txt']).problems[0])
+      && /not a pack/.test(bad([1]).problems[0]));
+    const loose = checkSymbolPack({ ...MULBERRY, words: { all_done: 'nowhere' } }, ['yes.svg']);
+    check('...an override pointing at no picture is a problem, not a refusal: that word falls back', !!loose.pack
+      && /"all_done" points at "nowhere"/.test(loose.problems[0]), J(loose.problems));
+    check('...a plate setting it does not know is Design\'s default', checkSymbolPack({ ...MULBERRY, style: { plate: 'sometimes' } },
+      ['yes.svg']).pack.style.plate === 'auto');
+    check('ids: a pack is "pack:<its folder>"', packId('Mulberry') === 'pack:Mulberry' && isPackId('pack:x') && !isPackId('theme'));
+  }
+
+  // =====================================================================================
+  section('*** the Symbols folder: one pack per folder, read where it is, never prompting ***');
+  {
+    check('*** a Symbols folder in the Nimrod folder tree, with a README saying what goes in it ***',
+      SUBFOLDERS[SYMBOLS_KIND] === 'Symbols' && FOLDER_KINDS.includes('symbols') && /nimrod\.symbols\.v1/.test(README.symbols)
+      && /never sent/.test(README.symbols));
+    check('*** option A: it is a pointer, so "Choose the folder your symbol sets are already in" points it anywhere ***',
+      POINTER_KINDS.includes('symbols'));
+    check('...the folders page has its words', !!KIND_WORDS.symbols?.title && /Symbols/.test(KIND_WORDS.symbols.none) && !!SAVE_WORDS.symbols);
+    const r = await readSymbolPacks({ find: findIn(tree()) });
+    const ids = r.packs.map((p) => p.id);
+    check('*** the good packs are found: Mulberry and the second one of the same name ***', J(ids) === J(['pack:Mulberry', 'pack:Zcopy']),
+      J(ids));
+    check('...two packs with one name read apart in the list (the second says its folder)', J(r.packs.map((p) => p.label))
+      === J(['Mulberry', 'Mulberry, folder Zcopy']), J(r.packs.map((p) => p.label)));
+    const why = Object.fromEntries(r.skipped.map((s) => [s.folder, s.why]));
+    check('*** the ones that cannot be offered are skipped with why: no licence, no pictures, a missing pictures folder ***',
+      /licence/.test(why.Broken || '') && /no pictures/.test(why.Empty || '') && /not there/.test(why.Lost || ''), J(r.skipped));
+    check('...a folder with no pack file (somebody\'s photos) is not a pack, and is not complained about', !('Photos' in why));
+    const mul = r.packs.find((p) => p.folder === 'Mulberry');
+    check('...only pictures are taken from a pack\'s pictures folder', mul && J([...mul.pictures.keys()].sort())
+      === J(['drink_,_to.svg', 'finished.svg', 'stop_2.svg', 'yes.svg']), mul && J([...mul.pictures.keys()]));
+    check('*** packPicture: the board word to the pack\'s picture, or null (Nimrod\'s own) ***',
+      packPicture(mul, 'drink')?.name === 'drink_,_to.svg' && packPicture(mul, 'all_done')?.how === 'override'
+      && packPicture(mul, 'pain') === null && packPicture(null, 'yes') === null);
+    check('...its label names it as the person\'s own, with its licence', packLabel(mul) === 'Mulberry (your own, CC BY-SA)');
+    const top = await readSymbolPacks({ find: findIn(fakeDir('Mulberry download', { 'm.json': json({ ...MULBERRY, files: '' }), 'yes.svg': svg('#000000') }), 'Mulberry download') });
+    check('*** the folder itself may be one pack (somebody who points straight at a single set) ***',
+      J(top.packs.map((p) => p.id)) === J(['pack:.']), J(top));
+    const none = await readSymbolPacks({ find: async () => ({ dir: null, name: '' }) });
+    const threw = await readSymbolPacks({ find: async () => { throw new Error('no store'); } });
+    check('*** no folder on this device, or its permission lapsed: no packs, and nothing thrown ***',
+      !none.packs.length && !threw.packs.length);
+    const many = {};
+    for (let i = 0; i < PACK_FOLDERS_MAX + 3; i++) many[`set${String(i).padStart(3, '0')}`] = { 'p.json': json({ ...MULBERRY, name: `S${i}`, files: '' }), 'yes.svg': svg('#000000') };
+    const lots = await readSymbolPacks({ find: findIn(fakeDir('Pictures', many)) });
+    check(`...a folder of hundreds is looked in only ${PACK_FOLDERS_MAX} folders deep, and says so`, lots.packs.length === PACK_FOLDERS_MAX
+      && lots.skipped.some((s) => /only the first/.test(s.why)), `${lots.packs.length}`);
+  }
+
+  // =====================================================================================
+  section('*** an AAC board with the person\'s own set ***');
+  {
+    const reading = await readSymbolPacks({ find: findIn(tree()) });
+    const fakeState = (v) => { let val = { ...v }; const subs = []; return { get: () => val, set: (p) => { val = { ...val, ...p }; subs.forEach((f) => f()); }, subscribe: (f) => subs.push(f), flush() {} }; };
+    const host = document.getElementById('board');
+    const mk = (symbols, reader = async () => reading) => {
+      host.innerHTML = '';
+      const st = fakeState({ boardId: 'yesno', symbols });
+      const inst = mountModule('board', { mount: host, bus: createBus(), events: { append: async () => {} }, state: st,
+        output: { say: () => {}, notify: () => {}, alert: () => {} }, symbolPacks: reader });
+      inst.init();
+      return { inst, st };
+    };
+    const card = (word) => [...host.querySelectorAll('.ab-card')].find((b) => b.getAttribute('aria-label') === word);
+    const until = async (fn, ms = 3000) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(25); } return !!fn(); };
+    {
+      const { inst } = mk('pack:Mulberry');
+      await until(() => card('Yes')?.querySelector('[data-pack-pic] img'));
+      const yes = card('Yes');
+      const img = yes?.querySelector('[data-pack-pic] img');
+      check('*** a word the set has a picture for shows the set\'s picture, read on this device (a blob: address) ***',
+        yes?.dataset.sym === 'pack:exact' && !!img && /^blob:/.test(img.getAttribute('src') || ''), yes && yes.outerHTML.slice(0, 160));
+      check('...the word is still on the card, and the picture is decoration to a screen reader',
+        /Yes/.test(yes?.textContent || '') && img?.getAttribute('alt') === '');
+      const no = card('No');
+      check('*** a word it has no picture for keeps Nimrod\'s own drawing: never blank ***', no?.dataset.sym === 'own'
+        && !!no.querySelector('svg') && !no.querySelector('[data-pack-pic]'), no && no.outerHTML.slice(0, 160));
+      const p = inst.impl.__probe();
+      check('...and the board knows which words fell back (for the editor\'s list)', p.packMissed.includes('No')
+        && !p.packMissed.includes('Yes'), J(p.packMissed));
+      const choices = inst.impl.settingsChoices().symbols;
+      check('*** "Symbols" lists the person\'s sets after Nimrod\'s own, by name and licence ***',
+        choices.some((o) => o.value === 'pack:Mulberry' && o.label === 'Mulberry (your own, CC BY-SA)')
+        && choices[0].value === 'own' && choices.some((o) => o.value === 'theme'), J(choices.map((o) => o.value)));
+      inst.destroy();
+    }
+    {
+      const { inst } = mk('pack:Elsewhere');
+      await sleep(150);
+      check('*** set to a pack this device does not have: Nimrod\'s own drawings, and the menu says so ***',
+        card('Yes')?.dataset.sym === 'own' && !!card('Yes').querySelector('svg')
+        && /not found on this device/.test(inst.impl.settingsChoices().symbols.find((o) => o.value === 'pack:Elsewhere')?.label || ''));
+      inst.destroy();
+    }
+    {
+      let release;
+      const slow = new Promise((r) => { release = r; });
+      const { inst } = mk('pack:Mulberry', () => slow);
+      await sleep(60);
+      check('...before the folder has been read, the cards already show (Nimrod\'s own drawings)', !!card('Yes')
+        && !card('Yes').querySelector('[data-pack-pic]'));
+      release(reading);
+      check('...and the set\'s pictures arrive when it has', await until(() => card('Yes')?.querySelector('[data-pack-pic] img')));
+      inst.destroy();
+    }
+    {
+      const { inst } = mk('theme');
+      await sleep(100);
+      check('a board not set to a pack is drawn as before (nothing from the pack on it)', !host.querySelector('[data-pack-pic]'));
+      inst.destroy();
+    }
+    check('*** the board\'s Symbols row says the person\'s own sets are listed there ***',
+      /Symbols folder/.test(getManifest('board').settings.find((f) => f.key === 'symbols')?.note || ''));
+  }
+
+  check('*** nothing left this device: no request went anywhere ***', !sent.filter((u) => !/^(blob|data):/.test(u.replace(/^xhr /, ''))).length, J(sent));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

@@ -96,6 +96,10 @@ export const SUBFOLDERS = Object.freeze({
   // row 2.111 (2026-10-21, chat's note CJ: "a Lessons folder in the Nimrod folder tree seems natural"): a person's own
   // lesson files (lesson_file.js), read by the Lessons module on this device (lessons_folder.js argues it).
   lessons: 'Lessons',
+  // row 2.204 (2026-11-03, Mike: symbol packs "option A, plus a Symbols folder in the Nimrod folder tree"): symbol sets a
+  // person already uses (symbol_packs.js), read by the AAC board on this device. A POINTER: point it at the folder a set
+  // is already in, or put sets here.
+  symbols: 'Symbols',
 });
 // Folders made INSIDE a kind's folder (2026-10-07): one per kind of artwork, from the art kit's own table. Made by
 // `ensureTree` like the rest - only what is missing, nothing changed.
@@ -103,7 +107,7 @@ export const ART_INNER = Object.freeze({ artwork: Object.freeze(ART_KINDS.map((k
 export const LEGACY_SUBFOLDERS = Object.freeze({ fonts: Object.freeze(['fonts']), luts: Object.freeze(['luts']),
   plugins: Object.freeze(['audio-plugins']) });
 // The kinds whose folder is only POINTED AT: their files are read where they are, never copied anywhere.
-export const POINTER_KINDS = Object.freeze(['pictures', 'music', 'videos']);
+export const POINTER_KINDS = Object.freeze(['pictures', 'music', 'videos', 'symbols']);
 
 export const README = Object.freeze({
   pictures: 'Put photos here (.jpg, .png, .heic and the like). Or leave this empty and point Nimrod at the folder\nyour '
@@ -141,6 +145,11 @@ export const README = Object.freeze({
     + 'Lessons panel offers each one under "Which lesson" on this device. A file that is not quite in the lesson shape\nis '
     + 'still read where it can be, and the panel says what it had to guess. Nothing here is sent to the Nimrod site.\n'
     + 'A lesson\'s sources are shown as not checked unless the file says "sourcesChecked": true.\n',
+  // row 2.204 (2026-11-03)
+  symbols: 'Put symbol sets here, one folder per set: its pictures (.svg, .png, .webp, .jpg) and one small .json file that\n'
+    + 'says "format": "nimrod.symbols.v1", the set\'s "name" and its "licence". Or point Nimrod at the folder a set is\n'
+    + 'already in. An AAC board then offers each set under "Symbols". A word the set has no picture for keeps Nimrod\'s\n'
+    + 'own. Nothing is copied: the pictures are read where they are, on this device, and never sent to the Nimrod site.\n',
 });
 
 export function available(view = (typeof window !== 'undefined' ? window : null)) {
