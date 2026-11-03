@@ -1855,6 +1855,27 @@ try {
       b.inst.destroy(); b.h.remove();
     }
     {
+      // The person's OWN character (idea 4): their avatar figure, read from their row.
+      const h = document.createElement('div');
+      h.style.cssText = 'position:relative;width:700px;height:420px';
+      document.body.append(h);
+      const clock = fakeClock();
+      const asked = [];
+      const figRow = { use: 'figure', figure: { hairColor: '#123abc', outfit: 'nimrodCardigan' } };
+      const inst = mountModule('board', { mount: h, bus: createBus(), events: fakeEvents(),
+        state: fakeState({ boardId: 'yesno', sayIt: 'avatar' }), personId: 'pat',
+        makePersonState: (pid, key) => { asked.push(`${pid}:${key}`); return { load: async () => {}, get: () => figRow, destroy() {} }; },
+        output: { say: () => {}, notify: () => {}, alert: () => {} },
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now });
+      inst.init();
+      await sleep(200);
+      h.querySelectorAll('.ab-card')[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      check('*** the person\'s own character: their figure is read from their row, and its hair colour is drawn ***',
+        asked.includes('pat:avatar') && await until(() => /#123abc/i.test(h.querySelector('.ab-sayit')?.innerHTML || '')),
+        `${asked} ${/#123abc/i.test(h.querySelector('.ab-sayit')?.innerHTML || '')}`);
+      inst.destroy(); h.remove();
+    }
+    {
       const b = await mk('symbol');
       const sym = () => b.h.querySelectorAll('.ab-card')[1].querySelector('.ab-sym');
       const before = [...(sym()?.children || [])];

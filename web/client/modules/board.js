@@ -1276,6 +1276,23 @@ registerModule(
     // the word is already spoken and on the card.
     let sayItEl = null, sayItTimer = null, sayItCard = null, sayItCardTimer = null;
     const SAY_IT_ASSETS = '/design-assets/';
+    // THE PERSON'S OWN CHARACTER (idea 4: "the person's own character says it"): the full-body figure they made in the
+    // avatar maker (avatar.js `figure` on their own row, avatar_figure.js figureParts), read once in the background the
+    // first time a character is wanted. Until it is in, or for somebody with no figure, the kit's own player figure.
+    let sayItWho = undefined;   // undefined: not asked yet; null: none; { look, outfit }
+    function sayItFigure() {
+      if (sayItWho !== undefined) return sayItWho;
+      sayItWho = null;
+      try {
+        if (!ctx.personId || typeof ctx.makePersonState !== 'function') return null;
+        const h = ctx.makePersonState(ctx.personId, 'avatar');
+        Promise.all([Promise.resolve(h?.load?.()), import('../avatar.js'), import('../avatar_figure.js')]).then(([, A, F]) => {
+          const a = A.readAvatar(h?.get?.());
+          if (a.figure) { const p = F.figureParts(a.figure); sayItWho = { look: p.look, outfit: p.opts.outfit }; }
+        }).catch(() => {}).finally(() => { try { h?.destroy?.(); } catch { /* gone */ } });
+      } catch { /* no person here: the kit's figure */ }
+      return sayItWho;
+    }
     function sayItClear(which = 'all') {
       if (which !== 'card') {
         if (sayItTimer != null) { clearTimer(sayItTimer); sayItTimer = null; }
@@ -1306,8 +1323,10 @@ registerModule(
       const settings = { actCareWords: cfg.sayItCareWords === true };
       let moving = false;
       try { moving = picturesMove(); } catch { moving = false; }
+      sayItFigure();
       Promise.all([import('../say_it.js'), import('../cast.js')]).then(([S, C]) => {
         if (destroyed) return;
+        const who = sayItWho || {};
         if (mode === 'avatar' || mode === 'both') {
           sayItClear('avatar');
           const el = document.createElement('div');
@@ -1315,7 +1334,8 @@ registerModule(
           el.setAttribute('aria-hidden', 'true');
           el.style.cssText = 'position:absolute;right:2%;bottom:2%;width:min(44%,420px);aspect-ratio:380/320;'
             + 'pointer-events:none;z-index:5';
-          el.innerHTML = S.sayItSvg(key, { who: 'player', settings, label, animated: moving, assetBase: SAY_IT_ASSETS });
+          el.innerHTML = S.sayItSvg(key, { who: 'player', look: who.look, outfit: who.outfit, settings, label, animated: moving,
+            assetBase: SAY_IT_ASSETS });
           const svg = el.firstElementChild;
           if (svg) svg.style.cssText = 'width:100%;height:100%;display:block';
           mount.append(el);
@@ -1333,7 +1353,8 @@ registerModule(
           fig.className = 'ab-sayit-card';
           fig.setAttribute('aria-hidden', 'true');
           fig.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none';
-          fig.innerHTML = C.castSvg('player', { pose: act ? 'stand' : 'talk', motion: act || undefined, animated: moving, assetBase: SAY_IT_ASSETS });
+          fig.innerHTML = C.castSvg('player', { pose: act ? 'stand' : 'talk', motion: act || undefined, animated: moving,
+            assetBase: SAY_IT_ASSETS, look: who.look, outfit: who.outfit });
           const svg = fig.firstElementChild;
           if (svg) svg.style.cssText = 'height:100%;width:auto;display:block';
           if (getComputedStyle(sym).position === 'static') sym.style.position = 'relative';
@@ -1987,6 +2008,8 @@ registerModule(
     }
 
     function applyConfig() {
+      // (big ideas 2 and 4) With a character on, the person's own figure is asked for now, so the first press has it.
+      if (cfg.sayIt && cfg.sayIt !== 'off') sayItFigure();
       // (row 2.184) A lock ends the draft (it is kept); the panel shows the draft only while it is being edited.
       if (drafting && (cfg.locked || !editingMe())) { closeSoundDialog(); drafting = null; }
       board = drafting ? drafting.draft : boardFor(cfg.boardId);
