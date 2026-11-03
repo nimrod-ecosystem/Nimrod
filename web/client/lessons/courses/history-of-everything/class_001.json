@@ -202,6 +202,14 @@
    "date": "n.d.",
    "link": "https://en.wikipedia.org/wiki/Barbara_Walters",
    "read": "2026-10-21"
+  },
+  {
+   "id": "s_sun_age",
+   "title": "How long has the Sun been shining?",
+   "publisher": "Caltech IPAC, Cool Cosmos",
+   "date": "n.d.",
+   "link": "https://coolcosmos.ipac.caltech.edu/ask/3-How-long-has-the-Sun-been-shining-",
+   "read": "2026-11-03"
   }
  ],
  "beats": [
@@ -257,7 +265,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Now let's compare some ages. The chart shows the universe at 13.8 billion years. NASA's Space Place puts our Milky Way galaxy at about 13.6 billion years, and our Sun at about 4.5 billion. The U.S. Geological Survey gives Earth's age as 4.54 billion years. Look at the gap. Earth is much younger than the universe. By my arithmetic, the universe had already finished about two-thirds of its history before our planet existed. So the earliest chapters of this course happen far from home."
+    "text": "Now let's compare some ages. The chart shows the universe at 13.8 billion years. NASA's Space Place puts our Milky Way galaxy at about 13.6 billion years. Caltech's Cool Cosmos puts our Sun at about 4.6 billion, and the U.S. Geological Survey gives Earth's age as 4.54 billion years. So the Sun is a little older than Earth. Now look at the bigger gap. Earth is much younger than the universe. By my arithmetic, the universe had already finished about two-thirds of its history before our planet existed. So the earliest chapters of this course happen far from home."
    },
    "show": {
     "kind": "chart",
@@ -266,7 +274,8 @@
    },
    "cite": [
     "s2",
-    "s3"
+    "s3",
+    "s_sun_age"
    ],
    "move": "bars-grow"
   },
@@ -576,14 +585,14 @@
      "source": "s2"
     },
     {
+     "label": "Sun",
+     "value": 4.6,
+     "source": "s_sun_age"
+    },
+    {
      "label": "Earth",
      "value": 4.54,
      "source": "s3"
-    },
-    {
-     "label": "Sun",
-     "value": 4.5,
-     "source": "s2"
     }
    ]
   }
@@ -628,7 +637,8 @@
    "links": [
     "[[Class 25: The Roman Empire, the Silk Roads and Early Christianity]]"
    ]
-  }
+  },
+  "2026-11-03, chat: the Sun was 4.5 (NASA Space Place's rounding) beside Earth's 4.54 (USGS), which read as Earth older than the Sun (Mike). Now 4.6, from Caltech's Cool Cosmos, and the beat says the Sun is a little older."
  ],
  "frame_of_reference": [
   {
