@@ -3253,7 +3253,14 @@ if (!GROUND_THEMES.medieval) {
     // preview) draws that moment and is not redrawn. Weather and seasons need nothing here: the sky's weather overlays
     // and the theme's season schedule already apply to every scene. Whether a PERSON'S own day may drive a routine is
     // Mike's question first (it is personal data), so nothing personal is read.
-    render: ({ date } = {}) => {
+    // (2026-11-03, row 2.184's "not done") THE SCREEN'S CHOICES OF DESIGN'S SETTINGS (medieval_theme.js MEDIEVAL_DEFAULTS:
+    // "everything here is a setting"): `look` (crafted or toon), `frame`, `cast`. Only those three are taken, so a stray key
+    // cannot reach the kit; anything missing is Design's default.
+    render: ({ date, settings } = {}) => {
+      const picked = {};
+      if (settings && (settings.look === 'crafted' || settings.look === 'toon')) picked.look = settings.look;
+      if (settings && typeof settings.frame === 'boolean') picked.frame = settings.frame;
+      if (settings && typeof settings.cast === 'boolean') picked.cast = settings.cast;
       const box = __lsh('div', { className: 'ls-medieval' });
       box.style.cssText = 'position:absolute;inset:0;overflow:hidden';
       const view = box.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null);
@@ -3266,7 +3273,7 @@ if (!GROUND_THEMES.medieval) {
           const key = `${now.getHours()}:${now.getMinutes()}`;
           if (key === drawnAt) return;
           drawnAt = key;
-          box.innerHTML = m.medievalBackdropSvg({ recipe: v.villageAt(now) },
+          box.innerHTML = m.medievalBackdropSvg({ ...picked, recipe: v.villageAt(now) },
             { date: now, aspect, castSvg: c.castSvg, assetBase: '/design-assets/' });
           const svg = box.firstElementChild;
           if (svg) { svg.setAttribute('preserveAspectRatio', 'xMidYMid slice'); svg.style.cssText = 'width:100%;height:100%;display:block'; }
@@ -3440,7 +3447,10 @@ function injectCss(doc) {
  * No limit, no attribute: the ruling that the flash limit applies only when that setting is on.
  * `set({ ..., fade: true })` (a change the screen made by itself) fades a change of scene: see FADE_MS.
  */
-export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'gentle', flashLimit, sky = null, date = null } = {}) {
+// `sceneSettings` (2026-11-03): a scene's own choices, keyed by scene id ({ medieval: { look, frame, cast } }); a scene
+// reads only its own (render's `settings`), and a scene with none ignores them.
+export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'gentle', flashLimit, sky = null, date = null,
+  sceneSettings = null } = {}) {
   const doc = host.ownerDocument || document;
   injectCss(doc);
   const root = doc.createElement('div');
@@ -3452,7 +3462,7 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
   let systemReduced = !!mq?.matches;
   // `flashLimit`: the screen's limit (flash_limit.js) - a number or a getter, read on every render.
   // A host that passes nothing gets 3, the published ceiling.
-  let cfg = { scene, overlays: [].concat(overlays || []), motion, flashLimit, sky: normalizeSky(sky), date };
+  let cfg = { scene, overlays: [].concat(overlays || []), motion, flashLimit, sky: normalizeSky(sky), date, sceneSettings };
   const dateNow = () => {
     const d = cfg.date ?? seasonContext().at ?? Date.now();
     const out = d instanceof Date ? new Date(d.valueOf()) : new Date(d);
@@ -3475,7 +3485,8 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
     }
     // (seasons) Photosafe while the screen has any flash limit; see above.
     root.toggleAttribute('data-photosafe', Number.isFinite(limitNow()));
-    const ng = __lsh('div', { className: 'ng' }, s.render({ date: dateNow(), time: cfg.sky?.time || null, weather: cfg.sky?.weather || null }));
+    const ng = __lsh('div', { className: 'ng' }, s.render({ date: dateNow(), time: cfg.sky?.time || null, weather: cfg.sky?.weather || null,
+      settings: cfg.sceneSettings?.[cfg.scene] || null }));
     // The shared layer's weather overlays join the scene's own, once each (a theme already wearing
     // rain does not get a second rain).
     const look = cfg.scene === NO_WORLD ? { overlays: [], tints: [] } : skyLook(cfg.scene, cfg.sky);
@@ -3582,7 +3593,7 @@ export function setSceneSky(sky) {
 
 // `flashLimit` (a number or a getter) is the screen's flash limit; omitted, the scene uses 3.
 // `fade` (seasons, 2026-10-05): a change the screen made by itself - fade the old world out (FADE_MS).
-export function syncScene(rootEl, theme, { motion, flashLimit, fade } = {}) {
+export function syncScene(rootEl, theme, { motion, flashLimit, fade, sceneSettings } = {}) {
   if (!rootEl) return;
   const doc = rootEl.ownerDocument || document;
   const isPage = rootEl === doc.documentElement;
@@ -3599,7 +3610,7 @@ export function syncScene(rootEl, theme, { motion, flashLimit, fade } = {}) {
     return;
   }
   const opts = { scene: want, overlays: theme.overlays || [], ...(motion ? { motion } : {}),
-    ...(flashLimit !== undefined ? { flashLimit } : {}), sky: PAGE_SKY };
+    ...(flashLimit !== undefined ? { flashLimit } : {}), ...(sceneSettings !== undefined ? { sceneSettings } : {}), sky: PAGE_SKY };
   if (had) had.set(fade ? { ...opts, fade: true } : opts);
   else {
     const s = mountScene(host, opts);

@@ -389,6 +389,31 @@ export const SCENE_MOTION_FIELD = Object.freeze({ key: SCENE_MOTION_KEY, label: 
   options: [{ value: 'auto', label: 'Moving, unless this screen is slow' }, { value: 'gentle', label: 'Moving, as designed' },
     { value: 'calm', label: 'Slower' },
     { value: 'still', label: 'Still (far less work for a small computer)' }] });
+// *** THE MEDIEVAL VILLAGE'S OWN CHOICES (2026-11-03, row 2.184's "not done"). *** Design's file says every part of the
+// village is "a setting with a starting value, never a fixed rule" (medieval_theme.js MEDIEVAL_DEFAULTS), and until now the
+// site passed none, so every screen got Design's defaults. Two of them are the screen's to choose, shown only while the
+// village is on screen. The look: Design's default (paper and felt in its diorama frame) stays the default, and it is also
+// the cheapest on a Pi 400 measured 2026-11-02 (57 fps; to the edges, the mirrored bleed, 21; cartoon 25), which the labels
+// say. The people: on by default (Design's); off leaves a quiet, empty village for anyone who finds the cast busy.
+// AGAINST more rows (the clock hours, a pinned time of day, the frame's card colour): nobody has asked, and each is one more
+// stop on a switch walk; Design's defaults stand for them.
+export const VILLAGE_LOOK_KEY = 'villageLook';
+export const VILLAGE_LOOKS = Object.freeze({ framed: { look: 'crafted', frame: true }, edges: { look: 'crafted', frame: false },
+  toon: { look: 'toon' } });
+export const VILLAGE_LOOK_FIELD = Object.freeze({ key: VILLAGE_LOOK_KEY, label: 'The village looks', kind: 'choice',
+  level: 'standard', default: 'framed',
+  options: [{ value: 'framed', label: 'Paper and felt, in its frame (the lightest on a small computer)' },
+    { value: 'edges', label: 'Paper and felt, to the screen’s edges (slower on a small computer)' },
+    { value: 'toon', label: 'Cartoon (slower on a small computer)' }] });
+export const VILLAGE_PEOPLE_KEY = 'villagePeople';
+export const VILLAGE_PEOPLE_FIELD = Object.freeze({ key: VILLAGE_PEOPLE_KEY, label: 'People in the village', kind: 'toggle',
+  level: 'standard', default: true, onLabel: 'Shown', offLabel: 'None' });
+/** The scenes' own settings from a screen's row ({ medieval: { look, frame, cast } }). Pure; exported for suites. */
+export function sceneSettingsFrom(row) {
+  const look = VILLAGE_LOOKS[row?.[VILLAGE_LOOK_KEY]] || VILLAGE_LOOKS.framed;
+  const cast = typeof row?.[VILLAGE_PEOPLE_KEY] === 'boolean' ? row[VILLAGE_PEOPLE_KEY] : VILLAGE_PEOPLE_FIELD.default;
+  return { medieval: { ...look, cast } };
+}
 /** Which path a real screen boots on, from its settings row and the default. Pure; exported for suites. */
 export function dashboardPathFor(row, fallback = DASHBOARD_MODULE_DEFAULT) {
   const v = row && row[DASHBOARD_MODULE_KEY];
@@ -807,14 +832,18 @@ export async function mountKiosk(root, {
     // context the avatars and solitaire already read) did nothing to a moving theme somebody had picked. Now both
     // scenes on a kiosk (the page's and the kiosk's own) are told. 'gentle' otherwise, so turning it off moves again.
     const motion = sceneMotion();
-    const resolved = applyTheme(document.documentElement, id, { flashLimit: flashLimitNow, motion });
+    // (2026-11-03) The scenes' own choices (the village's look and people). Read in a try: early in boot `settings` does
+    // not exist yet, and the defaults are Design's.
+    let sceneSettings;
+    try { sceneSettings = sceneSettingsFrom(settings.get() || {}); } catch { sceneSettings = sceneSettingsFrom({}); }
+    const resolved = applyTheme(document.documentElement, id, { flashLimit: flashLimitNow, motion, sceneSettings });
     // Subtitles follow the theme's subtitle style (theme.js `--subtitles-style`). In a try: `subtitles`
     // is a later `let`, and the first theme is applied before it exists.
     try { subtitles?.restyle(); } catch (err) { console.error('kiosk: subtitles', err); }
     // The scene's own flashes (neon signs, lightning) follow the screen's flash limit, read every render.
     // (2026-10-05: `paintedTheme`, not THEMES[resolved] -- the same theme, plus what "With the seasons"
     // adds to it while it falls back, e.g. Halloween's cat on Night. See theme.js.)
-    syncScene(kioskEl, paintedTheme(id), { flashLimit: flashLimitNow, fade, motion });
+    syncScene(kioskEl, paintedTheme(id), { flashLimit: flashLimitNow, fade, motion, sceneSettings });
     // The mixer's "sounds like: match the scene" follows the scene the screen is actually showing.
     soundScene = THEMES[resolved]?.scene || null;
     try { mixer?.setScene(soundScene); } catch (err) { console.error('kiosk: mixer scene', err); }
@@ -4097,6 +4126,7 @@ export async function mountKiosk(root, {
     [PANEL_CORNERS_FIELD.key]: ['display', 0],   // row 2.191: the corner buttons, beside the ring
     [HOLIDAYS_KEY]: ['theme', 0], [SKY_FOLLOW_KEY]: ['theme', 0],   // seasons and the sky (sky.js); themes: on Theme
     [SCENE_MOTION_KEY]: ['theme', 0],   // (2026-11-02) the scene's movement, with the scene
+    [VILLAGE_LOOK_KEY]: ['theme', 0], [VILLAGE_PEOPLE_KEY]: ['theme', 0],   // (2026-11-03) the village's own, with it
     ...Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, ['theme', 0]])),   // seasons: one row per holiday; themes: on Theme
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
     // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
@@ -4646,6 +4676,9 @@ export async function mountKiosk(root, {
     ...(sceneTakesSky(paintedTheme(shownTheme()).scene) ? [{ ...SKY_FIELD, options: SKY_FIELD.options.map((o) => ({ ...o })) }] : []),
     // (2026-11-02) "Moving theme scene": only while the theme on screen has a scene to move.
     ...(paintedTheme(shownTheme())?.scene ? [{ ...SCENE_MOTION_FIELD, options: SCENE_MOTION_FIELD.options.map((o) => ({ ...o })) }] : []),
+    // (2026-11-03) The village's look and people: only while the village is the scene on screen.
+    ...(paintedTheme(shownTheme())?.scene === 'medieval' ? [{ ...VILLAGE_LOOK_FIELD, options: VILLAGE_LOOK_FIELD.options.map((o) => ({ ...o })) },
+      { ...VILLAGE_PEOPLE_FIELD }] : []),
     // Space between panels (2026-10-02 evening): none by default, so four up is four quarters.
     { ...PANEL_GAP_FIELD, options: PANEL_GAP_FIELD.options.map((o) => ({ ...o })) },
     // panel ring (2026-10-09; panel_ring.js argues it): "Show which panel is selected" -- always, for a while after a

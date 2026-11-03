@@ -228,6 +228,45 @@ if (!motionOn) {
       drawn ? drawn.dataset.villageAt : 'not drawn');
     pin.destroy();
   }
+
+  // (2026-11-03, row 2.184's "not done") THE SCREEN'S CHOICES OF DESIGN'S SETTINGS: the village's look and its people reach
+  // the drawing, a stray key does not, and the kiosk turns its two rows into exactly those settings.
+  section('Medieval: the screen chooses the look and the people');
+  {
+    const when = new Date(2026, 10, 3, 14, 30);   // a Tuesday afternoon: people about
+    const drawWith = async (settings) => {
+      const sc = mountScene(box, { scene: 'medieval', overlays: [], motion: 'still', date: when,
+        ...(settings !== undefined ? { sceneSettings: { medieval: settings } } : {}) });
+      let svg = null;
+      for (let i = 0; i < 60 && !svg; i++) { await new Promise((r) => setTimeout(r, 50)); svg = box.querySelector('.ls-medieval svg'); }
+      // Ids are made fresh on every draw (two drawings of one village differ only there), so they are taken out first.
+      const html = svg ? svg.outerHTML.replace(/\b(id|href|xlink:href)="[^"]*"/g, '').replace(/url\(#[^)]*\)/g, '') : '';
+      sc.destroy();
+      return html;
+    };
+    const plain = await drawWith(undefined);
+    const framedOn = await drawWith({ look: 'crafted', frame: true, cast: true });
+    const nobody = await drawWith({ look: 'crafted', frame: true, cast: false });
+    const toon = await drawWith({ look: 'toon', cast: true });
+    const edges = await drawWith({ look: 'crafted', frame: false, cast: true });
+    const stray = await drawWith({ look: 'crafted', frame: true, cast: true, recipe: 'nothing', assetBase: 'http://elsewhere/' });
+    check('*** with no settings the village is Design\'s default, the same as choosing it ***', !!plain && plain === framedOn,
+      `${plain.length} vs ${framedOn.length}`);
+    check('*** "People in the village: None" draws a village with fewer things in it ***', !!nobody && nobody.length < framedOn.length,
+      `${nobody.length} vs ${framedOn.length}`);
+    check('...the cartoon look and the edges each draw a different village', !!toon && !!edges && toon !== framedOn && edges !== framedOn
+      && toon !== edges);
+    check('...and a key the screen has no row for never reaches the kit', stray === framedOn);
+    const K = await import('../kiosk.js');
+    check('the kiosk: no rows means Design\'s defaults', JSON.stringify(K.sceneSettingsFrom({}))
+      === JSON.stringify({ medieval: { look: 'crafted', frame: true, cast: true } }), JSON.stringify(K.sceneSettingsFrom({})));
+    check('...each look row is its pair of settings, and People off is no cast',
+      JSON.stringify(K.sceneSettingsFrom({ villageLook: 'edges', villagePeople: false }).medieval)
+        === JSON.stringify({ look: 'crafted', frame: false, cast: false })
+      && K.sceneSettingsFrom({ villageLook: 'toon' }).medieval.look === 'toon'
+      && K.sceneSettingsFrom({ villageLook: 'nonsense' }).medieval.frame === true);
+    check('...both rows default to Design\'s choice', K.VILLAGE_LOOK_FIELD.default === 'framed' && K.VILLAGE_PEOPLE_FIELD.default === true);
+  }
 }
 
 // Overlays are opt-in and listed for completeness: the rare crossings (one element each) still
