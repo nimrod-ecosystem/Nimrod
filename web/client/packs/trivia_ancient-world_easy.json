@@ -1,0 +1,919 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Ancient world trivia (easy)",
+ "description": "50 easy questions about prehistory and the early civilizations: Mesopotamia, Egypt, the Indus, China, the Americas. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "Which writing system, made of wedge-shaped marks, was developed by the Sumerians of Mesopotamia?",
+   "answers": [
+    "Cuneiform",
+    "Hieroglyphs",
+    "Runes",
+    "Linear B"
+   ],
+   "correct": "Cuneiform",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Sumerian scribes created cuneiform, which used wedge-shaped impressions to record ideas and sounds. It is regarded as the first system of writing.",
+   "source": {
+    "url": "https://www.britannica.com/place/Sumer",
+    "title": "Sumer"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Ancient Mesopotamia lay between which two rivers?",
+   "answers": [
+    "The Nile and the Jordan",
+    "The Indus and the Ganges",
+    "The Tigris and the Euphrates",
+    "The Danube and the Rhine"
+   ],
+   "correct": "The Tigris and the Euphrates",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The name Mesopotamia refers to the region between the Tigris and Euphrates rivers in southwestern Asia.",
+   "source": {
+    "url": "https://www.britannica.com/place/Mesopotamia-historical-region-Asia",
+    "title": "History of Mesopotamia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Sumer, the site of the earliest known civilization, lay in what is now southern part of which modern country?",
+   "answers": [
+    "Iran",
+    "Syria",
+    "Turkey",
+    "Iraq"
+   ],
+   "correct": "Iraq",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Sumer was in southern Mesopotamia, in the area that is now southern Iraq.",
+   "source": {
+    "url": "https://www.britannica.com/place/Sumer",
+    "title": "Sumer"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Hammurabi, famous for his set of laws, was the best-known king of which ancient city?",
+   "answers": [
+    "Memphis",
+    "Babylon",
+    "Troy",
+    "Carthage"
+   ],
+   "correct": "Babylon",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Hammurabi was the sixth ruler of the first dynasty of Babylon, reigning around 1792–1750 BCE.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Hammurabi",
+    "title": "Hammurabi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Code of Hammurabi is famous for which principle of retributive justice?",
+   "answers": [
+    "Turn the other cheek",
+    "Love thy neighbor",
+    "Might makes right",
+    "An eye for an eye"
+   ],
+   "correct": "An eye for an eye",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The code is known for prescribing retributive justice for bodily injuries, which is summed up as 'an eye for an eye'.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/analysis-code-hammurabi/",
+    "title": "Analysis: Code of Hammurabi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Because some of the earliest civilizations arose there, Mesopotamia is often given which nickname?",
+   "answers": [
+    "The Land of the Rising Sun",
+    "The Cradle of Civilization",
+    "The Middle Kingdom",
+    "The Dark Continent"
+   ],
+   "correct": "The Cradle of Civilization",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Mesopotamia is widely described as one of the earliest cradles of civilization.",
+   "source": {
+    "url": "https://www.britannica.com/place/Mesopotamia-historical-region-Asia",
+    "title": "History of Mesopotamia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For which pharaoh was the Great Pyramid of Giza built as a royal tomb?",
+   "answers": [
+    "Tutankhamun",
+    "Ramses II",
+    "Khufu",
+    "Akhenaten"
+   ],
+   "correct": "Khufu",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "answerKind": "person",
+   "explain": "The Great Pyramid was built as the tomb of Khufu (also called Cheops), the second king of Egypt's 4th dynasty.",
+   "source": {
+    "url": "https://www.britannica.com/place/Great-Pyramid-of-Giza",
+    "title": "Great Pyramid of Giza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Pyramids of Giza stand on the west bank of which river?",
+   "answers": [
+    "The Tigris",
+    "The Euphrates",
+    "The Indus",
+    "The Nile"
+   ],
+   "correct": "The Nile",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The Great Pyramid and its neighbours are on the west bank of the Nile in northern Egypt.",
+   "source": {
+    "url": "https://www.britannica.com/place/Great-Pyramid-of-Giza",
+    "title": "Great Pyramid of Giza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of the Seven Wonders of the Ancient World is the only one still standing today?",
+   "answers": [
+    "The Hanging Gardens of Babylon",
+    "The Colossus of Rhodes",
+    "The Great Pyramid of Giza",
+    "The Lighthouse of Alexandria"
+   ],
+   "correct": "The Great Pyramid of Giza",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The Great Pyramid at Giza is the only ancient wonder that survives.",
+   "source": {
+    "url": "https://www.thecollector.com/great-pyramid-giza-khufu-wonder/",
+    "title": "What We Really Know About the Great Pyramid of Giza & Its Builder"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to archaeological evidence, who mainly built the Egyptian pyramids?",
+   "answers": [
+    "Enslaved Hebrew laborers",
+    "Free, organized Egyptian workers",
+    "Captured Nubian soldiers",
+    "Visiting Greek engineers"
+   ],
+   "correct": "Free, organized Egyptian workers",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Archaeology suggests the pyramids were built by free, professional builders, not by the mass of slaves described in later legends.",
+   "source": {
+    "url": "https://www.thecollector.com/great-pyramid-giza-khufu-wonder/",
+    "title": "What We Really Know About the Great Pyramid of Giza & Its Builder"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Rosetta Stone became the key to deciphering which ancient script?",
+   "answers": [
+    "Cuneiform",
+    "Linear B",
+    "Mayan glyphs",
+    "Egyptian hieroglyphs"
+   ],
+   "correct": "Egyptian hieroglyphs",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The same decree is inscribed in three scripts, and scholars could still read the Greek. That let them decode the hieroglyphs.",
+   "source": {
+    "url": "https://www.britishmuseum.org/collection/egypt/explore-rosetta-stone",
+    "title": "Explore the Rosetta Stone"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Besides hieroglyphs and Demotic, which language is inscribed on the Rosetta Stone?",
+   "answers": [
+    "Latin",
+    "Ancient Greek",
+    "Hebrew",
+    "Akkadian"
+   ],
+   "correct": "Ancient Greek",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The stone carries one decree in hieroglyphs, Demotic script and ancient Greek.",
+   "source": {
+    "url": "https://smarthistory.org/the-rosetta-stone/",
+    "title": "The Rosetta Stone"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French scholar realized that hieroglyphs recorded the sounds of the Egyptian language, helping to decode them?",
+   "answers": [
+    "Napoleon Bonaparte",
+    "Howard Carter",
+    "Heinrich Schliemann",
+    "Jean-François Champollion"
+   ],
+   "correct": "Jean-François Champollion",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "answerKind": "person",
+   "explain": "Champollion showed that hieroglyphs recorded the sounds of the Egyptian language, which laid the foundations of modern Egyptology.",
+   "source": {
+    "url": "https://smarthistory.org/the-rosetta-stone/",
+    "title": "The Rosetta Stone"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which British archaeologist discovered the tomb of Tutankhamun in 1922?",
+   "answers": [
+    "Howard Carter",
+    "Heinrich Schliemann",
+    "Arthur Evans",
+    "Hiram Bingham"
+   ],
+   "correct": "Howard Carter",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "answerKind": "person",
+   "explain": "Howard Carter found the largely intact tomb of Tutankhamun in 1922.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Howard-Carter",
+    "title": "Howard Carter"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which famous Egyptian burial ground was Tutankhamun's tomb found?",
+   "answers": [
+    "The Giza Plateau",
+    "The Valley of the Kings",
+    "Saqqara",
+    "The Valley of the Queens"
+   ],
+   "correct": "The Valley of the Kings",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Carter's workmen found the steps to the tomb in the Valley of the Kings on 4 November 1922.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/november-4/entrance-to-king-tuts-tomb-discovered",
+    "title": "Entrance to King Tut's tomb discovered"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which iconic piece of ancient Egyptian art, made of solid gold, adorned Tutankhamun's mummy?",
+   "answers": [
+    "His royal sceptre",
+    "His war chariot",
+    "His throne",
+    "His funerary mask"
+   ],
+   "correct": "His funerary mask",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The solid-gold funerary mask that covered the king's mummy is among the most iconic works of Egyptian art ever found.",
+   "source": {
+    "url": "https://www.metmuseum.org/met-publications/tutankhamuns-tomb-the-thrill-of-discovery",
+    "title": "Tutankhamun's Tomb: The Thrill of Discovery - The Metropolitan Museum of Art"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which natural salt did ancient Egyptian embalmers use to dry out bodies during mummification?",
+   "answers": [
+    "Alum",
+    "Gypsum",
+    "Natron",
+    "Potash"
+   ],
+   "correct": "Natron",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Egyptian embalmers used natron, a salt found naturally in Egypt, to dry the body.",
+   "source": {
+    "url": "https://www.historyskills.com/classroom/year-7/mummification/",
+    "title": "How to mummify a pharaoh: A step-by-step guide - History Skills"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "During mummification, which organ did embalmers remove with a hook and then discard?",
+   "answers": [
+    "The liver",
+    "The heart",
+    "The brain",
+    "The lungs"
+   ],
+   "correct": "The brain",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Priests removed the brain with a brain hook and threw it away. The heart was kept because it was thought to be the seat of a person's spirit.",
+   "source": {
+    "url": "https://www.mpm.edu/sites/default/files/images/content/education/programs/curiosity/may/Mummification_Explained_v2.pdf",
+    "title": "Ancient Egyptian Mummification Explained"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which two cities were the greatest urban centers of the Indus Valley Civilization?",
+   "answers": [
+    "Ur and Uruk",
+    "Memphis and Thebes",
+    "Knossos and Mycenae",
+    "Harappa and Mohenjo-daro"
+   ],
+   "correct": "Harappa and Mohenjo-daro",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The Indus civilization is known for two large cities, Harappa and Mohenjo-daro, plus more than 100 towns and villages.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Indus-civilization",
+    "title": "Indus civilization"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which modern country are the ruins of Mohenjo-daro found?",
+   "answers": [
+    "India",
+    "Iran",
+    "Pakistan",
+    "Nepal"
+   ],
+   "correct": "Pakistan",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Mohenjo-daro is in the Sindh province of present-day Pakistan, on the Indus River.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Indus-civilization",
+    "title": "Indus civilization"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which other name is used for the Indus Valley Civilization?",
+   "answers": [
+    "Minoan civilization",
+    "Mycenaean civilization",
+    "Olmec civilization",
+    "Harappan civilization"
+   ],
+   "correct": "Harappan civilization",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The civilization is also called Harappan, after Harappa, one of its two great cities.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Indus-civilization",
+    "title": "Indus civilization"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Indus cities such as Harappa and Mohenjo-daro are celebrated for early examples of what?",
+   "answers": [
+    "Towering stepped pyramids",
+    "Planned grid streets and drains",
+    "Libraries of clay tablets",
+    "Giant carved stone heads"
+   ],
+   "correct": "Planned grid streets and drains",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "These cities had grid-based street layouts, standardized bricks and extensive drainage systems.",
+   "source": {
+    "url": "https://www.worldhistory.org/Indus_Valley_Civilization/",
+    "title": "Indus Valley Civilization - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For which ruler was the famous Terracotta Army created?",
+   "answers": [
+    "Kublai Khan",
+    "Qin Shi Huang",
+    "Emperor Wu of Han",
+    "Sun Tzu"
+   ],
+   "correct": "Qin Shi Huang",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "answerKind": "person",
+   "explain": "The Terracotta Army guards the tomb of Qin Shi Huang, the first unifier of China.",
+   "source": {
+    "url": "https://whc.unesco.org/en/list/441/",
+    "title": "Mausoleum of the First Qin Emperor - UNESCO World Heritage Centre"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who discovered the Terracotta Army in 1974?",
+   "answers": [
+    "British explorers",
+    "Government surveyors",
+    "Buddhist monks",
+    "A group of local farmers"
+   ],
+   "correct": "A group of local farmers",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The army was found on 29 March 1974 by farmers who were digging a well near Xi'an.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Terracotta_Army",
+    "title": "Terracotta Army"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Near which Chinese city is the Terracotta Army located?",
+   "answers": [
+    "Beijing",
+    "Shanghai",
+    "Nanjing",
+    "Xi'an"
+   ],
+   "correct": "Xi'an",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The army lies in Lintong District, Xi'an, in Shaanxi province.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Terracotta_Army",
+    "title": "Terracotta Army"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which dynasty's first emperor joined earlier fortifications into a single northern defense, creating the first Great Wall?",
+   "answers": [
+    "Ming",
+    "Qin",
+    "Tang",
+    "Song"
+   ],
+   "correct": "Qin",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Around 220 BCE, Qin Shi Huang connected sections of earlier walls into a united defense against invasions from the north.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Great-Wall-of-China",
+    "title": "Great Wall of China"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Most of the Great Wall of China that survives and is visible today was built by which dynasty?",
+   "answers": [
+    "Qin",
+    "Han",
+    "Ming",
+    "Zhou"
+   ],
+   "correct": "Ming",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The wall seen today is almost entirely the work of the Ming dynasty, which added the distinctive watchtowers.",
+   "source": {
+    "url": "https://www.worldhistory.org/Great_Wall_of_China/",
+    "title": "Great Wall of China - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who supplied most of the labor for the Great Wall built under Qin Shi Huang?",
+   "answers": [
+    "Paid guild masons",
+    "Volunteer temple monks",
+    "Conscripted soldiers and convicts",
+    "Foreign mercenary engineers"
+   ],
+   "correct": "Conscripted soldiers and convicts",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The Qin-era wall was built largely by soldiers, conscripts and convicts sent north under guard.",
+   "source": {
+    "url": "https://www.worldhistory.org/Great_Wall_of_China/",
+    "title": "Great Wall of China - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 221 BCE, Qin Shi Huang became the first ruler to do what?",
+   "answers": [
+    "Conquer India",
+    "Invent the compass",
+    "Build the Forbidden City",
+    "Unify China as its emperor"
+   ],
+   "correct": "Unify China as its emperor",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Qin Shi Huang proclaimed himself first emperor of China in 221 BCE after conquering the rival states.",
+   "source": {
+    "url": "https://www.smithsonianmag.com/history/what-you-need-know-about-chinas-terra-cotta-warriors-first-qin-emperor-30942673/",
+    "title": "What You Need to Know About China's Terra-Cotta Warriors and the First Qin Emperor"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ancient civilization built the city of Chichen Itza on Mexico's Yucatán Peninsula?",
+   "answers": [
+    "The Aztec",
+    "The Maya",
+    "The Inca",
+    "The Olmec"
+   ],
+   "correct": "The Maya",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Chichen Itza was a Maya city, later influenced by the Toltec civilization.",
+   "source": {
+    "url": "https://www.worldhistory.org/Chichen_Itza/",
+    "title": "Chichen Itza - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the most famous structure at Chichen Itza called?",
+   "answers": [
+    "The Temple of the Sun",
+    "The Pyramid of the Moon",
+    "The Temple of Kukulcán",
+    "The Palace of Montezuma"
+   ],
+   "correct": "The Temple of Kukulcán",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The Temple of Kukulcán, also known as El Castillo, is the best-known building at Chichen Itza.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Chichen_Itza",
+    "title": "Chichen Itza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name Chichen Itza is linked to a large natural sinkhole where the Maya threw offerings. What is such a sinkhole called?",
+   "answers": [
+    "A cenote",
+    "A geyser",
+    "An oasis",
+    "A lagoon"
+   ],
+   "correct": "A cenote",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The name probably comes from the Sacred Cenote, a large sinkhole into which the Maya threw offerings of jade and gold.",
+   "source": {
+    "url": "https://www.worldhistory.org/Chichen_Itza/",
+    "title": "Chichen Itza - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which trio of crops was central to early Maya agriculture?",
+   "answers": [
+    "Wheat, rice and barley",
+    "Corn, beans and squash",
+    "Oats, millet and tea",
+    "Olives, grapes and figs"
+   ],
+   "correct": "Corn, beans and squash",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The early Maya were farmers who grew crops such as corn, beans, squash and cassava.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/anthropology/pre-hispanic-city-chichen-itza",
+    "title": "Pre-Hispanic City of Chichen-Itza"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which modern capital city was built over the ruins of the Aztec capital Tenochtitlan?",
+   "answers": [
+    "Lima",
+    "Bogotá",
+    "Havana",
+    "Mexico City"
+   ],
+   "correct": "Mexico City",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Tenochtitlan stood on the site of modern Mexico City, in the marshes of Lake Texcoco.",
+   "source": {
+    "url": "https://www.britannica.com/place/Tenochtitlan",
+    "title": "Tenochtitlan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to legend, what sign told the Aztecs where to found Tenochtitlan?",
+   "answers": [
+    "A jaguar standing on a rock devouring a deer",
+    "An eagle perched on a cactus eating a snake",
+    "A hummingbird hovering above a golden lake",
+    "A serpent coiled around a temple stairway"
+   ],
+   "correct": "An eagle perched on a cactus eating a snake",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The god Huitzilopochtli told the Mexica to build where they saw an eagle on a cactus eating a snake.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/tenochtitlan/",
+    "title": "Tenochtitlan - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Spanish conquistador led the campaign that destroyed the Aztec capital in 1521?",
+   "answers": [
+    "Francisco Pizarro",
+    "Christopher Columbus",
+    "Hernán Cortés",
+    "Ferdinand Magellan"
+   ],
+   "correct": "Hernán Cortés",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "answerKind": "person",
+   "explain": "Tenochtitlan was destroyed by the Spanish under Hernán Cortés in 1521.",
+   "source": {
+    "url": "https://www.britannica.com/place/Tenochtitlan",
+    "title": "Tenochtitlan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What did the Aztecs use as a form of money?",
+   "answers": [
+    "Minted gold coins",
+    "Paper banknotes",
+    "Iron ingots",
+    "Cocoa beans"
+   ],
+   "correct": "Cocoa beans",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Aztec people used cocoa beans as money.",
+   "source": {
+    "url": "https://kids.nationalgeographic.com/history/article/aztec-civilization",
+    "title": "Aztec civilization facts and history"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which modern country is the Inca site of Machu Picchu?",
+   "answers": [
+    "Chile",
+    "Mexico",
+    "Peru",
+    "Argentina"
+   ],
+   "correct": "Peru",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Machu Picchu is in the Andes of Peru, about 50 miles northwest of Cuzco.",
+   "source": {
+    "url": "https://www.britannica.com/place/Machu-Picchu",
+    "title": "Machu Picchu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which city was the capital of the Inca Empire?",
+   "answers": [
+    "Quito",
+    "Lima",
+    "La Paz",
+    "Cusco"
+   ],
+   "correct": "Cusco",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Cuzco (Cusco) was the capital of the Inca Empire, known as Tawantinsuyu.",
+   "source": {
+    "url": "https://www.britannica.com/place/Cuzco",
+    "title": "Cuzco"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How were the stones in Inca masonry at Machu Picchu fitted together?",
+   "answers": [
+    "Bonded with lime plaster",
+    "Held by iron clamps",
+    "Glued with tree resin",
+    "Cut to fit tightly without mortar"
+   ],
+   "correct": "Cut to fit tightly without mortar",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Machu Picchu's buildings show Inca masonry, with stones cut to fit together without mortar.",
+   "source": {
+    "url": "https://www.history.com/articles/machu-picchu",
+    "title": "Machu Picchu - Peru, Elevation & Facts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What kind of surgery does evidence show that the Inca performed?",
+   "answers": [
+    "Heart surgery",
+    "Kidney transplants",
+    "Eye lens replacement",
+    "Brain surgery"
+   ],
+   "correct": "Brain surgery",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Evidence shows that the Inca performed brain surgeries.",
+   "source": {
+    "url": "https://kids.nationalgeographic.com/history/article/inca-civilization",
+    "title": "Inca civilization facts and history"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which country is the Lascaux cave, famous for its prehistoric paintings?",
+   "answers": [
+    "France",
+    "Spain",
+    "Italy",
+    "Greece"
+   ],
+   "correct": "France",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Lascaux is in southwestern France, near Montignac in the Dordogne region.",
+   "source": {
+    "url": "https://www.worldhistory.org/Lascaux_Cave/",
+    "title": "Lascaux Cave - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who discovered the Lascaux cave paintings in 1940?",
+   "answers": [
+    "A French army patrol",
+    "A team of archaeologists",
+    "Four local teenagers",
+    "A pair of shepherds"
+   ],
+   "correct": "Four local teenagers",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Four teenagers stumbled on the paintings after following their dog down a narrow entrance into the cavern.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/september-12/lascaux-cave-paintings-discovered",
+    "title": "Lascaux cave paintings discovered"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how old are the Lascaux cave paintings?",
+   "answers": [
+    "Around 2,000 to 3,000 years",
+    "Around 5,000 to 6,000 years",
+    "Around 15,000 to 17,000 years",
+    "Around 40,000 to 45,000 years"
+   ],
+   "correct": "Around 15,000 to 17,000 years",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The animal paintings at Lascaux are about 15,000 to 17,000 years old, from the Upper Paleolithic period.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/september-12/lascaux-cave-paintings-discovered",
+    "title": "Lascaux cave paintings discovered"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What major change defines the Neolithic Revolution?",
+   "answers": [
+    "A shift from farming to factory production",
+    "A move from cities back to nomadic herding",
+    "A switch from stone tools to iron tools",
+    "A shift from hunting and gathering to farming and settlement"
+   ],
+   "correct": "A shift from hunting and gathering to farming and settlement",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "During the Neolithic Revolution, humans began cultivating plants, breeding animals for food and forming permanent settlements.",
+   "source": {
+    "url": "https://www.history.com/articles/neolithic-revolution",
+    "title": "Neolithic Revolution"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how long ago did the Neolithic Revolution begin?",
+   "answers": [
+    "About 2,000 years ago",
+    "About 12,000 years ago",
+    "About 100,000 years ago",
+    "About 500 years ago"
+   ],
+   "correct": "About 12,000 years ago",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The shift from nomadic hunting and gathering to settled farming began around 12,000 years ago.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/agriculture-and-agribusiness/neolithic-revolution/",
+    "title": "Neolithic Revolution"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which crop became a staple for early farmers in the Middle East, thanks to its huge natural stands there?",
+   "answers": [
+    "Maize",
+    "Rice",
+    "Sorghum",
+    "Wheat"
+   ],
+   "correct": "Wheat",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Early Middle Eastern farmers relied on the abundant natural stands of wheat and barley. Rice, maize and sorghum became staples in other regions.",
+   "source": {
+    "url": "https://www.worldhistory.org/article/1937/dynamics-of-the-neolithic-revolution/",
+    "title": "Dynamics of the Neolithic Revolution - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Neolithic period is also known by what name?",
+   "answers": [
+    "The Bronze Age",
+    "The New Stone Age",
+    "The Iron Age",
+    "The Ice Age"
+   ],
+   "correct": "The New Stone Age",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "The Neolithic is also called the New Stone Age, a period marked by farming and permanent settlements.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/agriculture-and-agribusiness/neolithic-revolution/",
+    "title": "Neolithic Revolution"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which English county does the prehistoric monument Stonehenge stand?",
+   "answers": [
+    "Cornwall",
+    "Kent",
+    "Wiltshire",
+    "Yorkshire"
+   ],
+   "correct": "Wiltshire",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Stonehenge is a prehistoric monument in Wiltshire, England, and part of a UNESCO World Heritage Site.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/anthropology/stonehenge-avebury-and-associated-sites/",
+    "title": "Stonehenge, Avebury and Associated Sites"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how long ago did work on Stonehenge begin?",
+   "answers": [
+    "About 500 years ago",
+    "About 1,500 years ago",
+    "About 5,000 years ago",
+    "About 20,000 years ago"
+   ],
+   "correct": "About 5,000 years ago",
+   "difficulty": "easy",
+   "category": "Ancient world",
+   "explain": "Work began on Stonehenge about 5,000 years ago, and it was built in stages over many years.",
+   "source": {
+    "url": "https://www.english-heritage.org.uk/visit/places/stonehenge/history-and-stories/history/",
+    "title": "History of Stonehenge"
+   },
+   "ai_written": true
+  }
+ ]
+}

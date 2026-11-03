@@ -1,0 +1,921 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Religions trivia (easy)",
+ "description": "50 easy questions about the world's religions, large and small: beliefs, practices, holidays, history; respectful, no claims about which is true. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "Which Islamic festival marks the end of the fasting month of Ramadan?",
+   "answers": [
+    "Eid al-Fitr",
+    "Eid al-Adha",
+    "Mawlid",
+    "Ashura"
+   ],
+   "correct": "Eid al-Fitr",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Eid al-Fitr, the \"Festival of Breaking Fast,\" celebrates the end of Ramadan.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Eid-al-Fitr",
+    "title": "Eid al-Fitr"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many times each day do devout Muslims perform the ritual prayer known as salat?",
+   "answers": [
+    "Three",
+    "Five",
+    "Seven",
+    "Ten"
+   ],
+   "correct": "Five",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Salat, one of the Five Pillars of Islam, is performed five times each day.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Pillars-of-Islam",
+    "title": "Pillars of Islam"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "To which city do Muslims travel on the hajj pilgrimage?",
+   "answers": [
+    "Medina",
+    "Jerusalem",
+    "Mecca",
+    "Cairo"
+   ],
+   "correct": "Mecca",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The hajj is the pilgrimage to Mecca in Saudi Arabia, which every adult Muslim who is able must make at least once.",
+   "source": {
+    "url": "https://www.britannica.com/topic/hajj",
+    "title": "Hajj"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the holy book of Islam?",
+   "answers": [
+    "The Torah",
+    "The Vedas",
+    "The Quran",
+    "The Tripitaka"
+   ],
+   "correct": "The Quran",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Quran (also spelled Koran) is the holy book of Islam, which Muslims regard as the word of God.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Islam/353307",
+    "title": "Islam - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which day of the week do Muslim communities traditionally gather at the mosque for special congregational prayers?",
+   "answers": [
+    "Sunday",
+    "Saturday",
+    "Monday",
+    "Friday"
+   ],
+   "correct": "Friday",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Muslim communities gather at the mosque for special prayers on Fridays.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Islam/353307",
+    "title": "Islam - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which greeting is most commonly exchanged by English speakers at Eid al-Fitr?",
+   "answers": [
+    "Shalom aleichem",
+    "Eid Mubarak",
+    "Sat Sri Akal",
+    "Namaste"
+   ],
+   "correct": "Eid Mubarak",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "\"Eid Mubarak,\" meaning \"blessed Eid,\" is the usual greeting for Eid al-Fitr.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Eid-al-Fitr",
+    "title": "Eid al-Fitr"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the meal Muslims eat after sunset to break their fast during Ramadan?",
+   "answers": [
+    "Suhoor",
+    "Seder",
+    "Langar",
+    "Iftar"
+   ],
+   "correct": "Iftar",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "After sunset during Ramadan, Muslims break their fast with prayer and a meal called iftar.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Ramadan/353696",
+    "title": "Ramadan - Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For how many days does the Jewish festival of Hanukkah last?",
+   "answers": [
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten"
+   ],
+   "correct": "Eight",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Hanukkah begins on the 25th of Kislev and lasts eight days, recalling the miracle of the oil.",
+   "source": {
+    "url": "https://www.britannica.com/story/hanukkah-the-festival-of-lights",
+    "title": "Hanukkah, the Festival of Lights"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which four-sided spinning top is used in a traditional game of chance at Hanukkah?",
+   "answers": [
+    "Shofar",
+    "Dreidel",
+    "Mezuzah",
+    "Tallit"
+   ],
+   "correct": "Dreidel",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Playing dreidel, a game of chance with a four-sided top, is a well-known Hanukkah tradition.",
+   "source": {
+    "url": "https://www.britannica.com/story/hanukkah-the-festival-of-lights",
+    "title": "Hanukkah, the Festival of Lights"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which leader led the Jewish revolt against the Seleucids whose success Hanukkah commemorates?",
+   "answers": [
+    "King Solomon",
+    "Moses",
+    "Judah Maccabee",
+    "Ezra"
+   ],
+   "correct": "Judah Maccabee",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Hanukkah commemorates the rededication of the Second Temple after the revolt led by Judah Maccabee.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/story/hanukkah-the-festival-of-lights",
+    "title": "Hanukkah, the Festival of Lights"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What event does the Jewish festival of Passover commemorate?",
+   "answers": [
+    "The giving of the Torah at Sinai",
+    "The rebuilding of the Second Temple",
+    "The Exodus of the Israelites from slavery in Egypt",
+    "The creation of the world"
+   ],
+   "correct": "The Exodus of the Israelites from slavery in Egypt",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Passover commemorates the biblical story of the Exodus and the liberation of the Israelites from slavery in Egypt.",
+   "source": {
+    "url": "https://www.britannica.com/video/significance-history-Jewish-holiday-Passover/-277745",
+    "title": "What and When Is Passover?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which unleavened bread is eaten during Passover?",
+   "answers": [
+    "Challah",
+    "Pita",
+    "Naan",
+    "Matzo"
+   ],
+   "correct": "Matzo",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Matzo is specially prepared so the flour does not rise, recalling the haste of the Israelites' departure from Egypt.",
+   "source": {
+    "url": "https://www.britannica.com/video/significance-history-Jewish-holiday-Passover/-277745",
+    "title": "What and When Is Passover?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the English name for the Jewish holy day of Yom Kippur?",
+   "answers": [
+    "Festival of Weeks",
+    "Feast of Lots",
+    "Day of Rejoicing",
+    "Day of Atonement"
+   ],
+   "correct": "Day of Atonement",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Yom Kippur is the Day of Atonement, a solemn day of repentance and fasting.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Jewish-festivals",
+    "title": "Jewish festivals"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Jewish holiday marks the start of the Jewish year in the fall?",
+   "answers": [
+    "Purim",
+    "Sukkot",
+    "Shavuot",
+    "Rosh Hashanah"
+   ],
+   "correct": "Rosh Hashanah",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Jewish year begins in the fall with Rosh Hashanah, which starts the ten-day period ending with Yom Kippur.",
+   "source": {
+    "url": "https://www.britannica.com/explore/Jewish-Holidays",
+    "title": "Jewish Holidays"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the weekly Jewish Sabbath recall?",
+   "answers": [
+    "God resting on the seventh day after creation",
+    "The building of the Second Temple",
+    "The flood in the days of Noah",
+    "The binding of Isaac"
+   ],
+   "correct": "God resting on the seventh day after creation",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Sabbath recalls the seventh day on which God rested after completing creation, as told in Genesis 1.",
+   "source": {
+    "url": "https://www.britannica.com/explore/Jewish-Holidays",
+    "title": "Jewish Holidays"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What shape is the challah bread traditionally eaten at Rosh Hashanah?",
+   "answers": [
+    "Square",
+    "Round",
+    "Triangular",
+    "Oval"
+   ],
+   "correct": "Round",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Challah at Rosh Hashanah is made round, rather than the usual oval shape.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Rosh-Hashana",
+    "title": "Rosh Hashanah"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name is given to the first five books of the Hebrew Bible?",
+   "answers": [
+    "Talmud",
+    "Midrash",
+    "Torah",
+    "Haggadah"
+   ],
+   "correct": "Torah",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Torah is the first five books of the Hebrew Bible, and most Jewish holidays are set out in it.",
+   "source": {
+    "url": "https://www.britannica.com/explore/Jewish-Holidays",
+    "title": "Jewish Holidays"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which major Hindu festival is known as the Festival of Lights?",
+   "answers": [
+    "Holi",
+    "Navratri",
+    "Diwali",
+    "Raksha Bandhan"
+   ],
+   "correct": "Diwali",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Diwali, the Festival of Lights, is one of the major holidays of Hinduism and is also celebrated in Jainism and Sikhism.",
+   "source": {
+    "url": "https://www.britannica.com/story/the-festival-of-lights",
+    "title": "The Festival of Lights"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "During Diwali, rows of lamps are lit to invite which goddess of good fortune?",
+   "answers": [
+    "Saraswati",
+    "Durga",
+    "Parvati",
+    "Lakshmi"
+   ],
+   "correct": "Lakshmi",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Lamps are lit at Diwali to ask Lakshmi, the goddess of good fortune, to bring blessings for the coming year.",
+   "source": {
+    "url": "https://www.britannica.com/story/the-festival-of-lights",
+    "title": "The Festival of Lights"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many days after Easter is the Christian Feast of the Ascension celebrated?",
+   "answers": [
+    "Forty days",
+    "Seven days",
+    "Fifty days",
+    "One hundred days"
+   ],
+   "correct": "Forty days",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Ascension commemorates Jesus rising into heaven on the 40th day after the Resurrection.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Ascension-Christianity",
+    "title": "Ascension"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Hindu Trimurti, which god is known as the preserver?",
+   "answers": [
+    "Brahma",
+    "Vishnu",
+    "Shiva",
+    "Ganesha"
+   ],
+   "correct": "Vishnu",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Trimurti is the triad of Brahma the creator, Vishnu the preserver, and Shiva the destroyer.",
+   "source": {
+    "url": "https://www.britannica.com/topic/trimurti-Hinduism",
+    "title": "Trimurti"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Unlike many world religions, Jainism does not teach belief in what?",
+   "answers": [
+    "Rebirth after death",
+    "The law of karma",
+    "Souls in living beings",
+    "A god who created the world"
+   ],
+   "correct": "A god who created the world",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Jainism has no belief in a creator god, though it does teach karma, rebirth and the soul.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Jainism",
+    "title": "Jainism summary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Diwali is often linked to the triumph of Rama over which demon king?",
+   "answers": [
+    "Kansa",
+    "Hiranyakashipu",
+    "Ravana",
+    "Mahishasura"
+   ],
+   "correct": "Ravana",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Diwali is described as marking the victory of good over evil and the triumph of Rama over the demon king Ravana.",
+   "source": {
+    "url": "https://www.britannica.com/topic/How-is-Diwali-celebrated",
+    "title": "How Is Diwali Celebrated? Festival of Lights and Beyond"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Four Noble Truths of Buddhism begin by identifying what as a characteristic of existence?",
+   "answers": [
+    "Eternal bliss",
+    "Suffering",
+    "Divine judgment",
+    "Ancestral duty"
+   ],
+   "correct": "Suffering",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The first of the Four Noble Truths is the truth of suffering (dukkha).",
+   "source": {
+    "url": "https://www.britannica.com/topic/Four-Noble-Truths",
+    "title": "Four Noble Truths"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Buddhism, what is the state of liberation reached when suffering is ended?",
+   "answers": [
+    "Samsara",
+    "Karma",
+    "Dukkha",
+    "Nirvana"
+   ],
+   "correct": "Nirvana",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The third Noble Truth says that suffering can end, leading to the liberation known as nirvana.",
+   "source": {
+    "url": "https://www.britannica.com/topic/What-are-the-Four-Noble-Truths-of-Buddhism",
+    "title": "What are the Four Noble Truths of Buddhism?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which spiritual teacher is regarded as the founder of Buddhism?",
+   "answers": [
+    "Mahavira",
+    "Siddhartha Gautama",
+    "Guru Nanak",
+    "Confucius"
+   ],
+   "correct": "Siddhartha Gautama",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Siddhartha Gautama, known as the Buddha, is regarded as the founder of Buddhism.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://britannica.com/print/article/214989",
+    "title": "Four Noble Truths"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is one of the major traditions of Buddhism?",
+   "answers": [
+    "Sunni",
+    "Khalsa",
+    "Hasidic",
+    "Theravada"
+   ],
+   "correct": "Theravada",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Buddhism spread across Asia and developed into traditions such as Theravada, Mahayana and Vajrayana.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Buddhism",
+    "title": "Buddhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who founded Sikhism in the late 15th century?",
+   "answers": [
+    "Guru Nanak",
+    "Guru Angad",
+    "Guru Arjan",
+    "Guru Hargobind"
+   ],
+   "correct": "Guru Nanak",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Sikhism was founded by Guru Nanak, the first of ten Gurus, in the Punjab region.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Sikhism",
+    "title": "Sikhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these is one of the Five Ks worn by initiated Sikhs?",
+   "answers": [
+    "A silver necklace",
+    "A leather belt",
+    "A steel bracelet",
+    "A cotton scarf"
+   ],
+   "correct": "A steel bracelet",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Five Ks are uncut hair, a comb, short trousers, a ceremonial sword and a steel bracelet (kara).",
+   "source": {
+    "url": "https://www.britannica.com/summary/Sikhism",
+    "title": "Beliefs and practices of Sikhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Most Sikhs live in which region, home to their holiest shrine, the Golden Temple?",
+   "answers": [
+    "Kashmir",
+    "Punjab",
+    "Bengal",
+    "Kerala"
+   ],
+   "correct": "Punjab",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Most Sikhs live in the Punjab, where the Golden Temple and the Akal Takht are located.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Sikhism",
+    "title": "Beliefs and practices of Sikhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the Sikh tradition of a communal kitchen serving free meals to all called?",
+   "answers": [
+    "Puja",
+    "Iftar",
+    "Seder",
+    "Langar"
+   ],
+   "correct": "Langar",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The communal meal in the langar is a key Sikh practice that helps break down caste barriers.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Sikhism",
+    "title": "Sikhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Sikh Guru established the Khalsa order in 1699?",
+   "answers": [
+    "Guru Nanak",
+    "Guru Gobind Singh",
+    "Guru Angad",
+    "Guru Arjan"
+   ],
+   "correct": "Guru Gobind Singh",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Khalsa, the order of initiated Sikhs, was established by Guru Gobind Singh in 1699.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Five-Ks",
+    "title": "Five Ks"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the central scripture of Sikhism, named by the tenth Guru as his successor?",
+   "answers": [
+    "Rigveda",
+    "Tao Te Ching",
+    "Tripitaka",
+    "Guru Granth Sahib"
+   ],
+   "correct": "Guru Granth Sahib",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Guru Gobind Singh named the Guru Granth Sahib as his successor, and it is the central scripture of Sikhism.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sikhism",
+    "title": "Sikhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word \"Sikh\" means what?",
+   "answers": [
+    "Warrior",
+    "Student or disciple",
+    "Pilgrim",
+    "Temple servant"
+   ],
+   "correct": "Student or disciple",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Followers of Sikhism are called Sikhs, meaning \"students\" or \"disciples\" of the Guru.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sikhism",
+    "title": "Sikhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The word \"Christmas\" comes from an older phrase meaning what?",
+   "answers": [
+    "Christ's birthday",
+    "Christ's mass",
+    "Feast of light",
+    "Winter of Christ"
+   ],
+   "correct": "Christ's mass",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Christmas derives from Old English Cristes mæsse, meaning \"Christ's mass.\"",
+   "source": {
+    "url": "https://www.britannica.com/topic/Christmas",
+    "title": "Christmas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does Easter Sunday celebrate in Christian belief?",
+   "answers": [
+    "The birth of Jesus",
+    "The baptism of Jesus",
+    "The resurrection of Jesus",
+    "The Sermon on the Mount"
+   ],
+   "correct": "The resurrection of Jesus",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Easter Sunday marks the day Jesus rose from the dead, the most significant date in the Christian calendar.",
+   "source": {
+    "url": "https://www.christianity.org.uk/article/the-christian-calendar",
+    "title": "The Christian calendar - Christianity"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which day in Holy Week commemorates the trial and crucifixion of Jesus?",
+   "answers": [
+    "Palm Sunday",
+    "Ash Wednesday",
+    "Maundy Thursday",
+    "Good Friday"
+   ],
+   "correct": "Good Friday",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Good Friday is the day of Jesus' trial and crucifixion, marked by solemn services in many churches.",
+   "source": {
+    "url": "https://www.christianity.org.uk/article/the-christian-calendar",
+    "title": "The Christian calendar - Christianity"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Christian holy day, 50 days after Easter, commemorates the descent of the Holy Spirit on the disciples?",
+   "answers": [
+    "Epiphany",
+    "Advent",
+    "Lent",
+    "Pentecost"
+   ],
+   "correct": "Pentecost",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Pentecost, named from the Greek for \"fiftieth,\" commemorates the descent of the Holy Spirit on Jesus' disciples.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Pentekostarion",
+    "title": "Pentekostarion"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the four-week season of preparation before Christmas?",
+   "answers": [
+    "Lent",
+    "Advent",
+    "Epiphany",
+    "Pentecost"
+   ],
+   "correct": "Advent",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Advent is the four-week period before Christmas, just as Lent is the six-week period before Easter.",
+   "source": {
+    "url": "https://www.christianity.org.uk/article/the-christian-calendar",
+    "title": "The Christian calendar - Christianity"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Shinto, what are the deities or spirits enshrined at shrines called?",
+   "answers": [
+    "Karma",
+    "Sutra",
+    "Koan",
+    "Kami"
+   ],
+   "correct": "Kami",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Shinto shrines are places where the spirit of a deity, or kami, is enshrined or summoned.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Shinto",
+    "title": "Shinto"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the symbolic gateway marking the entrance to a Shinto shrine called?",
+   "answers": [
+    "Pagoda",
+    "Torii",
+    "Stupa",
+    "Mandala"
+   ],
+   "correct": "Torii",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "A torii is a symbolic gateway, often painted red, marking the boundary between the ordinary world and the sacred shrine grounds.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Why-do-Shinto-shrines-have-torii-gates",
+    "title": "Why do Shinto shrines have torii gates?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these does Shinto traditionally not have?",
+   "answers": [
+    "A weekly religious service",
+    "Festivals called matsuri",
+    "Visits to local shrines",
+    "Rites for newborn babies"
+   ],
+   "correct": "A weekly religious service",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Shinto has no weekly religious service; people visit shrines at their convenience and on festival occasions.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Shinto/Ritual-practices-and-institutions",
+    "title": "Shintō - Rituals, Kami, Shrines"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the central ethical principle of Jainism?",
+   "answers": [
+    "Absolute obedience to a single prophet",
+    "Daily sacrifice at a holy fire",
+    "Nonviolence toward all living beings",
+    "Complete devotion to one creator god"
+   ],
+   "correct": "Nonviolence toward all living beings",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Jainism's core belief is ahimsa, or noninjury to all living things.",
+   "source": {
+    "url": "https://www.britannica.com/topic/ahimsa",
+    "title": "Ahimsa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who was the 24th Tirthankara of Jainism?",
+   "answers": [
+    "Siddhartha Gautama",
+    "Guru Nanak",
+    "Mahavira",
+    "Laozi"
+   ],
+   "correct": "Mahavira",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Mahavira, who taught nonviolence and asceticism around the 6th century BCE, is counted as the 24th Tirthankara.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Indian-philosophy/Jain-philosophy",
+    "title": "Indian philosophy - Jainism, Ahimsa, Karma"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which ancient sage is traditionally credited with writing the Tao Te Ching?",
+   "answers": [
+    "Confucius",
+    "Mencius",
+    "Sun Tzu",
+    "Laozi"
+   ],
+   "correct": "Laozi",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "Laozi is traditionally regarded as the author of the Tao-te Ching, the fundamental text of Taoism.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Taoism/General-characteristics",
+    "title": "Taoism - Chinese Philosophy, Yin-Yang, Taoism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the Chinese word \"tao\" (or \"dao\") mean?",
+   "answers": [
+    "Heaven",
+    "Way",
+    "Virtue",
+    "Harmony"
+   ],
+   "correct": "Way",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Chinese word dao or tao means \"way,\" which gives Daoism its name.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Tao-te-Ching",
+    "title": "Tao-te Ching"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the collection of Confucius's sayings, compiled by his disciples, called in English?",
+   "answers": [
+    "The Tao Te Ching",
+    "The Art of War",
+    "The Analects",
+    "The Dhammapada"
+   ],
+   "correct": "The Analects",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Lunyu, translated as The Analects of Confucius, is the most reliable source of Confucius's teachings.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Lunyu",
+    "title": "Lunyu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Confucian thought, what is xiao, genuine respect for one's parents, called in English?",
+   "answers": [
+    "Ritual purity",
+    "Heavenly mandate",
+    "Righteous anger",
+    "Filial piety"
+   ],
+   "correct": "Filial piety",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Analects explains filial piety (xiao) as genuine respect for parents, not merely providing for them.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Lunyu",
+    "title": "Lunyu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who founded the Baháʼí Faith in the 19th century?",
+   "answers": [
+    "Joseph Smith",
+    "Zoroaster",
+    "Guru Nanak",
+    "Baháʼu'lláh"
+   ],
+   "correct": "Baháʼu'lláh",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Baháʼí Faith was founded in the mid-19th century by Baháʼu'lláh, whose name means \"Glory of God\" in Arabic.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Bahai-Faith",
+    "title": "Baha'i Faith"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which idea is central to the Baháʼí Faith?",
+   "answers": [
+    "Rule by a hereditary priesthood",
+    "Salvation through ritual animal sacrifice",
+    "Withdrawal from the world into monasteries",
+    "The essential unity of all religions"
+   ],
+   "correct": "The essential unity of all religions",
+   "difficulty": "easy",
+   "category": "Religions",
+   "explain": "The Baháʼí Faith teaches the essential unity of all religions and of humanity, and it has no priesthood.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Bahai-Faith",
+    "title": "Beliefs and practices of the Bahaʾi faith"
+   },
+   "ai_written": true
+  }
+ ]
+}

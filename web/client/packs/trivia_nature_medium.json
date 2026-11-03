@@ -2,7 +2,7 @@
  "schema": "nimrod.pack.v1",
  "kind": "trivia",
  "name": "Nature trivia (medium)",
- "description": "39 medium questions about animals, plants, weather, ecosystems. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "description": "50 medium questions about animals, plants, weather, ecosystems. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
  "source": {
   "name": "Web pages cited on each question",
   "kind": "ai-written-from-sources"
@@ -710,6 +710,204 @@
    "source": {
     "url": "https://www.smithsonianmag.com/smart-news/dolphins-sleep-with-only-half-their-brain-at-a-time-81426439/",
     "title": "Dolphins Sleep With Only Half Their Brain at a Time"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A giraffe's very long neck contains how many vertebrae, the same number found in a mouse's neck?",
+   "answers": [
+    "Seven",
+    "Nine",
+    "Eleven",
+    "Fourteen"
+   ],
+   "correct": "Seven",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Almost all mammals have seven neck vertebrae. A giraffe's are simply stretched out to enormous length.",
+   "source": {
+    "url": "https://www.nhm.ac.uk/discover/how-is-a-mouse-like-a-giraffe.html",
+    "title": "How is a mouse like a giraffe? - Natural History Museum"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the long, spiralling 'tusk' of a male narwhal actually?",
+   "answers": [
+    "An elongated tooth",
+    "A twisted keratin horn",
+    "A fused rib-bone spur",
+    "A hardened cartilage spike"
+   ],
+   "correct": "An elongated tooth",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The tusk is an enlarged tooth that grows through the upper lip and has many nerve endings. It is not a horn.",
+   "source": {
+    "url": "https://www.worldwildlife.org/resources/facts/unicorn-of-the-sea-narwhal-facts/",
+    "title": "Unicorn of the Sea: Fascinating Narwhal Facts - WWF"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which type of cloud, often topped with an anvil shape, is the classic thunderstorm cloud?",
+   "answers": [
+    "Cumulonimbus",
+    "Nimbostratus",
+    "Altocumulus",
+    "Stratocumulus"
+   ],
+   "correct": "Cumulonimbus",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Cumulonimbus clouds grow tall, and winds flatten their tops into an anvil shape. They bring heavy rain, hail and lightning.",
+   "source": {
+    "url": "https://scied.ucar.edu/image/cumulonimbus-clouds",
+    "title": "Cumulonimbus clouds - UCAR Center for Science Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "El Niño is a climate pattern marked by unusual warming of ocean surface waters in which region?",
+   "answers": [
+    "The central and eastern tropical Pacific",
+    "The western equatorial Atlantic",
+    "The northern Indian Ocean basin",
+    "The Southern Ocean near Antarctica"
+   ],
+   "correct": "The central and eastern tropical Pacific",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "NOAA describes El Niño as warming of sea surface temperatures in the central and eastern tropical Pacific Ocean. This warming can shift weather patterns worldwide.",
+   "source": {
+    "url": "https://www.noaa.gov/understanding-el-nino",
+    "title": "Understanding El Niño & ENSO - NOAA"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The titan arum, famous as the 'corpse flower' for its stench, is native to the rainforests of which Indonesian island?",
+   "answers": [
+    "Sumatra",
+    "Borneo",
+    "Java",
+    "Sulawesi"
+   ],
+   "correct": "Sumatra",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The titan arum (Amorphophallus titanum) is native to the tropical forests of Sumatra in Indonesia.",
+   "source": {
+    "url": "https://www.missouribotanicalgarden.org/gardens-gardening/our-garden/notable-plant-collections/titan-arum",
+    "title": "Corpse Flower - Missouri Botanical Garden"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pigments, present in leaves all summer but masked by chlorophyll, give autumn leaves their yellow and orange colours?",
+   "answers": [
+    "Carotenoids",
+    "Anthocyanins",
+    "Tannins",
+    "Melanins"
+   ],
+   "correct": "Carotenoids",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Carotenoids are in the leaf all season and show through once the green chlorophyll breaks down. Red anthocyanins, by contrast, are mostly made in autumn.",
+   "source": {
+    "url": "https://www.fs.usda.gov/visit/fall-colors/science-of-fall-colors",
+    "title": "Science of Fall Colors - USDA Forest Service"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which forest biome, dominated by conifers such as pines, spruces and larches, is the world's largest?",
+   "answers": [
+    "Taiga (boreal forest)",
+    "Tropical rainforest",
+    "Temperate deciduous forest",
+    "Temperate rainforest"
+   ],
+   "correct": "Taiga (boreal forest)",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The taiga, or boreal forest, forms a vast belt across the northern latitudes. It covers roughly 11.5% of Earth's land area.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Taiga",
+    "title": "Taiga - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where do brightly coloured wild poison dart frogs get the toxins in their skin?",
+   "answers": [
+    "From the ants and mites they eat",
+    "From venom glands they grow as adults",
+    "From bacteria living on their skin",
+    "From poisonous plant sap they lick"
+   ],
+   "correct": "From the ants and mites they eat",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "The frogs absorb alkaloids from the ants, mites and other small prey they eat. That is why frogs raised in captivity on other diets are not poisonous.",
+   "source": {
+    "url": "https://lazoo.org/explore-your-zoo/our-animals/amphibians/poison-frogs/",
+    "title": "Poison Frogs - Los Angeles Zoo and Botanical Gardens"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "By area, which place is the largest desert on Earth?",
+   "answers": [
+    "Antarctica",
+    "The Sahara",
+    "The Gobi",
+    "The Arabian Desert"
+   ],
+   "correct": "Antarctica",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "A desert is defined by low precipitation, not heat. Antarctica covers about 14.2 million square kilometres, which is bigger than the Sahara.",
+   "source": {
+    "url": "https://www.discoverwildlife.com/environment/largest-desert-in-the-world",
+    "title": "The world's largest desert is enormous and there's hardly any rain - BBC Discover Wildlife"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Beavers are called 'ecosystem engineers' because their dams turn streams into what kind of habitat?",
+   "answers": [
+    "Wetlands that support many species",
+    "Fast rapids that oxygenate the water",
+    "Salt-water estuaries with tidal flats",
+    "Dry meadows with deep, rich soil"
+   ],
+   "correct": "Wetlands that support many species",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Beaver dams slow the water and create ponds and wetlands. These give habitat to many other animals and plants and help clean the water.",
+   "source": {
+    "url": "https://www.worldwildlife.org/species/beaver/",
+    "title": "Beaver - WWF"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which group of small birds is noted as the only one able to fly backwards?",
+   "answers": [
+    "Hummingbirds",
+    "Swifts",
+    "Swallows",
+    "Nightjars"
+   ],
+   "correct": "Hummingbirds",
+   "difficulty": "medium",
+   "category": "Nature",
+   "explain": "Hummingbirds can hover and fly backwards, which lets them position themselves at flowers. Their wing joints and figure-eight wing stroke make this possible.",
+   "source": {
+    "url": "https://hummingbirds.vetmed.ucdavis.edu/information/facts",
+    "title": "Interesting Facts on Hummingbirds - UC Davis Hummingbird Health and Conservation Program"
    },
    "ai_written": true
   }

@@ -1,0 +1,923 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Religions trivia (medium)",
+ "description": "50 medium questions about the world's religions, large and small: beliefs, practices, holidays, history; respectful, no claims about which is true. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "Which Sikh Guru commanded Khalsa Sikhs in 1699 to wear the Five Ks at all times?",
+   "answers": [
+    "Guru Gobind Singh",
+    "Guru Nanak",
+    "Guru Angad",
+    "Guru Tegh Bahadur"
+   ],
+   "correct": "Guru Gobind Singh",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Guru Gobind Singh, the tenth Guru, established the Khalsa in 1699 and commanded its members to wear the Five Ks.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Five_Ks",
+    "title": "Five Ks"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Sikhism, what is the kara, one of the Five Ks worn by initiated Sikhs?",
+   "answers": [
+    "A steel bracelet",
+    "A wooden comb",
+    "A ceremonial sword",
+    "A cotton undergarment"
+   ],
+   "correct": "A steel bracelet",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The kara is the steel (or iron) bracelet. The other Ks are kesh (uncut hair), kangha (comb), kachera (undergarment) and kirpan (sword).",
+   "source": {
+    "url": "https://www.britannica.com/topic/kirpan",
+    "title": "Kirpan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Sikhs observe Diwali to commemorate the release from Mughal imprisonment of which Guru?",
+   "answers": [
+    "Guru Hargobind",
+    "Guru Arjan",
+    "Guru Nanak",
+    "Guru Ram Das"
+   ],
+   "correct": "Guru Hargobind",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Sikhs mark Diwali as the time Guru Hargobind was freed after being imprisoned by the Mughal emperor Jahangir.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bandi_Chhor_Divas",
+    "title": "Bandi Chhor Divas"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Buddhism, the Noble Eightfold Path corresponds to which of the Four Noble Truths?",
+   "answers": [
+    "The path leading to the end of suffering",
+    "The reality of suffering",
+    "The cause of suffering",
+    "The cessation of suffering"
+   ],
+   "correct": "The path leading to the end of suffering",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The Eightfold Path is identified with the fourth Noble Truth, the way that leads to the cessation of suffering.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Buddhism",
+    "title": "Buddhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Buddhist symbolism, what do the eight spokes of the dharma wheel (dharmachakra) represent?",
+   "answers": [
+    "The elements of the Noble Eightfold Path",
+    "The great disciples of the Buddha",
+    "The stages of rebirth in samsara",
+    "The vows taken by Buddhist monks"
+   ],
+   "correct": "The elements of the Noble Eightfold Path",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The Noble Eightfold Path is often shown as the dharma wheel, with each of its eight spokes standing for one element of the path.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Noble_Eightfold_Path",
+    "title": "Noble Eightfold Path"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of the following is one of the eight factors of the Buddhist Noble Eightfold Path?",
+   "answers": [
+    "Right livelihood",
+    "Right worship",
+    "Right sacrifice",
+    "Right devotion"
+   ],
+   "correct": "Right livelihood",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The eight factors are right view, intention, speech, action, livelihood, effort, mindfulness and concentration. Worship, sacrifice and devotion are not among them.",
+   "source": {
+    "url": "https://accesstoinsight.org/lib/authors/bodhi/waytoend.html",
+    "title": "The Noble Eightfold Path: The Way to the End of Suffering"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Islam, what is the name of the Pillar that consists of fasting during the month of Ramadan?",
+   "answers": [
+    "Sawm",
+    "Salat",
+    "Zakat",
+    "Shahadah"
+   ],
+   "correct": "Sawm",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Sawm is fasting during Ramadan, the fourth of the Five Pillars of Islam.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Pillars-of-Islam",
+    "title": "Pillars of Islam"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Pillar of Islam involves paying alms to benefit the poor and needy?",
+   "answers": [
+    "Zakat",
+    "Hajj",
+    "Salat",
+    "Sawm"
+   ],
+   "correct": "Zakat",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Zakat is the obligatory giving of alms for the benefit of the poor and needy, one of the Five Pillars of Islam.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Pillars-of-Islam",
+    "title": "Pillars of Islam"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Muslim pilgrimage known as the hajj takes place in which month of the Islamic calendar?",
+   "answers": [
+    "Dhu al-Hijjah",
+    "Rajab",
+    "Shawwal",
+    "Muharram"
+   ],
+   "correct": "Dhu al-Hijjah",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The hajj rites take place from the 7th to the 12th day of Dhu al-Hijjah, the last month of the Islamic year.",
+   "source": {
+    "url": "https://www.britannica.com/topic/hajj",
+    "title": "Hajj"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What must every Muslim recite at least once in a lifetime, aloud and with understanding, as the first of the Five Pillars?",
+   "answers": [
+    "The shahadah, the profession of faith",
+    "The adhan, the call to prayer",
+    "The Fatiha, the Quran's opening chapter",
+    "The talbiyah, the pilgrim's call"
+   ],
+   "correct": "The shahadah, the profession of faith",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The shahadah declares that there is no god but God and that Muhammad is God's Prophet. Every Muslim must recite it at least once in a lifetime.",
+   "source": {
+    "url": "https://www.britannica.com/topic/shahadah",
+    "title": "Shahadah"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Jains regard Mahavira as which in a succession of Jinas (Conquerors)?",
+   "answers": [
+    "The 24th",
+    "The 12th",
+    "The 23rd",
+    "The 48th"
+   ],
+   "correct": "The 24th",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Jains hold that their religion was revealed in stages by a series of Conquerors, of whom Mahavira was the 24th.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Jainism",
+    "title": "Jainism summary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the Sanskrit name for the central Jain doctrine of noninjury to all living beings?",
+   "answers": [
+    "Ahimsa",
+    "Aparigraha",
+    "Satya",
+    "Anekantavada"
+   ],
+   "correct": "Ahimsa",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Ahimsa means noninjury and is the standard by which all actions are judged in Jainism.",
+   "source": {
+    "url": "https://www.britannica.com/topic/ahimsa",
+    "title": "Ahimsa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which idea does Jainism reject, according to Britannica?",
+   "answers": [
+    "A creator god who made the world",
+    "Karma as a force binding the soul",
+    "Rebirth after death",
+    "Liberation as the ultimate goal"
+   ],
+   "correct": "A creator god who made the world",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Jainism has no belief in a creator god, though it teaches karma, rebirth and liberation (moksha).",
+   "source": {
+    "url": "https://www.britannica.com/summary/Jainism",
+    "title": "Jainism summary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many great vows (mahavratas) of renunciation did Mahavira teach, one more than his predecessor Parshvanatha had preached?",
+   "answers": [
+    "Five",
+    "Three",
+    "Seven",
+    "Ten"
+   ],
+   "correct": "Five",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Mahavira taught five great vows, whereas Parshvanatha had preached only four.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Mahavira-Jaina-teacher",
+    "title": "Mahavira"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After years of intense fasting and meditation, Vardhamana became known as Mahavira. What does this title mean?",
+   "answers": [
+    "Great Hero",
+    "Supreme Teacher",
+    "Pure Soul",
+    "Wandering Sage"
+   ],
+   "correct": "Great Hero",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Vardhamana was called Mahavira, meaning \"Great Hero,\" after more than 12 years of fasting and meditation led to enlightenment.",
+   "source": {
+    "url": "https://education.nationalgeographic.org/resource/jainism/",
+    "title": "Jainism - National Geographic Education"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Japan, what does a torii gate at the entrance of a Shinto shrine mark?",
+   "answers": [
+    "The boundary between ordinary space and the shrine's sacred ground",
+    "The burial ground of the shrine's founder",
+    "The route of the annual festival procession",
+    "The entrance to the priests' living quarters"
+   ],
+   "correct": "The boundary between ordinary space and the shrine's sacred ground",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "A torii is a symbolic gateway, often painted red, that separates the ordinary world from the sacred precincts where the kami reside.",
+   "source": {
+    "url": "https://www.britannica.com/topic/torii",
+    "title": "Torii"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Shinto custom, what is the purpose of the Shichi-go-san festival held on November 15?",
+   "answers": [
+    "Children of certain ages visit a shrine to give thanks and pray for growth",
+    "Families burn old charms at the shrine to mark the new year",
+    "Newlyweds pronounce their first vows before the shrine's kami",
+    "Fishermen carry the shrine's sacred symbol through the harbor"
+   ],
+   "correct": "Children of certain ages visit a shrine to give thanks and pray for growth",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Shichi-go-san (Seven-Five-Three) is when boys of five and girls of three and seven visit a shrine to thank the kami for protection and pray for healthy growth.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Shinto/Ritual-practices-and-institutions",
+    "title": "Shintō - Rituals, Kami, Shrines"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Japanese island is home to a Shinto shrine best known for its \"floating\" torii?",
+   "answers": [
+    "Itsukushima (Miyajima)",
+    "Sado",
+    "Awaji",
+    "Yakushima"
+   ],
+   "correct": "Itsukushima (Miyajima)",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Itsukushima Shrine on Itsukushima island, popularly called Miyajima, is famous for its torii that appears to float in the water.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Itsukushima_Shrine",
+    "title": "Itsukushima Shrine"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "A traditional Japanese house has a Shinto altar and a Buddhist altar. Whom does the Buddhist altar honor?",
+   "answers": [
+    "The family's ancestors",
+    "The local tutelary kami",
+    "The sun goddess Amaterasu",
+    "The emperors of the past"
+   ],
+   "correct": "The family's ancestors",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The Shinto altar is for the household's tutelary kami and Amaterasu Omikami, while the Buddhist altar is for the family ancestors.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Shinto/Ritual-practices-and-institutions",
+    "title": "Shintō - Rituals, Kami, Shrines"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the principal holy text of Zoroastrianism?",
+   "answers": [
+    "The Avesta",
+    "The Tripitaka",
+    "The Daodejing",
+    "The Kojiki"
+   ],
+   "correct": "The Avesta",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The major beliefs of Zoroastrianism are found in the Avesta, its principal holy text.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Zoroastrianism",
+    "title": "Zoroastrianism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Ahura Mazdā, the supreme god of Zoroastrianism, has a name meaning what?",
+   "answers": [
+    "Wise Lord",
+    "Eternal Light",
+    "Holy Fire",
+    "Righteous King"
+   ],
+   "correct": "Wise Lord",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The Avestan name Ahura Mazdā means \"Wise Lord.\"",
+   "source": {
+    "url": "https://www.britannica.com/topic/Ahura-Mazda",
+    "title": "Ahura Mazdā"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Persian king, who reigned from 522 to 486 BCE, worshipped Ahura Mazdā as the greatest of all gods?",
+   "answers": [
+    "Darius I",
+    "Nebuchadnezzar II",
+    "Hammurabi",
+    "Ashurbanipal"
+   ],
+   "correct": "Darius I",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Darius I and his successors worshipped Ahura Mazdā as the greatest of gods and protector of the just king.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Ahura-Mazda",
+    "title": "Ahura Mazdā"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Zoroastrian belief, what is the name of the Destructive Spirit who opposes Ahura Mazdā?",
+   "answers": [
+    "Angra Mainyu",
+    "Spenta Mainyu",
+    "Mithra",
+    "Verethraghna"
+   ],
+   "correct": "Angra Mainyu",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The Avesta describes Ahura Mazdā in a primeval battle against Angra Mainyu, the Destructive Spirit.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Zoroastrianism",
+    "title": "Zoroastrianism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name Bahá'u'lláh, taken by the founder of the Bahá'í Faith, means what in Arabic?",
+   "answers": [
+    "Glory of God",
+    "Light of Unity",
+    "Servant of God",
+    "Voice of Truth"
+   ],
+   "correct": "Glory of God",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Mírzá Ḥosayn ʿAlí Núrí became known as Bahá'u'lláh, which means \"Glory of God\" in Arabic.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Bahai-Faith",
+    "title": "Baha'i Faith"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The title \"the Báb,\" given to the forerunner of Bahá'u'lláh, means what in Arabic?",
+   "answers": [
+    "Gateway",
+    "Messenger",
+    "Herald",
+    "Servant"
+   ],
+   "correct": "Gateway",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Mírzā ʿAlī Moḥammad of Shīrāz was known as the Báb (Arabic \"Gateway\"), and his movement led to the Bahá'í Faith.",
+   "source": {
+    "url": "https://www.britannica.com/biography/Baha-Allah",
+    "title": "Bahāʾ Allāh"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where is the Baháʼí World Centre, a site Baháʼu'lláh identified as the future resting place of the Báb?",
+   "answers": [
+    "Mount Carmel, in Haifa",
+    "Mount Zion, in Jerusalem",
+    "Mount Tabor, in Galilee",
+    "Mount Nebo, in Jordan"
+   ],
+   "correct": "Mount Carmel, in Haifa",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "In 1891 Baháʼu'lláh pointed to a spot on Mount Carmel in Haifa as the Báb's resting place, which became the site of the Baháʼí World Centre.",
+   "source": {
+    "url": "https://religionmediacentre.org.uk/factsheets/factsheet-the-bahai-faith/",
+    "title": "Factsheet: The Baháʼí faith - Religion Media Centre"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which year was the Bábí faith, the movement from which the Baháʼí Faith grew, founded in Iran?",
+   "answers": [
+    "1844",
+    "1817",
+    "1863",
+    "1892"
+   ],
+   "correct": "1844",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The Báb founded the Bábí faith in Iran in 1844, and the Baháʼí religion grew out of it.",
+   "source": {
+    "url": "https://www.britannica.com/biography/the-Bab",
+    "title": "The Bāb"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name Rastafari comes from the pre-coronation title and name, Ras Tafari, of which Ethiopian ruler?",
+   "answers": [
+    "Haile Selassie I",
+    "Menelik II",
+    "Tewodros II",
+    "Yohannes IV"
+   ],
+   "correct": "Haile Selassie I",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Ras Tafari Makonnen was crowned in 1930 as Haile Selassie I, whom Rastas regard as central to their faith.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.reonline.org.uk/religion-worldview/rastafari/rastafari-table-of-contents/beliefs-teachings-wisdom-authority/basic-beliefs/",
+    "title": "Basic Beliefs - RE:ONLINE"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Rastafari practice, what are \"bingis\"?",
+   "answers": [
+    "All-night drumming ceremonies",
+    "Ritual vegetarian feasts",
+    "Pilgrimages to Ethiopia",
+    "Dawn prayer services"
+   ],
+   "correct": "All-night drumming ceremonies",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Britannica lists \"bingis\" among Rastafari rituals, alongside prayer services and ganja smoking for \"itation\" (meditation).",
+   "source": {
+    "url": "https://www.britannica.com/topic/Rastafari",
+    "title": "Rastafari"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The name of the Hindu festival Diwali comes from the Sanskrit word dipavali, meaning what?",
+   "answers": [
+    "Row of lights",
+    "Garland of flowers",
+    "Night of fire",
+    "Victory of dawn"
+   ],
+   "correct": "Row of lights",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Dipavali means \"row of lights,\" which is why Diwali is called the Festival of Lights.",
+   "source": {
+    "url": "https://www.britannica.com/video/Diwali-festival-significance-traditions/-283960",
+    "title": "Why Diwali Is Called the Festival of Lights"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In North India, Diwali celebrates which deity's return to the city of Ayodhya after defeating the demon king Ravana?",
+   "answers": [
+    "Rama",
+    "Krishna",
+    "Shiva",
+    "Ganesha"
+   ],
+   "correct": "Rama",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "In Northern India, Diwali honors Rama's return to Ayodhya after his victory over Ravana. In South India it is tied to Krishna's defeat of Narakasura.",
+   "source": {
+    "url": "https://www.britannica.com/video/Diwali-festival-significance-traditions/-283960",
+    "title": "Why Diwali Is Called the Festival of Lights"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Upanishads, the philosophical texts that end the Vedas, take their name from a term that traditionally meant what?",
+   "answers": [
+    "Sitting near a teacher",
+    "Great forest text",
+    "Hymn of the priests",
+    "Law of the ancestors"
+   ],
+   "correct": "Sitting near a teacher",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Upanishad traditionally meant \"sitting near a teacher,\" though it was originally understood as \"connection\" or \"equivalence.\"",
+   "source": {
+    "url": "https://www.britannica.com/topic/Hinduism/The-Upanishads",
+    "title": "Hinduism - Upanishads, Vedas, Brahman"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Hindu thought, the goal of moksha (literally \"release\") is freedom from what?",
+   "answers": [
+    "The cycle of death and rebirth",
+    "The caste system of society",
+    "The authority of the Vedas",
+    "The duty of ritual sacrifice"
+   ],
+   "correct": "The cycle of death and rebirth",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Moksha means release from samsara, the cycle of death and rebirth.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Moksha",
+    "title": "Moksha"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which date of the Hebrew calendar does Passover begin?",
+   "answers": [
+    "The 15th of Nisan",
+    "The 1st of Tishrei",
+    "The 10th of Tishrei",
+    "The 25th of Kislev"
+   ],
+   "correct": "The 15th of Nisan",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Passover takes place in early spring, beginning on the 15th of the Hebrew month of Nisan.",
+   "source": {
+    "url": "https://www.myjewishlearning.com/article/passover-pesach-101/",
+    "title": "Passover 101"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the matzah eaten at the Passover seder symbolize?",
+   "answers": [
+    "The hurried departure of the Israelites from Egypt",
+    "The wheat harvest celebrated at Shavuot",
+    "The Temple sacrifice of the Paschal lamb",
+    "The manna that fell in the wilderness"
+   ],
+   "correct": "The hurried departure of the Israelites from Egypt",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Matzah is unleavened bread that recalls how the Israelites left Egypt in such a hurry that their bread had no time to rise.",
+   "source": {
+    "url": "https://reformjudaism.org/jewish-holidays/passover/passover-customs-and-rituals",
+    "title": "Passover: Customs and Rituals"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Hebrew word seder, the name of the Passover ritual meal, literally means what?",
+   "answers": [
+    "Order",
+    "Journey",
+    "Remembrance",
+    "Feast"
+   ],
+   "correct": "Order",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Seder is Hebrew for \"order,\" reflecting the set sequence of steps in the Passover meal.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Passover",
+    "title": "Passover"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The afikoman, a piece of matzah at the Passover seder, takes its name from a Greek word meaning what?",
+   "answers": [
+    "Dessert",
+    "Hidden",
+    "Sacrifice",
+    "Freedom"
+   ],
+   "correct": "Dessert",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Afikoman comes from a Greek word for \"dessert,\" and matzah is the official dessert of the seder meal.",
+   "source": {
+    "url": "https://reformjudaism.org/jewish-holidays/passover/passover-customs-and-rituals",
+    "title": "Passover: Customs and Rituals"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mountain is the holiest site of the Samaritans, where they perform their Passover sacrifices?",
+   "answers": [
+    "Mount Gerizim",
+    "Mount Hermon",
+    "Mount Sinai",
+    "Mount of Olives"
+   ],
+   "correct": "Mount Gerizim",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Samaritans still sacrifice a sheep at Passover on Mount Gerizim, their holiest site.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Passover_(Samaritan_holiday)",
+    "title": "Passover (Samaritan holiday)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Roman emperor convened the First Council of Nicaea in 325?",
+   "answers": [
+    "Constantine",
+    "Diocletian",
+    "Justinian I",
+    "Theodosius I"
+   ],
+   "correct": "Constantine",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Emperor Constantine convened the council, the first ecumenical council of the Christian church, to resolve the controversy over Arianism.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/event/First-Council-of-Nicaea-325",
+    "title": "First Council of Nicaea"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The First Council of Nicaea condemned which doctrine, which held that Christ was a created being and not fully divine?",
+   "answers": [
+    "Arianism",
+    "Gnosticism",
+    "Docetism",
+    "Pelagianism"
+   ],
+   "correct": "Arianism",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The council condemned Arius and the Arian heresy, and affirmed the equality of God the Father and God the Son.",
+   "source": {
+    "url": "https://www.britannica.com/event/First-Council-of-Nicaea-325",
+    "title": "First Council of Nicaea"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The ancient city of Nicaea, site of the first ecumenical council of the Christian church, is now which Turkish town?",
+   "answers": [
+    "İznik",
+    "Bursa",
+    "Konya",
+    "Antalya"
+   ],
+   "correct": "İznik",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Ancient Nicaea is today the town of İznik in Turkey.",
+   "source": {
+    "url": "https://www.britannica.com/event/First-Council-of-Nicaea-325",
+    "title": "First Council of Nicaea"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to tradition, Martin Luther nailed his Ninety-five Theses to the door of a church in which German town?",
+   "answers": [
+    "Wittenberg",
+    "Worms",
+    "Augsburg",
+    "Erfurt"
+   ],
+   "correct": "Wittenberg",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Tradition says Luther posted the theses on the Castle Church door in Wittenberg on October 31, 1517, though historians dispute whether this happened.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/today-in-history/October-31-1517-Martin-Luther-and-the-Ninety-Five-Theses",
+    "title": "Today in History October 31"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year did the Eastern and Western branches of Christianity split, well before the Protestant Reformation?",
+   "answers": [
+    "1054",
+    "451",
+    "800",
+    "1204"
+   ],
+   "correct": "1054",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Britannica notes that the Eastern and Western branches of Christianity had already split in 1054, long before Luther's Reformation.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Martin-Luthers-Achievements",
+    "title": "Martin Luther"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In 1520, which pope demanded that Martin Luther recant statements from his writings?",
+   "answers": [
+    "Leo X",
+    "Julius II",
+    "Clement VII",
+    "Alexander VI"
+   ],
+   "correct": "Leo X",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Pope Leo X demanded that Luther recant. Luther publicly burned the papal bull threatening excommunication and was then excommunicated.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/today-in-history/October-31-1517-Martin-Luther-and-the-Ninety-Five-Theses",
+    "title": "Today in History October 31"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Luther's Ninety-five Theses responded to the selling of indulgences to pay for rebuilding which church in Rome?",
+   "answers": [
+    "St. Peter's Basilica",
+    "St. John Lateran",
+    "Santa Maria Maggiore",
+    "St. Paul Outside the Walls"
+   ],
+   "correct": "St. Peter's Basilica",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "The theses were written in response to indulgences being sold to fund the rebuilding of St. Peter's Basilica.",
+   "source": {
+    "url": "https://www.britannica.com/summary/Ninety-five-Theses",
+    "title": "Ninety-five Theses summary"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which figure, who flourished in the 6th century BCE, is traditionally regarded as the founder of Daoism and author of the Daodejing?",
+   "answers": [
+    "Laozi",
+    "Confucius",
+    "Mencius",
+    "Han Feizi"
+   ],
+   "correct": "Laozi",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Laozi is traditionally regarded as the founder of Daoism and author of its classic, though scholars think the Daodejing had several authors.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/summary/Taoism",
+    "title": "Origin and general characteristics of Daoism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Daoist philosophy, what does the concept of wuwei mean?",
+   "answers": [
+    "Nonaction, acting in harmony with nature",
+    "Ritual propriety in social life",
+    "Reverence for one's ancestors",
+    "Devotion to one's parents"
+   ],
+   "correct": "Nonaction, acting in harmony with nature",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Wuwei literally means \"no action,\" the practice of taking no action that is not in accord with the natural course of the universe.",
+   "source": {
+    "url": "https://www.britannica.com/topic/wuwei-Chinese-philosophy",
+    "title": "Wuwei"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which thinker, known as \"Master Zhuang,\" lived in the 4th–3rd century BCE and was a major interpreter of Daoism?",
+   "answers": [
+    "Zhuangzi",
+    "Mencius",
+    "Xunzi",
+    "Mozi"
+   ],
+   "correct": "Zhuangzi",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Zhuangzi (Zhuang Zhou), who lived from 369 to 286 BCE, was a major interpreter of Daoism, and the book bearing his name is a Daoist classic.",
+   "answerKind": "person",
+   "source": {
+    "url": "https://www.britannica.com/topic/Taoism",
+    "title": "Taoism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Malak Ṭāʾūs, the chief divine being of the Yazidi religion, is known in English by what name?",
+   "answers": [
+    "Peacock Angel",
+    "Phoenix Spirit",
+    "Dove Messenger",
+    "Eagle Guardian"
+   ],
+   "correct": "Peacock Angel",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Malak Ṭāʾūs means \"Peacock Angel,\" and Yazidis worship this chief divine being in the form of a peacock.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Yazidi",
+    "title": "Yazidi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where is the tomb of Sheikh Adi, located at the holiest temple of the Yazidi religion?",
+   "answers": [
+    "Lalish, in northern Iraq",
+    "Karbala, in southern Iraq",
+    "Tur Abdin, in southeastern Turkey",
+    "Mount Ararat, in eastern Turkey"
+   ],
+   "correct": "Lalish, in northern Iraq",
+   "difficulty": "medium",
+   "category": "Religions",
+   "explain": "Lalish, in Iraq's Nineveh Plains, is the Yazidis' holiest temple and the site of Sheikh Adi's tomb.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Yazidism",
+    "title": "Yazidism"
+   },
+   "ai_written": true
+  }
+ ]
+}

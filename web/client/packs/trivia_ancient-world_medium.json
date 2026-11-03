@@ -1,0 +1,924 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Ancient world trivia (medium)",
+ "description": "50 medium questions about prehistory and the early civilizations: Mesopotamia, Egypt, the Indus, China, the Americas. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "What was the main purpose of a Mesopotamian ziggurat?",
+   "answers": [
+    "A temple dedicated to a city's patron god",
+    "A royal tomb for the city's kings",
+    "A fortress guarding the city's gates",
+    "A public granary for storing the harvest"
+   ],
+   "correct": "A temple dedicated to a city's patron god",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Ziggurats were tiered temple platforms for a city's patron deity. Unlike Egyptian pyramids, they were not royal burial places.",
+   "source": {
+    "url": "https://www.scu.edu.au/news/2026/tc-ziggurat-in-ancient-mesopotamia/",
+    "title": "TC ziggurat in ancient Mesopotamia - Southern Cross University"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Around 2100 BC, which ruler of Ur built ziggurats at Ur, Eridu, Uruk and Nippur?",
+   "answers": [
+    "Sargon of Akkad",
+    "Ur-Nammu",
+    "Hammurabi",
+    "Nebuchadnezzar II"
+   ],
+   "correct": "Ur-Nammu",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The Metropolitan Museum of Art notes that Ur-Nammu gained control of southern Mesopotamian cities around 2100 BC and built ziggurats in these cities.",
+   "source": {
+    "url": "https://www.metmuseum.org/essays/ur-the-ziggurat",
+    "title": "Ur: The Ziggurat - The Metropolitan Museum of Art"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The name of the Sumerian writing system, cuneiform, comes from a Latin word meaning what?",
+   "answers": [
+    "Reed",
+    "Clay",
+    "Wedge",
+    "Seal"
+   ],
+   "correct": "Wedge",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Scribes pressed a reed into wet clay to make wedge-shaped marks. That gave the script its name, from the Latin for wedge.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/premium/article/invention-sumer-cradle-civilization-tigris-euphrates",
+    "title": "These Sumerian inventions changed the world"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which museum is the famous stele inscribed with the Code of Hammurabi displayed today?",
+   "answers": [
+    "The British Museum in London",
+    "The Pergamon Museum in Berlin",
+    "The Metropolitan Museum of Art in New York",
+    "The Louvre in Paris"
+   ],
+   "correct": "The Louvre in Paris",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "A French expedition found the stele, and it has been in the Louvre since shortly after its discovery.",
+   "source": {
+    "url": "https://www.livescience.com/39393-code-of-hammurabi.html",
+    "title": "Code of Hammurabi: Ancient Babylonian Laws"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Code of Hammurabi stele was found in 1901 at which site in what is now Iran?",
+   "answers": [
+    "Persepolis",
+    "Susa",
+    "Ecbatana",
+    "Pasargadae"
+   ],
+   "correct": "Susa",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "A French team led by Jacques de Morgan found the stele at Susa. It had been carried there as war booty from Mesopotamia.",
+   "source": {
+    "url": "https://www.livescience.com/39393-code-of-hammurabi.html",
+    "title": "Code of Hammurabi: Ancient Babylonian Laws"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the Epic of Gilgamesh, which Mesopotamian city did Gilgamesh rule as king?",
+   "answers": [
+    "Ur",
+    "Nippur",
+    "Lagash",
+    "Uruk"
+   ],
+   "correct": "Uruk",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The epic presents Gilgamesh as the part-divine king of Uruk, a great builder and warrior.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Epic-of-Gilgamesh",
+    "title": "Epic of Gilgamesh"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Epic of Gilgamesh, which character is the wild man sent by the gods to temper the king's harsh rule?",
+   "answers": [
+    "Humbaba",
+    "Enkidu",
+    "Utnapishtim",
+    "Siduri"
+   ],
+   "correct": "Enkidu",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The god Anu had Enkidu created to check Gilgamesh's harsh rule. He then became the king's close friend.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Gilgamesh",
+    "title": "Gilgamesh"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the Epic of Gilgamesh, what creature steals the plant that could renew Gilgamesh's youth?",
+   "answers": [
+    "A scorpion-man",
+    "A vulture",
+    "A wild bull",
+    "A serpent"
+   ],
+   "correct": "A serpent",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "After Gilgamesh obtains the youth-renewing plant, a serpent seizes it. He returns to Uruk and accepts that he is mortal.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Epic-of-Gilgamesh",
+    "title": "Epic of Gilgamesh"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Around 2000 BC, which language mostly replaced Sumerian as a spoken language in Mesopotamia?",
+   "answers": [
+    "Akkadian",
+    "Aramaic",
+    "Hittite",
+    "Elamite"
+   ],
+   "correct": "Akkadian",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Akkadian largely took over from Sumerian around 2000 BC. Sumerian survived for about 2,000 more years as a written language in cuneiform.",
+   "source": {
+    "url": "https://www.history.com/articles/sumer",
+    "title": "Sumer - Ancient, Map & Civilization"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After the fall of the Akkadian Empire around 2150 BC, which people from the eastern highlands overran Sumer?",
+   "answers": [
+    "The Hittites",
+    "The Hyksos",
+    "The Gutians",
+    "The Kassites"
+   ],
+   "correct": "The Gutians",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "National Geographic reports that Sumer was overrun by the Gutians, a people from the eastern highlands, after the Akkadian Empire fell.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/premium/article/invention-sumer-cradle-civilization-tigris-euphrates",
+    "title": "These Sumerian inventions changed the world"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On how many tablets does the fullest surviving version of the Epic of Gilgamesh appear?",
+   "answers": [
+    "Seven",
+    "Twelve",
+    "Twenty-four",
+    "Forty"
+   ],
+   "correct": "Twelve",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The fullest version of the epic is preserved on twelve incomplete tablets.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Gilgamesh",
+    "title": "Gilgamesh"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which French scholar announced in September 1822 that he had deciphered Egyptian hieroglyphs using the Rosetta Stone?",
+   "answers": [
+    "Auguste Mariette",
+    "Gaston Maspero",
+    "Vivant Denon",
+    "Jean-François Champollion"
+   ],
+   "correct": "Jean-François Champollion",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Champollion announced his decipherment on 27 September 1822. He matched the Greek text against the hieroglyphs on the stone.",
+   "source": {
+    "url": "https://www.livescience.com/archaeology/science-history-rosetta-stone-is-deciphered-opening-a-window-into-ancient-egyptian-civilization-sept-27-1822",
+    "title": "Science history: Rosetta stone is deciphered, opening a window into ancient Egyptian civilization — Sept. 27, 1822"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Rosetta Stone carries a decree written in 196 BC during the reign of which king?",
+   "answers": [
+    "Ptolemy V",
+    "Ramesses II",
+    "Akhenaten",
+    "Alexander the Great"
+   ],
+   "correct": "Ptolemy V",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The stone records a decree of Egyptian priests honoring Ptolemy V, written in 196 BC.",
+   "source": {
+    "url": "https://blog.oup.com/2011/09/rosetta-stone-2/",
+    "title": "Champollion reveals decipherment of the Rosetta Stone"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which language, a descendant of ancient Egyptian, gave Champollion an advantage in cracking hieroglyphs?",
+   "answers": [
+    "Hebrew",
+    "Coptic",
+    "Aramaic",
+    "Phoenician"
+   ],
+   "correct": "Coptic",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Champollion was fluent in Coptic, which descended from ancient Egyptian. This helped him match hieroglyphic signs to spoken sounds.",
+   "source": {
+    "url": "https://www.history.com/articles/rosetta-stone-languages-discovery",
+    "title": "The Rosetta Stone: Discovery and Decoding Ancient Languages"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For which pharaoh was the Great Pyramid of Giza built as a tomb?",
+   "answers": [
+    "Khufu",
+    "Djoser",
+    "Thutmose III",
+    "Ramesses II"
+   ],
+   "correct": "Khufu",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The Great Pyramid was the royal tomb of Khufu, also called Cheops, the second king of Egypt's 4th Dynasty.",
+   "source": {
+    "url": "https://www.britannica.com/place/Great-Pyramid-of-Giza",
+    "title": "Great Pyramid of Giza"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What does archaeological evidence suggest about who built the Giza pyramids?",
+   "answers": [
+    "Slaves captured in foreign wars",
+    "Enslaved Hebrews held in Egypt",
+    "Organized teams of free Egyptian laborers",
+    "Conscripted prisoners from Nubia"
+   ],
+   "correct": "Organized teams of free Egyptian laborers",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Herodotus claimed Khufu enslaved his people, but archaeology points to free, professional builders.",
+   "source": {
+    "url": "https://www.thecollector.com/great-pyramid-giza-khufu-wonder/",
+    "title": "What We Really Know About the Great Pyramid of Giza & Its Builder"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Great Pyramid was commissioned by Khufu, the son of which pharaoh?",
+   "answers": [
+    "Djoser",
+    "Khafre",
+    "Menkaure",
+    "Snefru"
+   ],
+   "correct": "Snefru",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The Smithsonian describes the Great Pyramid as commissioned by Snefru's son Khufu.",
+   "source": {
+    "url": "https://www.si.edu/spotlight/ancient-egypt/pyramid",
+    "title": "The Egyptian Pyramid"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Giza's three major pyramids were built for Khufu, his son Khafre, and which later king?",
+   "answers": [
+    "Menkaure",
+    "Djoser",
+    "Pepi II",
+    "Unas"
+   ],
+   "correct": "Menkaure",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The two other major Giza pyramids were built for Khafre and for a successor of Khafre, Menkaure.",
+   "source": {
+    "url": "https://www.si.edu/spotlight/ancient-egypt/pyramid",
+    "title": "The Egyptian Pyramid"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which wealthy English aristocrat financed Howard Carter's search for Tutankhamun's tomb?",
+   "answers": [
+    "The Earl of Cromer",
+    "The Earl of Carnarvon",
+    "The Earl of Elgin",
+    "The Earl of Kitchener"
+   ],
+   "correct": "The Earl of Carnarvon",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Carter's excavation was financed by the fifth Earl of Carnarvon, who nearly stopped funding it in 1922.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/anthropology/howard-carter-opens-king-tuts-tomb/",
+    "title": "Howard Carter Opens King Tut's Tomb"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "How many coffins, nested inside a stone sarcophagus, held Tutankhamun's mummy?",
+   "answers": [
+    "Two",
+    "Three",
+    "Five",
+    "Seven"
+   ],
+   "correct": "Three",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "A stone sarcophagus held three coffins nested one inside another. The innermost was solid gold.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/november-4/entrance-to-king-tuts-tomb-discovered",
+    "title": "Entrance to King Tut's tomb discovered"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how old was Tutankhamun when he died?",
+   "answers": [
+    "About 28",
+    "About 38",
+    "About 48",
+    "About 18"
+   ],
+   "correct": "About 18",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Tutankhamun, the 'boy king', died when he was about 18.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/november-4/entrance-to-king-tuts-tomb-discovered",
+    "title": "Entrance to King Tut's tomb discovered"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What originally covered the outer surface of the Great Pyramid of Giza, giving it a gleaming look?",
+   "answers": [
+    "Sheets of beaten gold",
+    "Smooth white limestone casing blocks",
+    "Red granite slabs",
+    "Glazed blue tiles"
+   ],
+   "correct": "Smooth white limestone casing blocks",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The pyramid was clad in gleaming white limestone casing blocks. They were later stripped away, leaving the rougher core stones visible today.",
+   "source": {
+    "url": "https://www.worldhistory.org/Great_Pyramid_of_Giza/",
+    "title": "Great Pyramid of Giza - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which Indus Valley city were the remains of the Great Bath found?",
+   "answers": [
+    "Harappa",
+    "Lothal",
+    "Mohenjo-daro",
+    "Kalibangan"
+   ],
+   "correct": "Mohenjo-daro",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The Great Bath was a large public water tank in the upper town of Mohenjo-daro, in present-day Pakistan.",
+   "source": {
+    "url": "https://www.nationalgeographic.com/history/graphics/mohenjo-daro-indus-valley-civilization-pakistan",
+    "title": "Inside Mohenjo Daro, the 5,000-year-old metropolis frozen in time"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Most Indus stamp seals were carved from which soft stone?",
+   "answers": [
+    "Marble",
+    "Jade",
+    "Basalt",
+    "Steatite"
+   ],
+   "correct": "Steatite",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Most Indus seals were small square pieces of steatite, a soft stone. They carried carved scenes and Indus script symbols.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/Indus-valley-civilization/275057",
+    "title": "Indus valley civilization - Students"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Indus civilization was first identified in 1921 at which site?",
+   "answers": [
+    "Harappa",
+    "Mohenjo-daro",
+    "Lothal",
+    "Dholavira"
+   ],
+   "correct": "Harappa",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Britannica says the civilization was identified at Harappa in 1921 and at Mohenjo-daro in 1922. That is why it is also called the Harappan civilization.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Indus-civilization",
+    "title": "Indus civilization"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Harappan seals and \"colonies\" point to extensive trade between the Indus civilization and which other region?",
+   "answers": [
+    "Mesopotamia",
+    "Olmec Mexico",
+    "Norte Chico Peru",
+    "Shang China"
+   ],
+   "correct": "Mesopotamia",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Britannica describes Indus trade as extensive and well regulated. It arguably led to Harappan colonies in Mesopotamia.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Indus-civilization",
+    "title": "Indus civilization"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Roughly when did the Mature Harappan phase of the Indus civilization flourish?",
+   "answers": [
+    "4500–3800 BCE",
+    "1500–800 BCE",
+    "900–300 BCE",
+    "2600–1900 BCE"
+   ],
+   "correct": "2600–1900 BCE",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The Mature Harappan period is dated to about 2600–1900 BCE. During it the Indus script signs were somewhat standardized.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Harappan-script",
+    "title": "Indus script"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Oracle bones bearing the earliest known Chinese writing come mainly from the Anyang capital of which dynasty?",
+   "answers": [
+    "Shang",
+    "Zhou",
+    "Xia",
+    "Han"
+   ],
+   "correct": "Shang",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Oracle bones from Anyang, the Shang capital, carry the earliest known examples of Chinese writing.",
+   "source": {
+    "url": "https://www.history.com/articles/everyday-objects-shang-dynasty",
+    "title": "7 Everyday Objects From the Shang Dynasty"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How did Shang diviners get an answer from an oracle bone?",
+   "answers": [
+    "Tossing it like a die and reading how it landed",
+    "Burning incense beside it and reading the smoke",
+    "Applying heat until it cracked, then reading the cracks",
+    "Casting yarrow stalks over it and counting them"
+   ],
+   "correct": "Applying heat until it cracked, then reading the cracks",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The diviner presented a question with two possible outcomes, then applied heat to crack the bone or shell. The cracks were read as the answer.",
+   "source": {
+    "url": "https://www.history.com/articles/everyday-objects-shang-dynasty",
+    "title": "7 Everyday Objects From the Shang Dynasty"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Besides cattle shoulder blades, which animal part was commonly inscribed for Shang divination?",
+   "answers": [
+    "Deer antlers",
+    "Tiger jawbones",
+    "Elephant tusks",
+    "Turtle shells"
+   ],
+   "correct": "Turtle shells",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Oracle bones were made from cow scapulas and turtle shells.",
+   "source": {
+    "url": "https://www.history.com/articles/everyday-objects-shang-dynasty",
+    "title": "7 Everyday Objects From the Shang Dynasty"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Before their importance was understood, inscribed bones dug up by farmers near Anyang were sold to be ground up for what use?",
+   "answers": [
+    "Traditional Chinese medicine",
+    "Fertilizer for fields",
+    "Paint pigment",
+    "Building plaster"
+   ],
+   "correct": "Traditional Chinese medicine",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "For centuries farmers sold the inscribed fragments to apothecaries, who ground them up for traditional medicine.",
+   "source": {
+    "url": "https://www.history.com/articles/everyday-objects-shang-dynasty",
+    "title": "7 Everyday Objects From the Shang Dynasty"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Anyang, site of the Shang capital Yinxu and its oracle bones, lies in which modern Chinese province?",
+   "answers": [
+    "Shaanxi",
+    "Sichuan",
+    "Henan",
+    "Hubei"
+   ],
+   "correct": "Henan",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Systematic excavations at the Ruins of Yin (Yinxu) took place near Anyang in Henan Province.",
+   "source": {
+    "url": "https://www.penn.museum/sites/expedition/the-case-of-the-wayward-oracle-bone/",
+    "title": "Expedition Magazine"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How were the warriors of the Terracotta Army first found in 1974?",
+   "answers": [
+    "Road builders widening a highway",
+    "Archaeologists following a historian's text",
+    "Villagers repairing a flooded canal",
+    "Farmers digging a well"
+   ],
+   "correct": "Farmers digging a well",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The tomb complex of China's first emperor was found by accident when farmers digging a well hit ceramic warrior figures.",
+   "source": {
+    "url": "https://smarthistory.org/tomb-first-emperor-qin/",
+    "title": "The Tomb of the First Emperor"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to reports, roughly how many workers labored on Qin Shi Huang's tomb complex?",
+   "answers": [
+    "About 7,000",
+    "About 70,000",
+    "About 700,000",
+    "About 7 million"
+   ],
+   "correct": "About 700,000",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Sources report that some 700,000 to 720,000 workers labored on the emperor's tomb complex.",
+   "source": {
+    "url": "https://www.smithsonianmag.com/history/what-you-need-know-about-chinas-terra-cotta-warriors-first-qin-emperor-30942673/",
+    "title": "What You Need to Know About China's Terra-Cotta Warriors and the First Qin Emperor"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year BCE did Qin Shi Huang proclaim himself first emperor of China?",
+   "answers": [
+    "256 BCE",
+    "221 BCE",
+    "206 BCE",
+    "141 BCE"
+   ],
+   "correct": "221 BCE",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Qin Shi Huang proclaimed himself first emperor of China in 221 BCE, after unifying the warring states.",
+   "source": {
+    "url": "https://www.smithsonianmag.com/history/what-you-need-know-about-chinas-terra-cotta-warriors-first-qin-emperor-30942673/",
+    "title": "What You Need to Know About China's Terra-Cotta Warriors and the First Qin Emperor"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Whom do the Olmec colossal heads most likely portray?",
+   "answers": [
+    "Olmec rain gods",
+    "Defeated enemy chiefs",
+    "Individual Olmec rulers",
+    "Priestly astronomers"
+   ],
+   "correct": "Individual Olmec rulers",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Britannica says the colossal heads are generally believed to be portraits of Olmec rulers.",
+   "source": {
+    "url": "https://www.britannica.com/art/colossal-head",
+    "title": "Colossal head"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After the decline of San Lorenzo, the Olmec center of power shifted to which site?",
+   "answers": [
+    "Teotihuacan",
+    "Tikal",
+    "Monte Albán",
+    "La Venta"
+   ],
+   "correct": "La Venta",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The Olmecs were first centered at San Lorenzo Tenochtitlán. They moved to La Venta in the 10th century BC after San Lorenzo declined.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Olmecs",
+    "title": "Olmecs"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Caral, often described as the oldest city in the Americas, is located in which modern country?",
+   "answers": [
+    "Peru",
+    "Mexico",
+    "Bolivia",
+    "Guatemala"
+   ],
+   "correct": "Peru",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Caral lies in Peru's Supe Valley, about 200 km north of Lima. It is about 5,000 years old.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Caral",
+    "title": "Caral"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Peruvian archaeologist founded the archaeological project at Caral, working there from 1994 onward?",
+   "answers": [
+    "Julio C. Tello",
+    "Luis G. Lumbreras",
+    "Ruth Shady",
+    "Rosa Fung Pineda"
+   ],
+   "correct": "Ruth Shady",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Ruth Shady founded and directed the Caral project. She is credited with the discovery of the Norte Chico civilization.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Ruth_Shady",
+    "title": "Ruth Shady"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In Maya numerals, which symbol stood for zero?",
+   "answers": [
+    "A knotted cord",
+    "A feather",
+    "A jaguar paw",
+    "A shell"
+   ],
+   "correct": "A shell",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Maya numbers used a dot for one, a bar for five and a shell glyph for zero.",
+   "source": {
+    "url": "https://www.mayaarchaeologist.co.uk/school-resources/maya-world/maya-calendar/",
+    "title": "Maya Calendar - Maya Archaeologist - Dr Diane Davies"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Maya number system was based on which number?",
+   "answers": [
+    "10",
+    "12",
+    "20",
+    "60"
+   ],
+   "correct": "20",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Maya numerals were vigesimal, meaning base 20.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Maya_numerals",
+    "title": "Maya numerals"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many days made up the Maya sacred calendar, the Tzolk'in?",
+   "answers": [
+    "260",
+    "360",
+    "365",
+    "400"
+   ],
+   "correct": "260",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The Tzolk'in combined a cycle of 20 day names with 13 numbers, giving 260 days. The 365-day count was a separate solar calendar.",
+   "source": {
+    "url": "https://www.mayaarchaeologist.co.uk/public-resources/maya-world/maya-calendar-system/",
+    "title": "The Maya Calendar Explained - Maya Archaeologist - Dr Diane Davies"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Maya Lowlands, Tikal's great rival for power was which city?",
+   "answers": [
+    "Chichén Itzá",
+    "Tulum",
+    "Uxmal",
+    "Calakmul"
+   ],
+   "correct": "Calakmul",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "In the Maya Lowlands, the cities of Tikal and Calakmul became two great rivals for power.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Maya_civilization",
+    "title": "Maya civilization"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Göbekli Tepe's monumental stone enclosures in Turkey were built by what kind of people?",
+   "answers": [
+    "Early farmers growing wheat and barley",
+    "Hunter-gatherers who had not yet farmed",
+    "Nomadic horse-riding herders",
+    "Bronze Age traders from Mesopotamia"
+   ],
+   "correct": "Hunter-gatherers who had not yet farmed",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Göbekli Tepe's builders were hunter-gatherers living around the start of the Neolithic. They built the monuments before farming was established.",
+   "source": {
+    "url": "https://archaeology.org/issues/may-june-2021/features/turkey-gobekli-tepe-hunter-gatherers/",
+    "title": "Features - Last Stand of the Hunter-Gatherers? - Archaeology Magazine - May/June 2021"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the Turkish name Göbekli Tepe mean?",
+   "answers": [
+    "Hill of Giants",
+    "Mound of Pillars",
+    "Eagle's Summit",
+    "Potbelly Hill"
+   ],
+   "correct": "Potbelly Hill",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Local farmers called the site Göbekli Tepe, meaning 'Potbelly Hill'.",
+   "source": {
+    "url": "https://gobekli-tepe.com/blog/why-gobekli-tepe-changed-everything/",
+    "title": "Why Göbekli Tepe Changed Everything About Prehistory"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Lascaux cave in France contains about 600 paintings and roughly how many engravings?",
+   "answers": [
+    "About 150",
+    "About 1,500",
+    "About 5,000",
+    "About 15,000"
+   ],
+   "correct": "About 1,500",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Britannica says Lascaux holds approximately 600 paintings and 1,500 engravings.",
+   "source": {
+    "url": "https://www.britannica.com/place/Lascaux",
+    "title": "Lascaux"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who stumbled upon the Lascaux cave paintings in 1940?",
+   "answers": [
+    "A shepherd searching for a lost goat",
+    "Soldiers digging a wartime trench",
+    "A priest-archaeologist excavating nearby",
+    "Teenagers who followed a dog into the cave"
+   ],
+   "correct": "Teenagers who followed a dog into the cave",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Four teenagers found the cave near Montignac after following their dog down a narrow entrance.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/september-12/lascaux-cave-paintings-discovered",
+    "title": "Lascaux cave paintings discovered"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "About how old are the paintings in the Lascaux cave in France?",
+   "answers": [
+    "About 7,000 years",
+    "About 17,000 years",
+    "About 37,000 years",
+    "About 57,000 years"
+   ],
+   "correct": "About 17,000 years",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The Lascaux paintings are approximately 17,000 years old, from the Upper Paleolithic.",
+   "source": {
+    "url": "https://www.britannica.com/place/Lascaux",
+    "title": "Lascaux"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Spanish cave's paintings, found in 1879, were at first widely doubted as authentic?",
+   "answers": [
+    "Altamira",
+    "El Castillo",
+    "Tito Bustillo",
+    "Covalanas"
+   ],
+   "correct": "Altamira",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "The first Upper Paleolithic cave paintings were found at Altamira in 1879 by a landowner, Marcelino Sanz de Sautuola. Many doubted they were genuine.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/anthropology/lascaux-cave-paintings",
+    "title": "Lascaux Cave Paintings"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which archaeologist coined the term \"Neolithic Revolution\" for the shift from hunting and gathering to farming?",
+   "answers": [
+    "Howard Carter",
+    "V. Gordon Childe",
+    "Leonard Woolley",
+    "Mortimer Wheeler"
+   ],
+   "correct": "V. Gordon Childe",
+   "difficulty": "medium",
+   "category": "Ancient world",
+   "explain": "Gordon Childe called the shift to farming and settled life the 'Neolithic Revolution'. For decades this was the standard model of early human development.",
+   "source": {
+    "url": "https://gobekli-tepe.com/blog/why-gobekli-tepe-changed-everything/",
+    "title": "Why Göbekli Tepe Changed Everything About Prehistory"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  }
+ ]
+}

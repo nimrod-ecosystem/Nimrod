@@ -1,0 +1,935 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Mythology trivia (hard)",
+ "description": "50 hard questions about myths and legends from cultures around the world. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "In Norse myth, which giantess bore the monstrous wolf Fenrir to Loki?",
+   "answers": [
+    "Skaði",
+    "Gerðr",
+    "Angrboða",
+    "Hyrrokkin"
+   ],
+   "correct": "Angrboða",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Fenrir was the son of Loki and the giantess Angrboða. She also bore Jörmungandr and Hel to Loki.",
+   "source": {
+    "url": "https://simple.wikipedia.org/wiki/Gleipnir",
+    "title": "Gleipnir"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Before the gods made Gleipnir, which two iron fetters did Fenrir tear apart?",
+   "answers": [
+    "Gungnir and Draupnir",
+    "Mjölnir and Megingjörð",
+    "Naglfar and Skíðblaðnir",
+    "Leyding and Dromi"
+   ],
+   "correct": "Leyding and Dromi",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The gods tried to bind Fenrir twice with huge metal chains, Leyding and Dromi, and he broke both. Gleipnir was the third binding and the one that held.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Gleipnir",
+    "title": "Gleipnir"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to one retelling of the binding of Fenrir, which of these was among the impossible ingredients the dwarves used to make Gleipnir?",
+   "answers": [
+    "The shadow of a raven",
+    "The breath of a fish",
+    "The echo of a thunderclap",
+    "The warmth of a flame"
+   ],
+   "correct": "The breath of a fish",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Gleipnir was made from impossible things such as the sound of a cat's footsteps, the roots of a mountain and the breath of a fish. The other options are not on the list.",
+   "source": {
+    "url": "https://fairytalez.com/mythology/fenrir/",
+    "title": "Fenrir: The Monstrous Wolf of Norse Mythology"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "While Loki lies bound beneath a dripping serpent, what does his wife Sigyn do?",
+   "answers": [
+    "She shields his face with her cloak",
+    "She sings to keep the snake asleep",
+    "She holds a bowl to catch the venom",
+    "She gnaws at the bonds that hold him"
+   ],
+   "correct": "She holds a bowl to catch the venom",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Sigyn holds a bowl over Loki's head to catch the venom that drips from the snake.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Bound_monster",
+    "title": "Bound monster"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Fenrir's byname Vánagandr means \"monster of the River\" what?",
+   "answers": [
+    "Gjöll",
+    "Slidr",
+    "Ván",
+    "Vimur"
+   ],
+   "correct": "Ván",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Vánagandr is Old Norse for \"monster of the [River] Ván\", one of several names for Fenrir.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Fenrir",
+    "title": "Fenrir"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Gilgamesh flood narrative, which god warns Utnapishtim and tells him to build a ship?",
+   "answers": [
+    "Enlil",
+    "Anu",
+    "Shamash",
+    "Ea"
+   ],
+   "correct": "Ea",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Utnapishtim was forewarned by Ea (Enki) and survived by building a great ship.",
+   "source": {
+    "url": "https://www.pseudepigrapha.com/pseudepigrapha/gilgamesh.html",
+    "title": "The Flood Narrative From the Gilgamesh Epic"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Which guardian of the Cedar Forest do Gilgamesh and Enkidu kill in the Epic of Gilgamesh?",
+   "answers": [
+    "Pazuzu",
+    "Kingu",
+    "Humbaba",
+    "Lamashtu"
+   ],
+   "correct": "Humbaba",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Together Gilgamesh and Enkidu kill Humbaba, the ferocious guardian of the Cedar Forest, and bring back valuable timber.",
+   "source": {
+    "url": "https://www.biblicalarchaeology.org/uncategorized/the-epic-of-gilgamesh/",
+    "title": "Biblical Archaeology Society - The Epic of Gilgamesh"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "After Gilgamesh resists her seduction, which goddess sends the Bull of Heaven to kill him?",
+   "answers": [
+    "Ereshkigal",
+    "Ishtar",
+    "Ninsun",
+    "Siduri"
+   ],
+   "correct": "Ishtar",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Ishtar sought revenge after Gilgamesh rejected her and sent the Bull of Heaven against him. Enkidu helped him kill it.",
+   "source": {
+    "url": "https://www.biblicalarchaeology.org/uncategorized/the-epic-of-gilgamesh/",
+    "title": "Biblical Archaeology Society - The Epic of Gilgamesh"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Who is the boatman in Utnapishtim's service who takes Gilgamesh to Utnapishtim's domain?",
+   "answers": [
+    "Siduri",
+    "Shamhat",
+    "Atrahasis",
+    "Urshanabi"
+   ],
+   "correct": "Urshanabi",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Urshanabi is described as a boatman serving the flood hero Utnapishtim. He ferries Gilgamesh to Utnapishtim and later goes with him back to Uruk.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Urshanabi",
+    "title": "Urshanabi"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the Babylonian Enuma Elish, from the blood of which slain god does Marduk create mankind?",
+   "answers": [
+    "Kingu",
+    "Apsu",
+    "Mummu",
+    "Anshar"
+   ],
+   "correct": "Kingu",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Marduk makes humankind from the blood of Kingu, Tiamat's lover and the leader of her armies.",
+   "source": {
+    "url": "https://www.thecollector.com/enuma-elish-babylonian-poem-creation/",
+    "title": "Enuma Elish: Discover the Babylonian Poem of Creation"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the Enuma Elish, the Tigris and Euphrates rivers flow from which part of Tiamat's body after Marduk kills her?",
+   "answers": [
+    "Her mouth",
+    "Her veins",
+    "Her hair",
+    "Her eyes"
+   ],
+   "correct": "Her eyes",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "After Marduk splits Tiamat in two with an arrow, the waters of the Tigris and Euphrates flow from her eyes.",
+   "source": {
+    "url": "https://www.worldhistory.org/article/225/enuma-elish---the-babylonian-epic-of-creation---fu/",
+    "title": "Enuma Elish - The Babylonian Epic of Creation - Full Text - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Aztec myth of Huitzilopochtli's conception, what does Coatlicue find and place in her waistband?",
+   "answers": [
+    "A jade bead",
+    "A ball of feathers",
+    "An obsidian blade",
+    "A cacao pod"
+   ],
+   "correct": "A ball of feathers",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Coatlicue found a ball of feathers and tucked it into her waistband. She then became pregnant with Huitzilopochtli.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Aztec_mythology",
+    "title": "Aztec mythology"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which mount does Coatlicue give birth to Huitzilopochtli, who then defeats his brothers?",
+   "answers": [
+    "Mount Tepeyac",
+    "Mount Chapultepec",
+    "Mount Tlaloc",
+    "Mount Coatepec"
+   ],
+   "correct": "Mount Coatepec",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Coatlicue gave birth on Mount Coatepec, pursued by her children. The newborn Huitzilopochtli, born armed, defeated most of his brothers there.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Aztec_mythology",
+    "title": "Aztec mythology"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which blue serpent does the newborn Huitzilopochtli use to kill his half-sister Coyolxauhqui?",
+   "answers": [
+    "Xiuhcoatl",
+    "Quetzalcoatl",
+    "Cihuacoatl",
+    "Mixcoatl"
+   ],
+   "correct": "Xiuhcoatl",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Huitzilopochtli tore out Coyolxauhqui's heart using Xiuhcoatl, a blue snake, and threw her body down the mountain.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Aztec_mythology",
+    "title": "Aztec mythology"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which three animals combine to form the Egyptian devourer Ammit, who waits beside the scales of judgment?",
+   "answers": [
+    "Jackal, lion and cobra",
+    "Falcon, crocodile and ibis",
+    "Hippopotamus, jackal and vulture",
+    "Crocodile, lion and hippopotamus"
+   ],
+   "correct": "Crocodile, lion and hippopotamus",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Ammit is a composite creature that is part crocodile, part lion and part hippopotamus.",
+   "source": {
+    "url": "https://mythwink.com/stories/the-weighing-of-the-heart",
+    "title": "The Weighing of the Heart"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Egyptian Weighing of the Heart, which god records the verdict?",
+   "answers": [
+    "Khnum",
+    "Thoth",
+    "Sobek",
+    "Ptah"
+   ],
+   "correct": "Thoth",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Thoth is the god who records the verdict of the Weighing of the Heart.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Duat",
+    "title": "Duat"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Which Book of the Dead spell was often inscribed on heart scarabs placed with the deceased?",
+   "answers": [
+    "Spell 17",
+    "Spell 64",
+    "Spell 125",
+    "Spell 30"
+   ],
+   "correct": "Spell 30",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Spell 30 was often inscribed on heart scarabs. The weighing of the heart itself is described in spell 125.",
+   "source": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3960665/",
+    "title": "The book of death: weighing your heart"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Kojiki, the birth of which fire deity fatally wounds Izanami?",
+   "answers": [
+    "Hiruko",
+    "Ōkuninushi",
+    "Kagu-tsuchi",
+    "Takemikazuchi"
+   ],
+   "correct": "Kagu-tsuchi",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "According to the Kojiki, the fire deity Kagu-tsuchi burned Izanami at birth and wounded her fatally.",
+   "source": {
+    "url": "https://graphsearch.epfl.ch/en/concept/153717/concepts?page=1",
+    "title": "graphsearch.epfl.ch"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "According to the Kojiki, Amaterasu was born when Izanagi purified which part of himself?",
+   "answers": [
+    "His left eye",
+    "His right eye",
+    "His nose",
+    "His mouth"
+   ],
+   "correct": "His left eye",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "In the Kojiki, Izanagi produced Amaterasu when he purified his left eye after returning from the underworld.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/political-science/amaterasu-mythology",
+    "title": "Amaterasu (mythology)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year was the Kojiki, a Japanese chronicle of ancient myths, recorded?",
+   "answers": [
+    "645 CE",
+    "720 CE",
+    "712 CE",
+    "794 CE"
+   ],
+   "correct": "712 CE",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The Kojiki was recorded in 712 CE. The Nihon Shoki, which is often confused with it, followed in 720 CE.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/political-science/amaterasu-mythology",
+    "title": "Amaterasu (mythology)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which three sacred emblems associated with Amaterasu are symbols of the Japanese imperial throne?",
+   "answers": [
+    "A mirror, a bow and a drum",
+    "A fan, a sword and a bell",
+    "A spear, a jewel and a fan",
+    "A mirror, a sword and a jewel"
+   ],
+   "correct": "A mirror, a sword and a jewel",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The three emblems are the sacred mirror, the sword of Susanoo and the jewel from the cave myth. They symbolize the Japanese empire.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/political-science/amaterasu-mythology",
+    "title": "Amaterasu (mythology)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of the Tuatha Dé Danann's four great treasures is said to cry out when the rightful king of Ireland stands on it?",
+   "answers": [
+    "The Spear of Lugh",
+    "The Stone of Destiny",
+    "The Sword of Nuada",
+    "The Cauldron of the Dagda"
+   ],
+   "correct": "The Stone of Destiny",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The Stone of Destiny (Lia Fáil) cries out under the rightful king of Ireland. The spear always hits its mark and the sword could never be defeated.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/social-sciences-and-humanities/dagda-deity/",
+    "title": "The Dagda (deity)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Through his mother, the Irish hero-god Lugh is grandson of which Fomorian leader?",
+   "answers": [
+    "Elatha",
+    "Indech",
+    "Tethra",
+    "Balor"
+   ],
+   "correct": "Balor",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Lugh is the grandson of the Fomorian leader Balor through his mother, even though he is a champion of the Tuatha Dé Danann.",
+   "source": {
+    "url": "https://www.historyandmyths.com/2026/09/tuatha-de-danann.html",
+    "title": "The Tuatha Dé Danann: The Supernatural Race of Irish Mythology"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the Lebor Gabála Érenn (Book of Invasions), which wave of settlers are the Tuatha Dé Danann?",
+   "answers": [
+    "Second",
+    "Third",
+    "Fifth",
+    "Sixth"
+   ],
+   "correct": "Fifth",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The Book of Invasions presents the Tuatha Dé Danann as the fifth wave of settlers to arrive in Ireland.",
+   "source": {
+    "url": "https://www.irishgetaways.com/blog/celtic-gods-goddesses-ireland-guide",
+    "title": "Celtic Gods & Goddesses of Ireland: Dagda, Morrígan and Brigid"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Milesian poet calmed the sea after the Tuatha Dé Danann raised a magical storm against the invaders?",
+   "answers": [
+    "Amergin",
+    "Taliesin",
+    "Fintan",
+    "Oisín"
+   ],
+   "correct": "Amergin",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The Milesian poet Amergin calmed the sea with his verse. His people then landed and defeated the Tuatha Dé Danann.",
+   "source": {
+    "url": "https://emrysydewin.substack.com/p/the-tuatha-de-danaan",
+    "title": "the tuatha de danaan"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Which mountain served as the churning rod when the gods and demons churned the Ocean of Milk?",
+   "answers": [
+    "Mount Meru",
+    "Mount Kailasa",
+    "Mount Mandara",
+    "Mount Govardhana"
+   ],
+   "correct": "Mount Mandara",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "In the Samudra Manthan the mountain Mandara, also called Mandaragiri, was used as the churning rod.",
+   "source": {
+    "url": "https://www.dollsofindia.com/library/samudra_manthan/",
+    "title": "Samudra Manthan - the Churning of Our Inner Consciousness"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After drinking the poison halahala that emerged from the churning of the ocean, which epithet did Shiva earn?",
+   "answers": [
+    "Mahakala",
+    "Pashupati",
+    "Nataraja",
+    "Nilakantha"
+   ],
+   "correct": "Nilakantha",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Shiva drank the poison halahala to save creation. His throat turned blue, which earned him the name Nilakantha (\"Blue Throat\").",
+   "source": {
+    "url": "https://www.britannica.com/topic/churning-of-the-ocean-of-milk",
+    "title": "Samudra Manthana"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which avatar did Vishnu dive beneath the sinking Mandara mountain and bear it on his back during the churning of the ocean?",
+   "answers": [
+    "Kurma",
+    "Matsya",
+    "Varaha",
+    "Narasimha"
+   ],
+   "correct": "Kurma",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Vishnu took the form of a huge tortoise, the Kurma avatar, and carried the mountain on his back so the churning could continue.",
+   "source": {
+    "url": "https://www.dollsofindia.com/library/samudra_manthan/",
+    "title": "Samudra Manthan - the Churning of Our Inner Consciousness"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Which serpent king was used as the churning rope in the Samudra Manthan?",
+   "answers": [
+    "Shesha",
+    "Vasuki",
+    "Takshaka",
+    "Kaliya"
+   ],
+   "correct": "Vasuki",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The gods and demons invited Vasuki, king of the snakes, to serve as the churning cord. He was tied around Mount Mandara.",
+   "source": {
+    "url": "https://glorioushinduism.com/2023/10/26/samudra-manthan/",
+    "title": "Samudra Manthan: Churning the Ocean for the Elixir of Immortality - Glorious Hinduism"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the Popol Vuh, the Hero Twins' mother Xquic is the daughter of which lord of Xibalba?",
+   "answers": [
+    "Hun Came",
+    "Vucub Came",
+    "Ah Puch",
+    "Cuchumaquic"
+   ],
+   "correct": "Cuchumaquic",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "In the Popol Vuh, Xquic is the daughter of Cuchumaquic, one of the Lords of Xibalba. She becomes the mother of Hunahpu and Xbalanque.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Xquic",
+    "title": "Xquic"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Which pretentious bird demon do the Maya Hero Twins destroy in the Popol Vuh?",
+   "answers": [
+    "Camazotz",
+    "Gucumatz",
+    "Vucub Caquix",
+    "Huracan"
+   ],
+   "correct": "Vucub Caquix",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Besides their conquest of Xibalba, the Twins destroy the pretentious bird demon Vucub Caquix and his two demonic sons.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Maya_Hero_Twins",
+    "title": "Maya Hero Twins"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "What does the name of the Maya underworld Xibalba mean?",
+   "answers": [
+    "Land of Silence",
+    "House of Ashes",
+    "Place of Fear",
+    "Realm of Mirrors"
+   ],
+   "correct": "Place of Fear",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Xibalba means \"Place of Fear\". It was a layered underworld ruled by twelve death gods led by Hun Came and Vucub Came.",
+   "source": {
+    "url": "https://godsandmonsters.info/welcome-to-gods-and-monsters/mayan-mythology/",
+    "title": "Mayan Mythology: The Complete Guide to the Popol Vuh, the Hero Twins, and the Maya Underworld"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After defeating the Lords of Death, what do the Hero Twins become in the Popol Vuh narrative?",
+   "answers": [
+    "Twin maize gods",
+    "The Sun and the Moon",
+    "Rulers of Xibalba",
+    "Guardians of the ballcourt"
+   ],
+   "correct": "The Sun and the Moon",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "In the Popol Vuh narrative, the Twins ascend to the sky after defeating the Lords of Death and become the sun and the moon.",
+   "source": {
+    "url": "https://mayan.org/myths/hero-twins-xibalba/",
+    "title": "Maya Hero Twins: Defeating the Lords of Death"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "From what is Māui's magical fishhook traditionally carved in Polynesian myth?",
+   "answers": [
+    "A whale's rib",
+    "A shark's tooth",
+    "His grandmother's jawbone",
+    "A sacred tree root"
+   ],
+   "correct": "His grandmother's jawbone",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Māui's magical fishhook is traditionally said to be carved from the jawbone of his grandmother.",
+   "source": {
+    "url": "https://www.thecollector.com/polynesian-creation-myths/",
+    "title": "Polynesian Creation Myths: Ever Wondered How Hawai'i Was Created?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Māori tradition, Te Ika-a-Māui, the great fish that Māui hauled from the sea, is which landmass?",
+   "answers": [
+    "South Island",
+    "Stewart Island",
+    "The Chatham Islands",
+    "North Island"
+   ],
+   "correct": "North Island",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Māui used a magical fishhook to pull Te Ika-a-Māui, New Zealand's North Island, from the seafloor.",
+   "source": {
+    "url": "https://www.history.com/articles/maui-mythology-demigod",
+    "title": "Who Is Māui in Polynesian Mythology?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which fire goddess does Māui trick into giving up her fingernails of flame?",
+   "answers": [
+    "Mahuika",
+    "Pele",
+    "Hine-nui-te-pō",
+    "Papatūānuku"
+   ],
+   "correct": "Mahuika",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Māui tricks the fire goddess Mahuika into giving up her fingernails of flame. Fire then takes refuge in certain trees, where people make it by friction.",
+   "source": {
+    "url": "https://a2aworld.ai/field-guides/polynesian",
+    "title": "Polynesian Mythology: Māui, Pele, Rangi & Papa"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In Hawaiian myth, the fire goddess Pele's quarrels with which sea-goddess sister help shape the islands?",
+   "answers": [
+    "Hiʻiaka",
+    "Kapo",
+    "Nāmaka",
+    "Laka"
+   ],
+   "correct": "Nāmaka",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Pele, the fire goddess, and her sister Nāmaka, the sea goddess, hated each other. Their battles formed parts of the Hawaiian Islands.",
+   "source": {
+    "url": "https://www.thecollector.com/polynesian-creation-myths/",
+    "title": "Polynesian Creation Myths: Ever Wondered How Hawai'i Was Created?"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In Hesiod's account, which beings were born from drops of Uranus's blood that fell on the Earth after Cronus castrated him?",
+   "answers": [
+    "The Muses, Graces and Hours",
+    "The Fates, Keres and Hesperides",
+    "The Erinyes, Giants and Meliads",
+    "The Gorgons, Graeae and Harpies"
+   ],
+   "correct": "The Erinyes, Giants and Meliads",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "From the drops of Uranus's blood that fell upon the earth came the Erinyes, the Giants and the Meliad nymphs. Aphrodite came from the foam around the severed genitals.",
+   "source": {
+    "url": "https://www.maicar.com/GML/Castration.html",
+    "title": "Castration of Uranus - Greek Mythology Link"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which mountain served as the base of the older generation of gods, the Titans, during the Titanomachy?",
+   "answers": [
+    "Mount Pelion",
+    "Mount Ossa",
+    "Mount Helicon",
+    "Mount Othrys"
+   ],
+   "correct": "Mount Othrys",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The Titans were based on Mount Othrys. The Olympians who fought them would come to reign on Mount Olympus.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Titanomachy",
+    "title": "Titanomachy"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Titan, a son of Iapetus, was second in command to Cronus during the Titanomachy?",
+   "answers": [
+    "Prometheus",
+    "Hyperion",
+    "Oceanus",
+    "Atlas"
+   ],
+   "correct": "Atlas",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Atlas, another son of Iapetus, was second in command after Cronus in the war against the Olympians.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Titanomachy",
+    "title": "Titanomachy"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "To which island did Rhea flee, with help from Gaia and Uranus, to give birth to Zeus?",
+   "answers": [
+    "Crete",
+    "Delos",
+    "Rhodes",
+    "Cyprus"
+   ],
+   "correct": "Crete",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Rhea appealed to Gaia and Uranus for help and was helped to escape to Crete, where Zeus was born, so that Cronus could not swallow him.",
+   "source": {
+    "url": "https://www.worldhistory.org/Uranus/",
+    "title": "Uranus - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which figure from the Hittite \"Kingship in Heaven\" text offers an Anatolian parallel to Hesiod's Uranus–Cronus castration conflict?",
+   "answers": [
+    "Teshub",
+    "Ullikummi",
+    "Kumarbi",
+    "Illuyanka"
+   ],
+   "correct": "Kumarbi",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "The Hittite Kingship in Heaven text, with its castration motif, offers in Kumarbi an Anatolian parallel to Hesiod's conflict between Uranus and Cronus.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Theogony",
+    "title": "Theogony"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In Slavic tree imagery, which bird represents the thunder god Perun in the crown while the serpent Veles lurks at the roots?",
+   "answers": [
+    "A falcon",
+    "A raven",
+    "An eagle",
+    "A cuckoo"
+   ],
+   "correct": "An eagle",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Perun is portrayed as an eagle sitting in the crown of the tree. The serpentine Veles is at the roots, in the Underworld.",
+   "source": {
+    "url": "https://www.thecollector.com/slavic-mythology-creatures-myths/",
+    "title": "Slavic Mythology: 8 Creatures, Myths, & Stories"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Slavic deity is the divine smith of celestial fire and the sky?",
+   "answers": [
+    "Mokosh",
+    "Triglav",
+    "Rod",
+    "Svarog"
+   ],
+   "correct": "Svarog",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Svarog is the Slavic god of celestial fire and the sky, the divine smith whose forge produces the celestial fire.",
+   "source": {
+    "url": "https://talesofmythandmagic.co.uk/slavic-mythology/",
+    "title": "Slavic Mythology: Gods, Creatures, and the Tradition That Never Quite Went Away"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In one version of the Chang'e myth, who tries to get Hou Yi's immortality pill before Chang'e swallows it?",
+   "answers": [
+    "Wu Gang",
+    "Gonggong",
+    "Feng Meng",
+    "Zhurong"
+   ],
+   "correct": "Feng Meng",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Chang'e swallowed the pill before Feng Meng could get it. She then became immortal and flew to the moon.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Hou_Yi",
+    "title": "Hou Yi"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "The story of Pangu separating heaven and earth first appears in written sources from which century CE?",
+   "answers": [
+    "The 1st century",
+    "The 7th century",
+    "The 3rd century",
+    "The 11th century"
+   ],
+   "correct": "The 3rd century",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Nüwa's sky repair and Houyi's ten suns are preserved in the 2nd-century BCE Huainanzi. The Pangu story first appears in writings of the 3rd century CE.",
+   "source": {
+    "url": "https://a2aworld.ai/field-guides/chinese",
+    "title": "Chinese Mythology: Pangu, Nüwa & Sun Wukong"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Ferdowsi's Shahnameh, in which mountain is the serpent-shouldered tyrant Zahhak finally chained by Fereydun?",
+   "answers": [
+    "Mount Ararat",
+    "Mount Damavand",
+    "Mount Alvand",
+    "Mount Sabalan"
+   ],
+   "correct": "Mount Damavand",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Fereydun overthrows Zahhak and chains him inside Mount Damavand.",
+   "source": {
+    "url": "https://godsandmonsters.info/zahhak/",
+    "title": "Zahhak: Persian Myth's Serpent-Shouldered Tyrant King"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Shahnameh, the hero Rostam is the son of Rudaba and which father?",
+   "answers": [
+    "Sam",
+    "Tus",
+    "Kay Kavus",
+    "Zal"
+   ],
+   "correct": "Zal",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Rostam is the son of Zāl and Rudaba. The Simurgh, which had raised Zāl, later helped at Rostam's birth.",
+   "source": {
+    "url": "https://www.cyruscrafts.com/blog/information/shahnameh-the-persian-book-of-kings",
+    "title": "Shahnameh The Epic of The Persian Kings"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "What does the blacksmith Kaveh use as a banner to rally the revolt against Zahhak in the Shahnameh?",
+   "answers": [
+    "His leather apron",
+    "His iron hammer",
+    "A torn war banner",
+    "A sheepskin cloak"
+   ],
+   "correct": "His leather apron",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "Kaveh uses his smith's leather apron as a banner. He then seeks out Fereydun and helps him overthrow Zahhak.",
+   "source": {
+    "url": "https://www.heritageinstitute.com/zoroastrianism/shahnameh/characters.htm",
+    "title": "Ferdowsi Shahnameh Characters - Heritage Institute"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Yoruba creation legend, the first mound of earth at Oke Ora, from which Ife was built, formed from soil in what?",
+   "answers": [
+    "A clay jar",
+    "A woven basket",
+    "A snail's shell",
+    "A tortoise carapace"
+   ],
+   "correct": "A snail's shell",
+   "difficulty": "hard",
+   "category": "Mythology",
+   "explain": "In the Yoruba creation legend, Oke Ora was the first mound of earth, formed from the soil in a snail shell. Ife, the first settlement, was built from it.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Oke_Ora",
+    "title": "Oke Ora"
+   },
+   "ai_written": true
+  }
+ ]
+}

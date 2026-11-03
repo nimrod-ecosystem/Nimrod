@@ -74,6 +74,17 @@ export const PACK_LIBRARY = [
   { id: 'trivia_words_easy', kind: 'trivia', label: 'Words trivia (easy)', url: '/packs/trivia_words_easy.json' },
   { id: 'trivia_words_medium', kind: 'trivia', label: 'Words trivia (medium)', url: '/packs/trivia_words_medium.json' },
   { id: 'trivia_words_hard', kind: 'trivia', label: 'Words trivia (hard)', url: '/packs/trivia_words_hard.json' },
+  // Three more topics (2026-11-03): 450 questions written and checked the same way. All nine it flagged were
+  // corrected: six by a better cited page, one by a clearer explanation, one reworded, one wrong answer replaced.
+  { id: 'trivia_ancient-world_easy', kind: 'trivia', label: 'Ancient world trivia (easy)', url: '/packs/trivia_ancient-world_easy.json' },
+  { id: 'trivia_ancient-world_medium', kind: 'trivia', label: 'Ancient world trivia (medium)', url: '/packs/trivia_ancient-world_medium.json' },
+  { id: 'trivia_ancient-world_hard', kind: 'trivia', label: 'Ancient world trivia (hard)', url: '/packs/trivia_ancient-world_hard.json' },
+  { id: 'trivia_mythology_easy', kind: 'trivia', label: 'Mythology trivia (easy)', url: '/packs/trivia_mythology_easy.json' },
+  { id: 'trivia_mythology_medium', kind: 'trivia', label: 'Mythology trivia (medium)', url: '/packs/trivia_mythology_medium.json' },
+  { id: 'trivia_mythology_hard', kind: 'trivia', label: 'Mythology trivia (hard)', url: '/packs/trivia_mythology_hard.json' },
+  { id: 'trivia_religions_easy', kind: 'trivia', label: 'Religions trivia (easy)', url: '/packs/trivia_religions_easy.json' },
+  { id: 'trivia_religions_medium', kind: 'trivia', label: 'Religions trivia (medium)', url: '/packs/trivia_religions_medium.json' },
+  { id: 'trivia_religions_hard', kind: 'trivia', label: 'Religions trivia (hard)', url: '/packs/trivia_religions_hard.json' },
   // Picture questions (2026-11-02, row 2.175): 244 about works in the Cleveland Museum of Art's open-access (CC0)
   // collection, each written from the museum's own record and checked by a second pass; of the 30 it flagged, 16 were
   // reworded (mostly a described picture that gave the answer away), two left out, and twelve stand because the full

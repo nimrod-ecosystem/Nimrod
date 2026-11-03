@@ -1,0 +1,945 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Mythology trivia (easy)",
+ "description": "50 easy questions about myths and legends from cultures around the world. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "Who is the king of the gods in Greek mythology?",
+   "answers": [
+    "Poseidon",
+    "Zeus",
+    "Apollo",
+    "Ares"
+   ],
+   "correct": "Zeus",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Zeus was the king of the twelve Olympian gods and the supreme god in Greek religion.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.worldhistory.org/collection/58/the-12-olympian-gods/",
+    "title": "The 12 Olympian Gods - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On which mountain were the twelve Olympian gods said to live?",
+   "answers": [
+    "Mount Parnassus",
+    "Mount Etna",
+    "Mount Olympus",
+    "Mount Athos"
+   ],
+   "correct": "Mount Olympus",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The Olympians were the twelve principal Greek gods, and they were thought to live on Mount Olympus.",
+   "source": {
+    "url": "https://www.greekmythology.com/Olympians/olympians.html",
+    "title": "Olympians"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Greek myth, which part of Achilles' body was his one vulnerable spot?",
+   "answers": [
+    "His throat",
+    "His shoulder",
+    "His knee",
+    "His heel"
+   ],
+   "correct": "His heel",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Achilles' mother dipped him in the River Styx but held him by the heel, so the heel was the only part left vulnerable. He died from an arrow wound there.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Achilles-Greek-mythology",
+    "title": "Achilles"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greek hero beheaded the Gorgon Medusa?",
+   "answers": [
+    "Perseus",
+    "Theseus",
+    "Jason",
+    "Bellerophon"
+   ],
+   "correct": "Perseus",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Perseus killed Medusa, the only mortal Gorgon, by cutting off her head.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.britannica.com/topic/Medusa-Greek-mythology",
+    "title": "Medusa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Greek myth, a glance from Medusa turned onlookers into what?",
+   "answers": [
+    "Salt",
+    "Ice",
+    "Sand",
+    "Stone"
+   ],
+   "correct": "Stone",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Medusa was a Gorgon whose gaze turned anyone who looked at her to stone.",
+   "source": {
+    "url": "https://www.worldhistory.org/Medusa/",
+    "title": "Medusa - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greek hero killed the Minotaur in the Labyrinth with Ariadne's help?",
+   "answers": [
+    "Perseus",
+    "Jason",
+    "Theseus",
+    "Bellerophon"
+   ],
+   "correct": "Theseus",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Theseus volunteered as one of the sacrificial victims in order to kill the Minotaur. Ariadne helped him escape the Labyrinth.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Ariadne",
+    "title": "Ariadne"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greek hero is credited with devising the Trojan Horse trick?",
+   "answers": [
+    "Agamemnon",
+    "Menelaus",
+    "Ajax",
+    "Odysseus"
+   ],
+   "correct": "Odysseus",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The Trojan Horse was a ruse devised by the Greek hero Odysseus to get inside Troy and finally conquer it.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/military-history-and-science/fall-troy-marks-end-trojan-war/",
+    "title": "Fall of Troy Marks End of Trojan War"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which epic poem by Homer centres on Achilles' quarrel with Agamemnon during the Trojan War?",
+   "answers": [
+    "The Odyssey",
+    "The Iliad",
+    "The Aeneid",
+    "The Theogony"
+   ],
+   "correct": "The Iliad",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Homer's Iliad centres on Achilles' quarrel with Agamemnon late in the war and ends with the death of the Trojan hero Hector.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Achilles-Greek-mythology",
+    "title": "Achilles"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Trojan prince's abduction of Helen is said to have started the Trojan War?",
+   "answers": [
+    "Hector",
+    "Priam",
+    "Aeneas",
+    "Paris"
+   ],
+   "correct": "Paris",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "In the myth, Paris, the Trojan prince, carried off Helen, and this started the war. He later killed Achilles with an arrow.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.britishmuseum.org/blog/myth-trojan-war",
+    "title": "The myth of the Trojan War"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many labours did King Eurystheus set Hercules in the traditional cycle?",
+   "answers": [
+    "Seven",
+    "Nine",
+    "Twelve",
+    "Fifteen"
+   ],
+   "correct": "Twelve",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The Labours of Hercules were later arranged in a standard cycle of twelve tasks assigned by King Eurystheus.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Labours-of-Hercules",
+    "title": "Labours of Hercules"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Hercules wore the skin of which beast after slaying it as the first of his labours?",
+   "answers": [
+    "The Nemean Lion",
+    "The Erymanthian Boar",
+    "The Cretan Bull",
+    "The Lernaean Hydra"
+   ],
+   "correct": "The Nemean Lion",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The first labour was the slaying of the Nemean lion, and Hercules wore its skin afterwards.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Labours-of-Hercules",
+    "title": "Labours of Hercules"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Titan stole fire from the gods and gave it to humans?",
+   "answers": [
+    "Atlas",
+    "Cronus",
+    "Prometheus",
+    "Epimetheus"
+   ],
+   "correct": "Prometheus",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "In Hesiod's account Prometheus stole fire from heaven. Zeus took revenge by sending Pandora to Prometheus' brother Epimetheus.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pandora%27s_box",
+    "title": "Pandora's box"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the original Greek story, what was Pandora's famous \"box\"?",
+   "answers": [
+    "A wooden chest",
+    "A woven basket",
+    "A silver chalice",
+    "A large jar"
+   ],
+   "correct": "A large jar",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The Greek word was pithos, meaning a large jar. It was later rendered as \"box\" in a Latin retelling.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Pandora%27s_box",
+    "title": "Pandora's box"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Greek myth, why did Icarus fall into the sea?",
+   "answers": [
+    "Zeus struck him with lightning",
+    "A storm snapped his wings",
+    "He grew tired and let go",
+    "The sun melted the wax on his wings"
+   ],
+   "correct": "The sun melted the wax on his wings",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Icarus got carried away and flew too close to the sun. The heat melted the wax holding his wings together.",
+   "source": {
+    "url": "https://interestingliterature.com/2020/12/best-stories-from-greek-mythology/",
+    "title": "12 of the Best Stories from Greek Myth"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "King Midas was famed for turning everything he touched into what?",
+   "answers": [
+    "Gold",
+    "Silver",
+    "Stone",
+    "Glass"
+   ],
+   "correct": "Gold",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The myth of King Midas and the golden touch tells of a king who turned everything he touched into gold.",
+   "source": {
+    "url": "https://interestingliterature.com/2020/12/best-stories-from-greek-mythology/",
+    "title": "12 of the Best Stories from Greek Myth"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Roman god corresponds to the Greek king of the gods, Zeus?",
+   "answers": [
+    "Neptune",
+    "Mars",
+    "Saturn",
+    "Jupiter"
+   ],
+   "correct": "Jupiter",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The Roman equivalent of Zeus is Jupiter, who, like Zeus, ruled all the Roman gods.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://libguides.tourolib.org/c.php?g=225798&p=1496500",
+    "title": "Greek and Roman Mythology - Mythology - LibGuides at Touro University-NY"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Roman goddess corresponds to the Greek goddess Aphrodite?",
+   "answers": [
+    "Juno",
+    "Venus",
+    "Minerva",
+    "Diana"
+   ],
+   "correct": "Venus",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Venus is the Roman goddess of love and beauty, the counterpart of the Greek Aphrodite.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://worldhistoryedu.com/list-of-roman-gods-and-their-greek-equivalents/",
+    "title": "List of Roman Gods and their Greek Equivalents - World History Edu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Roman god was the god of war?",
+   "answers": [
+    "Mercury",
+    "Vulcan",
+    "Neptune",
+    "Mars"
+   ],
+   "correct": "Mars",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Mars is the Roman god of war, the counterpart of the Greek Ares.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://slcl.libguides.com/c.php?g=1400971&p=10368496",
+    "title": "Myths and Astronomy - World Mythology - LibGuides at St. Louis County Library"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greek god, the counterpart of Rome's Mercury, was messenger of the gods and wore winged sandals?",
+   "answers": [
+    "Hermes",
+    "Apollo",
+    "Ares",
+    "Hephaestus"
+   ],
+   "correct": "Hermes",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Mercury is the Roman messenger god with winged sandals, and his Greek name is Hermes.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://slcl.libguides.com/c.php?g=1400971&p=10368496",
+    "title": "Myths and Astronomy - World Mythology - LibGuides at St. Louis County Library"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Venus was the mother of which Roman god of love?",
+   "answers": [
+    "Mercury",
+    "Cupid",
+    "Bacchus",
+    "Vulcan"
+   ],
+   "correct": "Cupid",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Venus is described as the mother of Cupid, the Roman god of love.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://slcl.libguides.com/c.php?g=1400971&p=10368496",
+    "title": "Myths and Astronomy - World Mythology - LibGuides at St. Louis County Library"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greek god ruled the underworld, known to the Romans as Pluto?",
+   "answers": [
+    "Poseidon",
+    "Cronus",
+    "Hades",
+    "Ares"
+   ],
+   "correct": "Hades",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Hades was the Greek god of the underworld, and his Roman counterpart was Pluto.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://worldhistoryedu.com/list-of-roman-gods-and-their-greek-equivalents/",
+    "title": "List of Roman Gods and their Greek Equivalents - World History Edu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to Hesiod, from which part of Zeus did Athena emerge?",
+   "answers": [
+    "His head",
+    "His thigh",
+    "His shoulder",
+    "His hand"
+   ],
+   "correct": "His head",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "In Hesiod's account, Athena came out of the head of Zeus himself.",
+   "source": {
+    "url": "https://www.greekmythology.com/Olympians/olympians.html",
+    "title": "Olympians"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Olympian is the Greek god of wine and merriment?",
+   "answers": [
+    "Apollo",
+    "Hermes",
+    "Dionysus",
+    "Hephaestus"
+   ],
+   "correct": "Dionysus",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Dionysus was the Greek god of wine and merriment, and he is often counted among the twelve Olympians.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.worldhistory.org/collection/58/the-12-olympian-gods/",
+    "title": "The 12 Olympian Gods - World History Encyclopedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greek god ruled the sea and was also linked to earthquakes and horses?",
+   "answers": [
+    "Zeus",
+    "Poseidon",
+    "Hades",
+    "Ares"
+   ],
+   "correct": "Poseidon",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Poseidon was the Greek god of the sea, earthquakes and horses. His Roman counterpart is Neptune.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://kennethreitz.org/knowledge/mythology/greek-roman-equivalents",
+    "title": "Greek-Roman Equivalents - Kenneth Reitz"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which day of the week is named after the Norse god Thor?",
+   "answers": [
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday"
+   ],
+   "correct": "Thursday",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Thursday comes from \"Thor's day\". Tuesday, Wednesday and Friday are named after Tyr, Odin and Frigg.",
+   "source": {
+    "url": "https://whizbeeapp.com/topics/norse-mythology",
+    "title": "Norse Mythology for Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Norse god of thunder wields the hammer Mjölnir?",
+   "answers": [
+    "Thor",
+    "Odin",
+    "Loki",
+    "Tyr"
+   ],
+   "correct": "Thor",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Thor was the thunder god, and his hammer Mjölnir protected both gods and humans.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://whizbeeapp.com/topics/norse-mythology",
+    "title": "Norse Mythology for Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who is the king of the Æsir, the main group of Norse gods?",
+   "answers": [
+    "Thor",
+    "Odin",
+    "Loki",
+    "Baldr"
+   ],
+   "correct": "Odin",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Odin was the king of the Æsir. The Norse believed he decided the fate of every battle.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.history.co.uk/articles/seven-of-the-most-important-gods-and-goddesses-in-norse-mythology",
+    "title": "12 most important Norse gods and goddesses in Viking mythology"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Norse god is famous as a cunning, shape-shifting trickster?",
+   "answers": [
+    "Heimdall",
+    "Baldr",
+    "Tyr",
+    "Loki"
+   ],
+   "correct": "Loki",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "In Norse mythology Loki is a cunning trickster who can change his shape and sex.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.britannica.com/topic/Loki",
+    "title": "Loki"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Norse tradition, which place was Odin believed to live in?",
+   "answers": [
+    "Helheim",
+    "Midgard",
+    "Jotunheim",
+    "Valhalla"
+   ],
+   "correct": "Valhalla",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Odin was traditionally believed to live in Valhalla, the great hall in Asgard.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Odin-Norse-deity",
+    "title": "Odin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name do Norse myths give to the eventual end of the world?",
+   "answers": [
+    "Yggdrasil",
+    "Ragnarök",
+    "Bifröst",
+    "Midgard"
+   ],
+   "correct": "Ragnarök",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Norse myths tell of the creation of the world and of its eventual end, which is called Ragnarök.",
+   "source": {
+    "url": "https://whizbeeapp.com/topics/norse-mythology",
+    "title": "Norse Mythology for Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which jackal-headed Egyptian god was associated with mummification?",
+   "answers": [
+    "Anubis",
+    "Horus",
+    "Thoth",
+    "Sobek"
+   ],
+   "correct": "Anubis",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Anubis was the jackal-headed Egyptian god of mummification.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://mythopedia.com/topics/anubis/",
+    "title": "Anubis"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Egyptian god was the sun god and a creator deity?",
+   "answers": [
+    "Osiris",
+    "Ra",
+    "Set",
+    "Thoth"
+   ],
+   "correct": "Ra",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Ra was the creator deity of the Egyptians, god of the sun and keeper of cosmic order.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Ra",
+    "title": "Ra"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Egyptian myth, which god kills his brother Osiris?",
+   "answers": [
+    "Horus",
+    "Anubis",
+    "Set",
+    "Thoth"
+   ],
+   "correct": "Set",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Osiris was killed by his brother Set. His wife Isis then restored him with help from Anubis and Thoth.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.egypttoursportal.com/en-us/the-egyptian-mythology-story-of-osiris/",
+    "title": "The Egyptian Mythology Story of Osiris"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Osiris myth, which goddess restores her husband's body so that he can father Horus?",
+   "answers": [
+    "Hathor",
+    "Nephthys",
+    "Bastet",
+    "Isis"
+   ],
+   "correct": "Isis",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Isis restores the body of her husband Osiris, which allows him to father their son Horus after his death.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Osiris_myth",
+    "title": "Osiris myth"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Egyptian god became the ruler of the underworld and the afterlife?",
+   "answers": [
+    "Osiris",
+    "Ra",
+    "Horus",
+    "Ptah"
+   ],
+   "correct": "Osiris",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "In the creation myths Osiris became the ruler of the underworld, taking over the role Anubis once held.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/religion-and-philosophy/anubis-deity",
+    "title": "Anubis (deity)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Hindu trimurti, which god is the destroyer and transformer?",
+   "answers": [
+    "Vishnu",
+    "Brahma",
+    "Ganesha",
+    "Shiva"
+   ],
+   "correct": "Shiva",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The trimurti is the triad of Brahma the creator, Vishnu the preserver and Shiva the destroyer.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.britannica.com/topic/trimurti-Hinduism",
+    "title": "Trimurti"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Hindu deity is readily identified by his elephant head?",
+   "answers": [
+    "Hanuman",
+    "Krishna",
+    "Ganesha",
+    "Shiva"
+   ],
+   "correct": "Ganesha",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Ganesha is one of the best-known and most worshipped Hindu deities, and he is readily identified by his elephant head.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Ganesha",
+    "title": "Ganesha"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which member of the Hindu trimurti descends to earth as avatars to restore cosmic order?",
+   "answers": [
+    "Shiva",
+    "Vishnu",
+    "Brahma",
+    "Ganesha"
+   ],
+   "correct": "Vishnu",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Vishnu is said to descend in the form of an avatar to restore cosmic order. The Dashavatara are his ten primary avatars.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Vishnu",
+    "title": "Vishnu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of King Arthur's legendary sword?",
+   "answers": [
+    "Durendal",
+    "Excalibur",
+    "Joyeuse",
+    "Gram"
+   ],
+   "correct": "Excalibur",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Geoffrey of Monmouth described Arthur's magic sword, called Caliburn and later Excalibur.",
+   "source": {
+    "url": "https://www.history.com/articles/was-king-arthur-a-real-person",
+    "title": "Was King Arthur a Real Person?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which wizard famously tutored and advised the young King Arthur?",
+   "answers": [
+    "Mordred",
+    "Gawain",
+    "Percival",
+    "Merlin"
+   ],
+   "correct": "Merlin",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "In the legend Arthur was trained by Merlin the Magician, who also helped him become king.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.history.com/articles/was-king-arthur-a-real-person",
+    "title": "Was King Arthur a Real Person?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name is given to King Arthur's legendary fortress and court?",
+   "answers": [
+    "Camelot",
+    "Lyonesse",
+    "Albion",
+    "Carbonek"
+   ],
+   "correct": "Camelot",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "In the legend Arthur acquired a fortress called Camelot, along with his friend Lancelot.",
+   "source": {
+    "url": "https://www.visitwales.com/info/history-heritage-and-traditions/discover-king-arthurs-wales",
+    "title": "Welsh places connected to the King Arthur legend"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Who is King Arthur's queen in the legends?",
+   "answers": [
+    "Morgan le Fay",
+    "Isolde",
+    "Guinevere",
+    "Elaine"
+   ],
+   "correct": "Guinevere",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Queen Guinevere is Arthur's wife in the legend. His half-sister Morgan le Fay is a separate character.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.history.com/articles/was-king-arthur-a-real-person",
+    "title": "Was King Arthur a Real Person?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "To which magical island was the mortally wounded King Arthur said to be taken to heal?",
+   "answers": [
+    "Atlantis",
+    "Avalon",
+    "Tír na nÓg",
+    "Hy-Brasil"
+   ],
+   "correct": "Avalon",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Avalon is the magical island where Arthur's sword was said to be forged. After Mordred wounded him, Arthur was taken there to heal.",
+   "source": {
+    "url": "https://www.visitwales.com/info/history-heritage-and-traditions/discover-king-arthurs-wales",
+    "title": "Welsh places connected to the King Arthur legend"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Irish folklore, whose wailing is said to foretell a coming death?",
+   "answers": [
+    "The leprechaun",
+    "The kelpie",
+    "The banshee",
+    "The pixie"
+   ],
+   "correct": "The banshee",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The banshee is a female spirit whose wailing is said to foretell a coming death.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/religion-and-philosophy/irish-mythology",
+    "title": "Irish mythology"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which child-sized Irish fairy is said to hoard pots of gold?",
+   "answers": [
+    "The leprechaun",
+    "The banshee",
+    "The kelpie",
+    "The pixie"
+   ],
+   "correct": "The leprechaun",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The leprechaun is a mischievous, child-sized fairy in Irish folklore with a habit of hoarding pots of gold.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/religion-and-philosophy/irish-mythology",
+    "title": "Irish mythology"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which part-divine king of Uruk searches for immortality in an ancient Mesopotamian epic?",
+   "answers": [
+    "Hammurabi",
+    "Sargon",
+    "Nebuchadnezzar",
+    "Gilgamesh"
+   ],
+   "correct": "Gilgamesh",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "The Epic of Gilgamesh follows the king of Uruk, who is part god and part human, in his search for immortality.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.britannica.com/topic/Epic-of-Gilgamesh",
+    "title": "Epic of Gilgamesh"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which goddess is the sun deity of Japanese Shinto mythology and the ancestor of the imperial family?",
+   "answers": [
+    "Izanami",
+    "Amaterasu",
+    "Inari",
+    "Kannon"
+   ],
+   "correct": "Amaterasu",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Amaterasu is the primary kami of Shinto, representing the sun, and the mythological ancestor of the Japanese imperial family.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/political-science/amaterasu-mythology",
+    "title": "Amaterasu (mythology)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Japanese myth, which divine pair stirred the sea with a jeweled spear to create the first land?",
+   "answers": [
+    "Amaterasu and Susanoo",
+    "Tsukuyomi and Inari",
+    "Raijin and Fujin",
+    "Izanagi and Izanami"
+   ],
+   "correct": "Izanagi and Izanami",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Izanagi and Izanami stood on the floating bridge of heaven and stirred the ocean with a jeweled spear. This created the first landmass.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.britannica.com/topic/Izanagi",
+    "title": "Izanagi and Izanami"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "By what name is the Aztec god Quetzalcoatl commonly known?",
+   "answers": [
+    "The Smoking Mirror",
+    "The Jaguar Sun",
+    "The Obsidian Eagle",
+    "The Feathered Serpent"
+   ],
+   "correct": "The Feathered Serpent",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Quetzalcoatl's name means \"quetzal-bird snake\", which is why he is called the Feathered Serpent. The Maya knew the same deity as Kukulcan.",
+   "source": {
+    "url": "https://yucatanmagazine.com/serpent-deities-of-mesoamerica/",
+    "title": "Of Serpents and Deities: The Many Meanings of Snakes in Mesoamerica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which stone-born Chinese mythological character, known as the Monkey King, stars in Journey to the West?",
+   "answers": [
+    "Zhu Bajie",
+    "Sha Wujing",
+    "Tang Sanzang",
+    "Sun Wukong"
+   ],
+   "correct": "Sun Wukong",
+   "difficulty": "easy",
+   "category": "Mythology",
+   "explain": "Sun Wukong, the Monkey King, first appeared in the 16th-century novel Journey to the West. He is born from a stone that produces a magical egg.",
+   "answerKind": "character",
+   "source": {
+    "url": "https://www.britannica.com/topic/Sun-Wukong",
+    "title": "Sun Wukong"
+   },
+   "ai_written": true
+  }
+ ]
+}

@@ -1,0 +1,932 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Ancient world trivia (hard)",
+ "description": "50 hard questions about prehistory and the early civilizations: Mesopotamia, Egypt, the Indus, China, the Americas. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "According to the Sumerian king list, Gilgamesh of Uruk reigned after which event?",
+   "answers": [
+    "The Flood",
+    "The fall of Akkad",
+    "The Gutian invasion",
+    "The founding of Ur"
+   ],
+   "correct": "The Flood",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Britannica notes that the Sumerian king list mentions Gilgamesh of Uruk as reigning after the Flood. The historical Gilgamesh probably ruled in the first half of the 3rd millennium BCE.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Gilgamesh",
+    "title": "Gilgamesh"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The fullest surviving text of the Gilgamesh epic comes from tablets found at Nineveh in the library of which Assyrian king?",
+   "answers": [
+    "Sennacherib",
+    "Ashurbanipal",
+    "Esarhaddon",
+    "Tiglath-Pileser III"
+   ],
+   "correct": "Ashurbanipal",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The fullest extant text is on 12 incomplete Akkadian tablets from the library of Ashurbanipal, who reigned 668–627 BCE.",
+   "source": {
+    "url": "https://britannica.com/EBchecked/topic/233644/Gilgamesh",
+    "title": "Gilgamesh | Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which scribe is credited with composing the most complete Akkadian version of the Epic of Gilgamesh in the Middle Babylonian period?",
+   "answers": [
+    "Berossus",
+    "Sîn-lēqi-unninni",
+    "Enheduanna",
+    "Kabti-ilani-Marduk"
+   ],
+   "correct": "Sîn-lēqi-unninni",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The most complete account of Gilgamesh's adventures was composed in Akkadian by a scribe named Sîn-lēqi-unninni.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Gilgamesh",
+    "title": "Gilgamesh"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In the Gilgamesh epic, which creature seizes the plant Gilgamesh obtained on his quest, so that he returns to Uruk unhappy?",
+   "answers": [
+    "A lion",
+    "An eagle",
+    "A serpent",
+    "A scorpion"
+   ],
+   "correct": "A serpent",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "After Gilgamesh obtained the plant, a serpent seized it and he returned to Uruk without it.",
+   "source": {
+    "url": "https://britannica.com/EBchecked/topic/233644/Gilgamesh",
+    "title": "Gilgamesh | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which son of Ur-Nammu do some scholars credit with writing the law code that bears his father's name?",
+   "answers": [
+    "Gudea",
+    "Ishbi-Erra",
+    "Rim-Sin",
+    "Shulgi"
+   ],
+   "correct": "Shulgi",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Some scholars have attributed the Code of Ur-Nammu to his son Shulgi, although the prologue credits Ur-Nammu.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Code-of-Ur-Nammu",
+    "title": "Code of Ur-Nammu"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Unlike the later 'eye for an eye' approach of Babylonian law, how did the Code of Ur-Nammu mostly punish bodily injury?",
+   "answers": [
+    "With forced labour on temple lands",
+    "With fines of monetary compensation",
+    "With public flogging in the city",
+    "With banishment from the home city"
+   ],
+   "correct": "With fines of monetary compensation",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The code instituted monetary compensation for bodily damage rather than later lex talionis, though capital crimes like murder and robbery were still punished by death.",
+   "source": {
+    "url": "https://www.historyofinformation.com/detail.php?id=1884",
+    "title": "The Ur-Nammu Law Code, the Oldest Known Legal Code"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The first copy of the Code of Ur-Nammu, found in two fragments and translated by Samuel Kramer in 1952, came from which Sumerian city?",
+   "answers": [
+    "Lagash",
+    "Eridu",
+    "Nippur",
+    "Kish"
+   ],
+   "correct": "Nippur",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The first copy was found in two fragments at Nippur and translated by Kramer in 1952. Later tablets from Ur and Sippar filled in more of the text.",
+   "source": {
+    "url": "https://www.historyofinformation.com/detail.php?id=1884",
+    "title": "The Ur-Nammu Law Code, the Oldest Known Legal Code"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which king carried off the stele bearing Hammurabi's laws to Susa as plunder in the 12th century BCE?",
+   "answers": [
+    "Untash-Napirisha",
+    "Tukulti-Ninurta I",
+    "Shutruk-Nahhunte",
+    "Nebuchadnezzar I"
+   ],
+   "correct": "Shutruk-Nahhunte",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The Louvre stele was discovered at Susa, where the Elamite king Shutruk-Nahhunte had taken it as plunder.",
+   "source": {
+    "url": "https://www.historyofinformation.com/detail.php?id=1883",
+    "title": "The Code of Hammurabi, Discovered in Khuzestan, Iran"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Louvre's Law Code of Hammurabi is described as a set of how many rules or laws?",
+   "answers": [
+    "57",
+    "128",
+    "282",
+    "400"
+   ],
+   "correct": "282",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The Law Code of Hammurabi refers to a set of 282 rules enacted by the Babylonian king who reigned 1792–1750 BCE.",
+   "source": {
+    "url": "https://joyofmuseums.com/museums/europe/france-museums/paris-museums/the-louvre/highlights-of-the-louvre/law-code-of-hammurabi/",
+    "title": "Law Code of Hammurabi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the Sumerian king list, Sargon of Akkad began his career as cupbearer to which king?",
+   "answers": [
+    "Lugal-zage-si of Uruk",
+    "Ur-Zababa of Kish",
+    "Eannatum of Lagash",
+    "Urukagina of Lagash"
+   ],
+   "correct": "Ur-Zababa of Kish",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The Sumerian King List says Sargon was a cupbearer to King Ur-Zababa of Kish before he rose to power.",
+   "source": {
+    "url": "https://kids.kiddle.co/Sargon_of_Akkad",
+    "title": "Sargon of Akkad facts for kids"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which grandson of Sargon of Akkad ruled when the Akkadian Empire reached its greatest height?",
+   "answers": [
+    "Rimush",
+    "Manishtushu",
+    "Shar-kali-sharri",
+    "Naram-Sin"
+   ],
+   "correct": "Naram-Sin",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Sargon's sons ruled well, but the empire's height came under his grandson Naram-Sin.",
+   "source": {
+    "url": "https://www.worldhistory.org/Sargon_of_Akkad/",
+    "title": "Sargon of Akkad: From Gardener to King of the Four Corners of the World"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "What were the earliest pictographic tablets from Uruk mainly records of?",
+   "answers": [
+    "Hymns praising city gods",
+    "Inventories of goods and commodities",
+    "Records of royal military victories",
+    "Private letters between merchants"
+   ],
+   "correct": "Inventories of goods and commodities",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The earliest Sumerian tablets from Uruk are mainly inventories, with drawings of commodities, numerals and personal names.",
+   "source": {
+    "url": "https://www.britannica.com/topic/cuneiform",
+    "title": "Cuneiform"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What kind of text is the latest firmly datable cuneiform tablet, written at Uruk in AD 79/80?",
+   "answers": [
+    "A royal land grant",
+    "A temple hymn",
+    "An astronomical almanac",
+    "A medical recipe list"
+   ],
+   "correct": "An astronomical almanac",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Cuneiform lasted about three millennia, and the latest firmly datable tablet is an astronomical almanac from Uruk dated AD 79/80.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Cuneiform",
+    "title": "Cuneiform"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "When Göbekli Tepe was first investigated in the 1960s, what was it dismissed as?",
+   "answers": [
+    "A Roman fortress",
+    "A Byzantine monastery",
+    "A medieval cemetery",
+    "An Ottoman caravanserai"
+   ],
+   "correct": "A medieval cemetery",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Britannica notes that early investigators in the 1960s dismissed the Neolithic site as a medieval cemetery.",
+   "source": {
+    "url": "https://www.britannica.com/place/Gobekli-Tepe",
+    "title": "Göbekli Tepe"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which archaeologist was the original excavator of Göbekli Tepe and interpreted it as a sanctuary used by hunter-gatherers?",
+   "answers": [
+    "Ian Hodder",
+    "James Mellaart",
+    "Kathleen Kenyon",
+    "Klaus Schmidt"
+   ],
+   "correct": "Klaus Schmidt",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Klaus Schmidt, the site's original excavator, interpreted it as a religious sanctuary established and visited by hunter-gatherers.",
+   "source": {
+    "url": "https://popular-archaeology.com/article/echo-from-the-past-how-gobekli-tepe-is-reshaping-our-understanding-of-the-neolithic-2/",
+    "title": "Echo from the Past: How Göbekli Tepe is Reshaping Our Understanding of the Neolithic"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many years does Göbekli Tepe predate Stonehenge, according to Britannica?",
+   "answers": [
+    "About 600 years",
+    "About 2,000 years",
+    "About 6,000 years",
+    "About 12,000 years"
+   ],
+   "correct": "About 6,000 years",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Britannica says Göbekli Tepe predates Stonehenge by some 6,000 years.",
+   "source": {
+    "url": "https://www.britannica.com/place/Gobekli-Tepe",
+    "title": "Göbekli Tepe"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the Turkish name Göbekli Tepe mean?",
+   "answers": [
+    "Hill of Stones",
+    "Mount of Pillars",
+    "Hill of Ancestors",
+    "Potbelly Hill"
+   ],
+   "correct": "Potbelly Hill",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Göbekli Tepe means 'Potbelly Hill' in Turkish, a name that reflects the shape of the mound.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe",
+    "title": "Göbekli Tepe"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Rosetta Stone carries a royal decree of 196 BCE issued in honour of which ruler?",
+   "answers": [
+    "Ptolemy I Soter",
+    "Ptolemy II Philadelphus",
+    "Ptolemy V Epiphanes",
+    "Ptolemy XII Auletes"
+   ],
+   "correct": "Ptolemy V Epiphanes",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Scholars deduced from the Greek text that it was a 196 BCE decree honouring the boy king Ptolemy V Epiphanes on the first anniversary of his coronation.",
+   "source": {
+    "url": "https://www.livescience.com/archaeology/science-history-rosetta-stone-is-deciphered-opening-a-window-into-ancient-egyptian-civilization-sept-27-1822",
+    "title": "Science history: Rosetta stone is deciphered, opening a window into ancient Egyptian civilization — Sept. 27, 1822"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which French officer recognised the significance of the Rosetta Stone when Napoleon's forces uncovered it while building fortifications?",
+   "answers": [
+    "Dominique Vivant Denon",
+    "Pierre-François Bouchard",
+    "Gaspard Monge",
+    "Joseph Fourier"
+   ],
+   "correct": "Pierre-François Bouchard",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Officer Pierre-François Xavier Bouchard immediately recognised the juxtaposed Greek and hieroglyphic scripts and predicted correctly that they were translations of one text.",
+   "source": {
+    "url": "https://arce.org/resource/rosetta-stone-unlocking-ancient-egyptian-language/",
+    "title": "The Rosetta Stone: Unlocking the Ancient Egyptian Language - ARCE"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Champollion's fluency in which language, a descendant of ancient Egyptian, helped him decipher the hieroglyphs?",
+   "answers": [
+    "Aramaic",
+    "Meroitic",
+    "Ge'ez",
+    "Coptic"
+   ],
+   "correct": "Coptic",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Champollion benefited from Thomas Young's work on cartouches and from his fluency in Coptic, a language descended from ancient Egyptian.",
+   "source": {
+    "url": "https://www.history.com/articles/rosetta-stone-languages-discovery",
+    "title": "The Rosetta Stone: Discovery and Decoding Ancient Languages"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which scholar, seventeen years older than Champollion, made major early progress on the hieroglyphic and demotic scripts and became his rival?",
+   "answers": [
+    "Silvestre de Sacy",
+    "Thomas Young",
+    "Johan David Åkerblad",
+    "Athanasius Kircher"
+   ],
+   "correct": "Thomas Young",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Thomas Young (born 1773) was seventeen years older than Champollion (born 1790) and made incredible progress, but Champollion led the final breakthrough.",
+   "source": {
+    "url": "https://arce.org/resource/rosetta-stone-unlocking-ancient-egyptian-language/",
+    "title": "The Rosetta Stone: Unlocking the Ancient Egyptian Language - ARCE"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Rosetta Stone is a slab of which kind of stone, inscribed in Greek, hieroglyphics and demotic?",
+   "answers": [
+    "Limestone",
+    "Sandstone",
+    "Granodiorite",
+    "Alabaster"
+   ],
+   "correct": "Granodiorite",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Live Science describes the Rosetta Stone as a slab of granodiorite inscribed in three scripts.",
+   "source": {
+    "url": "https://www.livescience.com/archaeology/science-history-rosetta-stone-is-deciphered-opening-a-window-into-ancient-egyptian-civilization-sept-27-1822",
+    "title": "Science history: Rosetta stone is deciphered, opening a window into ancient Egyptian civilization — Sept. 27, 1822"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which vizier of Khufu is believed by some to have been the architect of the Great Pyramid?",
+   "answers": [
+    "Imhotep",
+    "Senenmut",
+    "Ineni",
+    "Hemiunu"
+   ],
+   "correct": "Hemiunu",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Hemiunu, Khufu's vizier, is believed by some to be the architect of the Great Pyramid.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza",
+    "title": "Great Pyramid of Giza"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which pharaoh was the father of Khufu, who commissioned the Great Pyramid at Giza?",
+   "answers": [
+    "Djoser",
+    "Snefru",
+    "Userkaf",
+    "Khafre"
+   ],
+   "correct": "Snefru",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The Smithsonian notes that the Great Pyramid was commissioned by Snefru's son Khufu, also known as Cheops.",
+   "source": {
+    "url": "https://www.si.edu/spotlight/ancient-egypt/pyramid",
+    "title": "The Egyptian Pyramid"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Roughly how many blocks does the Great Pyramid of Khufu contain, by Smarthistory's estimate?",
+   "answers": [
+    "About 230,000",
+    "About 900,000",
+    "About 2,300,000",
+    "About 23,000,000"
+   ],
+   "correct": "About 2,300,000",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Smarthistory estimates that the Great Pyramid contains around 2,300,000 blocks, some weighing upwards of 50 tons.",
+   "source": {
+    "url": "https://smarthistory.org/pyramid-of-khufu/",
+    "title": "Pyramid of Khufu"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does Akhetaten, the capital Akhenaten built at modern Amarna, mean?",
+   "answers": [
+    "City of Ra's Glory",
+    "Gate of the Two Lands",
+    "Horizon of the Aten",
+    "Seat of Amun-Ra"
+   ],
+   "correct": "Horizon of the Aten",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Akhenaten named his new capital Akhetaten, 'The Horizon of the Aten', now known as Tell el-Amarna.",
+   "source": {
+    "url": "https://egyptfuntours.com/blog/akhenaten-nefertiti-amarna-style/",
+    "title": "Amarna Style, Akhenaten, and Nefertiti: Egypt's Radical Revolution"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the sixth year of Akhenaten's reign, Nefertiti's name was changed to what?",
+   "answers": [
+    "Meritaten",
+    "Ankhesenpaaten",
+    "Meketaten",
+    "Nefernefruaten"
+   ],
+   "correct": "Nefernefruaten",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "World History Encyclopedia reports that in the sixth year Nefertiti's name was changed to Nefernefruaten, meaning 'Beautiful in beauty is Aten'.",
+   "source": {
+    "url": "https://www.worldhistory.org/Nefertiti/",
+    "title": "Nefertiti - World History Encyclopedia"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which short-reigning pharaoh, named as Akhenaten's successor, have some scholars proposed was actually Nefertiti?",
+   "answers": [
+    "Tutankhamun",
+    "Ay",
+    "Horemheb",
+    "Smenkhkare"
+   ],
+   "correct": "Smenkhkare",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The Berlin museum notes it is possible that Smenkhkare, named as Akhenaten's successor, was in fact Nefertiti, though inscriptions do not confirm this.",
+   "source": {
+    "url": "https://www.smb.museum/en/museums-institutions/aegyptisches-museum-und-papyrussammlung/collection-research/bust-of-nefertiti/the-queen/",
+    "title": "The Queen"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which English archaeologist initiated and directed the original excavations at Harappa beginning in 1921?",
+   "answers": [
+    "Mortimer Wheeler",
+    "Alexander Cunningham",
+    "Leonard Woolley",
+    "John Marshall"
+   ],
+   "correct": "John Marshall",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Britannica says Sir John Hubert Marshall initiated and directed the original excavations at Harappa from 1921.",
+   "source": {
+    "url": "https://www.britannica.com/place/Harappa",
+    "title": "Harappa"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Mohenjo-daro's builders mainly used which material for construction, reserving mud brick for fillings and mass work?",
+   "answers": [
+    "Quarried limestone blocks",
+    "Burned brick",
+    "Timber frames",
+    "Rammed earth"
+   ],
+   "correct": "Burned brick",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Britannica says Mohenjo-daro employs burned brick, with mud brick reserved for fillings and mass work.",
+   "source": {
+    "url": "https://www.britannica.com/place/India/The-Indus-civilization",
+    "title": "India - Indus Valley, Harappan, Bronze Age"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which domestic bird might the people of the Indus Valley civilization have been the first to raise?",
+   "answers": [
+    "Ducks",
+    "Geese",
+    "Peafowl",
+    "Chickens"
+   ],
+   "correct": "Chickens",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Britannica Kids says the Indus people were among the first to grow cotton and might also have been the first to raise chickens.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Indus-Valley-civilization/353289",
+    "title": "Indus Valley civilization"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Besides bulls and elephants, which creature does Britannica say is especially common on carved seals from Mohenjo-daro?",
+   "answers": [
+    "A griffin",
+    "A unicorn",
+    "A sphinx",
+    "A dragon"
+   ],
+   "correct": "A unicorn",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Seals from Mohenjo-daro are carved with animals such as bulls, elephants and especially unicorns, and carry Indus script inscriptions.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/Mohenjo-daro/601116",
+    "title": "Mohenjo-daro"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Before archaeologists understood their value, farmers near Anyang sold inscribed oracle bones to be ground up for what purpose?",
+   "answers": [
+    "Fertiliser for their fields",
+    "Pigment for bronze casting",
+    "Traditional Chinese medicine",
+    "Fuel for pottery kilns"
+   ],
+   "correct": "Traditional Chinese medicine",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "For centuries farmers dug up inscribed bones but sold them to apothecaries, who ground them up for Traditional Chinese Medicine.",
+   "source": {
+    "url": "https://www.history.com/articles/everyday-objects-shang-dynasty",
+    "title": "7 Everyday Objects From the Shang Dynasty"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which scholar discovered in 1908 that the oracle bones came from near Anyang, the site of the last Shang capital?",
+   "answers": [
+    "Wang Yirong",
+    "Guo Moruo",
+    "Li Ji",
+    "Luo Zhenyu"
+   ],
+   "correct": "Luo Zhenyu",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "In 1908 Luo Zhenyu discovered the source of the bones near Anyang and realised it was the site of the last Shang capital.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Oracle_bone",
+    "title": "Oracle bone"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which Shang king is traditionally credited with moving the capital to Yin, near modern Anyang, around 1350 BCE?",
+   "answers": [
+    "Tang",
+    "Pan Geng",
+    "Di Xin",
+    "Tai Jia"
+   ],
+   "correct": "Pan Geng",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Oracle bone divination dates to the middle of the Shang, probably under Pan Geng, around 1350 BCE when the capital moved to Yin.",
+   "source": {
+    "url": "https://www.ibiblio.org/chinesehistory/contents/02cul/c03s03.html",
+    "title": "Exploring Chinese History :: Culture :: Archaeology :: Oracle Bones"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "According to the historian Sima Qian, which liquid metal simulated China's great rivers in Qin Shi Huang's tomb?",
+   "answers": [
+    "Molten lead",
+    "Liquid tin",
+    "Molten copper",
+    "Mercury"
+   ],
+   "correct": "Mercury",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Sima Qian described the Yangtze and Yellow River being simulated in the tomb with mercury, under a ceiling decorated with constellations.",
+   "source": {
+    "url": "https://www.liverpoolmuseums.org.uk/stories/top-10-facts-about-terracotta-warriors",
+    "title": "Top 10 facts about the Terracotta Warriors"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The weapons found with the terra-cotta army, still sharp today, were cast from an unusual alloy of how many elements?",
+   "answers": [
+    "3",
+    "7",
+    "13",
+    "21"
+   ],
+   "correct": "13",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Britannica notes that the swords and other weapons were cast from an unusual 13-element alloy and are still shiny and sharp.",
+   "source": {
+    "url": "https://britannica.com/topic/terra-cotta-army",
+    "title": "Terra-cotta army | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which direction does the buried terra-cotta army face, poised for battle?",
+   "answers": [
+    "West",
+    "North",
+    "South",
+    "East"
+   ],
+   "correct": "East",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The army faces east, guarding the tomb from Qin Shi Huang's chief former adversaries, who had come from that direction.",
+   "source": {
+    "url": "https://britannica.com/topic/terra-cotta-army",
+    "title": "Terra-cotta army | Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Olmec site's colossal heads are believed to be the oldest and the most skilfully executed?",
+   "answers": [
+    "La Venta",
+    "San Lorenzo",
+    "Tres Zapotes",
+    "Laguna de los Cerros"
+   ],
+   "correct": "San Lorenzo",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The San Lorenzo heads are believed to be the oldest and most skilfully executed, and they were buried by about 900 BC.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Olmec_colossal_heads",
+    "title": "Olmec colossal heads"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Around 900 BC, which Olmec centre succeeded San Lorenzo as the civilization's main centre?",
+   "answers": [
+    "Chalcatzingo",
+    "Teopantecuanitlán",
+    "Takalik Abaj",
+    "La Venta"
+   ],
+   "correct": "La Venta",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "San Lorenzo was succeeded as the main Olmec centre by La Venta in about 900 BC.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Olmec_colossal_heads",
+    "title": "Olmec colossal heads"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Two of the colossal heads at San Lorenzo were re-carved from what earlier monuments?",
+   "answers": [
+    "Giant basalt stelae",
+    "Ballcourt markers",
+    "Massive stone thrones",
+    "Temple lintels"
+   ],
+   "correct": "Massive stone thrones",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Most colossal heads were sculpted from spherical boulders, but two from San Lorenzo were re-carved from massive stone thrones.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Olmec_colossal_heads",
+    "title": "Olmec colossal heads"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Peruvian archaeologist first identified Caral-Supe as an independent civilization and has written about it since 1994?",
+   "answers": [
+    "Julio C. Tello",
+    "Rafael Larco Hoyle",
+    "Ruth Shady",
+    "Luis Guillermo Lumbreras"
+   ],
+   "correct": "Ruth Shady",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Ruth Shady first identified the Norte Chico or Caral-Supe civilization as an independent civilization and has been writing about it since 1994.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Huaricanga",
+    "title": "Huaricanga"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which knotted-cord recording system dates back at least to the Wari Empire and possibly to Caral in the third millennium BCE?",
+   "answers": [
+    "Wampum",
+    "Tocapu",
+    "Yupana",
+    "Quipu"
+   ],
+   "correct": "Quipu",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The use of the quipu dates back at least to the Wari Empire (600–1000 CE) and possibly to the much earlier Caral/Norte Chico civilization.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Andean_civilizations",
+    "title": "Andean civilizations"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Caral, the best-known Norte Chico site, lies in which Peruvian river valley?",
+   "answers": [
+    "Moche Valley",
+    "Supe Valley",
+    "Nazca Valley",
+    "Urubamba Valley"
+   ],
+   "correct": "Supe Valley",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Caral is located in the Supe Valley in Barranca Province, north of Lima, which gives the civilization its alternative name Caral-Supe.",
+   "source": {
+    "url": "https://www.perunorth.com/caral",
+    "title": "Caral"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Norte Chico site in the Fortaleza Valley is believed to be the earliest city of that civilization, established around 3500 BC?",
+   "answers": [
+    "Chavín de Huántar",
+    "Kotosh",
+    "Aspero",
+    "Huaricanga"
+   ],
+   "correct": "Huaricanga",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Huaricanga, in the Fortaleza Valley, is described as the earliest city of the Norte Chico civilization, established around 3500 BC.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Huaricanga",
+    "title": "Huaricanga"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Most historians think the Maya Long Count began on a base date in which year?",
+   "answers": [
+    "2334 BCE",
+    "1500 BCE",
+    "250 CE",
+    "3114 BCE"
+   ],
+   "correct": "3114 BCE",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Most historians think 4 Ahau 8 Cumku, most likely 11 August 3114 BCE, was the Long Count's base date.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Maya-calendar",
+    "title": "Maya calendar"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Combining the Maya 260-day ritual cycle with the 365-day year gives a Calendar Round of 18,980 days, equal to how many 365-day years?",
+   "answers": [
+    "13",
+    "20",
+    "52",
+    "400"
+   ],
+   "correct": "52",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The two cycles together form a 18,980-day Calendar Round, or 52 years of 365 days.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Maya-calendar",
+    "title": "Maya calendar"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the common name for the Maya 260-day ritual cycle, whose original name is unknown?",
+   "answers": [
+    "Haab",
+    "Baktun",
+    "Katun",
+    "Tzolk'in"
+   ],
+   "correct": "Tzolk'in",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "The original name of the 260-day cycle is unknown. It is variously called the Tzolkin ('Count of Days'), divinatory calendar, ritual calendar or day calendar.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Maya-calendar",
+    "title": "Maya calendar"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Early Classic Period, Tikal was an important post in a trading network established by which central Mexican city?",
+   "answers": [
+    "Monte Albán",
+    "Tula",
+    "Teotihuacán",
+    "Cholula"
+   ],
+   "correct": "Teotihuacán",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "Britannica says Tikal was an important post in the great trading network established in southern Mesoamerica by Teotihuacán.",
+   "source": {
+    "url": "https://kids.britannica.com/students/article/Tikal/72463",
+    "title": "Tikal"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Preclassic city is considered one of the first capital cities of the Maya civilization?",
+   "answers": [
+    "Copán",
+    "Palenque",
+    "El Mirador",
+    "Bonampak"
+   ],
+   "correct": "El Mirador",
+   "difficulty": "hard",
+   "category": "Ancient world",
+   "explain": "El Mirador is considered one of the first capital cities of the Maya civilization, and it was larger than Tikal was at that time.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/History_of_the_Maya_civilization",
+    "title": "History of the Maya civilization"
+   },
+   "ai_written": true
+  }
+ ]
+}

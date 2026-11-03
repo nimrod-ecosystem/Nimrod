@@ -1,0 +1,921 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Religions trivia (hard)",
+ "description": "50 hard questions about the world's religions, large and small: beliefs, practices, holidays, history; respectful, no claims about which is true. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "Zoroastrianism's five Gathas, traditionally attributed to Zarathustra himself, contain how many hymns in total?",
+   "answers": [
+    "Twenty-one hymns",
+    "Thirty-three hymns",
+    "Seventeen hymns",
+    "Seventy-two hymns"
+   ],
+   "correct": "Seventeen hymns",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The five Gathas together consist of seventeen hymns, the oldest part of the Avesta.",
+   "source": {
+    "url": "https://smarthistory.org/introduction-to-zoroastrianism/",
+    "title": "Zoroastrianism, an introduction"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The 9th-century Zoroastrian treatise the Dēnkart summarizes the Avesta's books, which are called nasks. How many nasks does it list?",
+   "answers": [
+    "Seven",
+    "Twelve",
+    "Twenty-one",
+    "Thirty-six"
+   ],
+   "correct": "Twenty-one",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Britannica notes that the Dēnkart gives a summary of the Avesta's 21 books, or nasks.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Zoroastrianism/Beliefs-and-mythology",
+    "title": "Zoroastrianism - Ahura Mazda, Dualism, Fire Worship"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which collection of Zoroastrian prayers and hymns, recited by priests and laypeople in daily worship, is called the 'Small Avesta'?",
+   "answers": [
+    "Vendidad",
+    "Khordeh Avesta",
+    "Denkard",
+    "Bundahishn"
+   ],
+   "correct": "Khordeh Avesta",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Khordeh (Khorda) Avesta is the 'Small Avesta', a book of common prayer used in daily worship.",
+   "source": {
+    "url": "https://smarthistory.org/introduction-to-zoroastrianism/",
+    "title": "Zoroastrianism, an introduction"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which concept, central to the Gathas and Zoroastrian scripture, is compared in one scholarly FAQ to the Dao in Daoism?",
+   "answers": [
+    "Haoma",
+    "Fravashi",
+    "Asha",
+    "Daena"
+   ],
+   "correct": "Asha",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Asha, usually rendered as truth or cosmic order, is described as a key concept in the Gathas in the way the Dao is in Daoism.",
+   "source": {
+    "url": "https://www.avesta.org/zfaq.html",
+    "title": "Zoroastrianism and Avesta: Overview and FAQ"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Within Jain tradition, Mahavira is counted as which Tirthankara of the present era?",
+   "answers": [
+    "The 12th",
+    "The 22nd",
+    "The 23rd",
+    "The 24th"
+   ],
+   "correct": "The 24th",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Mahavira is regarded as the 24th and final Tirthankara of the current cycle.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Jainism",
+    "title": "Jainism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Jainism, what are the five vows called when lay householders observe them in a lesser degree?",
+   "answers": [
+    "Mahavratas",
+    "Triratna",
+    "Pratikramana",
+    "Anuvratas"
+   ],
+   "correct": "Anuvratas",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The five vows are anuvratas (small vows) for lay Jains and mahavratas (great vows) for mendicants.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Jainism",
+    "title": "Jainism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Mahavira is said to have reworked the vows of his predecessor Parshvanatha by adding which fifth vow?",
+   "answers": [
+    "Aparigraha (non-possession)",
+    "Asteya (non-stealing)",
+    "Brahmacharya (celibacy)",
+    "Ahimsa (non-violence)"
+   ],
+   "correct": "Brahmacharya (celibacy)",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Mahavira re-established the community on Parshvanatha's teachings and added celibacy as the fifth great vow.",
+   "source": {
+    "url": "https://sociology.institute/sociology-of-religion/ancient-roots-evolution-jainism/",
+    "title": "Tracing the Ancient Roots and Evolution of Jainism • Sociology.Institute"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Jain doctrine teaches that truth is many-sided and that no single viewpoint captures all of it?",
+   "answers": [
+    "Aparigraha",
+    "Anekantavada",
+    "Ahimsa",
+    "Ratnatraya"
+   ],
+   "correct": "Anekantavada",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Anekantavada, or non-absolutism, holds that truth can be seen validly from many perspectives at once.",
+   "source": {
+    "url": "https://www.srmd.org/wisdom/articles/jain-temple/understanding-jain-dharma-the-eternal-religion-of-ahimsa",
+    "title": "Understanding Jain Dharma: The Eternal Religion of Ahimsa - Shrimad Rajchandra Mission Dharampur"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which site in Bihar did Mahavira attain nirvana, making it a major Jain pilgrimage destination?",
+   "answers": [
+    "Bodh Gaya",
+    "Girnar",
+    "Pavapuri",
+    "Shravanabelagola"
+   ],
+   "correct": "Pavapuri",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Mahavira preached for about 30 years before attaining nirvana at Pavapuri in Bihar.",
+   "source": {
+    "url": "https://sociology.institute/sociology-of-religion/ancient-roots-evolution-jainism/",
+    "title": "Tracing the Ancient Roots and Evolution of Jainism • Sociology.Institute"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What name is given to the first five Sikhs whom Guru Gobind Singh initiated into the Khalsa in 1699?",
+   "answers": [
+    "Panj Takht",
+    "Panj Kakar",
+    "Panj Pyare",
+    "Panj Kapde"
+   ],
+   "correct": "Panj Pyare",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Panj Pyare, or 'five beloved ones', were the first Sikhs initiated in the Khalsa's first initiation ceremony.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Khalsa",
+    "title": "Khalsa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Among the Sikh Five Ks, which item is the 'kara'?",
+   "answers": [
+    "A small comb",
+    "A steel bracelet",
+    "A ceremonial sword",
+    "A special undergarment"
+   ],
+   "correct": "A steel bracelet",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The five Ks are kesh (uncut hair), kara (steel bracelet), kangha (comb), kirpan (sword) and kachchera (undergarment).",
+   "source": {
+    "url": "https://www.britannica.com/topic/Khalsa",
+    "title": "Khalsa"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which Punjab town did Guru Gobind Singh hold the 1699 assembly at which the first Panj Pyare were initiated?",
+   "answers": [
+    "Amritsar",
+    "Patna Sahib",
+    "Nanded",
+    "Anandpur Sahib"
+   ],
+   "correct": "Anandpur Sahib",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The first five beloved ones were initiated at the historic assembly at Anandpur Sahib in 1699.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Panj_Pyare",
+    "title": "Panj Pyare"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "At which of the Sikh Takhts did Guru Gobind Singh historically compile the complete version of the Guru Granth Sahib?",
+   "answers": [
+    "Takht Sri Damdama Sahib",
+    "Takht Sri Keshgarh Sahib",
+    "Takht Sri Patna Sahib",
+    "Takht Sri Hazur Sahib"
+   ],
+   "correct": "Takht Sri Damdama Sahib",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Takht Sri Damdama Sahib is historically the place where Guru Gobind Singh compiled the complete Guru Granth Sahib.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Panj_Takht",
+    "title": "Panj Takht"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The First Council of Nicaea in 325 met in a city that today is known by what name?",
+   "answers": [
+    "Izmir",
+    "Iznik",
+    "Iskenderun",
+    "Istanbul"
+   ],
+   "correct": "Iznik",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Ancient Nicaea is now Iznik, in Turkey.",
+   "source": {
+    "url": "https://www.britannica.com/event/First-Council-of-Nicaea-325",
+    "title": "First Council of Nicaea"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Greek term, meaning 'of one substance', did the Creed of Nicaea use to affirm the divinity of Christ against Arianism?",
+   "answers": [
+    "Theotokos",
+    "Homoiousios",
+    "Hypostasis",
+    "Homoousios"
+   ],
+   "correct": "Homoousios",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The council invoked homoousios ('of one substance') to state that the Son is equal to the Father.",
+   "source": {
+    "url": "https://www.britannica.com/event/First-Council-of-Nicaea-325",
+    "title": "First Council of Nicaea"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which young deacon attended the Council of Nicaea as an assistant to Alexander of Alexandria and went on to champion the Nicene Creed against Arianism?",
+   "answers": [
+    "Athanasius",
+    "Augustine of Hippo",
+    "Origen",
+    "Tertullian"
+   ],
+   "correct": "Athanasius",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Athanasius attended Nicaea as Alexander's assistant and spent much of his life battling Arianism.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Arian_controversy",
+    "title": "Arian controversy"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Which council, held in 381, revised the Nicene Creed so that it speaks of the Holy Spirit as worshipped and glorified with the Father and the Son?",
+   "answers": [
+    "Council of Chalcedon",
+    "Council of Ephesus",
+    "Second Council of Nicaea",
+    "First Council of Constantinople"
+   ],
+   "correct": "First Council of Constantinople",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The 381 revision at Constantinople produced the Niceno-Constantinopolitan Creed, which is often simply called the Nicene Creed.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Nicene_Creed",
+    "title": "Nicene Creed"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Latin term, meaning 'and the Son', was added to the Nicene Creed in the West and became a flashpoint in the East-West Schism?",
+   "answers": [
+    "Ex cathedra",
+    "Sola fide",
+    "Filioque",
+    "Ex opere operato"
+   ],
+   "correct": "Filioque",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Roman church added 'and the Son' (Filioque) to the creed without consulting the East, which resented it.",
+   "source": {
+    "url": "https://www.britannica.com/event/East-West-Schism-1054",
+    "title": "East-West Schism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In what year were the mutual excommunications of 1054 between Rome and Constantinople revoked?",
+   "answers": [
+    "1914",
+    "1948",
+    "1965",
+    "1978"
+   ],
+   "correct": "1965",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The excommunications exchanged in 1054 were revoked in 1965.",
+   "source": {
+    "url": "https://www.britannica.com/event/East-West-Schism-1054",
+    "title": "East-West Schism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Before which Holy Roman Emperor did Martin Luther refuse to recant at the Diet of Worms in 1521?",
+   "answers": [
+    "Maximilian I",
+    "Charles V",
+    "Ferdinand II",
+    "Rudolf II"
+   ],
+   "correct": "Charles V",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Luther appeared before Charles V at Worms, refused to recant, and was declared a heretic.",
+   "source": {
+    "url": "http://protestantism.co.uk/timeline.html",
+    "title": "Timeline of Reformation History (1517-1685)"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Luther's Ninety-five Theses were launched against the actions of Archbishop Albert and which indulgence preacher?",
+   "answers": [
+    "Johann Eck",
+    "Thomas Müntzer",
+    "Johann Tetzel",
+    "Ulrich Zwingli"
+   ],
+   "correct": "Johann Tetzel",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Britannica says Luther launched the Theses against the actions of Albert and Tetzel.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Protestantism/Ninety-five-Theses",
+    "title": "Protestantism - Reformation, Luther, 95 Theses"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The 1555 Peace of Augsburg applied which Latin principle, roughly meaning 'whose region, his religion'?",
+   "answers": [
+    "Ecclesia semper reformanda",
+    "Cuius regio, eius religio",
+    "Sola scriptura",
+    "Ad fontes"
+   ],
+   "correct": "Cuius regio, eius religio",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The treaty tolerated Lutherans within the Holy Roman Empire on the principle that a ruler's faith set the faith of his territory.",
+   "source": {
+    "url": "http://protestantism.co.uk/timeline.html",
+    "title": "Timeline of Reformation History (1517-1685)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Bahá'í Ridván commemorates Bahá'u'lláh's 1863 declaration of his mission in a garden near which city, just before he left for Constantinople?",
+   "answers": [
+    "Tehran",
+    "Shiraz",
+    "Isfahan",
+    "Baghdad"
+   ],
+   "correct": "Baghdad",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Ridván recalls the twelve days Bahá'u'lláh spent in 1863 on the banks of the Tigris in Baghdad, where he declared his mission.",
+   "source": {
+    "url": "https://www.bahai.us/collection/festival-of-ri%E1%B8%8Dvan/",
+    "title": "The Festival of Riḍván"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Bahá'í festival, marking the new year at the spring equinox, comes at the end of the nineteen-day fast?",
+   "answers": [
+    "Ridván",
+    "Naw-Rúz",
+    "Ayyám-i-Há",
+    "Declaration of the Báb"
+   ],
+   "correct": "Naw-Rúz",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Bahá'í fast takes place in the last month of the year and ends with the festival of Naw-Rúz.",
+   "source": {
+    "url": "https://religionfacts.com/bahai/holidays",
+    "title": "Baha'i Holidays and Festivals - ReligionFacts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which age range of Bahá'ís is expected to observe the sunrise-to-sunset nineteen-day fast, if able?",
+   "answers": [
+    "Ages 12 to 60",
+    "Ages 18 to 65",
+    "Ages 21 to 80",
+    "Ages 15 to 70"
+   ],
+   "correct": "Ages 15 to 70",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Bahá'ís from age 15 to 70 abstain from food and drink between sunrise and sunset during the fast.",
+   "source": {
+    "url": "https://bahaidailycalendar.com/bahai-holy-days",
+    "title": "Baháʼí Holy Days & 19 Day Feast Dates 2026–2027 (Free PDF)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the name of the Shinto ritual in which the buildings of Ise Shrine are rebuilt every 20 years?",
+   "answers": [
+    "Niiname-sai",
+    "Oharae",
+    "Kagura",
+    "Shikinen sengū"
+   ],
+   "correct": "Shikinen sengū",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "From the 7th century, Ise's buildings and bridges were reconstructed every 20 years in the ritual called shikinen sengū.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Ise-Shrine",
+    "title": "Ise Shrine"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Izumo-taisha, widely regarded as Japan's oldest major Shinto shrine, is dedicated to which kami, famed as a deity of marriage?",
+   "answers": [
+    "Amaterasu",
+    "Ōkuninushi",
+    "Susanoo",
+    "Hachiman"
+   ],
+   "correct": "Ōkuninushi",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Izumo-taisha is dedicated to Ōkuninushi, famous as the Shinto deity of marriage.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Izumo-taisha",
+    "title": "Izumo-taisha"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Ise Grand Shrine's tradition of rebuilding every 20 years is traced to the reign of which empress at the end of the 7th century?",
+   "answers": [
+    "Empress Suiko",
+    "Empress Genmei",
+    "Empress Kōken",
+    "Empress Jitō"
+   ],
+   "correct": "Empress Jitō",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Since the reign of Empress Jitō, Ise has continued the shikinen sengū tradition of rebuilding on an adjacent site every 20 years.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Sugari_no_Ontachi",
+    "title": "Sugari no Ontachi"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The Theravada Pāṭimokkha monastic code consists of how many rules for fully ordained monks (bhikkhus)?",
+   "answers": [
+    "311",
+    "227",
+    "348",
+    "364"
+   ],
+   "correct": "227",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Pāṭimokkha has 227 rules for monks and 311 for nuns; the 348 and 364 figures belong to other nuns' Vinaya traditions.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Patimokkha",
+    "title": "Patimokkha"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which in-between state after death and before rebirth is especially important in Tibetan Buddhism, and rejected by the Theravada tradition?",
+   "answers": [
+    "Samsara",
+    "Anatta",
+    "Skandha",
+    "Bardo"
+   ],
+   "correct": "Bardo",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The bardo is the in-between stage after death and before rebirth. It is central to Tibetan Buddhism; Theravada teaches that rebirth follows death at once.",
+   "source": {
+    "url": "https://www.buddhanet.net/e-learning/snapshot02/",
+    "title": "Differences Between Theravada and Mahayana Buddhism - buddhanet.net"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Around which century was the Pali Canon followed by Theravada Buddhism first written down?",
+   "answers": [
+    "5th century BCE",
+    "3rd century BCE",
+    "1st century BCE",
+    "4th century CE"
+   ],
+   "correct": "1st century BCE",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Pali Canon was first compiled in written form in the first century BCE.",
+   "source": {
+    "url": "https://study.com/academy/lesson/the-three-baskets-and-the-dhammapada-description-overview.html",
+    "title": "Sacred Texts of Buddhism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Jewish 'Three Weeks' of mourning, which end on Tisha B'Av, begin with which fast day?",
+   "answers": [
+    "Tenth of Tevet",
+    "Fast of Gedaliah",
+    "Fast of Esther",
+    "Seventeenth of Tammuz"
+   ],
+   "correct": "Seventeenth of Tammuz",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The three-week period of increasing mourning begins with the fast of the 17th of Tammuz, which recalls the first breach in Jerusalem's walls.",
+   "source": {
+    "url": "https://www.jewfaq.org/tisha_bav",
+    "title": "Tisha B'Av - Judaism 101 (JewFAQ)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If the ninth of Av falls on Shabbat, when is the Tisha B'Av fast observed?",
+   "answers": [
+    "Brought forward to the eighth of Av",
+    "Kept on Shabbat as usual",
+    "Moved to the following Thursday",
+    "Postponed until the tenth of Av"
+   ],
+   "correct": "Postponed until the tenth of Av",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Tisha B'Av is never observed on Shabbat, so the fast is postponed to the 10th of Av when the 9th falls on a Saturday.",
+   "source": {
+    "url": "https://www.jewfaq.org/tisha_bav",
+    "title": "Tisha B'Av - Judaism 101 (JewFAQ)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which of these Jewish festivals is NOT one of the Three Pilgrimage Festivals?",
+   "answers": [
+    "Passover",
+    "Shavuot",
+    "Rosh Hashanah",
+    "Sukkot"
+   ],
+   "correct": "Rosh Hashanah",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Three Pilgrimage Festivals are Passover, Shavuot and Sukkot.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Jewish_holidays",
+    "title": "Jewish holidays"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which rabbinic text, together with the Gemara, makes up the Talmud?",
+   "answers": [
+    "Tosefta",
+    "Midrash",
+    "Mishnah",
+    "Zohar"
+   ],
+   "correct": "Mishnah",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Mishnah combined with the Gemara forms the Talmud.",
+   "source": {
+    "url": "https://www.myjewishlearning.com/article/shavuot-history-rabbinic-development/",
+    "title": "Shavuot History: Talmudic Development"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In which month of the Islamic calendar does the Hajj take place?",
+   "answers": [
+    "Muharram",
+    "Rajab",
+    "Shawwal",
+    "Dhu al-Hijjah"
+   ],
+   "correct": "Dhu al-Hijjah",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Hajj falls from the 8th to the 12th of Dhul Hijjah, the 12th and final month of the Islamic calendar.",
+   "source": {
+    "url": "https://www.muslimaid.org/media-centre/blog/the-five-pillars-of-islam/",
+    "title": "The Five Pillars of Islam"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the spiritual state of holiness, marked by plain white clothing, that Hajj pilgrims enter?",
+   "answers": [
+    "Tawaf",
+    "Sa'i",
+    "Ihram",
+    "Wuquf"
+   ],
+   "correct": "Ihram",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Pilgrims wear plain white clothing and enter a state of holiness known as ihram.",
+   "source": {
+    "url": "https://www.muslimaid.org/media-centre/blog/the-five-pillars-of-islam/",
+    "title": "The Five Pillars of Islam"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Muslim community rejects the Five Pillars and instead follows a system known as the Four Doors?",
+   "answers": [
+    "Ibadis",
+    "Ismailis",
+    "Alevis",
+    "Ahmadis"
+   ],
+   "correct": "Alevis",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Alevis are among the Muslim communities that reject the Five Pillars and follow the Four Doors system.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Five_Pillars_of_Islam",
+    "title": "Five Pillars of Islam"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the foundational and central text of the Druze faith?",
+   "answers": [
+    "Epistles of Wisdom",
+    "Nahj al-Balagha",
+    "Kitab al-Kafi",
+    "Kitab al-Shifa"
+   ],
+   "correct": "Epistles of Wisdom",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Epistles of Wisdom (Rasāʾil al-Ḥikma) is the foundational and central text of the Druze faith.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Druze",
+    "title": "Druze"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Druze faith holds that God took human form in which Fatimid caliph?",
+   "answers": [
+    "Al-Mu'izz",
+    "Al-Aziz",
+    "Al-Hakim bi-Amr Allah",
+    "Al-Mustansir"
+   ],
+   "correct": "Al-Hakim bi-Amr Allah",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Hamza ibn Ali, regarded as the founder of the Druze faith, proclaimed that God had become human in the form of al-Hakim bi-Amr Allah.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Incarnation",
+    "title": "Incarnation"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "Whom do Mandaeans regard as the greatest and final of their prophets?",
+   "answers": [
+    "Adam",
+    "Seth",
+    "John the Baptist",
+    "Noah"
+   ],
+   "correct": "John the Baptist",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Mandaeans count Adam, Seth, Noah, Shem and John the Baptist as prophets, with John the greatest and final.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Monotheism",
+    "title": "Monotheism"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "The name 'Mandaean' comes from an Aramaic word, manda, meaning what?",
+   "answers": [
+    "Baptism",
+    "Living water",
+    "Knowledge",
+    "Light"
+   ],
+   "correct": "Knowledge",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Manda means 'knowledge', as does the Greek gnosis, reflecting the Gnostic character of the religion.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Monotheism",
+    "title": "Monotheism"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Rastafari, which biblical name is commonly used for the oppressive and unjust Western society?",
+   "answers": [
+    "Zion",
+    "Nineveh",
+    "Babylon",
+    "Sodom"
+   ],
+   "correct": "Babylon",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Rastas associate Babylon with oppressive, unjust society, commonly identified with Western culture.",
+   "source": {
+    "url": "https://www.learnreligions.com/rastafari-95695",
+    "title": "Introduction to the Beliefs and Practices of Rastafari"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Sheikh Adi ibn Musafir, the saint whose tomb at Lalish is a focus of Yazidi pilgrimage, was born in the region of which present-day country?",
+   "answers": [
+    "Iraq",
+    "Syria",
+    "Iran",
+    "Lebanon"
+   ],
+   "correct": "Lebanon",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Adi ibn Musafir was born around Bait Far in what is now the Beqaa Valley of Lebanon, then settled in Lalish.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Adi_ibn_Musafir",
+    "title": "Adi ibn Musafir"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Daoist term denotes spontaneity or naturalness and is often paired with wu wei?",
+   "answers": [
+    "Ren",
+    "Li",
+    "Xiao",
+    "Ziran"
+   ],
+   "correct": "Ziran",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Daoism emphasizes spontaneity (ziran) and non-action (wu wei), acting in line with the natural course of the universe.",
+   "source": {
+    "url": "https://www.britannica.com/topic/dao",
+    "title": "Dao"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which text, honored as a Daoist classic under Emperor Xuanzong of Tang, completes a trilogy with the Daodejing and the Zhuangzi?",
+   "answers": [
+    "Huainanzi",
+    "Liezi",
+    "Baopuzi",
+    "Taiping Jing"
+   ],
+   "correct": "Liezi",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Emperor Xuanzong designated the Liezi a Daoist classic, completing the trilogy with the Tao Te Ching and Zhuangzi.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Liezi",
+    "title": "Liezi"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Within which parva (book) of the Mahabharata is the Bhagavad Gita found?",
+   "answers": [
+    "Adi Parva",
+    "Udyoga Parva",
+    "Bhishma Parva",
+    "Shanti Parva"
+   ],
+   "correct": "Bhishma Parva",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Gita is part of the Mahabharata and sits in the Bhishma Parva chapters 23–40.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_Hindu_texts",
+    "title": "List of Hindu texts"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Prasthanatrayi, the collective foundation of Hindu philosophy, comprises the Upanishads, the Bhagavad Gita and which third text?",
+   "answers": [
+    "Yoga Sutras",
+    "Manusmriti",
+    "Arthashastra",
+    "Brahma Sutras"
+   ],
+   "correct": "Brahma Sutras",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Prasthanatrayi is the collective name for the Upanishads, the Bhagavad Gita and the Brahma Sutras.",
+   "source": {
+    "url": "https://www.baps.org/Spiritual-Living/Scriptures/Central-Hindu-Scriptures.aspx",
+    "title": "Central Hindu Scriptures"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Upanishads are also called Vedanta. What does that term literally mean?",
+   "answers": [
+    "Song of the Lord",
+    "End of the Vedas",
+    "Way of knowledge",
+    "Path of duty"
+   ],
+   "correct": "End of the Vedas",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "Vedanta means 'end of the Vedas' and refers to the Upanishads as the concluding portion of the Vedas.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Principal_Upanishads",
+    "title": "Principal Upanishads"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Hindu scriptures such as the Vedas, regarded as 'that which is heard', are classed as what?",
+   "answers": [
+    "Smriti",
+    "Itihasa",
+    "Purana",
+    "Shruti"
+   ],
+   "correct": "Shruti",
+   "difficulty": "hard",
+   "category": "Religions",
+   "explain": "The Vedas and related texts are classed as Shruti, 'that which is heard'.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/List_of_Hindu_texts",
+    "title": "List of Hindu texts"
+   },
+   "ai_written": true
+  }
+ ]
+}

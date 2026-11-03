@@ -1,0 +1,936 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Mythology trivia (medium)",
+ "description": "50 medium questions about myths and legends from cultures around the world. Written by Claude from cited web pages; every question names its page. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Web pages cited on each question",
+  "kind": "ai-written-from-sources"
+ },
+ "ai_written": true,
+ "generated": "2026-11-02",
+ "items": [
+  {
+   "question": "In Hesiod's account, from which part of Zeus did the goddess Athena emerge?",
+   "answers": [
+    "His head",
+    "His thigh",
+    "His side",
+    "His hand"
+   ],
+   "correct": "His head",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Hesiod says Athena came out of the head of Zeus himself. The thigh is where Dionysus was later carried.",
+   "source": {
+    "url": "https://www.greekmythology.com/Olympians/olympians.html",
+    "title": "Olympians - GreekMythology.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Hesiod's Theogony, Aphrodite rose from the foam that gathered around the severed remains of which god?",
+   "answers": [
+    "Cronus",
+    "Uranus",
+    "Poseidon",
+    "Typhon"
+   ],
+   "correct": "Uranus",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Hesiod says Aphrodite was born from the foam around the severed parts of Uranus. Cronus was the son who did the cutting.",
+   "source": {
+    "url": "https://www.greekmythology.com/Olympians/olympians.html",
+    "title": "Olympians - GreekMythology.com"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Which pair of Titans were the parents of Zeus, Poseidon, Hera, Demeter and Hestia?",
+   "answers": [
+    "Uranus and Gaia",
+    "Oceanus and Tethys",
+    "Cronus and Rhea",
+    "Atlas and Pleione"
+   ],
+   "correct": "Cronus and Rhea",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Hesiod's Theogony names Cronus and Rhea as the parents of the first generation of Olympians.",
+   "source": {
+    "url": "https://www.greekmythology.com/Olympians/olympians.html",
+    "title": "Olympians - GreekMythology.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Dionysus was the son of Zeus and which mortal woman?",
+   "answers": [
+    "Leda",
+    "Io",
+    "Danaë",
+    "Semele"
+   ],
+   "correct": "Semele",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Dionysus was the son of Zeus and the mortal Semele. Hesiod says both are now gods.",
+   "source": {
+    "url": "https://www.greekmythology.com/Olympians/olympians.html",
+    "title": "Olympians - GreekMythology.com"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Why is Hades, brother of Zeus, not usually counted among the twelve Olympians?",
+   "answers": [
+    "His realm was the underworld, far from Olympus",
+    "He was a Titan rather than a god",
+    "He was born after the Trojan War",
+    "He was banished from Greece by Zeus"
+   ],
+   "correct": "His realm was the underworld, far from Olympus",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Hades was a major god, but his domain was the underworld rather than Mount Olympus, so he is not normally listed among the twelve.",
+   "source": {
+    "url": "https://theulyssesuniverse.com/blog/the-12-olympian-gods-explained",
+    "title": "The 12 Olympian Gods Explained"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Homer's Odyssey, which Olympian carries the message telling the nymph Calypso to release Odysseus?",
+   "answers": [
+    "Apollo",
+    "Ares",
+    "Hermes",
+    "Dionysus"
+   ],
+   "correct": "Hermes",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Hermes is the divine messenger and delivers the order to Calypso to let Odysseus go.",
+   "source": {
+    "url": "https://theulyssesuniverse.com/blog/the-12-olympian-gods-explained",
+    "title": "The 12 Olympian Gods Explained"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In Norse myth, who gave birth to Odin's eight-legged horse Sleipnir while in the shape of a mare?",
+   "answers": [
+    "Frigg",
+    "Freyja",
+    "Sif",
+    "Loki"
+   ],
+   "correct": "Loki",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Sleipnir was born of Loki after the trickster took the form of a mare.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Loki",
+    "title": "Loki - Britannica"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "According to Norse myth, what did Odin give up in exchange for wisdom?",
+   "answers": [
+    "One of his eyes",
+    "His right hand",
+    "His golden ring",
+    "His eight-legged horse"
+   ],
+   "correct": "One of his eyes",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Odin was imagined as a one-eyed old man who gave up his other eye in exchange for wisdom.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Odin/353560",
+    "title": "Odin - Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What were the names of the two ravens that brought Odin news of everything happening in the world?",
+   "answers": [
+    "Geri and Freki",
+    "Ratatoskr and Nidhogg",
+    "Huginn and Fenrir",
+    "Hugin and Munin"
+   ],
+   "correct": "Hugin and Munin",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Odin learned of events through his two ravens, Hugin and Munin (Thought and Memory).",
+   "source": {
+    "url": "https://en.natmus.dk/historical-knowledge/denmark/prehistoric-period-until-1050-ad/the-viking-age/religion-magic-death-and-rituals/the-viking-gods/",
+    "title": "The Viking gods - National Museum of Denmark"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Wednesday, or \"Woden's day\", is named after which Norse god?",
+   "answers": [
+    "Thor",
+    "Odin",
+    "Tyr",
+    "Frey"
+   ],
+   "correct": "Odin",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Odin is also called Woden or Wotan, and Wednesday takes its name from him.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Odin/353560",
+    "title": "Odin - Britannica Kids"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In Norse myth, the goddess Idun looked after apples that kept the gods from doing what?",
+   "answers": [
+    "Falling in battle",
+    "Growing old",
+    "Going hungry",
+    "Losing their sight"
+   ],
+   "correct": "Growing old",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Idun was entrusted with the apples that prevent the gods from growing old. The giant Thjazi once abducted her, and Loki brought her back.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Germanic-religion-and-mythology/Loki",
+    "title": "Germanic religion and mythology - Loki - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which pair were the first humans in Norse myth, made by Odin and his brothers Vili and Ve?",
+   "answers": [
+    "Líf and Lífthrasir",
+    "Baldr and Nanna",
+    "Ask and Embla",
+    "Njord and Skadi"
+   ],
+   "correct": "Ask and Embla",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Odin, Vili and Ve were said to have made the first human beings, Ask and Embla.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Odin/353560",
+    "title": "Odin - Britannica Kids"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Norse myth, Thor's hammer Mjollnir was among items the dwarves made as a penance after Loki cut off whose golden hair?",
+   "answers": [
+    "Frigg's",
+    "Freyja's",
+    "Idun's",
+    "Sif's"
+   ],
+   "correct": "Sif's",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Loki shaved Thor's wife Sif's hair while she slept. As a penance he had the dwarf craftsmen make magical items, including Mjollnir.",
+   "source": {
+    "url": "https://www.routesnorth.com/language-and-culture/norse-gods-goddesses-and-giants/",
+    "title": "Norse gods, goddesses and giants you might not know - Routes North"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In one Egyptian tradition, the loss and healing of Horus's left eye gave a mythical explanation for what?",
+   "answers": [
+    "The flooding of the Nile",
+    "The phases of the moon",
+    "The cycle of the seasons",
+    "Eclipses of the sun"
+   ],
+   "correct": "The phases of the moon",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Horus's left eye was linked with the moon, so its loss and restoration explained the moon's phases.",
+   "source": {
+    "url": "https://www.britannica.com/list/11-egyptian-gods-and-goddesses",
+    "title": "11 Egyptian Gods and Goddesses - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Osiris myth, Set tricks his brother into lying in what, before it is cast into the Nile?",
+   "answers": [
+    "A stone sarcophagus",
+    "A reed basket",
+    "A golden boat",
+    "A fitted wooden chest"
+   ],
+   "correct": "A fitted wooden chest",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Set had a chest made and trapped Osiris inside it, then cast it into the Nile.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/religion-and-philosophy/isis-and-search-osiris-egyptian-myth/",
+    "title": "Isis and the Search for Osiris (Egyptian myth) - EBSCO"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Depictions of Isis nursing the infant Horus are believed to have influenced Christian images of which pair?",
+   "answers": [
+    "Eve and Cain",
+    "Mary and Jesus",
+    "Hannah and Samuel",
+    "Elizabeth and John"
+   ],
+   "correct": "Mary and Jesus",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Britannica notes that images of Isis with the infant Horus are believed to have influenced Christian imagery of Mary with the infant Jesus.",
+   "source": {
+    "url": "https://www.britannica.com/list/11-egyptian-gods-and-goddesses",
+    "title": "11 Egyptian Gods and Goddesses - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to widely accepted Hindu tradition, which poet composed the Sanskrit epic the Ramayana?",
+   "answers": [
+    "Vyasa",
+    "Kalidasa",
+    "Tulsidas",
+    "Valmiki"
+   ],
+   "correct": "Valmiki",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Tradition credits the poet Valmiki with composing the Ramayana. The Mahabharata is traditionally attributed to Vyasa.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Ramayana-Indian-epic",
+    "title": "Ramayana - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Ramayana, how long is Prince Rama's exile from Ayodhya?",
+   "answers": [
+    "Fourteen years",
+    "Twelve years",
+    "Seven years",
+    "Ten years"
+   ],
+   "correct": "Fourteen years",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Rama is forced into a 14-year exile with his wife Sita and half brother Lakshmana.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Ramayana-Indian-epic",
+    "title": "Ramayana - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which celebrated Hindu sacred text forms a part of the Mahabharata?",
+   "answers": [
+    "The Rigveda",
+    "The Bhagavadgita",
+    "The Upanishads",
+    "The Manusmriti"
+   ],
+   "correct": "The Bhagavadgita",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "The Bhagavadgita is a part of the Mahabharata and is highly regarded in Hinduism.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Mahabharata",
+    "title": "Mahabharata - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to Aztec legend, Huitzilopochtli told his people to build Tenochtitlán where they found what sight?",
+   "answers": [
+    "A jaguar atop a pyramid",
+    "An eagle on a cactus holding a snake",
+    "A hummingbird drinking from a lake",
+    "A serpent coiled around a maize plant"
+   ],
+   "correct": "An eagle on a cactus holding a snake",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "The war and sun god told the Aztecs to settle where an eagle perched on a prickly pear cactus held a snake.",
+   "source": {
+    "url": "https://study.com/academy/lesson/aztec-god-huitzilopochtli-facts-story.html",
+    "title": "Aztec Sun God Huitzilopochtli - Study.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Quetzalcóatl, the Feathered Serpent, was the Aztec god of what?",
+   "answers": [
+    "War and sacrifice",
+    "Rain and lightning",
+    "Death and the underworld",
+    "Learning and the priesthood"
+   ],
+   "correct": "Learning and the priesthood",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Quetzalcóatl was one of the three great Aztec gods and presided over learning and the priesthood.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/religion-and-philosophy/quetzalcoatl-deity/",
+    "title": "Quetzalcóatl (deity) - EBSCO"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Aztec myth, Coatlicue became pregnant with Huitzilopochtli after tucking what into her waistband?",
+   "answers": [
+    "A jade stone",
+    "A maize cob",
+    "An obsidian blade",
+    "A ball of feathers"
+   ],
+   "correct": "A ball of feathers",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "The myth says she found a ball of feathers, placed it in her waistband and so became pregnant with Huitzilopochtli.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Aztec_mythology",
+    "title": "Aztec mythology - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Kojiki, from which part of Izanagi did the sun goddess Amaterasu emerge as he purified himself?",
+   "answers": [
+    "His right eye",
+    "His left eye",
+    "His nose",
+    "His mouth"
+   ],
+   "correct": "His left eye",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Izanagi produced Amaterasu while purifying his left eye after his journey to the underworld. The storm god Susanoo came from his nose.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/political-science/amaterasu-mythology",
+    "title": "Amaterasu (mythology) - EBSCO"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Kojiki, what caused the death of the creator goddess Izanami?",
+   "answers": [
+    "Giving birth to the fire god",
+    "A wound from Susanoo",
+    "A fall from the Floating Bridge",
+    "A curse of the sun goddess"
+   ],
+   "correct": "Giving birth to the fire god",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "One of Izanami's children was a fire god who fatally burned her at birth.",
+   "source": {
+    "url": "https://www.thecollector.com/amaterasu-japanese-sun-goddess-mythology/",
+    "title": "Amaterasu, the Mercurial Goddess of the Sun in Japanese Mythology - TheCollector"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which famous Shinto shrine is dedicated to Amaterasu as the highest national deity?",
+   "answers": [
+    "Itsukushima Shrine",
+    "Meiji Shrine",
+    "Izumo Shrine",
+    "Ise Shrine"
+   ],
+   "correct": "Ise Shrine",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Ise Shrine is dedicated to Amaterasu, the highest deity in Japanese mythology.",
+   "source": {
+    "url": "https://www.nippon.com/en/japan-topics/g00748/amaterasu-the-japanese-sun-goddess.html",
+    "title": "Amaterasu: The Japanese Sun Goddess - Nippon.com"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "The Irish hero Cú Chulainn was born with which name, before he took the place of a slain guard-dog?",
+   "answers": [
+    "Conall",
+    "Lugaid",
+    "Fergus",
+    "Sétanta"
+   ],
+   "correct": "Sétanta",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "He was born Sétanta and was renamed \"the hound of Culann\" after taking the place of the guard-dog he killed.",
+   "source": {
+    "url": "https://www.irishfolklore.com/myths/cu-chulainn/",
+    "title": "Cú Chulainn: The Hound of Ulster - Irish Folklore"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "The name Tuatha Dé Danann is usually translated as the people of which goddess?",
+   "answers": [
+    "Brigid",
+    "Danu",
+    "The Morrígan",
+    "Ériu"
+   ],
+   "correct": "Danu",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Tuatha Dé Danann means \"People of the Goddess Danu\".",
+   "source": {
+    "url": "https://historycooperative.org/celtic-mythology/",
+    "title": "Celtic Mythology: Myths, Legends, Deities, Heroes - History Cooperative"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the Irish epic the Táin Bó Cúailnge, what does Queen Medb of Connacht invade Ulster to steal?",
+   "answers": [
+    "A golden cauldron",
+    "The Stone of Destiny",
+    "A great bull",
+    "A herd of white horses"
+   ],
+   "correct": "A great bull",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "The Táin is a cattle-raid epic in which Medb invades Ulster to take a great bull, and Cú Chulainn holds off her army.",
+   "source": {
+    "url": "https://godsandmonsters.info/welcome-to-gods-and-monsters/irish-mythology/",
+    "title": "Irish Mythology: The Complete Guide - Gods and Monsters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which hero leads the warband at the centre of the Fenian Cycle of Irish mythology?",
+   "answers": [
+    "Cú Chulainn",
+    "Conchobar mac Nessa",
+    "Nuada",
+    "Fionn mac Cumhaill"
+   ],
+   "correct": "Fionn mac Cumhaill",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "The Fenian Cycle centres on Fionn mac Cumhaill and his warband. Cú Chulainn belongs to the Ulster Cycle.",
+   "source": {
+    "url": "https://www.danielkirkpatrick.co.uk/irish-mythology/",
+    "title": "Irish Mythology: The Four Cycles"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In Roman legend, which god was the father of the twins Romulus and Remus?",
+   "answers": [
+    "Jupiter",
+    "Neptune",
+    "Apollo",
+    "Mars"
+   ],
+   "correct": "Mars",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Rhea Silvia was impregnated by the war god Mars and gave birth to the twins.",
+   "source": {
+    "url": "https://www.history.com/this-day-in-history/april-21/rome-founded",
+    "title": "Rome founded - History.com"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "The Trojan hero Aeneas, ancestor of Rome's founders in legend, was the son of which goddess?",
+   "answers": [
+    "Juno",
+    "Venus",
+    "Minerva",
+    "Diana"
+   ],
+   "correct": "Venus",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Aeneas's mother was Aphrodite, known to the Romans as Venus.",
+   "source": {
+    "url": "https://www.thecollector.com/romulus-remus-legendary-founders-rome/",
+    "title": "Romulus and Remus: The Legendary Founders of Rome - TheCollector"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the legend of Rome's founding, Remus settled on the Aventine Hill. On which hill did Romulus settle?",
+   "answers": [
+    "The Capitoline",
+    "The Quirinal",
+    "The Palatine",
+    "The Esquiline"
+   ],
+   "correct": "The Palatine",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Romulus settled on the Palatine Hill and Remus on the Aventine.",
+   "source": {
+    "url": "https://www.ebsco.com/research-starters/history/romulus-and-remus/",
+    "title": "Romulus and Remus - EBSCO"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Babylonian creation epic Enuma Elish, Marduk forms the heavens and earth from the body of which slain figure?",
+   "answers": [
+    "Apsu",
+    "Kingu",
+    "Enlil",
+    "Tiamat"
+   ],
+   "correct": "Tiamat",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Marduk slays the chaos goddess Tiamat and uses her body to create the universe. Humankind is made from the blood of Kingu.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Mesopotamian-mythology",
+    "title": "Mesopotamian mythology - Britannica"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the Epic of Gilgamesh, which flood survivor, granted immortality, does Gilgamesh seek out?",
+   "answers": [
+    "Enkidu",
+    "Humbaba",
+    "Lugalbanda",
+    "Utnapishtim"
+   ],
+   "correct": "Utnapishtim",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "After Enkidu dies, Gilgamesh quests for immortality and meets Utnapishtim, who survived the Flood and was made immortal.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Mesopotamian-mythology",
+    "title": "Mesopotamian mythology - Britannica"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In the Epic of Gilgamesh, which goddess sends the Bull of Heaven after Gilgamesh rejects her?",
+   "answers": [
+    "Ereshkigal",
+    "Ninsun",
+    "Ishtar",
+    "Nammu"
+   ],
+   "correct": "Ishtar",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "When Gilgamesh spurns Ishtar, she sends the Bull of Heaven against him. The heroes kill it, and the gods then condemn Enkidu to die.",
+   "source": {
+    "url": "https://godsandmonsters.info/welcome-to-gods-and-monsters/mesopotamian-mythology/",
+    "title": "Mesopotamian Mythology: The Complete Guide - Gods and Monsters"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In Journey to the West, the Monkey King Sun Wukong is born from what?",
+   "answers": [
+    "A giant peach",
+    "A lotus bud",
+    "A bamboo stalk",
+    "A magical stone"
+   ],
+   "correct": "A magical stone",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Sun Wukong's story begins with his miraculous birth from a stone that produces a magical egg.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Sun-Wukong",
+    "title": "Sun Wukong - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Chinese creation myth, which cosmic giant breaks out of a cosmic egg and separates heaven from earth?",
+   "answers": [
+    "Nüwa",
+    "Fuxi",
+    "Pangu",
+    "Yu the Great"
+   ],
+   "correct": "Pangu",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Pangu emerged from primordial chaos, separated yin and yang, and raised the heavens while pressing down the earth.",
+   "source": {
+    "url": "https://www.advantour.com/china/culture/chinese-mythology.htm",
+    "title": "Chinese Mythology and Legends - Advantour"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Sun Wukong's weapon, the Ruyi Jingu Bang, is what kind of object?",
+   "answers": [
+    "A jade sword",
+    "A bronze spear",
+    "A magical staff",
+    "An iron fan"
+   ],
+   "correct": "A magical staff",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "The Ruyi Jingu Bang is a magical staff that can shrink, expand or multiply at will.",
+   "source": {
+    "url": "https://www.advantour.com/china/culture/chinese-mythology.htm",
+    "title": "Chinese Mythology and Legends - Advantour"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the Māori creation story, which son of Rangi and Papa finally pushed his parents apart?",
+   "answers": [
+    "Tangaroa",
+    "Tāwhirimātea",
+    "Tūmatauenga",
+    "Tāne"
+   ],
+   "correct": "Tāne",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Tāne, god of the forests, argued for separating his parents rather than killing them. He pushed Rangi up into the sky and pressed Papa to the earth.",
+   "source": {
+    "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/rangi-and-papa",
+    "title": "Rangi and Papa - Encyclopedia.com"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "Which Māori demigod is credited with fishing up an island and stealing fire for humankind?",
+   "answers": [
+    "Māui",
+    "Tāwhaki",
+    "Kupe",
+    "Rātā"
+   ],
+   "correct": "Māui",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Māui is the trickster demigod of Māori and wider Polynesian myth who fished up an island and obtained fire.",
+   "source": {
+    "url": "https://godsandmonsters.info/welcome-to-gods-and-monsters/maori-mythology/",
+    "title": "Māori Mythology: The Complete Guide - Gods and Monsters"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "According to Sir Thomas Malory, what does the name of King Arthur's sword Excalibur mean?",
+   "answers": [
+    "Moon-iron",
+    "Dragon's tooth",
+    "Light-bringer",
+    "Cut-steel"
+   ],
+   "correct": "Cut-steel",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Britannica notes that Malory said Excalibur means \"cut-steel\".",
+   "source": {
+    "url": "https://www.britannica.com/topic/Arthurian-legend",
+    "title": "Arthurian legend - Britannica"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which 12th-century French poet introduced the Holy Grail, and the love of Lancelot and Guinevere, into Arthurian legend?",
+   "answers": [
+    "Chrétien de Troyes",
+    "Geoffrey of Monmouth",
+    "Thomas Malory",
+    "Wace"
+   ],
+   "correct": "Chrétien de Troyes",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Chrétien de Troyes wrote five Arthurian romances and brought in the Grail and the Lancelot–Guinevere love story.",
+   "source": {
+    "url": "https://www.britannica.com/topic/Arthurian-legend",
+    "title": "Arthurian legend - Britannica"
+   },
+   "answerKind": "person",
+   "ai_written": true
+  },
+  {
+   "question": "In Arthurian legend, King Arthur was the son of which king?",
+   "answers": [
+    "Uther Pendragon",
+    "King Lot",
+    "King Pellinore",
+    "Leodegrance"
+   ],
+   "correct": "Uther Pendragon",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "According to the legend, Arthur was the son of King Uther Pendragon.",
+   "source": {
+    "url": "https://kids.britannica.com/kids/article/Arthurian-legend/352787",
+    "title": "Arthurian legend - Britannica Kids"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "The Popol Vuh is a foundational sacred narrative of which people?",
+   "answers": [
+    "The Mexica (Aztecs)",
+    "The Kʼicheʼ Maya",
+    "The Inca",
+    "The Olmec"
+   ],
+   "correct": "The Kʼicheʼ Maya",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "The Popol Vuh is a foundational sacred narrative of the Kʼicheʼ people of Guatemala, from before the Spanish conquest.",
+   "source": {
+    "url": "https://en.wikipedia.org/wiki/Popol_Vuh",
+    "title": "Popol Vuh - Wikipedia"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the Popol Vuh, monkeys are all that remain of which failed attempt at creating humans?",
+   "answers": [
+    "The mud people",
+    "The wooden people",
+    "The stone people",
+    "The first animals"
+   ],
+   "correct": "The wooden people",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "The Popol Vuh says monkeys are what is left of the wooden people, whom the gods rejected because they could not worship properly.",
+   "source": {
+    "url": "https://www.laits.utexas.edu/doherty/plan2/wren.html",
+    "title": "Mayan Creation Myth - University of Texas at Austin"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Inca myth, the creator god Viracocha rose from the waters of which lake?",
+   "answers": [
+    "Lake Texcoco",
+    "Lake Atitlán",
+    "Lake Poopó",
+    "Lake Titicaca"
+   ],
+   "correct": "Lake Titicaca",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "In the Inca creation story, Viracocha rose from the cold waters of Lake Titicaca into the darkness.",
+   "source": {
+    "url": "https://godsandmonsters.info/welcome-to-gods-and-monsters/incan-mythology/",
+    "title": "Incan Mythology: The Complete Guide - Gods and Monsters"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In Slavic folklore, what does Baba Yaga ride when she flies through the forest?",
+   "answers": [
+    "A broomstick",
+    "A mortar",
+    "A wooden sled",
+    "An iron cauldron"
+   ],
+   "correct": "A mortar",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Baba Yaga flies in a mortar, and her hut stands on chicken legs.",
+   "source": {
+    "url": "https://www.atlasobscura.com/articles/who-is-baba-yaga",
+    "title": "Baba Yaga: The Slavic Witch of Russian and Polish Lore - Atlas Obscura"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which Slavic god was matched with the Roman god Jupiter in Lomonosov's 1755 Russian grammar?",
+   "answers": [
+    "Veles",
+    "Svarog",
+    "Dazhbog",
+    "Perun"
+   ],
+   "correct": "Perun",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Lomonosov's 1755 grammar listed Slavic deities beside Roman equivalents and paired Perun with Jupiter.",
+   "source": {
+    "url": "https://www.atlasobscura.com/articles/who-is-baba-yaga",
+    "title": "Baba Yaga: The Slavic Witch of Russian and Polish Lore - Atlas Obscura"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  },
+  {
+   "question": "In a Navajo story, an impatient Coyote flung the remaining stars across the dark sky, creating what?",
+   "answers": [
+    "The Pleiades",
+    "The Milky Way",
+    "The Big Dipper",
+    "The North Star"
+   ],
+   "correct": "The Milky Way",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "While Black God carefully placed stars into constellations, Coyote grabbed the pouch and scattered the rest, forming the Milky Way.",
+   "source": {
+    "url": "https://godsandmonsters.info/coyote/",
+    "title": "Coyote: The Trickster Creator of Native American Myth - Gods and Monsters"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Which creator-trickster of the Pacific Northwest is said to have brought the first people the sun, moon, fire and salmon, usually by stealing them?",
+   "answers": [
+    "Coyote",
+    "Raven",
+    "Glooskap",
+    "Nanabush"
+   ],
+   "correct": "Raven",
+   "difficulty": "medium",
+   "category": "Mythology",
+   "explain": "Raven is the Pacific Northwest creator-trickster who brought these gifts to the first people, usually by stealing them.",
+   "source": {
+    "url": "https://godsandmonsters.info/welcome-to-gods-and-monsters/native-american-mythology/",
+    "title": "Native American Mythology: The Complete Guide - Gods and Monsters"
+   },
+   "answerKind": "character",
+   "ai_written": true
+  }
+ ]
+}
