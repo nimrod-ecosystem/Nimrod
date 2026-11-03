@@ -4761,6 +4761,23 @@ const toTab = (m, id) => {
           JSON.stringify(still().map((e) => e.className)));
         sk.destroy();
         sroot.remove();
+        // (2026-11-02, later) Nothing chosen ('auto'): still on a screen that measures slow, moving on one that does not.
+        // The device's measurement is the one kept in localStorage (theme_default.js CACHE_KEY), set here and put back.
+        const KEEP = localStorage.getItem('nimrod:theme-device');
+        const S3 = await profiles.create('TEST-scene-auto');
+        await profiles.addModule(S3.id, 'clock');
+        await remote(S3.id, () => ({ theme: 'fall' }));
+        for (const slow of [true, false]) {
+          localStorage.setItem('nimrod:theme-device', JSON.stringify({ cpuMs: slow ? 18 : 4, cpuSlow: slow, v: 1 }));
+          const aroot = box();
+          const ak = await mountKiosk(aroot, { user: USER, profileId: S3.id, profiles, bus: createBus() });
+          check(`*** "Moving theme scene" left as it is (auto), on a screen that measures ${slow ? 'SLOW: the scene stands still' : 'fast: it moves'} ***`,
+            await settled(() => still().length > 0 && still().every((e) => e.classList.contains('ls-still') === slow), 6000),
+            JSON.stringify(still().map((e) => e.className)));
+          ak.destroy();
+          aroot.remove();
+        }
+        if (KEEP == null) localStorage.removeItem('nimrod:theme-device'); else localStorage.setItem('nimrod:theme-device', KEEP);
         try { (await import('../theme.js')).applyTheme(document.documentElement, 'default'); } catch { /* the suite's own page */ }
       }
       root.remove();

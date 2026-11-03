@@ -255,7 +255,7 @@ import { syncScene } from './livescene.js';
 // Seasons and the sky outside (2026-10-05): "With the seasons" and a wallpaper that follows the weather.
 import { paintedTheme, isFollowTheme, followsSeasons, DEVICE_THEME, isDeviceTheme } from './theme.js';
 // "Best for this device" (2026-10-07): the default theme, and why it picked what it did on this device.
-import { setDeviceHints, startingTheme, settleStartingTheme } from './theme_default.js';
+import { setDeviceHints, startingTheme, settleStartingTheme, readDeviceSignals } from './theme_default.js';
 import { followSky, SKY_FIELD, HOLIDAY_FIELDS, SKY_FOLLOW_KEY, HOLIDAYS_KEY, holidayRowLabel } from './sky.js';
 import { sceneTakesSky, seasonsWhy, seasonContext } from './seasons.js';
 import { cachedFetch } from './cache.js';
@@ -376,14 +376,18 @@ export const PANEL_GAP_FIELD = Object.freeze({ key: 'panelGap', label: 'Space be
 // Measured on a Pi 400 at 1920x1080 with the fall scene: Chromium at 238% CPU (of 400) moving, 27% with nothing in the
 // scene moving, and most of it is the few large layers that cross the whole screen (canopy, haze, light), not the leaves:
 // 178% with the leaves hidden. A screen that runs all day has nothing spare for a call at that rate. FOR a setting: the
-// place's own choice, and the only lever before a scene is redrawn cheaper. Default `gentle`, unchanged for everybody:
-// most screens are not a Pi 400. 'calm' only slows each layer, so it saves almost nothing; the label says which one does.
-// The person's or the device's "less movement" still wins over it (`sceneMotion`).
+// place's own choice, and the only lever before a scene is redrawn cheaper. 'calm' only slows each layer, so it saves
+// almost nothing; the label says which one does. The person's or the device's "less movement" still wins (`sceneMotion`).
+// (2026-11-02, later) DEFAULT 'auto': moving, unless this screen measures slow (room_lod.js's probe, the one the AAC
+// board's "The pictures move: auto" already uses; a Pi 400 measures 13-18 ms against its 8). The machine only ever asks
+// for LESS movement than was chosen, so a fast screen looks exactly as before and "Moving, as designed" stays a choice.
+// A Code guess made while Mike was away, on the board's precedent: on the 11-02 list to undo.
 export const SCENE_MOTION_KEY = 'sceneMotion';
-export const SCENE_MOTIONS = Object.freeze(['gentle', 'calm', 'still']);
+export const SCENE_MOTIONS = Object.freeze(['auto', 'gentle', 'calm', 'still']);
 export const SCENE_MOTION_FIELD = Object.freeze({ key: SCENE_MOTION_KEY, label: 'Moving theme scene', kind: 'choice',
-  level: 'standard', default: 'gentle',
-  options: [{ value: 'gentle', label: 'Moving, as designed' }, { value: 'calm', label: 'Slower' },
+  level: 'standard', default: 'auto',
+  options: [{ value: 'auto', label: 'Moving, unless this screen is slow' }, { value: 'gentle', label: 'Moving, as designed' },
+    { value: 'calm', label: 'Slower' },
     { value: 'still', label: 'Still (far less work for a small computer)' }] });
 /** Which path a real screen boots on, from its settings row and the default. Pure; exported for suites. */
 export function dashboardPathFor(row, fallback = DASHBOARD_MODULE_DEFAULT) {
@@ -772,10 +776,13 @@ export async function mountKiosk(root, {
   // (2026-11-02) ...and the screen's own "Moving theme scene" (SCENE_MOTION_KEY below), which can only make it move LESS
   // than the rules above allow, never more. Read in a try: early in boot `settings` does not exist yet.
   function sceneMotion() {
-    let chosen = 'gentle';
-    try { const v = settings.get()?.[SCENE_MOTION_KEY]; if (SCENE_MOTIONS.includes(v)) chosen = v; } catch { chosen = 'gentle'; }
+    let chosen = 'auto';
+    try { const v = settings.get()?.[SCENE_MOTION_KEY]; if (SCENE_MOTIONS.includes(v)) chosen = v; } catch { chosen = 'auto'; }
     try { const a = avatarContextNow(); if (a && (a.reduceMotion || a.deviceReduced)) return 'still'; } catch { /* not resolved yet */ }
-    return chosen;
+    if (chosen !== 'auto') return chosen;
+    let slow = false;
+    try { slow = !!readDeviceSignals().cpu?.slow; } catch { slow = false; }
+    return slow ? 'still' : 'gentle';
   }
   // (seasons, 2026-10-05) `fade`: the date changed the look by itself (sky.js) - the scene fades (livescene FADE_MS).
   function applyKioskTheme(id, { fade = false } = {}) {
