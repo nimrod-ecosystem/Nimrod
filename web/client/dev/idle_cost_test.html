@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>what keeps drawing? — each module's idle cost</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.55 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
+    margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.25rem;margin:0 0 .3em} h2{font-size:.95rem;margin:18px 0 4px}
+  p{max-width:78ch}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.note{color:#5d7064}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  table{border-collapse:collapse;margin:12px 0;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+  td,th{padding:2px 12px 2px 0;text-align:left}
+  th{border-bottom:1px solid #e4e0c2}
+  .bad{color:#a4243b;font-weight:700}
+  /* Off to the side, not hidden: a hidden host skips layout, and CSS animations and frames only run on what is laid out. */
+  #host{position:absolute;left:-99999px;top:0;width:640px;height:400px}
+</style>
+</head>
+<body>
+<h1>What keeps drawing? Each module's cost while nobody touches it</h1>
+<p><b>Why (2026-11-02):</b> a kiosk Pi was found running Chromium at about two of its four cores for 31 hours with
+nobody touching it. A screen that draws all the time has nothing spare for a call. This page
+mounts every module once, leaves it alone, and counts what it keeps doing: animation frames asked for each second,
+animations that never end, and timers that fire faster than four times a second.</p>
+<p><b>A report, not a verdict.</b> Some modules move on purpose (a game, a clock's seconds). The question is which ones
+draw when nothing on them is changing, so the bench knows where to look first. The only checks are that the meter reads
+a known quantity right and that modules were actually measured.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { reportSkipped } from './press_controls.js';
+import { createTryHost } from '../module_try.js';
+import { CATALOG } from '../modules_catalog.js';
+
+const types = CATALOG.map((c) => c.type);
+await Promise.all(types.map((t) => import(`../modules/${t}.js`)
+  .catch((e) => console.error('could not load module file', t, e))));
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function note(t) { const d = document.createElement('div'); d.className = 'note'; d.textContent = t; out.append(d); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const host = document.getElementById('host');
+
+// *** THE METER. *** Counts, while armed: animation frames asked for, and timer callbacks that run (a setInterval
+// tick, or a setTimeout that fires) -- each one is work the page does with nobody asking. The real functions are
+// kept; this only counts on the way through.
+const orig = { raf: window.requestAnimationFrame, si: window.setInterval, st: window.setTimeout };
+let armed = false, frames = 0, ticks = 0;
+window.requestAnimationFrame = function (fn) { if (armed) frames += 1; return orig.raf.call(window, fn); };
+window.setInterval = function (fn, ms, ...rest) {
+  const f = typeof fn === 'function' ? function (...a) { if (armed) ticks += 1; return fn.apply(this, a); } : fn;
+  return orig.si.call(window, f, ms, ...rest);
+};
+window.setTimeout = function (fn, ms, ...rest) {
+  const f = typeof fn === 'function' ? function (...a) { if (armed) ticks += 1; return fn.apply(this, a); } : fn;
+  return orig.st.call(window, f, ms, ...rest);
+};
+/** Animations inside `box` that are running and never end (infinite iterations). */
+function endless(box) {
+  let list = [];
+  try { list = document.getAnimations(); } catch { return []; }
+  return list.filter((a) => {
+    const t = a.effect?.target;
+    if (!t || !box.contains(t) || a.playState !== 'running') return false;
+    const it = a.effect?.getComputedTiming?.().iterations;
+    return it === Infinity;
+  });
+}
+// The measuring window and the settle before it. 1.5 s lets a module's own start-up (a fade in, a first fetch) finish;
+// 2 s is long enough that 60 frames a second reads as ~120 and one a second as ~2, which is all the ranking needs.
+const SETTLE_MS = 1500, WINDOW_MS = 2000;
+async function measure(box) {
+  await sleep(SETTLE_MS);
+  frames = 0; ticks = 0; armed = true;
+  const t0 = performance.now();
+  await sleep(WINDOW_MS);
+  armed = false;
+  const s = (performance.now() - t0) / 1000;
+  // The page's own sleep above is one setTimeout tick; it is not the module's.
+  return { fps: frames / s, tps: Math.max(0, ticks - 1) / s, anims: endless(box) };
+}
+
+try {
+  section('the meter reads a known quantity first');
+  {
+    const box = document.createElement('div');
+    host.append(box);
+    let on = true;
+    const loop = () => { if (on) requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    const spin = document.createElement('div');
+    box.append(spin);
+    spin.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, iterations: Infinity });
+    const r = await measure(box);
+    on = false;
+    check('a rAF loop reads as about one frame per display frame (at least 20 a second)', r.fps >= 20, r.fps.toFixed(1));
+    check('an endless animation is counted', r.anims.length === 1, String(r.anims.length));
+    box.remove();
+    const quiet = await measure(host);
+    check('nothing mounted reads as no frames and no ticks', quiet.fps < 1 && quiet.tps < 1,
+      `${quiet.fps.toFixed(1)} fps, ${quiet.tps.toFixed(1)} ticks/s`);
+  }
+
+  section('every module, mounted once and left alone');
+  const tryHost = await Promise.race([createTryHost(), new Promise((r) => setTimeout(() => r(null), 20000))]);
+  if (!tryHost) {
+    reportSkipped('the local backend - IndexedDB did not open in 20 seconds', location.pathname);
+    throw new Error('__skipped__');
+  }
+  const rows = [];
+  const unmeasured = [];
+  for (const type of types) {
+    const box = document.createElement('div');
+    box.className = 'mod-box';
+    box.style.cssText = 'width:640px;height:400px';
+    host.append(box);
+    let r = null;
+    try { tryHost.mount(type, box); r = await measure(box); }
+    catch (err) { unmeasured.push(`${type} (${err.name}: ${err.message})`); }
+    try { tryHost.unmount(box); } catch { /* measured or not, it goes */ }
+    box.remove();
+    if (!r) continue;
+    const names = [...new Set(r.anims.map((a) => a.animationName || a.id || 'unnamed'))].slice(0, 3).join(' ');
+    rows.push({ type, fps: r.fps, tps: r.tps, anims: r.anims.length, names });
+  }
+  rows.sort((a, b) => (b.fps - a.fps) || (b.anims - a.anims) || (b.tps - a.tps));
+  // Drawing all the time: frames every second, or an endless animation. Busy timers: more than four ticks a second.
+  const busy = (r) => r.fps >= 5 || r.anims > 0 || r.tps > 4;
+  const t = document.createElement('table');
+  t.innerHTML = '<tr><th>module</th><th>frames/s</th><th>endless animations</th><th>timer ticks/s</th></tr>'
+    + rows.map((r) => `<tr class="${busy(r) ? 'bad' : ''}"><td>${r.type}</td><td>${r.fps.toFixed(1)}</td>`
+      + `<td>${r.anims}${r.names ? ' (' + r.names + ')' : ''}</td><td>${r.tps.toFixed(1)}</td></tr>`).join('');
+  out.append(t);
+  const drawing = rows.filter(busy);
+  note(`${drawing.length} of ${rows.length} modules keep working while nobody touches them: `
+    + (drawing.map((r) => r.type).join(', ') || 'none'));
+  if (unmeasured.length) note(`not measured here: ${unmeasured.join('; ')}`);
+  window.__idleCost = { rows, unmeasured };
+  check('PRECONDITION: modules were actually measured (a report over nothing is not a report)',
+    rows.length > 0 && rows.length >= types.length - unmeasured.length,
+    `${rows.length} measured, ${unmeasured.length} not, ${types.length} in the catalog`);
+} catch (err) {
+  if (err.message !== '__skipped__') { failed++; note(`stopped: ${err.stack || err}`); }
+}
+// The summary carries the report's headline too, so a headless run (web/tools/run_suite.py) prints it.
+const busyNames = (window.__idleCost?.rows || []).filter((r) => r.fps >= 5 || r.anims > 0 || r.tps > 4)
+  .map((r) => `${r.type} ${r.fps.toFixed(0)}fps/${r.anims}anim/${r.tps.toFixed(0)}tps`).join(', ');
+document.getElementById('summary').textContent = (failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`)
+  + (busyNames ? `. Keep working while idle: ${busyNames}` : '');
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

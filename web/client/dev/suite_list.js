@@ -93,6 +93,8 @@ export const SUITES = [
   'voice_open',
   // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
   'soak',
+  // (2026-11-02) mounts every module once, leaves it alone, and reports which keep drawing or ticking. A report, not a verdict.
+  'idle_cost',
   // PRIORITY.md #8's voice-command set. Opens no microphone: the matcher is a pure function
   // over text and the recogniser is injected, which is the same seam that lets a local engine
   // replace the browser's one.
