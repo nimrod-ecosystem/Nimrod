@@ -113,6 +113,8 @@ section('it does not animate when nobody can see it');
   document.body.append(host);
   const inst = mount(host);
   check('visible and on screen, it runs', probe(inst).running === true);
+  check('and with ripples on its own (the default) it keeps drawing - there is always one coming',
+    probe(inst).looping === true);
   inst.onHide();
   check('onHide stops it - a canvas behind a hidden panel is heat for nothing',
     probe(inst).running === false);
@@ -216,8 +218,24 @@ section('settings, and their defaults');
   await sleep(120);
   check('with ambient off, the pond stays perfectly still until it is touched',
     probe(inst2).ripples === start, `${start} -> ${probe(inst2).ripples}`);
+  // STILL WATER ASKS FOR NO FRAMES (idle_cost_test, 2026-11-02): it was repainting the same picture sixty
+  // times a second. Unconditional: still or not drawing at all, nothing is asked for.
+  check('and while it is still it asks for no frames at all - the last picture just stays',
+    probe(inst2).looping === false);
   bus2.publish('pond/splash');
   check('but it still answers a switch', probe(inst2).ripples > start);
+  check('and a splash wakes the drawing', probe(inst2).looping === probe(inst2).running, JSON.stringify(probe(inst2)));
+  if (probe(inst2).running && !document.hidden) {
+    // The biggest splash ripple lives 1600 + 900 x 1.4 = 2860 ms, x 1.4 when calm: 4004 ms. Then it goes still again.
+    await sleep(4300);
+    check('once the last ripple has gone, it stops drawing again', probe(inst2).ripples === 0 && probe(inst2).looping === false,
+      JSON.stringify(probe(inst2)));
+  } else {
+    const d = document.createElement('div');
+    d.textContent = 'not checked here: "stops drawing again" needs animation frames, and this document never gets any '
+      + '(hidden, or the panel is not on screen). web/tools/run_suite.py pond runs it.';
+    out.append(d);
+  }
   inst2.destroy(); host.remove();
 }
 

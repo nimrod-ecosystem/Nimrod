@@ -113,8 +113,11 @@ registerModule(
     let canvas = null;
     let c2d = null;
     let raf = 0;
-    let running = false;
+    let running = false;          // on screen, so it may draw; `raf` says whether it is drawing now
     let W = 1, H = 1, DPR = 1, last = 0, lastAmbient = 0;
+    // The shimmer's own clock. It moves only while the pond draws, so water that went still and is
+    // touched again carries on from where it stopped instead of jumping to where the page clock says.
+    let waterT = typeof performance !== 'undefined' ? performance.now() : 0;
     let ripples = [];
     let cx = -1, cy = -1;
     let theme = null;
@@ -132,6 +135,7 @@ registerModule(
       });
       const cap = calm() ? MAX_RIPPLES / 2 : MAX_RIPPLES;
       if (ripples.length > cap) ripples.splice(0, ripples.length - cap);
+      wake();
     }
 
     function splash(x, y) {
@@ -200,28 +204,40 @@ registerModule(
     }
 
     function frame(ts) {
-      if (!running) return;
+      if (!running) { raf = 0; return; }
       const dt = last ? Math.min(ts - last, 50) : 16;
+      waterT += last ? Math.min(ts - last, 1000) : 16;
       last = ts;
       if (cfg.ambient && ts - lastAmbient > cfg.ambientMs) {
         lastAmbient = ts;
         spawn(Math.random() * W, H * (0.2 + 0.7 * Math.random()), 0.15 + Math.random() * 0.25);
       }
-      drawWater(ts);
+      drawWater(waterT);
       for (let i = ripples.length - 1; i >= 0; i -= 1) {
         const rp = ripples[i];
         rp.life += dt;
         if (rp.life >= rp.dur) { ripples.splice(i, 1); continue; }
         drawRipple(rp);
       }
+      // STILL WATER IS A STILL PICTURE (idle_cost_test, 2026-11-02). With ambient off and the last ripple gone,
+      // nothing on the canvas will change until somebody touches it, so it stops asking for frames: it was
+      // repainting the same water sixty times a second, all night. The frame just drawn stays; a ripple, a
+      // setting or a resize wakes it. With ambient on there is always a ripple coming, so it keeps drawing.
+      if (!cfg.ambient && !ripples.length) { raf = 0; last = 0; return; }
+      raf = requestAnimationFrame(frame);
+    }
+
+    // Draw again if it is on screen and not already drawing. Also the way a resize gets repainted:
+    // resizing a canvas blanks it, and still water has no next frame coming to fill it in.
+    function wake() {
+      if (!running || raf) return;
+      last = 0;
       raf = requestAnimationFrame(frame);
     }
 
     function start() {
-      if (running) return;
       running = true;
-      last = 0;
-      raf = requestAnimationFrame(frame);
+      wake();
     }
 
     function stop() {
@@ -285,7 +301,7 @@ registerModule(
         // Proven rather than assumed: with the host observer disabled, `comet` and `pressgame`
         // fail `fit_test`'s "notices the box grew" and this module still passes — because of
         // this observer. With the host observer on and this one removed, all three pass.
-        state?.subscribe?.((s) => { cfg = { ...DEFAULTS, ...(s || {}) }; });
+        state?.subscribe?.((s) => { cfg = { ...DEFAULTS, ...(s || {}) }; wake(); });
       },
 
       onResize() { resize(); applyActive(); },
@@ -301,7 +317,7 @@ registerModule(
 
       // Exposed for the test: the pond is a canvas, so there is nothing in the DOM to
       // assert against and the state has to be readable some other way.
-      __probe: () => ({ ripples: ripples.length, running, W, H, cfg: { ...cfg },
+      __probe: () => ({ ripples: ripples.length, running, looping: raf !== 0, W, H, cfg: { ...cfg },
                         reducedMotion, calm: calm() }),
     };
   },
