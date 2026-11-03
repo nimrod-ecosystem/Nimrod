@@ -1,0 +1,532 @@
+{
+ "about": {
+  "title": "Capstone: Design Your Own Thought Experiment",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 11,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes of guided teaching. Making your own project will take longer. You can stop after any step and come back, so the lesson is built in small steps with no rush."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Thought Experiments (Winter 2023 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Winter 2023",
+   "link": "https://plato.stanford.edu/archives/win2023/entries/thought-experiment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Complexity of the Basic Reproduction Number (R0)",
+   "publisher": "Emerging Infectious Diseases, CDC",
+   "date": "January 2019",
+   "link": "https://wwwnc.cdc.gov/eid/article/25/1/17-1901_article",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Astronomy 2e, section 10.5: Water and Life on Mars",
+   "publisher": "OpenStax",
+   "date": "undated web edition",
+   "link": "https://openstax.org/books/astronomy-2e/pages/10-5-water-and-life-on-mars",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Evaluating Resources",
+   "publisher": "UC Berkeley Library Guides",
+   "date": "undated",
+   "link": "https://guides.lib.berkeley.edu/evaluating-resources",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Evaluate, Use, and Cite Information",
+   "publisher": "Purdue University Northwest Library Guides",
+   "date": "undated",
+   "link": "https://guides.pnw.edu/evaluate_use_cite_information",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Thought Experiments (current edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "current edition, undated in the page text I read",
+   "link": "https://plato.stanford.edu/entries/thought-experiment/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. Today you build your own thought experiment, one small step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Your Turn: Build a Thought Experiment"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick reminder. A thought experiment is a device of the imagination. Most are told as a short story, often with a diagram."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Thought experiment = a story you imagine in order to learn something"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a thought experiment?",
+    "right": "An imagined scenario used to investigate something",
+    "wrong": [
+     "A lab test with real equipment",
+     "A guess with no reasoning behind it",
+     "A story that must be completely true"
+    ],
+    "why": "It is a device of the imagination. We use a made-up scenario to think something through."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the plan for today. There are four steps. We will do them in order, and I will go slowly."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Pick a subject and a question. 2. Write a one-page scenario. 3. Build the ledger. 4. Share it and check it."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step one. Pick ONE subject from the course. One is plenty."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Outbreak. Logistics. Diplomacy. Economics. Language. Planets."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now turn your subject into one \"What if?\" question. Here is my example: what if a small town on a cold, thin-aired world wanted liquid water?"
+   },
+   "show": {
+    "kind": "quote",
+    "text": "What if a small town on a cold, thin-aired world wanted liquid water?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two is the setting. It must be original. You invent the place, the people and the rules. You do not borrow characters or worlds from anyone else."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Yours to invent: a place name, a few people, a problem, the rules of your world. | Not allowed: characters, ships or worlds from existing shows, books or games."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which setting follows the rule?",
+    "right": "A town called Pell Harbour on a made-up world, with people you invented",
+    "wrong": [
+     "A famous captain from a TV series",
+     "A named planet from a popular film",
+     "A wizard school from a well-known book"
+    ],
+    "why": "The setting and the people must be your own. Borrowed characters and worlds are not allowed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your one page needs four parts. Keep each part to a few sentences."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Setting. Problem. The rules of your world. The question you are asking."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a tiny sample. The world is Lantern Rock, and it is invented. The town is Pell Harbour. The problem is that the air is too thin for a pond to stay liquid."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small round town of low domes under a pale sky. A shallow pond sits behind a glass wall, with frost around its edge."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That sample mixes real science with made-up details. A reader cannot tell which is which. The ledger fixes that. It is step three, and it picks up the fact-versus-story skill from class one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ledger = a list that labels each claim"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The ledger has three labels. Real means you checked it in a source. Invented means you made it up on purpose. Unknown means nobody knows yet, or you could not check it."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 3,
+    "layout": "row",
+    "text": "Three labels: Real, Invented, Unknown"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "You named your town Pell Harbour. Which label fits that name?",
+    "right": "Invented",
+    "wrong": [
+     "Real",
+     "Unknown",
+     "It needs no label"
+    ],
+    "why": "You made the name up on purpose, so it is Invented. Everything in a ledger gets a label, even small things."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A Real claim needs a source. Good questions to ask: who wrote it, why, and when. And did they cite their own sources?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Who wrote it? Why was it made? When was it published? Did they show their sources?"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You also need to cite when you use data or paraphrase an idea. A citation lets your reader find the source themselves."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real claim + where it came from"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is the better source for a fact about a planet?",
+    "right": "A university-level astronomy textbook such as OpenStax",
+    "wrong": [
+     "A half-remembered thing a friend said",
+     "A meme with no author",
+     "A comment under a video"
+    ],
+    "why": "A textbook has named authors and review, and it can be checked. The other three cannot be traced."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a real ledger line. Real: an astronomy textbook says Mars today has an average surface pressure of only 0.007 bar, less than 1% of Earth's."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0.007 bar: Mars's average surface air pressure, less than 1% of Earth's"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A second Real line, from the same textbook. Liquid water is not stable on Mars's surface under present conditions. Salty water can sometimes be liquid there, under the right conditions."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Pure water on the surface: not stable today. | Salty water: sometimes liquid, under the right conditions."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "An Invented line looks different. I decided Lantern Rock's air is a little thicker than Mars's. That choice is mine, so it is Invented. It is not a fact about Mars."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Invented: Lantern Rock's air is a little thicker than Mars's"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Why is the thicker air on Lantern Rock labelled Invented?",
+    "right": "I chose it for my story",
+    "wrong": [
+     "A textbook says Mars has thick air",
+     "Nobody can know it",
+     "It is true on every planet"
+    ],
+    "why": "Lantern Rock is made up. Its air is whatever the author decides. Only claims you checked can be Real."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Unknown is the honest label. Say Pell Harbour's greenhouses might thicken the air in a hundred years. I have not checked that in a source, so it goes in the ledger as Unknown."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unknown: no source found, so no claim is made"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "You cannot find a source for a claim. What label is honest for now?",
+    "right": "Unknown, until you find a source",
+    "wrong": [
+     "Real, because it sounds right",
+     "Real, because someone must know",
+     "Invented, even though you did not make it up"
+    ],
+    "why": "Unknown is honest. You can change it to Real later if you find a good source."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the same idea with an outbreak. A real source defines R0 as the number of secondary cases one case would produce in a completely susceptible population."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Real: what R0 means. | Invented: our made-up illness has an R0 of 3."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same source adds a warning. R0 must be estimated and used with great caution. So even a Real number needs care."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real numbers still need care"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In your ledger, a made-up R0 of 3 for a made-up illness is which label?",
+    "right": "Invented",
+    "wrong": [
+     "Real",
+     "Unknown",
+     "Real, because R0 is a real idea"
+    ],
+    "why": "The idea of R0 is Real. The number 3 belongs to your made-up illness, so that line is Invented."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more skill: split mixed sentences. Take \"Pell Harbour's pond stays liquid because it is salty.\" The town and pond are Invented. Salty water sometimes being liquid on Mars's surface is Real."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Invented: Pell Harbour and its pond. | Real: salty water can sometimes be liquid on Mars's surface (OpenStax)."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A sentence has a made-up part and a real part. What do you do in the ledger?",
+    "right": "Split it into two lines and label each one",
+    "wrong": [
+     "Label it all Real",
+     "Label it all Invented",
+     "Leave it out"
+    ],
+    "why": "Splitting lets the reader see exactly which part is fact and which is story."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four is how you share it. You choose the format. All four are equally good."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Written. Spoken. Drawn. A short game."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The ledger goes with every format. Written: a list. Spoken: say each label aloud. Drawn: colour-code the parts. Game: put the labels on cards."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Written or spoken: a list or spoken labels. | Drawn or game: colours or label cards."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A share-out takes about three minutes. Say your question, tell your scenario, read your ledger, and name one Unknown. A partner may read for you. A recording works too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Question. Scenario. Ledger. One Unknown."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Peer feedback is kind and specific. Give three things: one thing you understood, one claim you would like a source for, and one question you are left with."
+   },
+   "show": {
+    "kind": "list",
+    "text": "I understood... I would like a source for... I am left wondering..."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which comment is the most useful feedback?",
+    "right": "\"Your Unknown about the greenhouses was clear. Could you add a source for the pressure number?\"",
+    "wrong": [
+     "\"Good.\"",
+     "\"This is wrong.\"",
+     "\"I would have picked a different topic.\""
+    ],
+    "why": "It names something that worked and gives one clear next step."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last, a self-check in plain words. Tick each one yourself before you share."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One subject. Original setting. No borrowed characters. Every Real claim has a source. Invented parts are labelled. At least one Unknown is named. A stranger could tell the three apart."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You find that one of your Real claims has no source. What is the best fix?",
+    "right": "Find a good source for it, or move it to Unknown",
+    "wrong": [
+     "Leave it as Real",
+     "Delete the whole ledger",
+     "Relabel it Invented, though you did not make it up"
+    ],
+    "why": "A Real label only holds if there is a source. Otherwise the honest label is Unknown."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the course. You have learned to imagine boldly and then label clearly which parts are real. Well done."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Imagine boldly. Label clearly."
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Real / Invented / Unknown ledger",
+   "links": [
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]",
+    "[[Outbreak, Part 1: How an Infection Spreads]]",
+    "[[Terraforming, Part 1: What Makes a World Livable]]"
+   ]
+  },
+  {
+   "topic": "Choosing and citing sources",
+   "links": [
+    "[[Real / Invented / Unknown ledger]]"
+   ]
+  },
+  {
+   "topic": "Sharing formats: written, spoken, drawn, game",
+   "links": [
+    "[[Peer feedback and self-check]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Thought experiments can teach us something about the real world.",
+   "other_view": "Most philosophers and scientists agree they matter. But the Stanford Encyclopedia says they can be wrong, and that they often rely on our intuitions. Experts still debate how far they can be trusted without real experiments. That is why the ledger separates what you checked from what you imagined.",
+   "cite": [
+    "s6",
+    "s1"
+   ]
+  },
+  {
+   "claim": "Liquid water cannot exist on the surface of Mars today.",
+   "other_view": "The textbook says liquid water is not stable under present conditions. It also says salty water can sometimes be liquid on the surface under the right conditions. So the claim is broadly true for pure water, and less settled for brines.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "claim": "A single R0 number tells you how dangerous or contagious an illness is.",
+   "other_view": "R0 is a useful measure of contagiousness, but the CDC journal article says it must be estimated and applied with great caution. A number alone can mislead.",
+   "cite": [
+    "s2"
+   ]
+  }
+ ]
+}

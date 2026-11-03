@@ -1,0 +1,1172 @@
+{
+ "about": {
+  "title": "Building a World: Maps and Worldbuilding",
+  "course": "fantasy-thought-experiments",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. This class has two real topics (medieval maps, and why towns grow where they do), then the drawing, then the thought experiment. If you need a break, stop after the beat about leaving things out. Part two starts at worldbuilding rules. It is fine to take two sittings."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Mappa Mundi",
+   "publisher": "Hereford Cathedral",
+   "date": "n.d.",
+   "link": "https://www.herefordcathedral.org/mappa-mundi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Mappa mundi",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mappa_mundi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Hereford Mappa Mundi",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Hereford_Mappa_Mundi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "1300 / Hereford Mappa Mundi",
+   "publisher": "The Ohio State University (u.osu.edu, Maps to Know)",
+   "date": "n.d.",
+   "link": "https://u.osu.edu/wagner.19/maps-to-know/1300-hereford-mappa-mundi/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Portolan Chart (catalogue summary by the Bavarian State Library)",
+   "publisher": "Library of Congress",
+   "date": "n.d.",
+   "link": "https://www.loc.gov/item/2021668713/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Gough Map: the earliest road map of Britain?",
+   "publisher": "Phys.org (on a Bodleian Library book)",
+   "date": "2008-02-04",
+   "link": "https://phys.org/news/2008-02-gough-earliest-road-britain.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Gough Map",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gough_Map",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Site vs. Situation (AP Human Geography)",
+   "publisher": "Fiveable",
+   "date": "n.d.",
+   "link": "https://fiveable.me/ap-hug/key-terms/site-vs-situation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Life in a medieval town",
+   "publisher": "Medieval and Middle Ages History Timelines (timeref.com)",
+   "date": "n.d.",
+   "link": "https://www.timeref.com/life/townlife.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Virtual Castles at a River Crossing",
+   "publisher": "Medieval and Middle Ages History Timelines (timeref.com)",
+   "date": "n.d.",
+   "link": "https://www.timeref.com/castles/virtual_river_crossing.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The History of British and Irish Towns",
+   "publisher": "Researching Historic Buildings in the British Isles (buildinghistory.org)",
+   "date": "n.d.",
+   "link": "http://www.buildinghistory.org/towns.shtml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Site and Situation in Geography: Understanding the Location of Settlements",
+   "publisher": "Geogyan",
+   "date": "n.d.",
+   "link": "https://geogyan.in/geography-in-english/urban-geography/site-and-situation-in-geography/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "6.1.1 Site and Situation of Cities (AP Human Geography Notes)",
+   "publisher": "TutorChase",
+   "date": "n.d.",
+   "link": "https://www.tutorchase.com/notes/ap/human-geography/6-1-1-site-and-situation-of-cities",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "3.1 The Cartographic Process",
+   "publisher": "Penn State University, GEOG 160",
+   "date": "n.d.",
+   "link": "https://courses.ems.psu.edu/geog160/node/1882",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "5. Simplification (Mapping, Society, and Technology)",
+   "publisher": "University of Minnesota Libraries (open textbook)",
+   "date": "n.d.",
+   "link": "https://open.lib.umn.edu/mapping/chapter/5-simplification/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Navigating with a Map and Compass: The Bare Basics",
+   "publisher": "National Center for Outdoor & Adventure Education",
+   "date": "n.d.",
+   "link": "https://ncoae.org/blog/navigating-with-a-map-and-compass-the-bare-basics/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Map Metadata: What to Include on Your Map",
+   "publisher": "Trent University Library",
+   "date": "n.d.",
+   "link": "https://guides.lib.trentu.ca/mapelements",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Complete Worldbuilding Template (7-Part Guide)",
+   "publisher": "Summon Worlds",
+   "date": "n.d.",
+   "link": "https://www.summonworlds.com/complete-worldbuilding-template/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Worldbuilding: How to Develop the World of Your Book",
+   "publisher": "GRIN",
+   "date": "n.d.",
+   "link": "https://www.grin.com/en/magazin/self-publishing/worldbuilding-how-to-develop-the-world-of-your-book/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Worldbuilding: The Ultimate Guide (10 Steps + TTRPG Tips)",
+   "publisher": "Anima Roleplay",
+   "date": "n.d.",
+   "link": "https://www.anima-roleplay.com/resources/worldbuilding/worldbuilding-fundamentals/ultimate-guide-worldbuilding",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Hereford Cathedral's Great Mappa Mundi",
+   "publisher": "ASA Tours",
+   "date": "n.d.",
+   "link": "https://www.asatours.com.au/newsroom-hereford-mappa-mundi/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Portolan Charts: The First Wikis?",
+   "publisher": "Stanford Center for Internet and Society",
+   "date": "2008-11",
+   "link": "https://cyberlaw.stanford.edu/blog/2008/11/portolan-charts-first-wikis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Sailing the Early Seas with Portolan Charts",
+   "publisher": "Library of Congress, Maps blog",
+   "date": "2019-09",
+   "link": "https://blogs.loc.gov/maps/2019/09/sailing-the-early-seas-with-portolan-charts/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today we draw a map of Nimrod's village and region. Then we ask how the land decides who lives where."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Building a World: Maps and Worldbuilding"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A map is a drawing of a place. It shows some things and leaves other things out on purpose."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Map"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, real history. Medieval people did make maps, but different maps had different jobs."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "REAL HISTORY: Medieval maps"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One famous map is the Hereford Mappa Mundi, made around the year 1300 on one sheet of calfskin, about 1.6 metres by 1.3."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge round world map drawn on a single sheet of calfskin. Jerusalem sits at the centre. Tiny pictures of cities, animals and old stories fill the page."
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It shows the world in spiritual as well as geographical terms. It was a picture for teaching, not for finding your way."
+   },
+   "show": {
+    "kind": "list",
+    "text": "On the big maps of this kind: Bible stories | history | mythology | plants and animals | distant lands"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was the Hereford map mainly made to do?",
+    "right": "Show how scholars understood the world, with stories and meaning",
+    "wrong": [
+     "Guide ships safely into a harbour",
+     "Give walking directions between villages",
+     "Measure farmers' fields exactly"
+    ],
+    "why": "Mappae mundi were never meant as navigation charts. They were drawings that illustrated ideas, history and stories."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sailors needed something else. Portolan charts, first made around 1300, drew coasts and ports as accurately as possible."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A sheet of vellum with the coastline outlined. Port names are written in rows along the shore, with the inland area left mostly empty."
+   },
+   "cite": [
+    "s5",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the two kinds differ. One came from scholars and stories. The other grew from sailors' own experience."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mappa mundi: made by scholars | teaches stories and meaning || Portolan chart: grew from sailors' work | shows coasts and ports"
+   },
+   "cite": [
+    "s22",
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which map would help a sailor find a harbour?",
+    "right": "A portolan chart",
+    "wrong": [
+     "The Hereford Mappa Mundi",
+     "Neither, because medieval people had no maps",
+     "A map of Bible stories only"
+    ],
+    "why": "Portolan charts were made to show coastlines and ports as accurately as possible. Sailors were their main users."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A third kind is the Gough Map, from about 1360. It is the earliest surviving map of Britain to show routes and a recognisable coastline."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Britain drawn on its side, with thin red lines linking towns across the land."
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Notice it is turned. On the Gough Map, north lies to the left, not at the top."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "North is on the left"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where does north lie on the Gough Map?",
+    "right": "To the left of the sheet",
+    "wrong": [
+     "At the top, like most modern maps",
+     "At the bottom",
+     "To the right"
+    ],
+    "why": "The Gough Map is drawn with north to the left. Medieval mapmakers did not always put north at the top."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three maps, three jobs: teaching, sailing, and showing routes."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c.1300 Hereford Mappa Mundi: a teaching picture of the world | c.1300 early portolan charts: coast charts for sailors | c.1360 Gough Map: routes across Britain"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Compared with modern maps, medieval ones put purpose first. Direction, size and detail could bend to the message."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Direction: not always north at the top | Size: mappae mundi made no attempt to show true areas of land and water | Content: pictures and stories beside places"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, real geography. Why do towns grow where they do? Geographers use two words."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "REAL GEOGRAPHY: Why towns grow where they do"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Site is what is at the place. Situation is what is around it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Site: the land itself | soil, water, slope || Situation: its position | roads, rivers, neighbours"
+   },
+   "cite": [
+    "s8",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A river is a good site feature. It gives drinking water, farmland, fish and a way to travel."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Drinking water | Farming | Fishing | Transport"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People also liked level ground that was safer from floods. So a village sits near the river, but on higher, safer ground."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A village on a gentle rise beside a river. Flat fields lie below it, and the river bends past."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A village picks flat, dry ground near water. Is that site or situation?",
+    "right": "Site, because it is about the land itself",
+    "wrong": [
+     "Situation, because it is about neighbours",
+     "Neither",
+     "Both words mean the same thing"
+    ],
+    "why": "Site is the physical land a place stands on. Situation is its position relative to other places."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now situation. Many medieval towns grew at river crossings, harbours and crossroads, where people could sell to passers-by."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "River crossing"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some town names remember this. Oxford and Cambridge sit where easy river crossings could be controlled."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Oxford: river crossing | Cambridge: river crossing"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rulers noticed too. A castle near a crossing let the lord control the goods passing by and collect tolls."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small earth mound with a wooden tower, beside a river crossing. Carts queue on the road below."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why might a lord build a castle beside a river crossing?",
+    "right": "To control the traffic and collect tolls",
+    "wrong": [
+     "Because rivers hide castles from view",
+     "So boats cannot carry goods",
+     "Because crossings have no travellers"
+    ],
+    "why": "A crossing is where travellers and goods must pass, so a castle there lets the lord regulate them and charge tolls."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Geography helps, but it is not destiny. Kings and churches also planned towns. Salisbury was created to serve a new cathedral."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 100 new towns, England and Wales, 1066 to 1190: some prospered, some failed"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now map basics. A good map has a few helpers: a compass, a scale and a key."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Map basics: compass, scale, key"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The compass rose, or north arrow, shows which way is which, so the reader can line the map up with the land."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Compass rose"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The scale tells you how far a distance on the map is in real life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scale"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For example, on a 1:50,000 map, 1 millimetre on paper is 50 metres on the ground."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "What 1 centimetre stands for at two real map scales",
+    "chart": "c1"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "On a 1:50,000 map, 1 millimetre is 50 metres. What is 1 centimetre?",
+    "right": "500 metres",
+    "wrong": [
+     "50 metres",
+     "5 metres",
+     "5 kilometres"
+    ],
+    "why": "There are 10 millimetres in a centimetre, and 10 times 50 metres is 500 metres."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For Nimrod we will keep it simple. On our map, 1 centimetre stands for 1 kilometre of our land."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1 cm = 1 km"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The key, or legend, explains the symbols. A tiny castle drawing in the key means that a castle stands there."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Key (legend)"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a map key do?",
+    "right": "It explains what the symbols and colours mean",
+    "wrong": [
+     "It shows the distance in real life",
+     "It shows which way is north",
+     "It names the person who drew the map"
+    ],
+    "why": "The key lists the map's symbols and colours and says what each stands for. Distance is the scale's job and direction is the compass's."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more skill: what to leave out. A map is smaller than the world, so the maker chooses what fits its job."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Leave things out"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even a map of the whole United States cannot show every city. It would be unreadable."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two maps side by side. The left one is crowded with labels. The right one shows only the biggest places and is easy to read."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do mapmakers leave things out?",
+    "right": "A map is smaller than the world, so the maker picks what suits its purpose",
+    "wrong": [
+     "Leaving things out always makes a map wrong and useless",
+     "Everything left out is unimportant forever",
+     "To hide the truth from the reader"
+    ],
+    "why": "Maps can only hold a limited number of features. The maker decides what to keep by thinking about the audience and what the map is for."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now worldbuilding, which means making up a believable place. Writers' guides offer two rules. These are craft advice, not science."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Worldbuilding rules"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rule one: keep it consistent. Once something is true in your world, it stays true. If the castle is 2 km from the village, it stays 2 km."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rule 1: Be consistent"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Our map says the castle is 2 km from the village. A later story calls it a two-day journey. What went wrong?",
+    "right": "The world was not kept consistent",
+    "wrong": [
+     "Nothing went wrong, because stories may change any fact",
+     "The map key was left out",
+     "The compass pointed the wrong way"
+    ],
+    "why": "Once a rule or fact is set, it should not suddenly be broken. The map and the story must agree."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rule two: let one change cause the next. Writers say every physical feature should cause something somewhere else."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rule 2: One change causes the next"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Guides give examples. A culture on a coast may come to value sailing and trade."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Coast → ships and fishing → trade → a sailing culture"
+   },
+   "cite": [
+    "s20",
+    "s18"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A village sits on a coast. By rule two, what is a likely effect?",
+    "right": "People learn to value sailing and trade",
+    "wrong": [
+     "Nothing changes, because geography never matters",
+     "Everyone becomes a mountain herder",
+     "The village forgets that the sea exists"
+    ],
+    "why": "Writers' guides say culture grows from geography and history. A coastal people would likely come to value sailing and trade."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the invented part. Everything on Nimrod's map is made up for this lesson, so you may change it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "INVENTED: Nimrod's map"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: the land. Hills along the north edge. A forest in the west. The River Nim runs from the hills down the middle."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Paper 20 cm wide, 15 cm tall, north at the top. Compass rose in the top-right corner. Scale bar: 1 cm = 1 km. Hills along the top edge. Forest along the west edge. The River Nim starts in the hills and runs south, bending a little east near the middle."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two: the crossing. A ford, later a wooden bridge, lets the old road cross the river near the middle of the map."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Add the old road. It runs from the forest edge in the west, across a bridge over the River Nim, and on to the east."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three: the castle. We put it on a small hill on the east bank, right beside the crossing."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Add a small hill on the east bank beside the bridge, and a castle symbol on top of it."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why put King Kenny's castle on a hill beside the crossing?",
+    "right": "From the hill, guards can watch and control the crossing",
+    "wrong": [
+     "To be as far from everyone as possible",
+     "To hide from the river",
+     "To grow more crops"
+    ],
+    "why": "Real castles stood by crossings to control traffic and collect tolls. A mound gave a wide view of the countryside and the crossing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four: the village. Flat ground on the west bank by the crossing. It is near water but above the flood, with fields along the river."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Add the village on the west bank beside the bridge, on a gentle rise. Draw fields in strips along both banks of the river."
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who lives where? We choose homes that fit the land. These jobs and homes are our choice for this lesson."
+   },
+   "show": {
+    "kind": "list",
+    "text": "King Kenny, Queen Rose, Princess Jess, Prince Vince: the castle | Sir Michael: the bridge | Jack: the river fields | Dame Gladys, Robin the Joker: the market | Merlin: the forest edge | Nimrod the cat: the riverbank"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step five: the market. Put it where the road meets the bridge, so every traveller walks past."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Add a market square in the village, right where the road reaches the west end of the bridge."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where should the market go?",
+    "right": "Where the road meets the bridge",
+    "wrong": [
+     "High in the northern hills",
+     "Deep in the forest",
+     "On top of the castle hill"
+    ],
+    "why": "Medieval towns grew at crossings and crossroads, where people could sell to passers-by."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step six: the dragon's home. Call it Cold Crag, high in the northern hills, 8 cm north of the village."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Add a jagged crag symbol in the top-left hills, about 8 cm north of the village. Label it Cold Crag."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Our map shows Cold Crag 8 cm north of the village. The scale is 1 cm = 1 km. How far away is it?",
+    "right": "8 km",
+    "wrong": [
+     "8 cm",
+     "80 km",
+     "1 km"
+    ],
+    "why": "Each centimetre stands for 1 kilometre, so 8 cm stands for 8 km."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Count the places we have placed: castle, village, market, bridge and Cold Crag."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "Five places: castle, village, market, bridge, Cold Crag"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, the key and a title: The Village of Nimrod and Its Region. Add a symbol for each place, and leave out the small stuff."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Title: The Village of Nimrod and Its Region | Key: castle, village, market, bridge, Cold Crag, forest, fields | Compass rose | Scale bar: 1 cm = 1 km"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a thought experiment: move the river. We change one thing in our heads, then follow what happens."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thought experiment: move the river"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Say the River Nim now runs 6 km east, past the castle hill. The village stays where it is."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: river beside the village | bridge on the old road | castle watches the crossing || After: river 6 km away | no crossing near the village | castle watches empty ground"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First effect: water. Rivers give drinking water, farmland and fish. The fields lose their easy water."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Effect 1: fields"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second effect: travellers. With no crossing here, fewer people pass by. Markets thrive where travellers pass, so Dame Gladys's stalls go quiet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Effect 2: market"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "After the river moves, which effect is most likely?",
+    "right": "Fewer travellers pass the village, so the market gets quieter",
+    "wrong": [
+     "The dragon grows bigger",
+     "The scale on the map changes",
+     "North moves to the left"
+    ],
+    "why": "Towns grew at crossings because travellers passed through. Without a crossing nearby, fewer travellers come to the market."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third effect: the castle. It stood there to watch the crossing and collect tolls. With no crossing, its job and income change."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Effect 3: castle"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A chain follows. People might slowly move toward the new river. Then the map and every story must be updated: rules one and two together."
+   },
+   "show": {
+    "kind": "list",
+    "text": "River moves → fields dry → market quiet → castle poorer → village may move"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Move the river somewhere new. Write three effects, then check that your map, scale and key still agree."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Move the river | 2. Write three effects | 3. Redraw the map | 4. Check scale and key"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: medieval maps had different jobs, and land and position help explain where towns grow. Maps need a compass, scale and key, and a good map leaves things out. Stay consistent, and let one change cause the next."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Medieval maps: teach, sail, show routes | Site and situation | Compass, scale, key; leave things out | Be consistent; one change causes the next | Nimrod's map and the moved river"
+   },
+   "cite": [
+    "s2",
+    "s5",
+    "s8",
+    "s16",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "What 1 cm on the map stands for (metres on the ground), worked out from the scales in the source",
+   "rows": [
+    {
+     "label": "1:24,000 scale",
+     "value": 240,
+     "source": "s16"
+    },
+    {
+     "label": "1:50,000 scale",
+     "value": 500,
+     "source": "s16"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "mappa mundi",
+   "links": [
+    "[[portolan charts]]",
+    "[[Gough Map]]",
+    "[[where dragons come from]]"
+   ]
+  },
+  {
+   "topic": "portolan charts",
+   "links": [
+    "[[mappa mundi]]",
+    "[[map scale]]"
+   ]
+  },
+  {
+   "topic": "site and situation",
+   "links": [
+    "[[life in a medieval village]]",
+    "[[inside the castle]]",
+    "[[river crossing]]"
+   ]
+  },
+  {
+   "topic": "river crossing",
+   "links": [
+    "[[site and situation]]",
+    "[[the magic market]]"
+   ]
+  },
+  {
+   "topic": "map scale",
+   "links": [
+    "[[map key]]",
+    "[[compass rose]]",
+    "[[leaving things out]]"
+   ]
+  },
+  {
+   "topic": "map key",
+   "links": [
+    "[[map scale]]",
+    "[[compass rose]]"
+   ]
+  },
+  {
+   "topic": "leaving things out (generalization)",
+   "links": [
+    "[[map scale]]",
+    "[[worldbuilding rules]]"
+   ]
+  },
+  {
+   "topic": "worldbuilding rules",
+   "links": [
+    "[[cause and effect]]",
+    "[[what if? thought experiment]]"
+   ]
+  },
+  {
+   "topic": "cause and effect",
+   "links": [
+    "[[worldbuilding rules]]",
+    "[[move the river]]"
+   ]
+  },
+  {
+   "topic": "Nimrod's map",
+   "links": [
+    "[[Cold Crag]]",
+    "[[inside the castle]]",
+    "[[the magic market]]",
+    "[[science of a dragon]]"
+   ]
+  },
+  {
+   "topic": "move the river",
+   "links": [
+    "[[what if? thought experiment]]",
+    "[[cause and effect]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c.1300, when the Hereford Mappa Mundi was made",
+   "elsewhere": "Marco Polo is thought to have dictated his travel account a few years earlier. King Dinis of Portugal (reigned 1279 to 1325) began an export policy that ultimately led to Portugal's age of discovery.",
+   "cite": [
+    "s21"
+   ]
+  },
+  {
+   "when": "1066 to 1190",
+   "elsewhere": "About 100 new towns were created in England and Wales. Some prospered and some failed.",
+   "cite": [
+    "s11"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Medieval maps were primitive and inaccurate.",
+   "other_view": "Mappae mundi were schematic, meant to illustrate ideas and stories rather than to navigate or measure land and water. Judging them as route maps misses their job. Experts also say the Hereford map's original context and purpose are lost, so interpretations are difficult.",
+   "cite": [
+    "s2",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The Gough Map is Britain's oldest road map.",
+   "other_view": "The Bodleian-linked description calls it the earliest surviving map of Britain to show routes, and modern overlays show much of it is accurate. A later study notes that its route network does not cover the whole map or show every main route. It therefore could not have worked as a wayfinding aid in the sense that the term 'road map' suggests.",
+   "cite": [
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Geography decides where towns grow.",
+   "other_view": "Site and situation matter, but they are not the whole story. Kings and churches also planned towns, such as Salisbury beside a new cathedral, and some of the new medieval towns failed. A place's situation can change over time, so a good situation can let a town grow beyond what its site alone would suggest.",
+   "cite": [
+    "s11",
+    "s8"
+   ]
+  },
+  {
+   "claim": "You should plan the whole world map before you write.",
+   "other_view": "Planning from the top down gives the most consistent world, but it can take months before any story is written. Other writers start small, with one village, or mix the two approaches. These are craft preferences, not facts.",
+   "cite": [
+    "s20"
+   ]
+  }
+ ]
+}

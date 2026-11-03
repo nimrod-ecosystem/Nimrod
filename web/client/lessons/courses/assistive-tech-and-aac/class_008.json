@@ -1,0 +1,1121 @@
+{
+ "about": {
+  "title": "How to support a communicator",
+  "course": "assistive-tech-and-aac",
+  "class_n": 8,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "This class runs about 10 minutes over the usual 30. It covers ten topics: six core habits, plus equipment, family, self-care and four scenarios. Each idea gets its own short step and check question, so I did not squeeze them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Communication Bill of Rights, 3rd Edition",
+   "publisher": "National Joint Committee for the Communication Needs of Persons With Severe Disabilities (NJC), hosted by ASHA",
+   "date": "2024",
+   "link": "https://www.asha.org/njc/communication-bill-of-rights/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Communication Bill of Rights (3rd Edition): Guidance for Advocacy and Practice",
+   "publisher": "NJC, hosted by ASHA",
+   "date": "2025",
+   "link": "https://www.asha.org/siteassets/njc/njc-communication-bill-of-rights-guidance-for-advocacy-and-practice.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "AAC Devices in Schools: Teacher Tips for Classroom Inclusion",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "2026",
+   "link": "https://www.asha.org/news/2026/back-to-school-aac-classroom-tips/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Back-to-School: Tips for Supporting Students Who Use AAC Devices (press release)",
+   "publisher": "ASHA via PR Newswire",
+   "date": "2026-08-13",
+   "link": "https://www.prnewswire.com/news-releases/back-to-school-tips-for-supporting-students-who-use-aac-devices-302850926.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Why Give People Who Use AAC More Communication Time",
+   "publisher": "The ASHA Leader",
+   "date": "2020",
+   "link": "https://leader.pubs.asha.org/do/10.1044/2020-1016-aac-awareness/full/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "From Frustration to Understanding: An AAC Story of Presuming Potential",
+   "publisher": "The ASHA Leader",
+   "date": "2025",
+   "link": "https://leader.pubs.asha.org/do/10.1044/leader.FTR2.30032025.AAC-presumed-potential.46/full/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Pitfalls of Presumptions: Two AAC clinicians explore how the 'presumed competence' framework can lead to problematic communication system selection",
+   "publisher": "The ASHA Leader",
+   "date": "2018",
+   "link": "https://leader.pubs.asha.org/doi/10.1044/leader.FMP.23122018.10",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Please Don't Leave My Voice on the Shelf: 5 Tips to Improve AAC Use in School",
+   "publisher": "The ASHA Leader",
+   "date": "undated",
+   "link": "https://leader.pubs.asha.org/do/10.1044/please-dont-leave-my-voice-on-the-shelf-5-tips-to-improve-aac-use-in-school/full/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Aided Language Modeling",
+   "publisher": "University of Kentucky Human Development Institute (Ky Speaks AAC)",
+   "date": "undated",
+   "link": "https://hdi.uky.edu/ky-speaks-aac/aided-language-modeling",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Aided Language Stimulation",
+   "publisher": "AssistiveWare",
+   "date": "undated",
+   "link": "https://www.assistiveware.com/learn-aac/aided-language-stimulation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Communication partner skills for AAC learners",
+   "publisher": "AssistiveWare",
+   "date": "undated",
+   "link": "https://www.assistiveware.com/learn-aac/build-communication-partner-skills",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Planning for communication when AAC is not available",
+   "publisher": "AssistiveWare",
+   "date": "undated",
+   "link": "https://www.assistiveware.com/learn-aac/planning-communication-when-aac-is-not-available",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Emergency Preparation for AAC Users",
+   "publisher": "BridgingApps",
+   "date": "undated",
+   "link": "https://bridgingapps.org/emergency-preparation-for-aac-users/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Right to Ask For or Refuse Objects, Actions, Events, and People (Right #8)",
+   "publisher": "NWACS (Northwest AAC Communication Supports)",
+   "date": "undated",
+   "link": "https://nwacs.info/aac/basics/communication-bill-of-rights/right-to-request-and-refuse/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "2022 in Review - The Communication Bill of Rights",
+   "publisher": "NWACS",
+   "date": "2022",
+   "link": "https://nwacs.info/blog/2022/12/2022-in-review-the-communication-bill-of-rights",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The Right to Make Choices From Meaningful Options (Right #10)",
+   "publisher": "NWACS",
+   "date": "undated",
+   "link": "https://nwacs.info/aac/basics/communication-bill-of-rights/right-to-make-choices/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Augmentative and alternative communication (AAC) overview",
+   "publisher": "Royal College of Speech and Language Therapists (RCSLT)",
+   "date": "undated",
+   "link": "https://www.rcslt.org/speech-and-language-therapy/clinical-information/augmentative-and-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Augmentative and Alternative Communication (AAC)",
+   "publisher": "NJC, hosted by ASHA",
+   "date": "undated",
+   "link": "https://www.asha.org/njc/aac/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Caregiver burnout: Early signs, self-care strategies and finding support",
+   "publisher": "Baylor Scott & White Health",
+   "date": "undated",
+   "link": "https://www.bswhealth.com/blog/caregiver-burnout-early-signs-self-care-strategies-finding-support",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Right to Individualized, Working AAC Systems and Other Assistive Technology at All Times (Right #12)",
+   "publisher": "NWACS",
+   "date": "undated",
+   "link": "https://nwacs.info/aac/basics/communication-bill-of-rights/right-to-working-aac-assistive-technology-at-all-times/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "AAC is a Team Sport: Why Collaboration Matters",
+   "publisher": "NWACS",
+   "date": "undated",
+   "link": "https://nwacs.info/community/supporters/team-collaboration/aac-team-sport-why-collaboration-matters/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Aided Language Input: Communication Partner Strategies",
+   "publisher": "Anna Ollinger Speech Therapy",
+   "date": "undated",
+   "link": "https://annaospeech.com/blog/aided-language-input-communication-partner-strategies",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Self-Care Tips to Prevent Caregiver Burnout",
+   "publisher": "Community of Hope (ch-dc.org)",
+   "date": "undated",
+   "link": "https://ch-dc.org/self-care-for-caregivers/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Behaviours that challenge: a message to decode with AAC",
+   "publisher": "Pictalk",
+   "date": "undated",
+   "link": "https://www.pictalk.org/en/article/behaviours-that-challenge-message-aac/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "More Than Asking for Things: Giving AAC Users a Real Voice",
+   "publisher": "Project HAANS",
+   "date": "undated",
+   "link": "https://projecthaans.com/more-than-asking-for-things-giving-aac-users-a-real-voice/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Attention & AAC systems",
+   "publisher": "Meaningful Speech",
+   "date": "undated",
+   "link": "https://www.meaningfulspeech.com/blog/attention-and-aac",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Why We Need to Presume Competence with AAC",
+   "publisher": "Sparking Speech",
+   "date": "2024",
+   "link": "https://sparkingspeech.com/2024/03/18/why-we-need-to-presume-competence-with-aac/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "AAC Behavior Management: Supporting Communication During Challenging Behaviors",
+   "publisher": "AbleNet",
+   "date": "undated",
+   "link": "https://support.ablenetinc.com/aac-education-and-resources/ableteams/aac-behavior-management/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "AACtual Therapy: Using Aided Language Modeling",
+   "publisher": "PrAACtical AAC",
+   "date": "undated",
+   "link": "https://praacticalaac.org/praactical/aactual-therapy-using-aided-language-modeling/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Presuming Competence: A Neuro-Affirming Reframe To Support Autistic People",
+   "publisher": "Autistic Realms",
+   "date": "undated",
+   "link": "https://autisticrealms.com/presuming-competence-a-neuro-affirming-reframe-to-support-autistic-people/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "AAC Device Setup Guide for Everyday Communication",
+   "publisher": "USA Speech Tablets",
+   "date": "undated",
+   "link": "https://usaspeechtablets.com/blogs/news/aac-device-setup-guide",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "National Joint Committee for the Communication Needs of Persons With Severe Disabilities (NJC)",
+   "publisher": "ASHA",
+   "date": "undated",
+   "link": "https://www.asha.org/njc/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 8. This is the hands-on class: what you can do, starting this week, to support someone who uses AAC."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How to support a communicator"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One promise first. This is general learning, not clinical advice. For one person's needs, a speech-language pathologist, or SLP, is the right guide. Class 9 shows how to reach one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "SLP: speech-language pathologist"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By the end you will have six practical habits, and you will know the habits that get in the way. Here is the road map."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Speak to the person\n2. Give time and wait\n3. Model on their system\n4. Keep the voice within reach\n5. Accept all communication\n6. Offer real choices and a chance to say no"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, who are you in all this? You are a communication partner: anyone who talks with a person who uses AAC. Family, carers, friends, neighbours. Anyone can be one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Communication partner"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Habit 1: speak to the person, not about them. Look at them, use their name, and ask your question straight to them."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Habit 1: Speak to the person, not about them"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is also a right. The NJC is a committee of eight organisations, including ASHA. Its Communication Bill of Rights, third edition from 2024, says it plainly."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The right to be addressed directly and not be spoken for or talked about as if not there."
+   },
+   "cite": [
+    "s1",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Behind this habit is an idea: presume competence. It means we believe the person has thoughts, feelings and things to say, even when we can't yet see how they will say them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Presume competence"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. A neighbour asks you, 'Does Sam want tea?' Sam is sitting right there, with his device. What do you do?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A neighbour at the door looks at Sam's carer. Sam sits in an armchair with his communication device on his lap."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A neighbour asks, 'Does Sam want tea?' Sam is right there. What is the best response?",
+    "right": "Turn to Sam, ask him, and give him time to answer.",
+    "wrong": [
+     "Answer for Sam, because you know him best.",
+     "Tell the neighbour to ask again later, when Sam is not around.",
+     "Say nothing and make the tea anyway."
+    ],
+    "why": "The Bill of Rights says people have the right to be addressed directly, and not spoken for or talked about as if they are not there."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You turned to Sam. Now, habit 2. If you believe he has something to say, you will wait for it. One SLP puts it this way: when you presume someone has something to say, you wait longer."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "clock",
+    "count": 1,
+    "layout": "row",
+    "text": "Habit 2: Give time and wait"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why wait? Using AAC takes longer. The person finds the words, builds the message, then sends it. If we rush, people may shrink their thoughts to a word or two, or pull back from talking."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Find the words\nBuild the message\nSend it\nThen we reply"
+   },
+   "cite": [
+    "s11",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So resist finishing sentences. Picture Alex building a message on his device. You think you know the end. Stay quiet, look interested, and let him finish."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Don't finish the sentence"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Alex is building a message on his device. You think you know how it ends. What do you do?",
+    "right": "Wait quietly until he finishes, then check you understood.",
+    "wrong": [
+     "Say the end of the sentence to save time.",
+     "Ask him to hurry up.",
+     "Walk away so he has privacy."
+    ],
+    "why": "Guessing can get the message wrong, and repeated mistakes can make people pull back from conversation. Waiting, then checking, protects the message."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How long is long enough? It depends on the person. One SLP notes that 45 seconds can be enough for some. A written plan can note a person's usual pause. Before you move on, check you understood."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "45 seconds"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Habit 3 has a long name: aided language input, also called modelling. You speak as usual, and you also touch the symbols or words on the person's device or board."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A parent says 'Let's go outside' while touching the GO and OUTSIDE symbols on a communication board. The child watches."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why bother? It shows how the system works in real conversation, and the person does not have to answer. A University of Kentucky guide calls it evidence-based, and more successful than spoken prompts alone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Show, don't test"
+   },
+   "cite": [
+    "s21",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How to do it, from that guide: speak slowly, point to the symbols or words, stress the key words, pause often, and wait for the person to join in."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Speak slowly\nPoint to symbols or words\nStress the key words\nPause often\nWait for the person to join in"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two reminders. You don't need to model every word, and it is not a test. Now try it. Priya uses a symbol board, and you are talking about lunch."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two people at a kitchen table. A symbol board sits between them, with WANT and SOUP in view."
+   },
+   "cite": [
+    "s22",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Priya uses a symbol board, and you are talking about lunch. Which one is aided language input?",
+    "right": "Say 'Do you want soup?' while touching WANT and SOUP on her board.",
+    "wrong": [
+     "Say it aloud only, very slowly.",
+     "Ask her to point to every symbol to prove she knows it.",
+     "Take her hand and press the symbols for her."
+    ],
+    "why": "Aided language input means showing the message on her own system as you speak. It is showing, not testing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Habit 4: keep the voice within reach. ASHA wrote this line for schools, but it fits every setting. It is also a right: right 12 is to have working AAC and other assistive technology at all times."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Where the student goes, their AAC goes."
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That leads to a hard rule. Never use the device as a reward or a punishment. The NJC guidance says to avoid removing or changing AAC as punishment. An SLP in the ASHA Leader says use ordinary rewards instead."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Never a reward. Never a punishment."
+   },
+   "cite": [
+    "s2",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture a teenager who has had a hard afternoon. A parent says, 'No device until you calm down.' What does the guidance suggest instead?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A teenager sits on a sofa with a communication device on the cushion beside them. A parent stands nearby."
+   },
+   "cite": [
+    "s2",
+    "s8",
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A parent says, 'No device until you calm down.' What does the guidance suggest instead?",
+    "right": "Keep the device within reach and use calming strategies the person prefers.",
+    "wrong": [
+     "Take it away for an hour, then give it back.",
+     "Take it away and return it as a reward for good behaviour.",
+     "Hide it so it cannot be thrown."
+    ],
+    "why": "The NJC guidance says to avoid removing AAC as punishment or behaviour management. AbleNet also says never take the device away, and suggests preferred calming strategies."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if a device gets thrown or damaged? Still don't take it away. AbleNet suggests shoulder straps or cross-body carrying, and a low-tech backup."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shoulder strap or cross-body carry\nCalming strategies the person likes\nLow-tech backup\nNever remove the device"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Habit 5: accept all communication. People say things with sounds, gestures, looks, faces and body movement, as well as with a device. The RCSLT says all forms should be valued and listened to."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sounds\nGestures\nLooks and eye pointing\nFace and body movement\nThe device or board"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Accepting means responding. Right 4 says everyone gets a response to their communication, even when the answer is 'not possible'. A good way: say what you think they meant, and show it on their system."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Respond to every message"
+   },
+   "cite": [
+    "s1",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try it. You offer Marco a spoonful. He turns his head away and makes a short sound. What is your best response?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A man in a wheelchair turns his face away from a spoon held out to him."
+   },
+   "cite": [
+    "s17",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You offer Marco a spoonful. He turns his head away and makes a short sound. What is the best response?",
+    "right": "Treat it as a message. Say 'You turned away. Do you want to stop?' and wait.",
+    "wrong": [
+     "Ignore it, because he did not use his device.",
+     "Wait until he uses the device before you respond.",
+     "Offer the spoon again straight away."
+    ],
+    "why": "The RCSLT says all forms of communication should be valued, and the Bill of Rights says all communication deserves a response."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Habit 6: offer real choices. Right 10 is the right to make choices from meaningful options. A real choice is one you can honour straight away."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Real choice: 'Tea or juice?' with both ready.\nNot a real choice: 'Tea or juice?' when there is only tea."
+   },
+   "cite": [
+    "s1",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two tips. First, give the person a chance to say what they want before you offer a list. Second, add a 'something different' option, because their wish may not be on the list."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Let them try first\nThen offer a few real options\nAdd 'something different'"
+   },
+   "cite": [
+    "s16",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the chance to say no. Refusal is not only the word 'no'. It can be 'not right now' or 'I'm not ready'. It matters for control, and for safety and consent."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The right to say no"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Partners can help. Always acknowledge a request, and honour a refusal whenever possible. Pictalk suggests keeping NO, STOP, ALL DONE and HELP one touch away on every page."
+   },
+   "show": {
+    "kind": "list",
+    "text": "NO\nSTOP\nALL DONE\nHELP"
+   },
+   "cite": [
+    "s14",
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why does the right to say 'no' matter so much?",
+    "right": "It gives people control over their lives, and 'stop' or 'I don't like that' matter for consent and safety.",
+    "wrong": [
+     "It makes the person easier to manage.",
+     "It is only useful for fun or play.",
+     "It only matters for children."
+    ],
+    "why": "Being able to say 'not right now', 'stop' and 'no' gives control, and it is crucial for consent and safety."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Honouring 'no' does not always mean getting your way. A child might say 'no school' and still go. The difference is hearing someone versus granting everything. When you can't say yes, offer control inside the limit, like which drink goes with the medicine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hear it. Offer control inside the limit."
+   },
+   "cite": [
+    "s25",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the people around the person. Teaching partners has been shown to improve outcomes. Three things help: patience, consistency and a shared vocabulary."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Patience\nConsistency: use the person's system regularly\nShared vocabulary: everyone learns where words live"
+   },
+   "cite": [
+    "s21",
+    "s11",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Start small. Pick one routine or a few words so everyone feels successful. Write the person's usual pause into their plan, so newcomers know. Quick check on sharing the words."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Start small"
+   },
+   "cite": [
+    "s29",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why share the person's vocabulary with family, friends and support workers?",
+    "right": "So everyone uses the same words in the same places, and the person gets steady practice.",
+    "wrong": [
+     "So others can speak for the person.",
+     "So only one person ever has to learn the system.",
+     "So nobody needs to wait for a message."
+    ],
+    "why": "Consistency means using the person's system regularly and reliably. Modelling also helps partners learn the vocabulary."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the equipment. A voice is no use with a flat battery. ASHA says AAC devices are not optional accessories. Pick one charging spot the person can reach, and check the battery before appointments and outings."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Look after the equipment"
+   },
+   "cite": [
+    "s3",
+    "s31"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Keep a backup. Print screenshots of key pages and laminate them, or keep them in a binder. Practise with it so it isn't new on a bad day. In an emergency bag, add extra boards, and spare batteries if the device uses them. Keep the digital device charged too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Printed copy of key pages\nPractise with it\nExtra boards in the emergency bag\nSpare batteries, if the device uses them\nKeep the device charged"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more backup: the programming itself. Save an electronic copy, so personal words can be reloaded after a repair. Now a check. Jo has an appointment in an hour, and her device shows 5% battery."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Back up the programming"
+   },
+   "cite": [
+    "s20",
+    "s3",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Jo has an appointment in an hour. Her device shows 5% battery. What is the best plan?",
+    "right": "Charge it now, bring the charger, and bring a paper copy of key pages.",
+    "wrong": [
+     "Leave the device at home and let the staff guess.",
+     "Hope the clinic has a board she can use.",
+     "Skip the appointment."
+    ],
+    "why": "Check the battery before appointments, and keep a low-tech backup in case the device fails or the power goes out."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now you. You do not need to be a technology expert. ASHA's president says to be willing to learn, speak to the person directly, and welcome every effort to communicate."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Look after yourself"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Carers get tired. Burnout is physical, mental and emotional exhaustion from long stress. Ask for help before you reach breaking point, and share tasks, including everyday ones like shopping or paperwork."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask for help early"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Isolation is a strong predictor of burnout. So reach out to friends, a support group or a counsellor. Ask someone to stay with your loved one so you can attend your own appointments. Caring for yourself is not selfish."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Friends\nSupport group\nCounsellor\nRespite: someone to stay while you rest or attend appointments"
+   },
+   "cite": [
+    "s19",
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A carer has not seen friends for months and sleeps badly. What does the guidance suggest?",
+    "right": "Ask for help early, reconnect with people, and consider a support group, counsellor or respite.",
+    "wrong": [
+     "Push on, because asking for help is selfish.",
+     "Wait until you cannot cope any more.",
+     "Do even more yourself so nobody else has to learn."
+    ],
+    "why": "Isolation is a strong predictor of burnout. Asking early, connecting with others and taking breaks all help, and looking after yourself helps you care better."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's practise with four scenarios. Think first, then check. Scenario one: mealtimes. Everyone talks across the table. Dee pushes her plate away."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Scenarios to talk through: mealtimes"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "At a family meal, Dee pushes her plate away while others talk across the table. What helps most?",
+    "right": "Treat the push as a message, check what she means, offer a real choice including 'something different', and keep her device on the table.",
+    "wrong": [
+     "Keep eating and wait until she uses her device correctly.",
+     "Take the plate away without asking.",
+     "Put the device away until the meal is over."
+    ],
+    "why": "All forms of communication count, choices should be real and include a 'something different' option, and the device stays within reach."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scenario two: an appointment. The doctor looks only at you, the carer, and talks about the patient."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A consulting room. The doctor faces the carer. The patient sits between them, holding a charged device."
+   },
+   "cite": [
+    "s1",
+    "s15",
+    "s31"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "At an appointment the doctor speaks only to you. What is a good move?",
+    "right": "Kindly ask the doctor to speak to the person directly, explain they may need time, and have the device charged and ready.",
+    "wrong": [
+     "Answer for them to save time.",
+     "Let the doctor carry on, since it is quicker.",
+     "Tell the doctor the device is only for home."
+    ],
+    "why": "People have the right to be addressed directly, and to be active conversation partners at medical appointments."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scenario three: a noisy family gathering. Many relatives, a lot of sound, and everyone wants to talk to Sam."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A crowded living room with many people. Sam sits near the edge with his device and board."
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s24",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "At a noisy family gathering, which plan fits the habits best?",
+    "right": "Ask relatives to talk to the person directly, wait, and use the board. Keep the device in reach, and agree a way to say 'break' or 'all done'.",
+    "wrong": [
+     "Keep the device in a bag so it does not get lost.",
+     "Have one relative speak for the person all evening.",
+     "Skip the gathering so nobody has to wait."
+    ],
+    "why": "People have the right to take part across settings. Loud, crowded places can overwhelm, so a way to say 'break' or 'all done' helps. The device stays within reach."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scenario four: play and friendships. A game night with friends. The game moves fast."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Four friends around a table with a board game. One friend's communication device sits next to their game pieces."
+   },
+   "cite": [
+    "s1",
+    "s9",
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "At a game night with friends, what best supports friendship?",
+    "right": "Let friends model on the board and wait for replies. Keep the device with the person, and make room for jokes and comments, not only requests.",
+    "wrong": [
+     "Let an adult speak for the person to keep the game moving.",
+     "Keep the device away so it does not distract from the game.",
+     "Only include words for asking for things."
+    ],
+    "why": "People have the right to build relationships. Peers can model too, and a voice that only makes requests is too small."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the whole class on one page: what to do, and what to leave behind."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Do: speak to the person; wait; model on their system; keep the device within reach; accept every kind of message; offer real choices and a chance to say no.\nLeave behind: talking about them over their head; finishing their sentences; testing them; taking the device away; ignoring looks and gestures; fake choices."
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s2",
+    "s17",
+    "s16"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is NOT a good habit?",
+    "right": "Taking the device away until the person calms down.",
+    "wrong": [
+     "Waiting quietly while a message is built.",
+     "Touching symbols on the board as you speak.",
+     "Responding to a look or a gesture."
+    ],
+    "why": "The NJC guidance says to avoid removing AAC as punishment or behaviour management. The other three are good habits."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Six habits: speak to the person, wait, model, keep it within reach, accept all communication, and offer real choices. Look after the kit and yourself too. Next is class 9: getting professional help."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: class 9, getting professional help"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Speak to the person",
+   "links": [
+    "[[Presume competence]]",
+    "[[Right to be addressed directly]]"
+   ]
+  },
+  {
+   "topic": "Presume competence",
+   "links": [
+    "[[Give time and wait]]",
+    "[[Presume potential]]"
+   ]
+  },
+  {
+   "topic": "Give time and wait",
+   "links": [
+    "[[Wait time is individual]]",
+    "[[Confirm understanding]]"
+   ]
+  },
+  {
+   "topic": "Aided language input",
+   "links": [
+    "[[Core and fringe vocabulary]]",
+    "[[Symbol sets and how pages are laid out]]"
+   ]
+  },
+  {
+   "topic": "Keep the device available",
+   "links": [
+    "[[Never a reward or a punishment]]",
+    "[[Low-tech backup]]"
+   ]
+  },
+  {
+   "topic": "Accept all communication",
+   "links": [
+    "[[Eye gaze and other ways to access a device]]",
+    "[[Respond to every message]]"
+   ]
+  },
+  {
+   "topic": "Real choices and saying no",
+   "links": [
+    "[[Communication Bill of Rights]]"
+   ]
+  },
+  {
+   "topic": "Equipment care",
+   "links": [
+    "[[Low-tech backup]]",
+    "[[Switches and scanning]]"
+   ]
+  },
+  {
+   "topic": "Looking after yourself as a carer",
+   "links": [
+    "[[Getting professional help and what to do next]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Always presume competence.",
+   "other_view": "Two clinicians writing in the ASHA Leader say the phrase can be taken too far. They have seen it used to justify choosing a system from a diagnosis alone, and they note that questioning it does not mean presuming incompetence. A 2025 ASHA Leader piece uses the wording 'presuming potential'. One autistic writer argues that high expectations without the right supports can set people up to fail.",
+   "cite": [
+    "s7",
+    "s6",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Honour every 'no'.",
+   "other_view": "Writers on AAC separate hearing a person from always granting the request. Sometimes a refusal cannot be accepted, such as medicine or school. The advice is to acknowledge it and offer control inside the limit.",
+   "cite": [
+    "s25",
+    "s24"
+   ]
+  },
+  {
+   "claim": "Model without expecting a reply.",
+   "other_view": "Some SLPs stress that modelling is input, not testing, and should place no demand on the person. Other guides list prompting among the skills partners should learn, along with modelling, waiting and responding. Which mix fits one person is a question for their SLP.",
+   "cite": [
+    "s22",
+    "s11"
+   ]
+  }
+ ]
+}

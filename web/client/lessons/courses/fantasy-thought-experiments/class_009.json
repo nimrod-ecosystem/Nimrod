@@ -1,0 +1,932 @@
+{
+ "about": {
+  "title": "Science of a Wizard: Energy, Chemistry and Evidence",
+  "course": "fantasy-thought-experiments",
+  "class_n": 9,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 32,
+  "length_note": "About 32 minutes. This class has three real-science ideas (energy, chemistry, fair tests) plus Merlin's invented rules, and each idea gets a short check question. Pause after any check if you want more time, or skip the 'other side' notes on a first pass."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Ch. 7 Introduction to Work, Energy, and Energy Resources - College Physics 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-physics-2e/pages/7-introduction-to-work-energy-and-energy-resources",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Ch. 7 Connection for AP Courses - College Physics for AP Courses 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/college-physics-ap-courses-2e/pages/7-connection-for-ap-r-courses",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Laws of energy - Energy Kids",
+   "publisher": "U.S. Energy Information Administration (EIA)",
+   "date": "n.d.",
+   "link": "https://www.eia.gov/kids/what-is-energy/laws-of-energy.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Laws of Thermodynamics",
+   "publisher": "Lumen Learning (SUNY Biology 2e course)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-osbiology2e/chapter/the-laws-of-thermodynamics/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Calories and kilojoules: how do we know the energy content of food, and how accurate are the labels?",
+   "publisher": "School of Public Health, University of Queensland",
+   "date": "2023-08",
+   "link": "https://public-health.uq.edu.au/article/2023/08/calories-and-kilojoules-how-do-we-know-energy-content-food-and-how-accurate-are-labels",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Kilojoules",
+   "publisher": "healthdirect (Australian Government)",
+   "date": "n.d.",
+   "link": "https://www.healthdirect.gov.au/kilojoules",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Joules for lamps - how much energy does my light really consume?",
+   "publisher": "leuchtstark.de",
+   "date": "n.d.",
+   "link": "https://www.leuchtstark.de/en/lexicon/joules-for-lamps-how-much-energy-does-my-light-really-consume.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Secrets of Alchemy",
+   "publisher": "Science History Institute",
+   "date": "n.d.",
+   "link": "https://www.sciencehistory.org/stories/magazine/the-secrets-of-alchemy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Al-Kimiya: Notes on Arabic Alchemy",
+   "publisher": "Science History Institute",
+   "date": "2007-10-16",
+   "link": "https://www.sciencehistory.org/stories/magazine/al-kimiya-notes-on-arabic-alchemy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Alchemy - Transmutation, Elixir, Philosopher's Stone (The chemistry of alchemy)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/alchemy/The-chemistry-of-alchemy",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The Secrets of Alchemy",
+   "publisher": "The Mystery of Matter (mysteryofmatter.net)",
+   "date": "n.d.",
+   "link": "https://www.mysteryofmatter.net/alchemy.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Antoine-Laurent Lavoisier",
+   "publisher": "Science History Institute",
+   "date": "n.d.",
+   "link": "https://www.sciencehistory.org/education/scientific-biographies/antoine-laurent-lavoisier/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "ALICE detects the conversion of lead into gold at the LHC",
+   "publisher": "CERN",
+   "date": "2025-05-08",
+   "link": "https://home.cern/alice-detects-conversion-lead-gold-lhc/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Physicists turn lead into gold - for a fraction of a second",
+   "publisher": "Nature (news)",
+   "date": "2025-05-09",
+   "link": "https://www.nature.com/articles/d41586-025-01501-5",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Commission Royale. Bailly A (1784)",
+   "publisher": "The James Lind Library",
+   "date": "n.d. (report from 1784)",
+   "link": "https://www.jameslindlibrary.org/commission-royale-bailly-a-1784/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Franklin, Lavoisier, and Mesmer: Origin of the controlled clinical trial",
+   "publisher": "ScienceDirect (journal article abstract)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S1078143905000220",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "He Blinded Me with Science",
+   "publisher": "Lapham's Quarterly",
+   "date": "n.d.",
+   "link": "https://www.laphamsquarterly.org/roundtable/he-blinded-me-science",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "What Is a Controlled Experiment?",
+   "publisher": "Simply Psychology",
+   "date": "n.d.",
+   "link": "https://www.simplypsychology.org/controlled-experiment.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Selection of Control, Randomization, Blinding, and Allocation Concealment",
+   "publisher": "PubMed Central (PMC)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6743387/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The oxygen revolution",
+   "publisher": "Chemistry World",
+   "date": "n.d.",
+   "link": "https://www.chemistryworld.com/news/the-oxygen-revolution/3003970.article",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Conservation of energy",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Conservation_of_energy",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "225th Anniversary: Death of Antoine Lavoisier",
+   "publisher": "ChemistryViews",
+   "date": "n.d.",
+   "link": "https://www.chemistryviews.org/details/ezine/11152154/225th_Anniversary_Death_of_Antoine_Lavoisier/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is today's puzzle. Merlin snaps his fingers, and the lamp in the castle hall lights up. Where did the energy come from?"
+   },
+   "show": {
+    "kind": "objects",
+    "object": "lamp",
+    "count": 1,
+    "layout": "row",
+    "text": "One lamp in the castle hall, newly lit by Merlin"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To answer it fairly, we will use real science. I will tell you which parts are REAL and which are INVENTED."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL: energy and where it goes | REAL: chemistry, and what alchemists got right and wrong | REAL: how to run a fair test | INVENTED: Merlin's rules for spells"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, energy. Physicists loosely say energy is the ability to do work, which means to push, heat or light things."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Energy"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Energy comes in many forms, such as heat, light, motion, and chemical energy stored in food."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Heat | Light | Motion | Chemical energy stored in food"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the big rule. Energy changes from one form to another, but it never appears from nothing."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Energy can change forms, but it cannot appear from nothing or disappear without a trace."
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take Mike climbing the castle stairs after lunch. The energy stored in his lunch changes into motion and warmth."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Mike on the castle stairs. An arrow runs from his lunch (chemical energy) to his legs (motion) and to his warm skin (heat)."
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Mike eats a meal, then climbs the castle stairs. Where did the energy for climbing come from?",
+    "right": "From energy stored in his food, which his body changed into motion and heat.",
+    "wrong": [
+     "The stairs made new energy for him.",
+     "His body made it from nothing.",
+     "Energy gets used up and disappears, so it came from nowhere."
+    ],
+    "why": "Energy is not made from nothing and does not vanish. It changes form, here from the food's stored chemical energy into motion and heat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Is this just a saying? No. It rests on experiments, and every new form of energy found so far has obeyed it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Based on experiment"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a real example. Two scientists, Du Chatelet and 's Gravesande, dropped lead balls into clay. A ball dropped at twice the speed sank four times as deep."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A heavy lead ball dropped onto a bed of soft clay. A second ball, going twice as fast, leaves a hole four times as deep."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a second fact. In every real energy change, some energy turns into heat that is hard to use. Nothing is perfectly efficient."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Some always becomes heat"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "In real physics, a lamp changes stored energy into light. Can all of that energy become light?",
+    "right": "No. In every real energy change, some of it ends up as heat that is hard to use.",
+    "wrong": [
+     "Yes, if the lamp is kept clean.",
+     "Yes, but only in daylight.",
+     "No, the rest is destroyed."
+    ],
+    "why": "No real energy change is completely efficient. The rest is not destroyed. It becomes heat."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To count energy we need units. Scientists count energy in joules. A watt is a joule each second."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Joule (J): an amount of energy | Watt (W): energy per second, so 1 W = 1 J every second"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The sum is simple: energy equals watts times seconds. A 10-watt lamp running for one hour uses 10 times 3,600 seconds, which is 36,000 joules."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "36,000 J"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A 10-watt lamp runs for 10 seconds. How much energy does it use?",
+    "right": "100 joules",
+    "wrong": [
+     "10 joules",
+     "1 joule",
+     "1,000 joules"
+    ],
+    "why": "Energy is watts times seconds. 10 watts times 10 seconds is 100 joules."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Lamps differ a lot. One source says an 8-watt LED gives about the same light as an old 60-watt bulb. The LED uses far less energy each hour."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Energy for one hour of lamp light"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Food is counted in kilocalories. One kilocalorie is about 4.2 kilojoules, and an average adult needs about 8,700 kilojoules a day."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "8,700 kJ a day (average adult)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now compare. 36,000 joules is 36 kilojoules. Out of 8,700, one hour of a 10-watt lamp is under half of one percent of a day's food."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "One hour of a 10 W lamp: 36 kJ | One day of an adult's food: 8,700 kJ"
+   },
+   "cite": [
+    "s7",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "About how much of a day's food energy would one hour of a 10-watt lamp take?",
+    "right": "A tiny part, under 1 percent.",
+    "wrong": [
+     "About half of it.",
+     "All of it.",
+     "More than a whole day's worth."
+    ],
+    "why": "36 kJ divided by 8,700 kJ is about 0.4 percent, so a lamp-hour is a very small bite of a day's food."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to the puzzle. Real science allows stored energy, such as Merlin's lunch, a burning log or sunlight. It does not allow energy from nothing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Allowed: energy stored in Merlin's food, in a burning log, in stored sunlight | Not allowed: new energy made from nothing"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which source of the lamp's energy does the law of conservation of energy NOT allow?",
+    "right": "New energy made from nothing.",
+    "wrong": [
+     "Energy stored in Merlin's lunch.",
+     "Energy stored in a burning log.",
+     "Energy stored in sunlight."
+    ],
+    "why": "Energy can be moved from a store and changed in form. It cannot be made from nothing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now chemistry. Alchemy is a real part of history. It began in late antiquity, and Arabic alchemists made large contributions."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "REAL: Alchemy and chemistry"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Alchemists got a lot right. They found mineral acids, invented distillation and flasks, and met new elements. Brandt found phosphorus by accident in 1669 while hunting for gold."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mineral acids such as nitric and sulfuric acid | Distillation and lab tools like flasks | Pigments, medicines and perfumes | Phosphorus, found by accident in 1669"
+   },
+   "cite": [
+    "s10",
+    "s9",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these did alchemists really give us?",
+    "right": "Distillation and lab tools such as flasks.",
+    "wrong": [
+     "A working recipe to turn lead into gold.",
+     "A potion of immortality that worked.",
+     "The law of conservation of energy."
+    ],
+    "why": "Alchemists invented real techniques and tools still used in labs. They never made gold from lead with chemistry."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What did they get wrong? They thought metals were mixes of a few basic principles, so changing the mix should change the metal. But lead and gold are different elements."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Alchemists thought: change the mix, change the metal | Chemistry shows: lead and gold are different elements, and chemical methods cannot turn one into the other"
+   },
+   "cite": [
+    "s11",
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why can't mixing and heating turn lead into gold?",
+    "right": "Lead and gold are different elements, and chemical methods cannot change one into the other.",
+    "wrong": [
+     "The alchemists never heated it hot enough.",
+     "Gold is too heavy to make.",
+     "Nobody has ever tried hard enough."
+    ],
+    "why": "Chemical methods rearrange materials but cannot change one element into another."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a surprise. Modern physics has turned lead into gold. In 2025 CERN measured it, by knocking three protons out of lead in a giant collider."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 protons removed: lead (82) becomes gold (79)"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But there is a catch. The gold lasted a tiny fraction of a second, and the total was about 29 trillionths of a gram. A gold spell would have a huge price."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "29 trillionths of a gram"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Matter is conserved too. Lavoisier weighed everything in a reaction, gases included. An older theory said burning metal gives something off, so it should get lighter. It got heavier."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A balance scale with a metal sample on one side. After burning, the sample is heavier, because it combined with oxygen from the air."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did Lavoisier's careful weighing show about burning metal?",
+    "right": "Burnt metal weighs more, because it combines with oxygen from the air.",
+    "wrong": [
+     "Burnt metal weighs less, because it loses something.",
+     "Burnt metal weighs nothing.",
+     "Weighing cannot tell us anything about burning."
+    ],
+    "why": "By weighing all the parts, Lavoisier showed that lead and tin got heavier when burned, because oxygen joined them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now evidence. Merlin says, 'My spell lights lamps.' How would a scientist test that? Tool one is a fair comparison. Change one thing and keep the rest the same."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same lamp, same oil, same room, same hour | Only one thing differs: spell or no spell"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tool two is to repeat it. One lit lamp could be luck or a trick. Many lit lamps, repeated by other people under the same conditions, are real evidence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Repeat it (replicate)"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Merlin lights the lamp once. Why is that not enough evidence?",
+    "right": "One result could be luck or a trick. Repeating the test checks it.",
+    "wrong": [
+     "Because lamps only count if they are lit at night.",
+     "Because wizards cannot be tested.",
+     "Because one lit lamp is too bright to measure."
+    ],
+    "why": "A claim becomes strong when the same result keeps appearing when other people repeat the test."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tool three is to check for tricks. Sir Michael judges the lamps without knowing which one Merlin tried to light. Hiding that from the judge is called blinding. It stops hopes and guesses from bending the result."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Blinding: the judge does not know which is which"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This is real history. In 1784 Franklin and Lavoisier tested Mesmer's claim of an invisible 'animal magnetism'. They blindfolded patients and found no evidence for the fluid."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1774: Priestley isolates oxygen | 1784: Franklin and Lavoisier's commission tests Mesmer with blindfolds | 1789: Lavoisier's chemistry textbook"
+   },
+   "cite": [
+    "s15",
+    "s16",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did the 1784 commission blindfold patients?",
+    "right": "So patients could not know whether they were being treated, which tests whether expectation alone explains the effect.",
+    "wrong": [
+     "To make the treatment look more magical.",
+     "To keep the treatment secret from the king.",
+     "To stop the patients from running away."
+    ],
+    "why": "Using intentional ignorance and sham treatments is how the commission checked for tricks and expectation. It became a model for later controlled trials."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the INVENTED part. These are Merlin's rules for spells. We made them up for the village, but they are built to obey the real law."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "INVENTED: Merlin's Rules for Spells"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rules one and two. No spell makes energy from nothing. Merlin must pay from a source, either his own body or a store such as sun, fire or a wound spring."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rule 1: No spell makes energy from nothing | Rule 2: Every spell is paid from a source: Merlin's food, or a stored supply"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rule three. Part of every spell turns to heat, so Merlin always pays a bit extra. That is why he gets warm and hungry after casting."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rule 3: Some of every spell becomes heat"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rule four is a price list built from real numbers. Raising 1 gram of water by 1 degree takes one calorie, about 4.2 joules. We assume a cup holds about 240 grams."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Merlin's price list (calculated, in kilojoules)"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s7"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Under Merlin's price list, which spell costs the most?",
+    "right": "Heating a cup of water from 20 to 100 degrees (about 80 kJ).",
+    "wrong": [
+     "Warming a cup of water by 1 degree (about 1 kJ).",
+     "Lighting a 10-watt lamp for an hour (36 kJ).",
+     "They all cost the same."
+    ],
+    "why": "Heating a cup by 80 degrees takes about 80 times the energy of heating it by 1 degree, and it is more than the lamp-hour."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rules five and six. Changing one metal into another costs a mountain of energy. And every spell can be tested with the three tools."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rule 5: Changing one element into another costs a mountain of energy | Rule 6: Any spell can be tested: fair comparison, repeat, check for tricks"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So, the puzzle solved. Merlin's lamp is paid for by his last meal. The spell turns that stored energy into light and heat. An hour costs about 36 kilojoules, under half of one percent of his day's food."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Source: Merlin's last meal (chemical energy) | Change: stored energy becomes light and heat | Cost: about 36 kJ an hour | Side effect: Merlin feels warm and hungry"
+   },
+   "cite": [
+    "s7",
+    "s6",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Merlin's lamp burns all night with no fuel, no sun and no meal. What should a careful scientist do first?",
+    "right": "Look for a hidden energy source or a trick, then test again carefully.",
+    "wrong": [
+     "Announce that energy can be made from nothing.",
+     "Decide the law of energy is wrong right away.",
+     "Stop testing, because magic cannot be tested."
+    ],
+    "why": "The law rests on many experiments, so the first move is to check for hidden sources and tricks. If careful, repeated tests still found a real exception, scientists would have to rethink the law."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To wrap up: energy changes form and is never made from nothing. Alchemy gave us real tools, but chemistry cannot turn lead into gold. And fair tests, repeats and blinding keep us honest. Next, you build your own thought experiment."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Energy: conserved, and some always becomes heat | Alchemy: real tools, but no chemical gold | Tests: fair comparison, repeat, check for tricks | Next: Class 10, your own thought experiment"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Energy for one hour of lamp light (joules)",
+   "rows": [
+    {
+     "label": "8-watt LED (about as bright as a 60 W old bulb)",
+     "value": 28800,
+     "source": "s7"
+    },
+    {
+     "label": "10-watt LED",
+     "value": 36000,
+     "source": "s7"
+    },
+    {
+     "label": "60-watt old-style bulb",
+     "value": 216000,
+     "source": "s7"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Merlin's price list (invented spells, real energy, kilojoules, calculated)",
+   "rows": [
+    {
+     "label": "Warm a cup (240 g) of water by 1 degree",
+     "value": 1,
+     "source": "s5"
+    },
+    {
+     "label": "Light a 10-watt lamp for 1 hour",
+     "value": 36,
+     "source": "s7"
+    },
+    {
+     "label": "Heat a cup (240 g) of water from 20 to 100 degrees",
+     "value": 80,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Conservation of energy",
+   "links": [
+    "[[What If? How a Thought Experiment Works]]",
+    "[[Science of a Dragon: Size, Flight and Fire]]"
+   ]
+  },
+  {
+   "topic": "Joules, watts and food energy",
+   "links": [
+    "[[Science of a Dragon: Size, Flight and Fire]]",
+    "[[The Magic Market: Economics with Spells]]"
+   ]
+  },
+  {
+   "topic": "Alchemy and early chemistry",
+   "links": [
+    "[[Where Wizards Come From: Merlin and the Real Past]]"
+   ]
+  },
+  {
+   "topic": "Fair tests: comparison, repeating, blinding",
+   "links": [
+    "[[What If? How a Thought Experiment Works]]",
+    "[[Your Own Thought Experiment: Fantasy and Science Fiction]]"
+   ]
+  },
+  {
+   "topic": "Merlin's rules for spells (invented)",
+   "links": [
+    "[[Inside the Castle]]",
+    "[[The Magic Market: Economics with Spells]]",
+    "[[Your Own Thought Experiment: Fantasy and Science Fiction]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1200s (Europe)",
+   "elsewhere": "European alchemists were making the first mineral acids, with nitric acid probably first, while Arabic alchemists had earlier discovered several acids and substances.",
+   "cite": [
+    "s10",
+    "s9"
+   ]
+  },
+  {
+   "when": "1669",
+   "elsewhere": "In Germany, the alchemist Hennig Brandt was hunting for a way to make gold and found phosphorus by accident.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "when": "1774 to 1789",
+   "elsewhere": "Priestley isolated oxygen in 1774, and in 1789 Lavoisier published what is considered the first modern chemistry textbook, stating the conservation of mass.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "when": "1784",
+   "elsewhere": "In Paris, a royal commission that included Franklin and Lavoisier tested Mesmer's animal magnetism by blindfolding patients.",
+   "cite": [
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "when": "2025",
+   "elsewhere": "CERN's ALICE team published measurements of lead briefly turning into gold in the Large Hadron Collider.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Energy can never be made from nothing.",
+   "other_view": "The law is based on experiment, not on a proof for every possible case. Some physicists note that on the scale of the whole universe, whether energy is conserved can depend on how energy is defined. For a lamp in a castle hall, no exception has been found.",
+   "cite": [
+    "s2",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Alchemy was just failed chemistry.",
+   "other_view": "Historians now describe alchemy as a real part of chemistry's heritage, with practical knowledge and sophisticated theories about matter. It also mixed in religious and philosophical aims, and it never achieved gold from lead by chemical means.",
+   "cite": [
+    "s8",
+    "s11",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Lavoisier's oxygen theory ended the old fire-stuff idea overnight.",
+   "other_view": "Chemistry World reports that several high-profile chemists kept a place for the old idea long after 1789. Parts of Lavoisier's own theories also came under attack.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "claim": "Franklin's commission showed Mesmer's patients were faking.",
+   "other_view": "The commissioners did not doubt that the patients' reactions were sincere. They concluded that the effects were real but did not come from magnetic fluid.",
+   "cite": [
+    "s17",
+    "s16"
+   ]
+  }
+ ]
+}

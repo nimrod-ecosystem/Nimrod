@@ -1,0 +1,1310 @@
+{
+ "about": {
+  "title": "Spreading across the world",
+  "course": "prehistory",
+  "class_n": 7,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. The class follows four routes (Asia, Australia, Europe, the Americas), and the Americas are the most argued, so they get the most beats. Each site gets its own short beat. If you are short on time, skip the Apidima beats (4 and 5) and the Monte Verde beats (27 and 28). Everything else builds on the beats before it."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Human occupation of northern Australia by 65,000 years ago",
+   "publisher": "Nature (Clarkson et al.)",
+   "date": "2017-07-20",
+   "link": "https://www.nature.com/articles/nature22968",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "How do we know how old the Indigenous Madjedbebe rock shelter is?",
+   "publisher": "ABC News (Australia)",
+   "date": "2017-07-20",
+   "link": "https://www.abc.net.au/news/science/2017-07-20/indigenous-discovery-how-do-we-know-how-old-it-is/8719334",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Digging deeper into a 65,000 year story",
+   "publisher": "Inside Story",
+   "date": "2017",
+   "link": "https://insidestory.org.au/digging-deeper-into-a-65000-year-story/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Reimagining the History of Human Migration With a 65,000-Year-Old Find",
+   "publisher": "Hakai Magazine",
+   "date": "2017",
+   "link": "https://hakaimagazine.com/news/reimagining-history-human-migration-65000-year-old-find/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Recent DNA Studies Question a 65 kya Arrival of Humans in Sahul (Allen and O'Connell)",
+   "publisher": "Archaeology in Oceania, Wiley",
+   "date": "2025",
+   "link": "https://onlinelibrary.wiley.com/doi/10.1002/arco.70002",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "This month in Australian Archaeology",
+   "publisher": "The Australian Museum Blog",
+   "date": "n.d.",
+   "link": "https://australian.museum/blog/amri-news/this-month-in-australian-archaeology/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Early human settlement of Sahul was not an accident",
+   "publisher": "Scientific Reports, via PubMed",
+   "date": "2019",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/31209234",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "An Evolutionary Timeline of Homo Sapiens",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/essential-timeline-understanding-evolution-homo-sapiens-180976807/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "The earliest 'Homo sapiens' outside Africa (Misliya Cave)",
+   "publisher": "CORDIS, European Commission",
+   "date": "n.d.",
+   "link": "https://cordis.europa.eu/article/id/136156-the-earliest-homo-sapiens-outside-africa",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Modern Humans Failed in Early Attempt to Migrate Out of Africa, Old Skull Shows",
+   "publisher": "Live Science",
+   "date": "2019",
+   "link": "https://www.livescience.com/65906-oldest-modern-human-skull-eurasia.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Apidima Cave fossils provide earliest evidence of Homo sapiens in Eurasia",
+   "publisher": "Nature",
+   "date": "2019",
+   "link": "https://www.nature.com/articles/s41586-019-1376-z",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The oldest Upper Paleolithic Homo sapiens in Europe (Bacho Kiro Cave)",
+   "publisher": "EurekAlert / Max Planck Society",
+   "date": "2020-05-11",
+   "link": "https://www.eurekalert.org/news-releases/580745",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Genomes of the earliest Europeans",
+   "publisher": "Max Planck Society",
+   "date": "n.d.",
+   "link": "https://www.mpg.de/16663512/genomes-earliest-europeans",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Subarctic climate for the earliest Homo sapiens in Europe",
+   "publisher": "Science Advances",
+   "date": "n.d.",
+   "link": "https://www.science.org/doi/10.1126/sciadv.abi4642",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "When and how did modern humans, Homo sapiens, spread out of Africa and around the world?",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/when-how-did-modern-humans-homo-sapiens-spread-out-of-africa.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "North America's first people may have arrived by sea ice highway",
+   "publisher": "International Arctic Fellows Initiative (reporting AGU23 research)",
+   "date": "2023",
+   "link": "https://iafi.org/north-americas-first-people-may-have-arrived-by-sea-ice-highway/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Ice-free corridor opened too late to be population route for the Americas",
+   "publisher": "Imperial College London",
+   "date": "2022",
+   "link": "https://www.imperial.ac.uk/news/234899/ice-free-corridor-opened-late-population-route/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Peopling of the Americas (podcast transcript)",
+   "publisher": "PNAS",
+   "date": "n.d.",
+   "link": "https://www.pnas.org/post/podcast/peopling-americas",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "New artifacts suggest people arrived in North America earlier than previously thought (Cooper's Ferry)",
+   "publisher": "Oregon State University via EurekAlert",
+   "date": "2019-08-29",
+   "link": "https://www.eurekalert.org/news-releases/814181",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Ancient site in Idaho implies first Americans came by sea",
+   "publisher": "Science",
+   "date": "2019-08-30",
+   "link": "https://www.science.org/doi/10.1126/science.365.6456.848",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Independent age estimates resolve the controversy of ancient human footprints at White Sands",
+   "publisher": "U.S. Geological Survey (Science, 2023)",
+   "date": "2023-10-05",
+   "link": "https://www.usgs.gov/publications/independent-age-estimates-resolve-controversy-ancient-human-footprints-white-sands",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Hotly debated human footprints in New Mexico are more than 21,000 years old, closely matching prior estimates",
+   "publisher": "Live Science",
+   "date": "2025",
+   "link": "https://www.livescience.com/archaeology/evidence-is-building-that-people-were-in-the-americas-23-000-years-ago",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Buried for 23,000 years: These footprints are rewriting American history",
+   "publisher": "ScienceDaily (University of Arizona)",
+   "date": "2025-06-29",
+   "link": "https://www.sciencedaily.com/releases/2025/06/250629033438.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "New dating for White Sands footprints confirms controversial theory",
+   "publisher": "Ars Technica, via Harvard TagTeam",
+   "date": "2025-06-18",
+   "link": "https://tagteam.harvard.edu/hub_feeds/3415/feed_items/14198936",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "A new study questions when people first reached South America (Monte Verde)",
+   "publisher": "Science News",
+   "date": "n.d.",
+   "link": "https://www.sciencenews.org/article/first-people-south-america-clovis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Monte Verde, one of the earliest Indigenous sites in South America, is much younger than thought, study claims. But others call it 'egregiously poor geological work.'",
+   "publisher": "Live Science",
+   "date": "n.d.",
+   "link": "https://www.livescience.com/archaeology/americas/monte-verde-one-of-the-earliest-indigenous-sites-in-south-america-is-much-younger-than-thought-study-claims-but-others-call-it-egregiously-poor-geological-work",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "A mid-Holocene age for Monte Verde challenges the timeline of human colonization of South America (with replies)",
+   "publisher": "Science",
+   "date": "n.d.",
+   "link": "https://www.science.org/doi/10.1126/science.adw9217",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Oldest stone tools in the Americas claimed in Chile",
+   "publisher": "Science",
+   "date": "2015",
+   "link": "https://www.science.org/content/article/oldest-stone-tools-americas-claimed-chile",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Early human migrations",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Early_human_migrations",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "65,000-years of continuous grinding stone use at Madjedbebe, Northern Australia",
+   "publisher": "Scientific Reports (Hayes et al.)",
+   "date": "2022-07-11",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9273753/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class we met our species and its cousins. Today we follow Homo sapiens as it spreads into Asia, Australia, Europe and the Americas."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Spreading across the world"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will also see why the dates are argued over. That part matters as much as the routes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Migration: a group of people moving to live somewhere new"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a key idea. 'Earliest known' means the oldest site found so far. It does not mean the first person who ever arrived."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Earliest known = oldest site found so far"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New finds can move a date back. One dig in northern Australia pushed the date of arrival back by up to 18,000 years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Up to 18,000 years pushed back"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does 'earliest known' mean?",
+    "right": "The oldest site that has been found so far",
+    "wrong": [
+     "The exact day the first person arrived",
+     "The oldest site that could ever exist",
+     "The site with the most tools"
+    ],
+    "why": "A new dig can always find something older, so 'earliest known' can change."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Homo sapiens began in Africa. A few early groups left long before the main exit. A jaw from Misliya Cave in Israel is 177,000 to 194,000 years old."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An upper jaw with teeth, found in Misliya Cave on Mount Carmel, Israel"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Apidima Cave in Greece is a site in its own right. Two skulls were found there in the late 1970s but stayed puzzling for decades."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two incomplete, distorted fossil skulls from Apidima Cave, southern Greece"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2019, new analysis said one skull, about 210,000 years old, was an early Homo sapiens. The other was a Neanderthal, about 40,000 years younger. The researchers think this early group died out, and Neanderthals later lived there instead."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Apidima, the site twice | Skulls made their owners' lives about 210,000 years ago | Found late 1970s, understood in 2019"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do the researchers think this early group did not found today's non-African populations?",
+    "right": "They think it died out and was probably replaced by Neanderthals",
+    "wrong": [
+     "It sailed to Australia",
+     "It was never found",
+     "It turned into Neanderthals"
+    ],
+    "why": "The skull is much older than the main exit, and a younger Neanderthal skull is in the same cave. Researchers read that as a failed early move out of Africa."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The exit that matters for most people alive outside Africa came later. Genetic studies point to a move beginning some 50,000 to 60,000 years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "50,000 to 60,000 years ago"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other summaries say 70,000 to 50,000 years ago. So scientists do not give one number, and we say a range."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "70,000 to 50,000 years ago"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Roughly when did the main exit from Africa happen?",
+    "right": "Between about 70,000 and 50,000 years ago",
+    "wrong": [
+     "About 5,000 years ago",
+     "About 500,000 years ago",
+     "About 20,000 years ago"
+    ],
+    "why": "Different studies give slightly different dates, but they overlap in the range of about 70,000 to 50,000 years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One common model has people following the southern coast of Asia. They reached Oceania by about 50,000 years ago."
+   },
+   "show": {
+    "kind": "map",
+    "text": "An arrow from East Africa along the southern coast of Asia, then south-east to Oceania"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our class on one line. Early exits, the main exit, Australia, Europe, then the Americas."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 200,000 years ago: early exits | 70,000 to 50,000: main exit | 50,000 or more: Australia | About 45,000: Europe | 23,000 to 14,500: the Americas (argued)"
+   },
+   "cite": [
+    "s9",
+    "s29",
+    "s7",
+    "s12",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us go to Australia first. Sahul is the old continent that existed when sea levels were low: Australia, New Guinea and the Aru Islands, joined."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sahul: Australia + New Guinea + Aru Islands, joined at low sea level"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Reaching Sahul still took several sea crossings through the islands of Wallacea. At least one crossing was close to 100 kilometres."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Sunda (south-east Asia) on the left, a chain of Wallacean islands, then Sahul on the right, with sea gaps between"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What made reaching Sahul special?",
+    "right": "It needed several crossings of open sea",
+    "wrong": [
+     "It was joined to Asia by a land bridge",
+     "It was reached through the ice-free corridor",
+     "It needed no boats at all"
+    ],
+    "why": "The Wallacean islands were not joined by land, so people had to cross water, at least once about 100 kilometres."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Did they drift there by accident? A 2019 model says random drifting almost never works. The chance is under 5% unless 40 or more adults were washed off an island every 20 years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Under 5% by chance"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Choosing when to leave and steering a little raised the odds a lot. The authors conclude people could plan open-sea voyages by 50,000 years ago. Whether these particular crossings were planned is unknown."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pick a time to leave | Paddle a little toward the target | Odds of arriving go up"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What raised the chance of arriving, in the model?",
+    "right": "Choosing when to leave and making a little headway toward land",
+    "wrong": [
+     "Waiting for a land bridge to appear",
+     "Travelling only in large ships with sails",
+     "Following the coast of Europe"
+    ],
+    "why": "The model found that picking a departure time and steering a little greatly increased the chance of arriving."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a site. Madjedbebe is a rock shelter in Mirarr Country, about 300 kilometres east of Darwin, at the foot of the Arnhem Land escarpment."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A sandstone rock shelter at the base of a rocky escarpment on a sandy plain, Northern Territory, Australia"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is Madjedbebe twice. A 2017 study says people lived there about 65,000 years ago, using grinding stones, ground ochre and ground-edge axe heads."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Madjedbebe, the site twice | Lived in: about 65,000 years ago (disputed) | Dug: 1970s, again in 1989, and again for the 2017 study"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do you date sand? The team dated the sand grains themselves and checked against radiocarbon where they could. Charcoal there runs out at about 45,000 years."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dated the sand grains | Checked against radiocarbon where possible | Charcoal runs out at about 45,000 years"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why could radiocarbon not date the oldest layers at Madjedbebe?",
+    "right": "The charcoal runs out at about 45,000 years, so older layers needed another method",
+    "wrong": [
+     "Radiocarbon only works on stone",
+     "Nobody in Australia owned the equipment",
+     "The sand was too wet"
+    ],
+    "why": "Radiocarbon on charcoal only reached about 45,000 years at the site, so the older dates came from the sand grains."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everyone accepts 65,000. Archaeologists Jim Allen and James O'Connell say the sand was disturbed, so younger tools could have sunk into older sand."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Disputed | For: dates the sand at 65,000 | Against: the sand was disturbed, so it looks too old"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their 2025 paper says the other oldest Sahul sites cluster between about 43,000 and 54,000 years ago. The dig team says disturbance was small and termites did not rework the deposit."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Allen and O'Connell: no reliable support before about 50,000 | Dig team: only small disturbance"
+   },
+   "cite": [
+    "s5",
+    "s30"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the Madjedbebe argument mainly about?",
+    "right": "Whether disturbed sand makes the tools look older than they are",
+    "wrong": [
+     "Whether Australia was ever settled",
+     "Whether Madjedbebe is in Australia",
+     "Whether anyone used stone tools"
+    ],
+    "why": "Both sides accept people lived there. They disagree on whether the sand was shuffled and the old date is too old."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the two dates side by side. Careful scientists stand behind each one."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Two views on when people reached Australia",
+    "chart": "c2"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now Europe. Bacho Kiro Cave in Bulgaria holds some of the oldest securely dated Homo sapiens in Europe."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The mouth of Bacho Kiro Cave in the foothills of the Balkan Mountains, Bulgaria"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fossils reported in 2020 are directly dated to about 45,000 years ago. They lay with stone tools, bone tools, hunted animal remains and personal ornaments."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Bacho Kiro, the site twice | Lived in: about 45,000 years ago | Fossils reported: 2020"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was not a warm place. Animal bones from the cave show a subarctic climate about 45,000 years ago, much colder than once thought."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Subarctic cold, about 45,000 years ago"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And Neanderthals were still around. The oldest people in the cave lived while Neanderthals were still living in Europe."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Homo sapiens in the cave | Neanderthals still in Europe | Cold, subarctic weather"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Genetics adds a twist. A later person from the cave, about 35,000 years old, came from a genetically different group."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Early Europeans: groups replaced by later groups"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Researchers say the earliest history of modern humans in Europe may have involved population replacements. The early cave group did not contribute to the genes of modern Europeans."
+   },
+   "show": {
+    "kind": "list",
+    "text": "First arrivals did not all leave descendants | Later groups replaced earlier ones"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does the genetic evidence suggest about the earliest Europeans?",
+    "right": "Some early groups were replaced by later ones",
+    "wrong": [
+     "All modern Europeans descend from the first cave people",
+     "They never met Neanderthals",
+     "They all arrived by boat"
+    ],
+    "why": "The 35,000-year-old person was from a different group, and the early cave group did not pass genes to modern Europeans."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick recap. Early exits, a main exit around 70,000 to 50,000 years ago, a sea crossing to Australia, and cold Europe about 45,000 years ago. Now the Americas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Early exits | Main exit | Sea crossing to Australia | Europe about 45,000 years ago | Next: the Americas"
+   },
+   "cite": [
+    "s9",
+    "s29",
+    "s7",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the ice age, so much water was locked in ice that sea level fell. A land bridge called Beringia joined Asia and North America."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Asia and North America joined by a wide land bridge, Beringia, with huge ice sheets to the south and east"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For decades, the standard story was 'Clovis first'. Clovis hunters made stone tools about 13,000 years ago and were thought to be first, walking south through the ice-free corridor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Clovis first + ice-free corridor"
+   },
+   "cite": [
+    "s20",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The ice-free corridor is a gap between two great ice sheets, the Cordilleran and the Laurentide. The big question is when it opened."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A narrow strip of land between two huge ice sheets running north to south"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the ice-free corridor?",
+    "right": "A gap between two great ice sheets",
+    "wrong": [
+     "A tunnel under the ice",
+     "A sea route along the coast",
+     "A bridge over the Atlantic"
+    ],
+    "why": "As the ice sheets melted and retreated, the gap between them is what we call the corridor."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dating suggests it began opening from the south about 15,400 years ago. The whole length was not open until after people were already arriving."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15,400 years ago: it began to open"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One study put the full opening at about 13,800 years ago, too late for the first peoples. So if people were in the Americas earlier, they must have come another way."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "13,800 years ago: fully open"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did the new dating say about the corridor?",
+    "right": "It opened too late to be the road for the first Americans",
+    "wrong": [
+     "It never existed",
+     "It opened before the ice age",
+     "It was open the whole time"
+    ],
+    "why": "People had reached the Americas before the whole corridor opened, so it was not the first road."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The other idea is a coastal route. In 2007 Jon Erlandson and colleagues proposed a 'kelp highway': boat travel down the Pacific coast, following rich waters."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kelp highway: a coastal route by boat"
+   },
+   "cite": [
+    "s18",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some researchers add winter sea ice as a possible road. The evidence is thin: few coastal sites that old, but similar gaps exist along the corridor route."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Boats along the coast | Winter sea ice | Few coastal sites that old, so far"
+   },
+   "cite": [
+    "s16",
+    "s18"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the 'kelp highway'?",
+    "right": "A proposed coastal route by boat along the Pacific shore, following rich sea life",
+    "wrong": [
+     "A road made of seaweed linking Asia and America",
+     "A path along an inland river",
+     "Another name for the ice-free corridor"
+    ],
+    "why": "The kelp highway is the idea that people travelled the Pacific coast, where kelp forests supported food from the sea."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now newer finds. Cooper's Ferry in western Idaho shows people about 16,000 years ago, over a thousand years before the corridor is thought to have opened."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cooper's Ferry, the site twice | Lived in: about 16,000 years ago | Results published: 2019"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It lies more than 500 kilometres inland, so those people may have followed rivers inland from a coastal route. Not everyone agrees the tools prove a coastal link."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A river running inland from the Pacific coast to Cooper's Ferry, Idaho"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "White Sands in New Mexico has human footprints pressed into mud beside an ancient lake. They were first found in 2009 and excavated in 2019."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Human footprints in pale clay at White Sands National Park"
+   },
+   "cite": [
+    "s24",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 2021 paper dated them to between 21,000 and 23,000 years ago, during the Last Glacial Maximum. So the site twice: made then, found in 2009."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "White Sands, the site twice | Footprints made: about 21,000 to 23,000 years ago | First found 2009, excavated 2019, published 2021"
+   },
+   "cite": [
+    "s24",
+    "s21",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They were first dated using seeds of a water plant. Critics worried such plants can take in old carbon, which could make the dates too old."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Old carbon worry: water plants may make dates look too old"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So in 2023 scientists dated pollen and used sediment luminescence and got the same age. In 2025 a team dated lake mud at 20,700 to 22,400 years."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Seeds: 21,000 to 23,000 | Pollen and luminescence (2023): same age | Lake mud (2025): 20,700 to 22,400"
+   },
+   "cite": [
+    "s21",
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did scientists redo the White Sands dating with other materials?",
+    "right": "To check whether the water-plant seeds had given dates that were too old",
+    "wrong": [
+     "Because the footprints had washed away",
+     "To find out who made the footprints",
+     "Because radiocarbon cannot date seeds"
+    ],
+    "why": "If different materials give the same age, the first date is much more likely to be right."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Still, not everyone is convinced. Archaeologist Waters says he remains concerned about the radiocarbon ages, even with the new data."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Accepted by many, not by everyone"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more site: Monte Verde in southern Chile, found in late 1975 about 800 kilometres south of Santiago. A peat bog kept wood, leather, rope and the remains of wooden huts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A creek bank in southern Chile where preserved wood and hut remains were dug from peat"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tom Dillehay's team dated the people there to about 14,500 years ago. That helped break 'Clovis first', after a long and exhausting fight."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Monte Verde, the site twice | Lived in: about 14,500 years ago (disputed) | Found: late 1975"
+   },
+   "cite": [
+    "s25",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A recent study in Science says the site may be much younger, perhaps only about 8,000 years old. Dillehay's team replied that the evidence still supports 14,500 years."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Monte Verde: 14,500 years old, or much younger? | Challenge: perhaps 8,000 years | Reply: still about 14,500"
+   },
+   "cite": [
+    "s25",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some experts called the new study poor geological work. So this argument is live and unsettled."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Live argument"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is being argued about Monte Verde?",
+    "right": "Whether people lived there about 14,500 years ago or much more recently",
+    "wrong": [
+     "Whether the site is in Chile",
+     "Whether Clovis points were found there",
+     "Whether the peat bog still exists"
+    ],
+    "why": "The site's age is the dispute. If it is younger, it no longer shows people in South America so early."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the main dates for the Americas. Remember that every bar is a claim that someone has tested, and some are still argued."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Dates in the debate over the first Americans",
+    "chart": "c1"
+   },
+   "cite": [
+    "s20",
+    "s18",
+    "s25",
+    "s19",
+    "s21"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why are these dates argued over? Small groups leave few traces. Sand can be disturbed. Water plants can carry old carbon. And each new find can move the date."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Few traces from small groups | Disturbed sand | Old carbon in water plants | New finds change dates"
+   },
+   "cite": [
+    "s5",
+    "s21",
+    "s26"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is a real reason dates are argued over?",
+    "right": "Disturbed sediment or old carbon can make a date look too old",
+    "wrong": [
+     "Archaeologists refuse to use science",
+     "All sites agree already",
+     "Dates are never checked again"
+    ],
+    "why": "We saw this at Madjedbebe (disturbed sand) and White Sands (old carbon). Scientists keep rechecking."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we turn from the road to the mind: art, symbols and cave paintings."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: art, symbols and the mind"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Dates in the debate over the first Americans (years ago)",
+   "rows": [
+    {
+     "label": "Clovis-style tools (old 'first' date)",
+     "value": 13000,
+     "source": "s20"
+    },
+    {
+     "label": "Ice-free corridor fully open (one study)",
+     "value": 13800,
+     "source": "s18"
+    },
+    {
+     "label": "Monte Verde II (disputed)",
+     "value": 14500,
+     "source": "s25"
+    },
+    {
+     "label": "Cooper's Ferry, Idaho",
+     "value": 16000,
+     "source": "s19"
+    },
+    {
+     "label": "White Sands footprints (oldest end of range)",
+     "value": 23000,
+     "source": "s21"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Two views on when people reached Australia (years ago)",
+   "rows": [
+    {
+     "label": "Madjedbebe dig team (2017)",
+     "value": 65000,
+     "source": "s1"
+    },
+    {
+     "label": "Allen and O'Connell: no reliable support before about",
+     "value": 50000,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Madjedbebe rock shelter: people there about 65,000 years ago (disputed); dug in the 1970s, 1989 and for the 2017 study",
+   "links": [
+    "[[Sahul]]",
+    "[[luminescence dating]]",
+    "[[Aboriginal Australians]]"
+   ]
+  },
+  {
+   "topic": "Apidima Cave: skulls about 210,000 years old; found late 1970s, reanalysed 2019",
+   "links": [
+    "[[Neanderthals]]",
+    "[[Homo sapiens]]",
+    "[[early exits from Africa]]"
+   ]
+  },
+  {
+   "topic": "Bacho Kiro Cave: Homo sapiens about 45,000 years ago; fossils reported 2020",
+   "links": [
+    "[[Neanderthals]]",
+    "[[Ice Age]]",
+    "[[Initial Upper Palaeolithic]]"
+   ]
+  },
+  {
+   "topic": "Cooper's Ferry: people there about 16,000 years ago; results published 2019",
+   "links": [
+    "[[coastal route]]",
+    "[[Clovis]]"
+   ]
+  },
+  {
+   "topic": "White Sands footprints: made about 21,000 to 23,000 years ago; first found 2009, excavated 2019",
+   "links": [
+    "[[Last Glacial Maximum]]",
+    "[[radiocarbon dating]]"
+   ]
+  },
+  {
+   "topic": "Monte Verde: people there about 14,500 years ago (disputed); found late 1975",
+   "links": [
+    "[[Clovis first]]",
+    "[[radiocarbon dating]]",
+    "[[peopling of the Americas]]"
+   ]
+  },
+  {
+   "topic": "Beringia and the ice-free corridor",
+   "links": [
+    "[[Ice Age]]",
+    "[[coastal route]]",
+    "[[kelp highway]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 210,000 years ago",
+   "elsewhere": "A Homo sapiens skull and, tens of thousands of years later, a Neanderthal skull were left in the same cave in Greece.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "when": "About 45,000 years ago",
+   "elsewhere": "Neanderthals were still living in Europe, in the cold subarctic climate that the first Homo sapiens at Bacho Kiro Cave also faced.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "when": "About 23,000 years ago",
+   "elsewhere": "The Last Glacial Maximum: ice sheets were at their fullest, and the White Sands area was a wetland with ice age animals.",
+   "cite": [
+    "s22",
+    "s18"
+   ]
+  },
+  {
+   "when": "About 14,500 years ago",
+   "elsewhere": "The last ice age was starting to fade, and Monte Verde sat in a cool, wet temperate rain forest about 60 kilometres from the Pacific Ocean.",
+   "cite": [
+    "s28"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "People reached Australia about 65,000 years ago, based on Madjedbebe.",
+   "other_view": "Archaeologists Jim Allen and James O'Connell argue the sand at Madjedbebe was disturbed and that younger artefacts could have moved into older sand. They say the other oldest Sahul sites cluster between about 43,000 and 54,000 years ago, so the date of arrival is about 50,000 years ago. The excavation team reports only small-scale disturbance and no extensive termite reworking.",
+   "cite": [
+    "s1",
+    "s5",
+    "s6",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Early crossings to Sahul show planned open-sea voyages.",
+   "other_view": "The 2019 model concludes that people could plan voyages lasting several days by at least 50,000 years ago. The authors state that whether these particular crossings were accidental or intentional is unknown.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "claim": "The 210,000-year-old Apidima 1 skull is an early Homo sapiens.",
+   "other_view": "The 2019 Nature study concluded this, but some summaries say the skull fragment cannot be confidently assigned to Homo sapiens. The identification is still open.",
+   "cite": [
+    "s11",
+    "s29"
+   ]
+  },
+  {
+   "claim": "The ice-free corridor opened too late to be the first route into the Americas.",
+   "other_view": "One study dates the full opening of the corridor to about 13,800 years ago. Others argue that evidence for coastal sites that old is also thin, and say Clovis-like peoples probably did move through the corridor later as it opened.",
+   "cite": [
+    "s17",
+    "s18"
+   ]
+  },
+  {
+   "claim": "Cooper's Ferry, dated to about 16,000 years ago, supports an early coastal route.",
+   "other_view": "Archaeologist David Meltzer is not convinced that the stemmed-point tools clearly predate Clovis or show a link around the Pacific Rim, and notes that the complete points are almost the same age as Clovis.",
+   "cite": [
+    "s19",
+    "s20"
+   ]
+  },
+  {
+   "claim": "The White Sands footprints are 21,000 to 23,000 years old.",
+   "other_view": "Seeds, pollen, luminescence and lake mud all gave matching ages. Archaeologist Waters says he is still concerned about the radiocarbon ages.",
+   "cite": [
+    "s21",
+    "s23",
+    "s22"
+   ]
+  },
+  {
+   "claim": "Monte Verde II is about 14,500 years old.",
+   "other_view": "A recent Science study says the site may be only about 8,000 years old, and some experts criticise its geology. Dillehay's team replied that geological and archaeological evidence supports 14,500 years.",
+   "cite": [
+    "s25",
+    "s26",
+    "s27"
+   ]
+  }
+ ]
+}

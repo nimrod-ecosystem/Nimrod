@@ -1,0 +1,1458 @@
+{
+ "about": {
+  "title": "The Internet and AI: Fast Copying, New Learners",
+  "course": "cumulative-culture",
+  "class_n": 7,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 45,
+  "length_note": "About 45 minutes: 52 short beats and 15 questions. It covers six ideas, so you can pause after any section. If you need two sittings, stop after the source-checking section and finish with AI. I read the sources as search excerpts on 2026-11-03, not as full pages, so a person should check the full pages before publishing. I did not research wider world events, so the frame_of_reference list only holds computing and web events that the sources support. The class-wide history-of-everything timeline should supply the rest."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "A short history of the Web",
+   "publisher": "CERN",
+   "date": "n.d.",
+   "link": "https://home.cern/science/computing/the-birth-of-the-web/short-history-web/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The birth of the web",
+   "publisher": "CERN Document Server",
+   "date": "2012-02-08",
+   "link": "https://cds.cern.ch/record/1997266",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "CERN - How the web began",
+   "publisher": "CERN (public archive)",
+   "date": "n.d.",
+   "link": "http://public-archive.web.cern.ch/en/About/WebStory-en.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Happy 20th birthday, World Wide Web",
+   "publisher": "CERN Courier",
+   "date": "n.d. (marks the 20th anniversary of the web)",
+   "link": "https://cerncourier.com/a/happy-20th-birthday-world-wide-web/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Curator Picks - Online collections (Personal Computers)",
+   "publisher": "Computer History Museum",
+   "date": "n.d.",
+   "link": "https://www.computerhistory.org/collections/curator-picks",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Computers (timeline)",
+   "publisher": "Computer History Museum",
+   "date": "n.d.",
+   "link": "https://www.computerhistory.org/timeline/computers/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "1981 (timeline): IBM introduces its Personal Computer",
+   "publisher": "Computer History Museum",
+   "date": "n.d.",
+   "link": "https://www.computerhistory.org/timeline/1981/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Brief History: Birth of the Personal Computer",
+   "publisher": "Information Processing Society of Japan Computer Museum",
+   "date": "n.d.",
+   "link": "https://museum.ipsj.or.jp/en/computer/personal/history.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "ITU's Facts and Figures 2025 shows steady progress in connectivity, while highlighting gaps in quality and affordability",
+   "publisher": "International Telecommunication Union",
+   "date": "2025-11-17",
+   "link": "https://www.itu.int/en/mediacentre/Pages/PR-2025-11-17-Facts-and-Figures.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Progress and Gaps: Key Findings from ITU's Facts and Figures 2025",
+   "publisher": "United Nations DESA",
+   "date": "2025-11",
+   "link": "https://social.desa.un.org/world-summit-2025/blog/progress-and-gaps-key-findings-from-itus-facts-and-figures-2025",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Statistics (ICT Facts and Figures)",
+   "publisher": "International Telecommunication Union",
+   "date": "2025 estimates",
+   "link": "https://www.itu.int/en/ITU-D/Statistics/pages/stat/default.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Usage statistics and market share of content languages for websites",
+   "publisher": "W3Techs",
+   "date": "2026-10-25",
+   "link": "https://w3techs.com/technologies/overview/content_language",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Is it True that More Than Half of Web Contents are in English? If Web Multilingualism is Paid Due Attention, then No!",
+   "publisher": "ResearchGate (research paper)",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/379819378_Is_it_True_that_More_Than_Half_of_Web_Contents_are_in_English_If_Web_Multilingualism_is_Paid_Due_Attention_then_No",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Evaluating Sources: Introduction (SIFT and lateral reading)",
+   "publisher": "Ray W. Howard Library, Shoreline Community College",
+   "date": "n.d.",
+   "link": "https://library.shoreline.edu/c.php?g=989548",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The SIFT Method - Evaluating Resources and Misinformation",
+   "publisher": "University of Chicago Library",
+   "date": "n.d.",
+   "link": "https://guides.lib.uchicago.edu/c.php?g=1241077&p=9082322",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Helping students to sort facts from lies on the internet",
+   "publisher": "EdSource",
+   "date": "2019",
+   "link": "https://edsource.org/2019/stanford-researchers-design-new-lessons-for-students-to-sort-facts-from-lies-on-the-internet/620870",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Students' Civic Online Reasoning: A National Portrait",
+   "publisher": "Stanford Graduate School of Education",
+   "date": "2021",
+   "link": "https://stacks.stanford.edu/file/druid:cz440cm8408/Students%27%20Civic%20Online%20Reasoning_2021.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Why language models hallucinate",
+   "publisher": "OpenAI",
+   "date": "2025",
+   "link": "https://openai.com/index/why-language-models-hallucinate/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Why Language Models Hallucinate (Kalai, Nachum and colleagues)",
+   "publisher": "arXiv",
+   "date": "2025-09",
+   "link": "https://arxiv.org/pdf/2509.04664",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Generative AI without guardrails can harm learning: Evidence from high school mathematics",
+   "publisher": "Proceedings of the National Academy of Sciences",
+   "date": "2025-06-25",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.2422633122",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Generative AI without guardrails can harm learning (full article PDF)",
+   "publisher": "Proceedings of the National Academy of Sciences",
+   "date": "2025-06-25",
+   "link": "https://www.pnas.org/doi/pdf/10.1073/pnas.2422633122",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Exploring the Use of ChatGPT as a Tool for Learning and Assessment in Undergraduate Computer Science Curriculum: Opportunities and Challenges",
+   "publisher": "arXiv",
+   "date": "2023",
+   "link": "https://arxiv.org/pdf/2304.11214",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Generative pre-trained transformer",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Generative_pre-trained_transformer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "AI Is Starting to Build Better AI (Recursive Self-Improvement Edges Closer in AI Labs)",
+   "publisher": "IEEE Spectrum",
+   "date": "n.d.",
+   "link": "https://spectrum.ieee.org/recursive-self-improvement",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Will Compute Bottlenecks Prevent an Intelligence Explosion?",
+   "publisher": "arXiv",
+   "date": "2025-07",
+   "link": "https://arxiv.org/pdf/2507.23181",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Don't Fear the Reaper: Refuting Bostrom's Superintelligence Argument",
+   "publisher": "arXiv",
+   "date": "2017",
+   "link": "https://arxiv.org/pdf/1702.08495",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "What Happens When AI Learns To Improve Itself?",
+   "publisher": "Forbes",
+   "date": "2026-10-07",
+   "link": "https://www.forbes.com/sites/bernardmarr/2026/10/07/what-happens-when-ai-learns-to-improve-itself/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Superintelligence Strategy: Expert Version",
+   "publisher": "arXiv",
+   "date": "2025-03",
+   "link": "https://arxiv.org/pdf/2503.05628",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Accessibility (W3C mission)",
+   "publisher": "World Wide Web Consortium",
+   "date": "n.d.",
+   "link": "https://www.w3.org/mission/accessibility/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "WCAG 2 Overview",
+   "publisher": "W3C Web Accessibility Initiative",
+   "date": "n.d.",
+   "link": "https://www.w3.org/WAI/standards-guidelines/wcag/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Understanding WCAG",
+   "publisher": "University of Missouri Digital Access",
+   "date": "n.d.",
+   "link": "https://digitalaccess.missouri.edu/best-practices/introduction-to-the-web-content-accessibility-guidelines-wcag/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "What are The Web Content Accessibility Guidelines (WCAG)?",
+   "publisher": "Interaction Design Foundation",
+   "date": "2026",
+   "link": "https://ixdf.org/literature/topics/web-content-accessibility-guidelines",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "ITU Statistics Update - December 2025",
+   "publisher": "International Telecommunication Union",
+   "date": "2025-12",
+   "link": "https://www.itu.int/en/ITU-D/Statistics/Pages/StatisticsUpdate/December2025.aspx",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class seven. Last time, printing and schools copied knowledge at scale. Today we look at two newer tools: the internet, and AI."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Internet and AI: Fast Copying, New Learners"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Six ideas, one at a time. Take your time, and pause whenever you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Computers and the web\n2. Checking a source\n3. What AI is\n4. AI and learning\n5. Can AI improve itself? Fact or guess\n6. Who gets to join in"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Remember the ratchet from class one: each generation keeps what works and builds on it. Faster copying means the ratchet can turn faster."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The ratchet"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the machines. In 1975 came a hobby kit, the Altair 8800. In 1977, the Apple II. In 1981, the IBM PC."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1975: Altair 8800 kit\n1977: Apple II\n1981: IBM PC"
+   },
+   "cite": [
+    "s8",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A personal computer is one a single person can use. Apple gave away thousands of Apple IIs to schools, so many young people met a computer for the first time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Personal computer"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The IBM PC was widely copied by other makers, and a huge world of software grew around it. Copying a design spread the machine."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An early IBM PC: a beige box, a keyboard, and a screen showing plain text."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which order is right, earliest first?",
+    "right": "Altair 8800 (1975), Apple II (1977), IBM PC (1981)",
+    "wrong": [
+     "IBM PC (1981), Altair 8800 (1975), Apple II (1977)",
+     "Apple II (1977), IBM PC (1981), Altair 8800 (1975)",
+     "Apple II (1977), Altair 8800 (1975), IBM PC (1981)"
+    ],
+    "why": "The Altair kit came in 1975, the Apple II began shipping in 1977, and IBM announced its PC in 1981."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now two words that get mixed up. The internet is the network joining computers. The web is linked pages you move through by clicking."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The internet: the network that carries information || The web: linked pages (hypertext) you click through"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tim Berners-Lee, a scientist at CERN, wrote the first proposal for the web in March 1989."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The first web page: plain text and links about the web project itself."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By the end of 1990 the first web server and browser were running at CERN. The software was released in 1991."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Mar 1989: first proposal\n12 Nov 1990: formal proposal with Robert Cailliau\nEnd of 1990: first server and browser running\n1991: software released\nDec 1991: first US web server (SLAC)\nLate 1993: over 500 known web servers\n1994: the 'Year of the Web'"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In late 1993 the web was only about one percent of internet traffic. It seemed a lot back then."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1% of internet traffic (late 1993)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Where did the first US web server come online, in December 1991?",
+    "right": "At a particle physics laboratory (SLAC, in California)",
+    "wrong": [
+     "At a newspaper office",
+     "At a high school",
+     "At a public library"
+    ],
+    "why": "Early web servers were in physics laboratories. The first in the US was at the Stanford Linear Accelerator Center."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why was the web built? To let physicists share computer-stored information, not just at their lab, but around the world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Built for sharing"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the web first designed to help with?",
+    "right": "Physicists sharing information around the world",
+    "wrong": [
+     "Selling products online",
+     "Streaming films",
+     "Playing computer games"
+    ],
+    "why": "Berners-Lee's idea was a single information network so CERN physicists could share what was stored on computers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the pattern. Speech, writing, printing, and now the web: each one helps knowledge travel further."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Speech\nWriting\nPrinting\nThe web"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two more gifts. Search helps you find one page among millions. And sharing the tools lets others build on them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Search and open sharing"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Berners-Lee released the web software in 1991. CERN soon offered a much simpler browser that could run on any system."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Open tools"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the problem. Misinformation is false or misleading information. On the web anyone can publish, and a false claim can be copied as fast as a true one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Misinformation"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stanford researchers watched how people check websites. Fact-checkers often clicked away from an unfamiliar site to see what others said about it. This is called lateral reading."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lateral reading"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a simple method with four moves, called SIFT. It was created by Mike Caulfield."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "finger",
+    "count": 4,
+    "layout": "row",
+    "text": "SIFT: four moves"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "S is for Stop. Pause before you believe it or share it. Ask yourself: do I know this source?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "S - Stop"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "I is for Investigate the source. Who wrote it? What do they want? Do they know this subject?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "I - Investigate the source"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "F is for Find better coverage. See whether other trusted sources agree, or disagree."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "F - Find better coverage"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "T is for Trace. If a story quotes an expert or a study, find the original. Retellings can leave out important context."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "T - Trace to the original"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "An article quotes a study. What does 'Trace' ask you to do?",
+    "right": "Find the original study and read what it actually says",
+    "wrong": [
+     "Count how many times the article was shared",
+     "Trust it because it sounds scientific",
+     "Check the colour and design of the website"
+    ],
+    "why": "Following a claim back to its original source helps you spot facts or context that were left out."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example. A site you have never heard of makes a shocking claim. Don't scroll through it. Open a new tab and look up the site's name."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A browser with two tabs: the shocking page on the left tab, a search about the site's name on the right tab."
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Unfamiliar site, shocking claim. What is the best first move?",
+    "right": "Open a new tab and see what trusted sources say about the site",
+    "wrong": [
+     "Read only the site's own 'About us' page and stop there",
+     "Share it quickly so friends can judge",
+     "Scroll through the whole page very carefully"
+    ],
+    "why": "Lateral reading means leaving the page to check who is behind it. The site's own About page is not enough."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now AI. Many chat tools run on a large language model. It is a computer program trained on huge amounts of text."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Large language model"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Training means practising prediction: guess the next word in a piece of text, again and again, across a huge pile of writing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Predict the next word"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People wrote that text. So the model is built from the pile of human knowledge that the ratchet left behind. Some systems are trained on other kinds of data besides text."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Made by people: the writing the model learns from || Made by the model: new text built from patterns it learned"
+   },
+   "cite": [
+    "s18",
+    "s22",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Transformer design that powers these tools was published in 2017. ChatGPT appeared in November 2022."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "2017: the Transformer paper ('Attention Is All You Need')\nNov 2022: ChatGPT"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does a language model learn from?",
+    "right": "Huge amounts of human-written text, practising next-word prediction",
+    "wrong": [
+     "One expert who checks every answer",
+     "Only the questions you type today",
+     "A hand-written list of every true fact"
+    ],
+    "why": "Pretraining means predicting the next word across a huge amount of text."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So an AI is a new kind of learner. It takes in a vast pile of writing and copies its patterns, fast and wide."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A new kind of learner"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But in pretraining it sees only examples of fluent language. Nobody marks each sentence as true or false."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fluent is not the same as true"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When an AI gives a confident answer that isn't true, that is called a hallucination."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hallucination"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does it happen? OpenAI researchers argue that training and testing reward guessing over saying 'I'm not sure', like a student guessing on a hard exam."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Guessing is rewarded"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rare facts are the risky ones. In the paper's example, if a fifth of birthday facts appear only once in training, expect errors on at least a fifth of them."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1 in 5 (the paper's example)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is a hallucination?",
+    "right": "A confident answer from an AI that is not true",
+    "wrong": [
+     "A picture the AI draws",
+     "A message saying the AI is switched off",
+     "A correct answer found by searching the web"
+    ],
+    "why": "Hallucination means a model confidently giving an answer that isn't true."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a real test. Nearly a thousand high school maths students used AI tutors in a field experiment, at one high school in Turkey."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Nearly 1,000 students, 1 school, 1 subject"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One tutor worked like a plain chatbot. The other had prompts built to protect learning. Access to AI improved performance on practice."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Plain chatbot tutor || Tutor with learning safeguards"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But without guardrails, AI help could substantially inhibit learning. The safeguards largely reduced that harm, though the study saw no clear gain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Performance is not learning"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the study find about unguarded AI help?",
+    "right": "It raised practice performance but could weaken learning",
+    "wrong": [
+     "It made learning much stronger",
+     "It had no effect at all",
+     "It only helped students who were already top of the class"
+    ],
+    "why": "The researchers found access to AI can improve performance while substantially inhibiting learning without guardrails."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how can you use AI well for learning? Try first yourself, ask for hints or explanations, and always check what it says."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Try the problem first\nAsk for hints and explanations\nCheck its answers (use SIFT)\nRemember: AI is fallible"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Big question next. Can AI help improve AI, and then improve itself again? Machines helping to design better versions of themselves is called recursive self-improvement."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Recursive self-improvement"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People already do a human version of this: tools build better tools, and science improves its own methods. That was class six."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Improving the way we improve"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The idea is old. In the mid-1960s the mathematician I. J. Good wrote that a machine could design better machines. He called the result an 'intelligence explosion'."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Mid-1960s: I. J. Good describes an 'intelligence explosion' (an idea)\n2017: Transformer paper\nNov 2022: ChatGPT"
+   },
+   "cite": [
+    "s24",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Keep two things apart: what has happened, and what someone predicts. Here they are side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Known now: AI is starting to help with AI work; humans are still in the loop || Only predicted: a runaway 'intelligence explosion'; dates like 2027"
+   },
+   "cite": [
+    "s24",
+    "s27",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Known now: AI is starting to help build better AI, but humans are still in the loop. Leading labs still need human oversight for high-level decisions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Known: humans still in the loop"
+   },
+   "cite": [
+    "s24",
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is a present fact, not a prediction?",
+    "right": "Humans still oversee high-level decisions in AI development",
+    "wrong": [
+     "AI will certainly outthink all people by 2027",
+     "An uncontrollable intelligence explosion is already under way",
+     "Self-improving AI will definitely end humanity"
+    ],
+    "why": "Reports describe models as still needing human oversight. The other statements are forecasts or claims about the future."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now predictions. Some essays project superintelligence by 2027, or by the end of this decade. And some leading researchers call an intelligence explosion a credible risk."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Predictions, not facts"
+   },
+   "cite": [
+    "s25",
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement is a prediction about the future?",
+    "right": "Superintelligence will arrive by 2027",
+    "wrong": [
+     "I. J. Good wrote about an intelligence explosion in the 1960s",
+     "ChatGPT appeared in November 2022",
+     "The Transformer paper was published in 2017"
+    ],
+    "why": "The other three are dated records of things that already happened. The first one is a forecast that nobody can yet check."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Experts disagree. Skeptics say new ideas must be tested with huge amounts of computing, so smarter thinking alone could hit a limit."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Compute bottleneck"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another paper argued the barriers are high, though it called this not a decisive argument. Others say the idea is partly hype."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Skeptical voices"
+   },
+   "cite": [
+    "s26",
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do some skeptics doubt a fast runaway loop?",
+    "right": "Testing ideas takes lots of computing and experiments, which can slow it down",
+    "wrong": [
+     "Computers cannot do any research",
+     "Every expert agrees it is impossible",
+     "Humans have banned all AI research"
+    ],
+    "why": "One paper argues that ideas must be tested in compute-heavy experiments, so a loop could fizzle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The honest summary: the loop is an idea with early, partial signs. How fast or far it goes is not known."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unknown: how far it goes"
+   },
+   "cite": [
+    "s24",
+    "s25",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last section: who gets to take part? The ITU estimates 6 billion people were online in 2025, about three-quarters of the world. And 2.2 billion were not."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6 billion online · 2.2 billion offline (2025)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is growth: from 60 percent online in 2020 to 74 percent in 2025."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c3",
+    "text": "Share of world population online"
+   },
+   "cite": [
+    "s11",
+    "s9"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But the gaps are big. 94 percent online in high-income countries, 23 percent in low-income ones. Cities are ahead of rural areas, and men slightly ahead of women."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Share of people online, 2025, by group"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Where do most people who are offline live?",
+    "right": "In low- and middle-income countries (96 percent of those offline)",
+    "wrong": [
+     "In high-income countries",
+     "Mostly in big cities",
+     "Nobody can say"
+    ],
+    "why": "ITU reports that 96 percent of people offline live in low- and middle-income countries."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cost and quality matter too. ITU's head says today's divides come from speed, reliability, affordability and skills. 'Online' is not one thing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Speed\nReliability\nAffordability\nSkills"
+   },
+   "cite": [
+    "s10",
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Language is another gate. W3Techs finds English on about half of websites whose language is known. Spanish comes next at about six percent."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Share of websites by content language, October 2026"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Measuring this is hard. One study argues English is nearer 20 to 30 percent of web content. Either way, W3Techs lists Hindi, Swahili and Tamil under 0.1 percent of sites."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many languages are thinly covered"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A reasoning step, not a measured result here: if AI learns from web text, languages with less text give it less to learn from."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A worry to think about"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now disability. The web's stewards put access at the centre of the design."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Access by everyone regardless of disability is an essential aspect. (W3C)"
+   },
+   "cite": [
+    "s29",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The standard is called WCAG. It explains how to make web content usable for people with disabilities, including people who use screen readers or voice commands."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "WCAG"
+   },
+   "cite": [
+    "s30",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It helps others too, like someone with a broken arm, or someone in bright sunlight. The W3C started its accessibility work in 1997."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Good access helps everyone"
+   },
+   "cite": [
+    "s31",
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is WCAG?",
+    "right": "International guidelines for making web content accessible to people with disabilities",
+    "wrong": [
+     "A search engine",
+     "A type of AI model",
+     "A programming language for building apps"
+    ],
+    "why": "WCAG is developed within the W3C Web Accessibility Initiative to explain how to make web content accessible."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us put the dates in one place, for the history-of-everything timeline."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1975: Altair 8800 kit\n1977: Apple II\n1981: IBM PC\nMar 1989: first web proposal\nEnd of 1990: first web server and browser running\nDec 1991: first US web server\n1997: W3C starts its Web Accessibility Initiative\n2017: Transformer paper\nNov 2022: ChatGPT"
+   },
+   "cite": [
+    "s8",
+    "s1",
+    "s2",
+    "s32",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To remember: the web shares fast, so check sources with SIFT. AI learns from human text and can be wrong. Self-improving AI is an idea, not a settled fact. And access is uneven."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The web shares fast: check with SIFT\nAI learns from human text and can be wrong\nSelf-improving AI: idea, early signs, big disagreement\nAccess is uneven: place, cost, language, disability"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class: how knowledge gets lost. Faster copying helps, but copies can vanish too."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: How Knowledge Gets Lost"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of people online in 2025 (%)",
+   "rows": [
+    {
+     "label": "High-income countries",
+     "value": 94,
+     "source": "s9"
+    },
+    {
+     "label": "Low-income countries",
+     "value": 23,
+     "source": "s9"
+    },
+    {
+     "label": "Urban areas",
+     "value": 85,
+     "source": "s10"
+    },
+    {
+     "label": "Rural areas",
+     "value": 58,
+     "source": "s10"
+    },
+    {
+     "label": "Men",
+     "value": 77,
+     "source": "s9"
+    },
+    {
+     "label": "Women",
+     "value": 71,
+     "source": "s9"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Share of websites by content language, Oct 2026 (% of sites with a known language)",
+   "rows": [
+    {
+     "label": "English",
+     "value": 49.5,
+     "source": "s12"
+    },
+    {
+     "label": "Spanish",
+     "value": 6.1,
+     "source": "s12"
+    },
+    {
+     "label": "German",
+     "value": 5.9,
+     "source": "s12"
+    },
+    {
+     "label": "Japanese",
+     "value": 4.9,
+     "source": "s12"
+    },
+    {
+     "label": "French",
+     "value": 4.6,
+     "source": "s12"
+    },
+    {
+     "label": "Portuguese",
+     "value": 4.1,
+     "source": "s12"
+    },
+    {
+     "label": "Russian",
+     "value": 3.4,
+     "source": "s12"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "line",
+   "title": "Share of the world's people online (%), ITU 2025 estimates",
+   "rows": [
+    {
+     "label": "2020",
+     "value": 60,
+     "source": "s11"
+    },
+    {
+     "label": "2024 (revised)",
+     "value": 71,
+     "source": "s9"
+    },
+    {
+     "label": "2025",
+     "value": 74,
+     "source": "s11"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "The ratchet and faster copying",
+   "links": [
+    "[[cumulative culture]]",
+    "[[printing and schools]]",
+    "[[history of everything timeline]]"
+   ]
+  },
+  {
+   "topic": "Checking a source (SIFT and lateral reading)",
+   "links": [
+    "[[misinformation]]",
+    "[[how knowledge gets lost]]"
+   ]
+  },
+  {
+   "topic": "What a language model is and why it hallucinates",
+   "links": [
+    "[[hallucination]]",
+    "[[extended mind]]"
+   ]
+  },
+  {
+   "topic": "Recursive self-improvement: fact versus prediction",
+   "links": [
+    "[[science improves its methods]]",
+    "[[intelligence explosion]]"
+   ]
+  },
+  {
+   "topic": "Who takes part: access, language, cost, disability",
+   "links": [
+    "[[digital divide]]",
+    "[[web accessibility]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1975",
+   "elsewhere": "In computing, the Altair 8800 kit appeared on a hobby magazine cover in January. Its buzz pushed Bill Gates and Paul Allen to start a software company for it.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "when": "1977",
+   "elsewhere": "Apple began shipping the Apple II in June, and Apple gave away thousands of them to schools.",
+   "cite": [
+    "s8",
+    "s6"
+   ]
+  },
+  {
+   "when": "1981",
+   "elsewhere": "IBM announced its PC. It was widely cloned, and a large software ecosystem grew around it.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "1989 to 1991",
+   "elsewhere": "The web was proposed in March 1989, ran on a first server by the end of 1990, and reached its first US server in December 1991. That same year the European Commission approved its first web project.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "when": "1997",
+   "elsewhere": "The W3C launched its Web Accessibility Initiative.",
+   "cite": [
+    "s32"
+   ]
+  },
+  {
+   "when": "2017 to 2022",
+   "elsewhere": "The Transformer design was published in 2017, and ChatGPT appeared in November 2022.",
+   "cite": [
+    "s22"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "AI may soon improve itself in a runaway 'intelligence explosion'.",
+   "other_view": "Some experts take this seriously. In one study of 25 AI experts, all but two entertained the idea. Some leading researchers call it a credible risk. Skeptics argue that testing ideas needs huge computing power, that barriers to self-improvement are high, and that the term is partly hype. Current systems still need human oversight.",
+   "cite": [
+    "s24",
+    "s25",
+    "s26",
+    "s27",
+    "s28"
+   ]
+  },
+  {
+   "claim": "English makes up about half of the web.",
+   "other_view": "W3Techs reports English on about half of sites with a known language. One research paper argues that English content is nearer 20 to 30 percent when multilingual sites are counted properly. Methods differ, and the two figures measure different things.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "AI tutors help students learn.",
+   "other_view": "In a school experiment, unguarded AI raised practice performance but could substantially inhibit learning. Safeguards largely removed the harm, but no clear gain in learning was seen. It was one school and one subject, so more evidence is needed.",
+   "cite": [
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "claim": "AI hallucinations can never be avoided.",
+   "other_view": "OpenAI's researchers argue hallucinations are not inevitable, because models can decline to answer when unsure. They say current training and scoring rewards guessing, and that this could be changed. Hallucinations persist in current models.",
+   "cite": [
+    "s18",
+    "s19"
+   ]
+  },
+  {
+   "claim": "The web opened knowledge to everyone.",
+   "other_view": "About 2.2 billion people were still offline in 2025, mostly in low- and middle-income countries. Cost, speed, skills, language and disability can still be barriers for people who are online.",
+   "cite": [
+    "s9",
+    "s10",
+    "s33"
+   ]
+  }
+ ]
+}

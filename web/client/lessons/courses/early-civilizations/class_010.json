@@ -1,0 +1,1213 @@
+{
+ "about": {
+  "title": "Early China II: Zhou Rule, Ritual, Trade and Daily Life",
+  "course": "early-civilizations",
+  "class_n": 10,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. The Zhou lasted about eight centuries and the lesson covers rule, ritual, law, farming, silk, trade and the wider world, plus a tomb site shown twice (built, then found). Each idea gets its own short step, so it runs close to the target. The law section is the longest because it needs a few steps. If you need to cut time, skip the crafts step and the coins step."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Zhou dynasty (ca. 1050-221 BCE)",
+   "publisher": "Smithsonian National Museum of Asian Art",
+   "date": "n.d.",
+   "link": "https://asia-archive.si.edu/learn/for-educators/teaching-china-with-the-smithsonian/explore-by-dynasty/zhou-dynasty/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "5.16: The Mandate of Heaven (Early World Civilizations, Lumen)",
+   "publisher": "Humanities LibreTexts",
+   "date": "n.d.",
+   "link": "https://human.libretexts.org/Bookshelves/History/World_History/Early_World_Civilizations_(Lumen)/05%3A_Early_Chinese_Dynasties/5.16%3A_The_Mandate_of_Heaven",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Mandate of Heaven",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mandate_of_Heaven",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Rites of Harmony: Special Exhibition of Bronze Ding of the Shang and Zhou Dynasties",
+   "publisher": "National Museum of China",
+   "date": "2021",
+   "link": "https://en.chnmuseum.cn/exhibition/exhibition_series/temporary_exhibitions/selected_historical_artifacts_exhibitions/202109/t20210914_251209.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Ritual Altar Set, Shang dynasty-Western Zhou dynasty",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/art/collection/search/76974",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Chinese Ritual Bronzes Used For Almost 3,000 Years On Display In New York City",
+   "publisher": "Forbes",
+   "date": "2025-06-10",
+   "link": "https://www.forbes.com/sites/janelevere/2025/06/10/chinese-ritual-bronzes-used-for-almost-3000-years-on-display-in-nyc/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Government, Administration, and Law of the Zhou Period",
+   "publisher": "chinaknowledge.de",
+   "date": "n.d.",
+   "link": "http://www.chinaknowledge.de/History/Zhou/zhou-admin.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Traditional Chinese law",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Traditional_Chinese_law",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Zhou Period Agriculture",
+   "publisher": "chinaknowledge.de",
+   "date": "n.d.",
+   "link": "http://www.chinaknowledge.de/History/Zhou/zhou-econ-agriculture.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The Society of Ancient China: Social Change",
+   "publisher": "TimeMaps",
+   "date": "n.d.",
+   "link": "https://timemaps.com/encyclopedia/ancient-china-society/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "History G380 course reading on the Zhou (well-field system, city dwellers, farmers)",
+   "publisher": "Indiana University",
+   "date": "n.d.",
+   "link": "https://scholarworks.iu.edu/iuswrrest/api/core/bitstreams/e85bc19f-c95c-42a6-8738-2ca0d456e16b/content",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Silk in Antiquity",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Silk/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "History of Ancient Chinese Sericulture: Mulberry Trees, Silkworms, Silk Fibers and Textiles",
+   "publisher": "Springer",
+   "date": "n.d.",
+   "link": "https://link.springer.com/chapter/10.1007/978-981-99-7475-7_26",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "History of China: Zhou and Shang; Economic development",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/history-of-China/The-first-historical-dynasty-the-Shang",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Zhou Dynasty (Eastern Art Online)",
+   "publisher": "Ashmolean Museum, Yousef Jameel Centre for Islamic and Asian Art",
+   "date": "n.d.",
+   "link": "https://jameelcentre.ashmolean.org/collection/4/901/910",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "China and the steppe: reception and resistance (Jessica Rawson)",
+   "publisher": "Antiquity, Cambridge University Press",
+   "date": "2017-04-04",
+   "link": "https://www.cambridge.org/core/journals/antiquity/article/china-and-the-steppe-reception-and-resistance/C8CFF543119597721F43956F2EDB4A28",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Zhou Dynasty",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Zhou_Dynasty/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Neo-Assyrian Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Neo-Assyrian_Empire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Introduction: The Origin and Development of Olmec Research",
+   "publisher": "Dumbarton Oaks",
+   "date": "n.d.",
+   "link": "https://www.doaks.org/resources/olmec-art/introduction",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Suizhou Bianzhong of Marquis Yi of Zeng",
+   "publisher": "UNESCO Memory of the World",
+   "date": "n.d.",
+   "link": "https://www.unesco.org/en/memory-world/suizhou-bianzhong-marquis-yi-zeng",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Marquis Yi of Zeng: Bronze Objects",
+   "publisher": "Google Arts & Culture with Hubei Provincial Museum",
+   "date": "n.d.",
+   "link": "https://artsandculture.google.com/story/the-marquis-yi-of-zeng-%C4%B1-bronze-objects-hubei-provincial-museum-%E6%B9%96%E5%8C%97%E7%9C%81%E5%8D%9A%E7%89%A9%E9%A6%86/qAVhJ6vlhDe4Lg?hl=en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Tomb of Marquis Yi of Zeng",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Tomb_of_Marquis_Yi_of_Zeng",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Tomb of Zenghouyi",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Tomb-of-Zenghouyi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "China's UNESCO-designated chime bells enrich music history",
+   "publisher": "State Council Information Office of China",
+   "date": "2025-04-25",
+   "link": "http://english.scio.gov.cn/chinavoices/2025-04/25/content_117844428.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Zhou dynasty coinage",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Zhou_dynasty_coinage",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "History 410 Keynotes 2: The Crucial Millennium (The Zhou Dynasty)",
+   "publisher": "University of Oregon",
+   "date": "n.d.",
+   "link": "https://darkwing.uoregon.edu/~inaasim/Hist%20410/Hist%20410%20Keynotes2.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Zhou Dynasty Life",
+   "publisher": "Facts and Details",
+   "date": "n.d.",
+   "link": "https://factsanddetails.com/china/cat2/sub2/entry-5398.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Spring and Autumn Period 771-476 BCE of the Eastern Zhou dynasty",
+   "publisher": "ChinaSage",
+   "date": "n.d.",
+   "link": "https://www.chinasage.info/spring-and-autumn.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Hubei Provincial Museum",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Hubei_Provincial_Museum",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Sericulture",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sericulture",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Ritual and Punishment (chapter 5, Legalizing Space in China, by Sanft)",
+   "publisher": "Chinese Legal Culture seminar series",
+   "date": "2016-2017",
+   "link": "https://lsc.chineselegalculture.org/iDocuments/Documents/Seminar/Seminar%202016-2017/170324-%20S%C3%A9ance%20n%C2%B0%2010/Sanft_-Rituals&Punishments.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Constructing the discourse system of Chinese rule of law",
+   "publisher": "Supreme People's Court of China (English site)",
+   "date": "2019-01-09",
+   "link": "https://english.court.gov.cn/2019-01/09/c_761412.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Chinese bronzes: The Zhou dynasty (1046-256 BCE)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/art/Chinese-bronzes/The-Zhou-dynasty-1046-256-bce",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we met the Shang, the first Chinese dynasty that scholars can verify. Today we meet the people who overthrew them: the Zhou."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Early China II: Zhou Rule, Ritual, Trade and Daily Life"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is today's plan. First an idea about who has the right to rule. Then ritual and law, then farming, silk and village life, then trade. We finish with the wider world."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The Mandate of Heaven; 2. Ritual and law; 3. Farming, silk, village life; 4. Trade and neighbours; 5. The world outside China"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who were the Zhou? They came from the far west of the Yellow River region, in what is now Shaanxi. They conquered the Shang in a battle at a place called Muye."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1046 BCE: Battle of Muye. The Shang are overthrown and the Zhou dynasty begins."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After a conquest, a new ruler has a problem. Why should anyone obey you? The Zhou answered with a new idea, and it has a name."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mandate of Heaven"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is what it means. Heaven, called Tian, is a power above the king. Heaven gives a king the right to rule, but only while he rules well."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rules well: keeps the Mandate | Rules badly: loses the Mandate"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now an example. The Zhou said the Shang had fallen into moral decline and had lost the Mandate. So, they said, Heaven's favour had moved to the Zhou."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A king on a throne, with a bright shape above him labelled 'Heaven' and an arrow pointing from the old king to a new one"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check that idea before we go on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mandate of Heaven: rule well, or lose it"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the Mandate of Heaven idea, what could make a king lose the right to rule?",
+    "right": "Ruling badly in the eyes of Heaven",
+    "wrong": [
+     "Being born in the wrong city",
+     "Owning fewer bronze vessels than his neighbours",
+     "Having a capital in the west"
+    ],
+    "why": "The Zhou said the Shang lost the Mandate through moral decline. The idea was that a ruler keeps Heaven's favour only by ruling well."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This idea outlasted the Zhou. It has been called the Zhou's most important contribution to Chinese political thought. And the dynasty itself lasted about eight centuries."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 800 years: the Zhou dynasty, 1046 to 256 BCE"
+   },
+   "cite": [
+    "s3",
+    "s14",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do you run a huge territory with no phones or trains? The early Zhou kings gave regions to relatives and trusted nobles, who ruled them for the king."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fengjian: rule through relatives and nobles"
+   },
+   "cite": [
+    "s1",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Over time the lords grew strong and the king grew weak. In 771 BCE, after attacks from the west, the capital moved east. We call the time before the move Western Zhou, and the time after it Eastern Zhou."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1046-771 BCE: Western Zhou | 771-256 BCE: Eastern Zhou"
+   },
+   "cite": [
+    "s17",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Land gifts were not enough to hold lords together. The Zhou also used ritual: set ceremonies that honoured Heaven and the family ancestors."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ritual (li)"
+   },
+   "cite": [
+    "s1",
+    "s32"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In these ceremonies, food and wine were set out in bronze vessels as gifts for ancestors. People prayed to the spirits to protect the living. The Met holds a set like this, made about the time of the Zhou conquest. It is said to come from a tomb uncovered in 1901."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A group of bronze wine and food vessels on an altar table, decorated with dragons, birds and masks"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ritual also showed rank. From the middle of the Western Zhou, rules said how many ding, a type of bronze food vessel, each rank could use. By the traditional rule, the king used nine, a duke seven, senior officials five and junior officials three."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Ding allowed at ceremonies, by rank",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of the ding as a badge you could not fake. The higher your rank, the more ding you could use. Let's see if that stuck."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Ding allowed at ceremonies, by rank",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How many ding was a duke allowed to use at ceremonies?",
+    "right": "Seven",
+    "wrong": [
+     "Nine",
+     "Five",
+     "Three"
+    ],
+    "why": "The King of Zhou used nine, a duke seven, senior officials five and junior officials three."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Music mattered too. Large sets of bronze bells were part of ceremonies. A gallery note says music was meant to help people follow the social order."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ritual + music = order"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a site where bronze, music and rank all meet: the tomb of Marquis Yi of Zeng. Zeng was a small state in the later Zhou age. Yi was buried about 433 BCE."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Tomb of Marquis Yi of Zeng. Built about 433 BCE (Eastern Zhou)"
+   },
+   "cite": [
+    "s21",
+    "s23"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Inside were 65 bronze bells, weighing nearly five tonnes. The bells carry 3,755 written characters, and many of them are about music and tuning."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "The 65 bells by type",
+    "chart": "c2"
+   },
+   "cite": [
+    "s21",
+    "s24",
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the same site a second time, this time for when it was found. Soldiers levelling a hill for a factory came across it by accident in 1977. Archaeologists began excavating in May 1978, and the bells were played again that August."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 433 BCE: tomb built | 1977: found by accident | May 1978: excavation begins | 1 Aug 1978: bells sound again"
+   },
+   "cite": [
+    "s22",
+    "s21",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the tomb has two dates: when it was built, and when we found it. Here is a question about the gap between them."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 2,400 years between burial (c. 433 BCE) and excavation (1978)"
+   },
+   "cite": [
+    "s20",
+    "s23",
+    "s21"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how many years passed between Marquis Yi's burial and the excavation of his tomb?",
+    "right": "About 2,400 years",
+    "wrong": [
+     "About 240 years",
+     "About 1,200 years",
+     "About 4,000 years"
+    ],
+    "why": "The burial was about 433 BCE and the dig was in 1978 CE. That is roughly 2,400 years, which matches UNESCO's description of the bells."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ritual guided the elite. What about crimes? Early Zhou thinkers paired two tools: ritual, to teach and lead, and punishment, to stop crime. The word for punishment is xing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Li (ritual): guide and teach | Xing (punishment): prevent crime"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Later writers speak of 'nine punishments' of the early Zhou. They included harsh bodily penalties like tattooing and cutting off the nose or feet. That is hard to hear, but it is part of the record."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The 'nine punishments'"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is some good news. Scholars say Zhou penal law looks somewhat softer than Shang law. Kings told officials to be careful, and cases followed set steps, such as questioning both sides."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Be cautious with harsh punishments; question the accuser and the accused; follow ritual principles"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rank mattered in law, too. Under the 'eight considerations', relatives of the king and 'worthy' people could have their punishment reduced."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same crime, different rank, different outcome"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Later, in the 6th century BCE, several states wrote down their penal laws and cast them on bronze cauldrons. Law was moving from custom into writing."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "6th century BCE: penal laws written on bronze cauldrons in several Zhou-era states"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's pull the law part together."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Li (ritual): guide | Xing (punishment): prevent"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pair best describes how early Zhou thinkers hoped to keep order?",
+    "right": "Ritual to guide people, and punishment to prevent crime",
+    "wrong": [
+     "Punishment only, with no ritual",
+     "Ritual only, with no punishments at all",
+     "Written law codes carved in stone for everyone to read"
+    ],
+    "why": "The plan attributed to the Duke of Zhou used ritual and music to lead people, with punishment to stop crimes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now daily life. Most people farmed. Millet was the old staple grain, and the Zhou even traced their family to Houji, called Lord Millet. Wheat, rice, barley, beans and hemp were grown too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Millet; wheat; rice; barley; beans; hemp"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meals were simple. Millet and wheat were usually boiled into a gruel, with vegetables or meat added if you had them."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A clay pot of steaming grain gruel with chopped vegetables"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who owned the land? Nobles did. A famous idea is the well-field system: a plot split into nine squares, like the character for 'well'. Peasants farmed their own plots and also worked a ninth plot for the lord."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid of nine squares like a tic-tac-toe board. Eight squares are family plots and one square is the lord's field."
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians are unsure how widely this really worked. Later writers described it as an ideal. Let's check what the ninth plot was for."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Well-field system: a nine-square plan"
+   },
+   "cite": [
+    "s9",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the well-field idea, what was the ninth plot for?",
+    "right": "Growing food for the lord, worked by all the peasants",
+    "wrong": [
+     "A village school",
+     "A market for silk",
+     "Storing bronze vessels"
+    ],
+    "why": "The ninth plot was kept for the lord, and the peasants had to work it as well as their own land."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Farmers changed over time. Under the early Zhou, peasants were tied to the land as serfs. From the middle of the Zhou age, more of them became free farmers."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Early Zhou: serfs tied to the land | Later Zhou: more free farmers"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Iron helped. Iron farming tools only appeared in the late Western Zhou. By the Spring and Autumn period iron was used for ploughs and axes."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Late Western Zhou: iron working appears | Spring and Autumn period: iron ploughs and axes"
+   },
+   "cite": [
+    "s9",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where did people live? Some scholars think most people lived in walled towns, and farmers moved to field huts in spring and summer. The honest answer is that we can't be sure."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A walled town with fields around it and small field huts among the crops"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Crafts were skilled. Early Zhou bronzes continued the Shang style, often made by the same craftsmen or their descendants. Jade objects were more numerous and varied than in the Shang."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bronze vessels; jade objects; weapons; chariot fittings"
+   },
+   "cite": [
+    "s33",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now silk. Silk is a fabric made from silkworm cocoons. The worms are fed mulberry leaves, and the threads are gathered and woven. China was where silk began."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sericulture: raising silkworms to make silk"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Zhou writings mention silkworms and mulberry, including a line in a poem collection called the Classic of Poetry. Silk was prized and traded far away. One source reports Shang silk found in an Egyptian tomb."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A woman picking mulberry leaves beside trays of silkworms"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check on the new word."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sericulture"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is sericulture?",
+    "right": "Raising silkworms on mulberry leaves and making silk from their cocoons",
+    "wrong": [
+     "Casting bronze vessels for ancestors",
+     "Farming millet in nine plots",
+     "Writing laws on bronze cauldrons"
+    ],
+    "why": "Sericulture means cultivating mulberry leaves, tending silkworms, gathering cocoon threads and weaving silk."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now trade. Trade between regions grew in Zhou China. Great commercial centres arose, and the new cities wanted luxuries made of bronze, gold, lacquer and silk."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bronze; gold and silver inlay; lacquer; silk; ceramics; precious stones"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Money changed too. In the Shang, cowrie shells were used as money. Later came spade-shaped coins, and from about 350 BCE round coins with holes. These are some of the earliest coins in the world."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Shang: cowrie shells | Later Zhou: spade coins, then round coins with holes"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What about neighbours? The Zhou had contact with peoples of the northern steppe. Scholars say bronze, iron and horse-drawn chariots in China grew out of relations like these."
+   },
+   "show": {
+    "kind": "map",
+    "text": "North China with the Zhou lands in the centre and the steppe to the north and west, with arrows for exchange of horses and bronze"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Zhou also made bronze horse fittings, and traded them on their northern frontier. But contact was not always friendly. Attacks from the west led to the move east in 771 BCE."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Horse fittings in bronze traded north; attacks from the west in 771 BCE"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these did the Zhou world seek from its northern and western neighbours?",
+    "right": "Horses",
+    "wrong": [
+     "Spade-shaped coins",
+     "Mulberry leaves",
+     "Rice"
+    ],
+    "why": "Scholars link Zhou horses and chariot technology to steppe contacts, and the Zhou also traded bronze horse fittings on the northern frontier."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Time to look outside China. Around 911 BCE, far to the west, the Neo-Assyrian Empire began to grow. It became the largest empire the world had yet seen."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1046 BCE: Zhou rule begins | 911 BCE: Neo-Assyrian Empire begins in the Near East"
+   },
+   "cite": [
+    "s18",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And across the Pacific, the Olmec at San Lorenzo, in what is now Mexico, were at their peak between 1150 and 900 BCE. They carved huge basalt heads. We meet them next class."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge carved stone head with a flat nose and a close-fitting helmet, standing in a clearing"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which people were carving colossal stone heads at San Lorenzo while the Zhou ruled China?",
+    "right": "The Olmec",
+    "wrong": [
+     "The Shang",
+     "The Assyrians",
+     "The Harappans"
+    ],
+    "why": "San Lorenzo was the main Olmec site in the period 1150 to 900 BCE, and it is known for basalt colossal heads."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. The Mandate of Heaven said kings keep power by ruling well. Ritual and law kept the ranks in order. Farmers, silk and trade fed and clothed the dynasty. Next time, the Americas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mandate of Heaven; ritual, rank and law; farming and silk; trade with neighbours; the wider world"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s7",
+    "s10",
+    "s12",
+    "s16"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Ding (bronze food vessels) allowed by rank, after the mid-Western Zhou",
+   "rows": [
+    {
+     "label": "King of Zhou",
+     "value": 9,
+     "source": "s4"
+    },
+    {
+     "label": "Duke",
+     "value": 7,
+     "source": "s4"
+    },
+    {
+     "label": "Senior official",
+     "value": 5,
+     "source": "s4"
+    },
+    {
+     "label": "Junior official",
+     "value": 3,
+     "source": "s4"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "pie",
+   "title": "The 65 bells of Marquis Yi of Zeng, by type",
+   "rows": [
+    {
+     "label": "Niu bells",
+     "value": 19,
+     "source": "s21"
+    },
+    {
+     "label": "Yong bells",
+     "value": 45,
+     "source": "s21"
+    },
+    {
+     "label": "Bo bell",
+     "value": 1,
+     "source": "s21"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Mandate of Heaven",
+   "links": [
+    "[[Zhou dynasty]]",
+    "[[Shang dynasty]]",
+    "[[Battle of Muye]]"
+   ]
+  },
+  {
+   "topic": "Fengjian (rule through relatives and nobles)",
+   "links": [
+    "[[Western Zhou]]",
+    "[[Eastern Zhou]]"
+   ]
+  },
+  {
+   "topic": "Ritual Altar Set at the Met (made late 11th century BCE)",
+   "links": [
+    "[[Ritual bronzes]]",
+    "[[Ding]]"
+   ]
+  },
+  {
+   "topic": "Ritual Altar Set at the Met (said to come from a tomb uncovered in 1901)",
+   "links": [
+    "[[Ritual bronzes]]",
+    "[[Shang dynasty]]"
+   ]
+  },
+  {
+   "topic": "Ding and rank",
+   "links": [
+    "[[Ritual (li)]]",
+    "[[Ritual bronzes]]"
+   ]
+  },
+  {
+   "topic": "Tomb of Marquis Yi of Zeng (built about 433 BCE)",
+   "links": [
+    "[[Bianzhong bells]]",
+    "[[Eastern Zhou]]",
+    "[[Ritual (li)]]"
+   ]
+  },
+  {
+   "topic": "Tomb of Marquis Yi of Zeng (found 1977, excavated 1978)",
+   "links": [
+    "[[Bianzhong bells]]",
+    "[[Archaeology in China]]"
+   ]
+  },
+  {
+   "topic": "Li and xing (ritual and punishment)",
+   "links": [
+    "[[Duke of Zhou]]",
+    "[[Traditional Chinese law]]"
+   ]
+  },
+  {
+   "topic": "Well-field system",
+   "links": [
+    "[[Zhou farming]]",
+    "[[Serfs and free farmers]]"
+   ]
+  },
+  {
+   "topic": "Silk and sericulture",
+   "links": [
+    "[[Trade and contact with neighbours]]",
+    "[[Mesopotamia III: Trade, Everyday Life and Empires]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Trade with the steppe (horses and bronze)",
+   "links": [
+    "[[Zhou coinage]]",
+    "[[Western Zhou]]"
+   ]
+  },
+  {
+   "topic": "San Lorenzo (Olmec)",
+   "links": [
+    "[[The Americas I: Caral, the Olmec and Early Cities]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1046 BCE (Zhou conquest of the Shang)",
+   "elsewhere": "In the Near East, the Middle Assyrian Empire was lost in the late 11th century BCE. In Mexico, the Olmec at San Lorenzo were at their height (about 1150 to 900 BCE).",
+   "cite": [
+    "s18",
+    "s19"
+   ]
+  },
+  {
+   "when": "911 BCE",
+   "elsewhere": "The Neo-Assyrian Empire began with the accession of Adad-nirari II. It later grew into the largest empire the world had yet seen.",
+   "cite": [
+    "s18"
+   ]
+  },
+  {
+   "when": "About 900 BCE",
+   "elsewhere": "San Lorenzo, the first major Olmec centre, declined sharply, and the Olmec site of La Venta rose to prominence.",
+   "cite": [
+    "s19"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Mandate of Heaven was a moral rule: a king who rules badly loses the right to rule.",
+   "other_view": "Some scholars treat it mainly as a political justification, since it was first used to support the Zhou overthrow of the Shang. Some also think the Zhou may have invented the earlier Xia dynasty to strengthen their case. Notably, no Western Zhou bronze inscriptions mention the Xia.",
+   "cite": [
+    "s2",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The Zhou conquered the Shang in 1046 BCE.",
+   "other_view": "Sources give slightly different dates. Some give 1046 BCE for the Battle of Muye, while others say about 1050 BCE. This lesson uses 1046.",
+   "cite": [
+    "s2",
+    "s1"
+   ]
+  },
+  {
+   "claim": "The well-field system was how Zhou farmland was organised.",
+   "other_view": "The well-field system is described in later texts. Some historians doubt it was ever a strict, widespread system and treat it as an ideal. The land was owned by nobles, and farmers were not simply free communities.",
+   "cite": [
+    "s9",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Ritual was for nobles and punishment was for commoners.",
+   "other_view": "A famous ritual text says ritual does not reach down to commoners and punishment does not reach up to nobles. A scholar notes that Western Zhou evidence shows nobles could suffer bodily punishments. Zhou law also allowed reduced punishments for some ranks, so practice was more mixed than the saying suggests.",
+   "cite": [
+    "s31",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Most Zhou people lived in walled towns and farmed from field huts.",
+   "other_view": "This is one reading of early texts. A scholar of the period says we cannot yet answer clearly how class related to town and country.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "claim": "Silk began in China around 2700 BCE.",
+   "other_view": "The earliest known woven silk is dated about 2700 BCE, but some archaeological records point to silk as early as the Yangshao period (5000-3000 BCE). Dates for the very beginnings are uncertain.",
+   "cite": [
+    "s12",
+    "s30"
+   ]
+  },
+  {
+   "claim": "The Marquis Yi bell set has 65 bells.",
+   "other_view": "Most sources, including UNESCO-linked coverage and the Hubei Provincial Museum's own story, say 65 bells. One museum summary says the complete set has 54 pieces. Counts differ by source, so check the museum for the latest figure.",
+   "cite": [
+    "s24",
+    "s21",
+    "s29"
+   ]
+  }
+ ]
+}

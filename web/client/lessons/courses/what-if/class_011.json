@@ -1,0 +1,823 @@
+{
+ "about": {
+  "title": "Your own 'What if?': putting the tools to work",
+  "course": "what-if",
+  "class_n": 11,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 28,
+  "length_note": "A little over the usual 25 minutes. This class recaps the tiers and the toolkit, then has you build your own card, with a writing pause, a practice conversation and a final thought experiment. Pause at the 'Pause and write' beat and at the last question for as long as you like."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Karl Popper (falsifiability and its limits)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/popper/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The Fine Art of Baloney Detection (Carl Sagan, from The Demon-Haunted World)",
+   "publisher": "PDF copy hosted by Freie Universität Berlin",
+   "date": "1995",
+   "link": "https://www.inf.fu-berlin.de/lehre/pmo/eng/Sagan-Baloney.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The Fine Art of Baloney Detection: Sagan's Essay Three Decades Later (Massimo Pigliucci)",
+   "publisher": "Skeptical Inquirer",
+   "date": "2026-06",
+   "link": "https://skepticalinquirer.org/2026/06/the-fine-art-of-baloney-detection-sagans-essay-three-decades-later/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Students' Civic Online Reasoning: A National Portrait",
+   "publisher": "Stanford University (Stanford Digital Repository)",
+   "date": "2021",
+   "link": "https://stacks.stanford.edu/file/druid:cz440cm8408/Students'%20Civic%20Online%20Reasoning_2021.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Improving college students' fact-checking strategies through lateral reading instruction in a general education civics course",
+   "publisher": "Cognitive Research: Principles and Implications (via PubMed Central)",
+   "date": "2021",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8012470/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Covering scientific consensus: What to avoid and how to get it right",
+   "publisher": "Journalist's Resource",
+   "date": "n.d.",
+   "link": "https://journalistsresource.org/media/scientific-consensus-news-tips/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Glossary: Scientific Consensus",
+   "publisher": "GreenFacts",
+   "date": "n.d.",
+   "link": "https://www.greenfacts.org/glossary/abc/consensus.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Widespread use of National Academies consensus reports by the American public",
+   "publisher": "PNAS (via PubMed Central)",
+   "date": "2022-02-22",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8892306/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Anatol Rapaport on argument (excerpt of Daniel Dennett's account of the rules)",
+   "publisher": "Serpentine (blog quoting Dennett)",
+   "date": "2007-02-15",
+   "link": "https://www.serpentine.com/2007/02/15/anatol-rapaport-on-argument/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Rapoport's rules: A 4-step strategy to de-escalate tense arguments",
+   "publisher": "Big Think",
+   "date": "n.d.",
+   "link": "https://bigthink.com/the-learning-curve/rapoports-rules-arguments/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Intellectual Humility Defined",
+   "publisher": "Greater Good Science Center, UC Berkeley",
+   "date": "n.d.",
+   "link": "https://greatergood.berkeley.edu/topic/humility/definition",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "What Does Intellectual Humility Look Like? (Mark Leary)",
+   "publisher": "Greater Good Science Center, UC Berkeley",
+   "date": "2021-11-03",
+   "link": "https://greatergood.berkeley.edu/article/item/what_does_intellectual_humility_look_like",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "How Humility Can Help Us Bridge Our Political Divides",
+   "publisher": "Greater Good Science Center, UC Berkeley",
+   "date": "n.d.",
+   "link": "https://greatergood.berkeley.edu/article/item/how_humility_can_help_us_bridge_our_political_divides",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Younger Dryas Impact: A Failed Hypothesis",
+   "publisher": "Skeptical Inquirer",
+   "date": "2025",
+   "link": "https://skepticalinquirer.org/2025/06/the-younger-dryas-impact-a-failed-hypothesis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Great balls of fire! Researchers find evidence for Younger Dryas comet-impact theory in ocean cores",
+   "publisher": "University of South Carolina News & Events",
+   "date": "2025-08-08",
+   "link": "https://sc.edu/uofsc/posts/2025/08/08-younger-dryas-comet.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Ocean sediments might support theory that comet impact triggered Younger Dryas cool-off",
+   "publisher": "Phys.org",
+   "date": "2025-08",
+   "link": "https://phys.org/news/2025-08-ocean-sediments-theory-comet-impact.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "A Blind Test of the Younger Dryas Impact Hypothesis",
+   "publisher": "PLOS ONE (via PubMed Central)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4938604/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Steady-State Universe: A viable alternative to the Big Bang?",
+   "publisher": "Big Think",
+   "date": "n.d.",
+   "link": "https://bigthink.com/starts-with-a-bang/steady-state-universe-alternative-big-bang/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The Cosmic Microwave Background (Astro 801)",
+   "publisher": "Penn State, College of Earth and Mineral Sciences",
+   "date": "n.d.",
+   "link": "https://courses.ems.psu.edu/astro801/content/l10_p8.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a look at what you will build today. Where this idea stands: a comet set off the Younger Dryas cold spell, about 13,000 years ago."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Where this idea stands\nIdea: a comet or airburst triggered the Younger Dryas cold spell\nTier: between 'active research debate' and 'minority scholarly view'\nAccepted view: most experts do not accept an impact as the cause\nStill open: new sediment studies are still being tested"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the card is fair to both sides. Supporters point to new ocean-core studies. Most experts say the evidence still falls short."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fair to both sides"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By the end, you can make a card like this for any harmless idea you love. Five steps, one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Choose an idea\n2. Find the accepted view\n3. Place it in a tier\n4. Write your four-line card\n5. Say what would change your mind"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a quick recap. Our tiers run from most to least backed by experts. The top tier is mainstream consensus: experts in a field broadly agree."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mainstream consensus"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Consensus is not certainty. It is where the evidence points today, and new research can change it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Consensus is not certainty"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The middle two tiers. Active research debate: experts are testing it right now. Minority scholarly view: some qualified experts hold it, most do not."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Active research debate: experts are testing it now | Minority scholarly view: some qualified experts hold it, most do not"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The last two tiers. Popular speculation: widely shared, but not seriously tested by experts. Fiction: invented on purpose, as a story."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Popular speculation: widely shared, little expert testing | Fiction: made up on purpose, as a story"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A film invents a lost city to tell a good story and never claims the city is real. Which tier is that?",
+    "right": "Fiction",
+    "wrong": [
+     "Mainstream consensus",
+     "Active research debate",
+     "Minority scholarly view"
+    ],
+    "why": "Fiction is invented on purpose and does not claim to be true. The other tiers are about claims that experts have studied or hold."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the toolkit. Tool one: independent confirmation. Does someone working separately find the same thing?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Independent confirmation"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tool two: keep more than one explanation alive and let them compete. Don't settle for the first good story."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More than one explanation"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tool three: lateral reading. Met an unfamiliar source? Leave the page and see what other sources say about it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lateral reading: leave the page, check around"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A website you have never heard of makes a bold claim. What did professional fact-checkers do first?",
+    "right": "They left the site and checked what other sources said about it.",
+    "wrong": [
+     "They read the whole site carefully from top to bottom.",
+     "They counted how many pages the site had.",
+     "They judged how professional the site looked."
+    ],
+    "why": "In the Stanford research, fact-checkers clicked away from an unfamiliar site and read laterally. Later studies found students taught this method used it more."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tool four: what would count against the idea? Karl Popper's test is that a scientific idea must clash with some possible observation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What would count against it?"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which description fits a testable idea?",
+    "right": "It says what you should find, and what finding would count against it.",
+    "wrong": [
+     "It fits every result, so it can never be wrong.",
+     "Many people find it appealing.",
+     "One famous person once said it was true."
+    ],
+    "why": "An idea that fits every possible result tells us nothing. A testable idea takes a risk: some observation could show it wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One caution. Tools are not machines. Sagan warned his kit can be used instead of thinking, and Popper allowed that one clash rarely settles things alone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tools help thinking. They don't replace it."
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: choose your idea. Pick something curious and harmless. Our rule: nothing aimed at a group of people, and nothing that could put someone's health at risk."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Good picks: a puzzle about the sky, the past, or how life changed | Skip: anything blaming a group of people, or advice about medicine"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is a good pick for this exercise?",
+    "right": "Could the universe have bounced from an earlier universe?",
+    "wrong": [
+     "A theory that blames a certain group of people for a world event",
+     "A claim that a common medicine is secretly harmful, so people should stop taking it",
+     "A story written to make people dislike their neighbours"
+    ],
+    "why": "Questions about the cosmos or the distant past harm no one. Ideas that target people, or could lead someone to harm their health, are left out of this course."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: find the accepted view first. You can't say how an idea differs until you know what it differs from."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Accepted view first"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: steady state. Since the mid-1960s, the hot Big Bang has been the generally accepted account of where the universe came from."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Accepted view: the Big Bang, backed by the cosmic microwave background | The old rival: the steady-state idea"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did one win? They made different predictions. Steady state said the background temperature stays the same over time. The Big Bang said it rises as we look further back."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Steady state predicted: background temperature does not change with redshift | Big Bang predicted: it rises with redshift"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A testable difference. Later, more detailed observations ruled steady state out as a viable alternative. The evidence did the deciding."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The evidence decided"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where to look for an accepted view: textbooks, universities, museums, and expert committee reports, like those of the National Academies. Read them laterally too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Textbooks\nUniversity pages\nMuseums\nExpert committee reports"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three: place your idea in a tier. Ask three questions, in order."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Do experts broadly agree?\nAre experts actively testing it?\nDo some qualified experts hold it?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sometimes good sources disagree. Our comet card shows it: one university page calls it an ongoing debate, and a skeptics' magazine says most experts reject it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "University of South Carolina news page: an ongoing debate | Skeptical Inquirer: rejected by most experts"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Two reliable sources place your idea in different tiers. What is the best move?",
+    "right": "Say so plainly and show what each source rests on.",
+    "wrong": [
+     "Choose whichever tier you like better.",
+     "Leave the tier blank and say nothing.",
+     "Drop the source you disagree with."
+    ],
+    "why": "An honest card shows the disagreement. That is more useful than hiding it, and it is kinder to both sides."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four: write your card. Four short lines. Plain words are best."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Idea:\nTier:\nAccepted view:\nStill open:"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Pause here and write your four lines for your own idea. Short sentences are perfect. Press play when you are ready."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Pause and write"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step five: what would change my mind? For the comet idea, critics point to the missing crater, and to markers that other events can also leave."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A critic would want: a crater, or other convincing independent evidence | Both sides can ask: can other teams reproduce the markers?"
+   },
+   "cite": [
+    "s14",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A good line has a shape: 'If this is found, I would think again.' It names something that could really happen."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "If this is found, I would think again"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which is a good 'what would change my mind' line?",
+    "right": "If independent teams cannot reproduce the evidence, I will doubt the idea.",
+    "wrong": [
+     "Nothing could ever change my mind.",
+     "If enough people online agree, I will believe it.",
+     "If someone is rude about it, I will know I am right."
+    ],
+    "why": "It names a real, checkable finding and ties back to independent confirmation. The other lines can never be tested, or depend on popularity or mood."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the human part. Argue with the idea, never the person. Research links intellectual humility with being less defensive and more open to others' views."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Argue with the idea, not the person"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Philosopher Daniel Dennett shares four rules from Anatol Rapoport. Rule one: state their view so clearly and fairly that they are glad you put it that way."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Dennett describes the goal as a reply of 'Thanks, I wish I'd thought of putting it that way.'"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rule two: list what you agree on. Rule three: say something you learned from them. Only then, rule four, offer a doubt."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Say their view fairly\n2. List what you agree on\n3. Say what you learned\n4. Only then, offer your doubt"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's practise on a friend's idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rule one comes first"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Your friend loves the idea of a lost civilization from the Ice Age. What is the best way to begin?",
+    "right": "Say their view back fairly and ask, 'Have I got that right?'",
+    "wrong": [
+     "Open with the accepted view and why they are mistaken.",
+     "Ask why anyone would believe something like that.",
+     "Tell them that experts have settled it."
+    ],
+    "why": "Rule one asks you to restate their view fairly before any criticism. It shows you listened, and they are more likely to listen back."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watch me use the rules on the comet idea, with A holding it. You think a comet may have set off the cold spell, and new ocean cores help your case. Right?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two people at a table with a mud core sample between them, leaning in and listening"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Right. Though I admit the new results do not prove it directly."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The same two people, one nodding"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We agree it is still being tested. I learned the cores are a new line of evidence. My doubt: no crater has been found."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Agree: still being tested\nLearned: ocean cores are new evidence\nDoubt: no crater found"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Three handy phrases. 'Have I understood you?' 'What would change your mind?' 'Here is where I am unsure.' Also ask yourself: why do I disagree?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Have I understood you?\nWhat would change your mind?\nHere is where I am unsure."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more check. Humility works even if you are the only one being humble in the conversation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Idea, not person"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which sentence argues with the idea, not the person?",
+    "right": "I see the missing crater as a gap. How would you answer that?",
+    "wrong": [
+     "Only someone gullible would believe that.",
+     "You never check anything.",
+     "People like you always fall for this."
+    ],
+    "why": "The first sentence names a specific point in the evidence and invites an answer. The others judge the person, which ends the conversation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, a thought experiment of your own. Pick one 'What if?' from this course, or bring a harmless one of your own."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What if a civilization existed before the Ice Age ended?\nWhat if the universe cycles, bouncing again and again?\nWhat if visitors helped build the pyramids?\nOr your own harmless question"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Run it through the five steps. Take your time. No one is timing you."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Choose\n2. Accepted view\n3. Tier\n4. Four-line card\n5. What would change my mind"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the twist. Imagine a trusted new study on your idea comes out tomorrow, and says the opposite of what you hoped. What do you do?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "If the evidence says no"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A trusted new study contradicts your favourite idea. What is the best response?",
+    "right": "Update my card, tier included, and thank the evidence.",
+    "wrong": [
+     "Hunt for reasons to ignore it.",
+     "Decide the study must be flawed because it disagrees with me.",
+     "Stop reading about the idea."
+    ],
+    "why": "Sagan describes warm but tentative acceptance for ideas that survive testing, and consensus can change. A good thinker lets a card change with the evidence."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. You can now pick an idea, place it in a tier, state the accepted view, say what would change your mind, and talk kindly. Keep wondering."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pick an idea\nPlace it in a tier\nState the accepted view\nSay what would change your mind\nDisagree kindly"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "The five tiers",
+   "links": [
+    "[[How to play 'What if?': the five tiers and the evidence toolkit]]"
+   ]
+  },
+  {
+   "topic": "Where this idea stands (the four-line card)",
+   "links": [
+    "[[The Younger Dryas: what happened at the end of the Ice Age?]]",
+    "[[The Big Bang and the rival that lost: steady state]]"
+   ]
+  },
+  {
+   "topic": "Evidence toolkit: independent confirmation, lateral reading, testable ideas",
+   "links": [
+    "[[Real conspiracies and unproven ones: how people weigh evidence]]"
+   ]
+  },
+  {
+   "topic": "Rapoport's rules and kind disagreement",
+   "links": [
+    "[[Case studies: the Moon landings, a presidential assassination and other open questions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Asking 'what would change my mind?' is a simple, reliable test of an idea.",
+   "other_view": "Popper's own view was that in practice one clash with the evidence is never enough to settle a theory. Theories are often kept despite anomalies, so weighing evidence takes judgement as well as a checklist.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "claim": "The Younger Dryas comet idea is rejected by most experts.",
+   "other_view": "A skeptics' magazine says most experts reject it, and notes no crater has been found. Researchers at the University of South Carolina call it an ongoing debate and report ocean-core evidence. A science-news summary says those results do not directly confirm the idea.",
+   "cite": [
+    "s14",
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Use the baloney detection kit on any claim.",
+   "other_view": "Sagan himself warned the kit can be misused, applied out of context, or used as a rote stand-in for thinking.",
+   "cite": [
+    "s2"
+   ]
+  },
+  {
+   "claim": "When you lack expertise, go with the consensus.",
+   "other_view": "One glossary says that is the best choice without the expertise to judge. The same sources stress that consensus is not unanimous or certain, and that disagreement can help science progress.",
+   "cite": [
+    "s7",
+    "s6"
+   ]
+  }
+ ]
+}

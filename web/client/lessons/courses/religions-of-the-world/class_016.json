@@ -1,0 +1,1429 @@
+{
+ "about": {
+  "title": "Newer Movements and Non-Religious Worldviews",
+  "course": "religions-of-the-world",
+  "class_n": 16,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "This class runs a little over 30 minutes because it covers six topics: Rastafari, Modern Paganism (with Wicca and Heathenry), Unitarian Universalism, humanism with atheism and agnosticism, spiritual-but-not-religious people, and where these groups live. Each topic has its own short check question. Good places to pause are after Rastafari, after Modern Paganism, and after Unitarian Universalism."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Rastafari",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Rastafari",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Rastafari Movement (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/nutrition-and-dietetics/rastafari-movement/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Rastafari",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Rastafari",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Rastafari (mirror of the Wikipedia article)",
+   "publisher": "Wikiwand",
+   "date": "n.d.",
+   "link": "https://www.wikiwand.com/en/Rastafari",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Ethiopian Orthodox vs Rastafari Explained",
+   "publisher": "Rasta Today",
+   "date": "n.d.",
+   "link": "https://blog.rastatoday.com/ethiopian-orthodox-vs-rastafari/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Rastafarianism",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/history-of-rastafarianism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Rastafari",
+   "publisher": "CDAMM",
+   "date": "n.d.",
+   "link": "https://www.cdamm.org/articles/rastafari",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Drawing Down the Moon (book)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Drawing_Down_the_Moon_(book)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Living Witchcraft",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Living_Witchcraft",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Uncovering the Obscured: Paganism and the Occult in the Modern World",
+   "publisher": "MagellanTV",
+   "date": "n.d.",
+   "link": "https://www.magellantv.com/articles/uncovering-the-obscured-paganism-and-the-occult-in-the-modern-world",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Wheel of the Year",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Wheel_of_the_Year",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Wheel of the Year: The 8 Wiccan Sabbats",
+   "publisher": "Pagan Grimoire",
+   "date": "n.d.",
+   "link": "https://www.pagangrimoire.com/wheel-of-the-year/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Modern paganism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Modern_paganism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Paganism Is the Oldest, Newest Religion",
+   "publisher": "HowStuffWorks",
+   "date": "n.d.",
+   "link": "https://people.howstuffworks.com/paganism.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Heathenry (new religious movement)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Heathenry_(new_religious_movement)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Ásatrú and Heathenry, Belief and Beards, Racists and Reporters",
+   "publisher": "The Norse Mythology Blog",
+   "date": "2019-01-01",
+   "link": "https://www.norsemyth.org/2019/01/asatru-and-heathenry-belief-and-beards.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Asatru (Iceland)",
+   "publisher": "World Religions and Spirituality Project",
+   "date": "2020-08-02",
+   "link": "https://wrldrels.org/2020/08/02/asatru-iceland/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Ásatrúarfélagið",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/%C3%81satr%C3%BAarf%C3%A9lagi%C3%B0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Jörmundur Ingi Hansen",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/J%C3%B6rmundur_Ingi_Hansen",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Modern paganism in the United Kingdom",
+   "publisher": "Wikipedia (citing the 2021/22 UK Census)",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Modern_paganism_in_the_United_Kingdom",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Modern paganism in the United States",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Modern_paganism_in_the_United_States",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Unitarian Universalism Develops",
+   "publisher": "The Pluralism Project, Harvard University",
+   "date": "n.d.",
+   "link": "https://pluralism.org/unitarian-universalism-develops",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Unitarianism, Universalism, and Unitarian Universalism (Religion Compass entry)",
+   "publisher": "Harvard University (DASH repository)",
+   "date": "n.d.",
+   "link": "https://dash.harvard.edu/server/api/core/bitstreams/7312037d-432c-6bd4-e053-0100007fdf3b/content",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "A Brief Overview of the History of Unitarian Universalism",
+   "publisher": "American Humanist Association",
+   "date": "n.d.",
+   "link": "https://americanhumanist.org/wp-content/uploads/2016/11/unitarianism.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Unitarian Universalist Principles and Article 2",
+   "publisher": "Quimper Unitarian Universalist Fellowship",
+   "date": "n.d.",
+   "link": "https://www.quuf.org/unitarian-universalist-principles-and-article-2/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Unitarian Universalism and LGBTQ people",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Unitarian_Universalism_and_LGBTQ_people",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Humanism: FAQs",
+   "publisher": "Humanists International",
+   "date": "n.d.",
+   "link": "https://humanists.international/what-is-humanism/faqs/?lang=fr",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The Amsterdam Declaration",
+   "publisher": "Humanists International",
+   "date": "n.d.",
+   "link": "https://humanists.international/what-is-humanism/the-amsterdam-declaration/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Amsterdam Declaration 1952",
+   "publisher": "Humanists International",
+   "date": "1952",
+   "link": "https://humanists.international/policy/amsterdam-declaration-1952/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Definitions of humanism",
+   "publisher": "Understanding Humanism",
+   "date": "n.d.",
+   "link": "https://understandinghumanism.org.uk/what-is-humanism/definitions/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Atheism and Agnosticism",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/atheism-agnosticism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "T H Huxley",
+   "publisher": "Humanists UK",
+   "date": "n.d.",
+   "link": "https://humanists.uk/humanism/the-humanist-tradition/19th-century-freethinkers/huxley/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Agnosticism (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/religion-and-philosophy/agnosticism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Agnostic atheism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Agnostic_atheism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Many Religious ‘Nones’ Around the World Hold Spiritual Beliefs",
+   "publisher": "Pew Research Center",
+   "date": "2025-09-04",
+   "link": "https://www.pewresearch.org/religion/2025/09/04/many-religious-nones-around-the-world-hold-spiritual-beliefs/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "Pew study reveals nonreligious adults’ nuanced beliefs",
+   "publisher": "Angelus News",
+   "date": "n.d.",
+   "link": "https://angelusnews.com/news/nation/pew-global-nones-study/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Are the ‘nones’ new kinds of believers? New Pew study explores diverse views of ‘nones’ around the world",
+   "publisher": "Deseret News",
+   "date": "2025-09-04",
+   "link": "https://www.deseret.com/faith/2025/09/04/nones-religion-faith-spirituality-pew-study/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "Spiritual but not religious",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Spiritual_but_not_religious",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "How the Global Religious Landscape Changed From 2010 to 2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/how-the-global-religious-landscape-changed-from-2010-to-2020/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s41",
+   "title": "Countries with the most people with no religion & global unaffiliated population change, 2010-2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/religiously-unaffiliated-population-change/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s42",
+   "title": "Pew report: How the global religious landscape changed from 2010 to 2020",
+   "publisher": "Catholic World Report",
+   "date": "2025-06-09",
+   "link": "https://www.catholicworldreport.com/2025/06/09/news-264641-pew-report-how-the-global-religious-landscape-changed-from-2010-to-2020/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 16. Today we meet religious movements that began, or were revived, in the last two centuries. We also look at worldviews that do not include religion."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Newer Movements and Non-Religious Worldviews"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "“Newer” is a relative word. Some of these groups are under a hundred years old. Others build on much older roots. As always, we describe each one the way its own people do."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Describe, don’t rank"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our path. Rastafari. Modern Paganism, with Wicca and Heathenry. Unitarian Universalism. Humanism, atheism and agnosticism. Then spiritual-but-not-religious people, and where these groups are found."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Rastafari; 2. Modern Paganism (Wicca, Heathenry); 3. Unitarian Universalism; 4. Humanism, atheism, agnosticism; 5. Spiritual but not religious; 6. Where they are found today"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let’s begin with Rastafari. First, a word about the word. Many followers say “Rastafari” and dislike “Rastafarianism”, because they distrust the ending “ism”."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Rastafari"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rastafari began in Jamaica in the 1930s. It developed after Haile Selassie I was crowned emperor of Ethiopia in 1930."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A simple map of the Caribbean with Jamaica marked, and a small inset showing Ethiopia in East Africa."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where and when did Rastafari begin?",
+    "right": "In Jamaica, in the 1930s",
+    "wrong": [
+     "In Ethiopia, in the 1500s",
+     "In India, in the 1950s",
+     "In Brazil, in the 1970s"
+    ],
+    "why": "Britannica says Rastafari developed in Jamaica in the 1930s, after Haile Selassie I was crowned in 1930."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its roots are in the Bible. Several Jamaican preachers, most famously Leonard Howell, taught that Selassie’s crowning fulfilled a Bible prophecy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bible prophecy"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Early followers were mostly poor Jamaicans, many moving into the city of Kingston. Rastafari spoke of African heritage, and of “Babylon”: Western society, which it sees as oppressing people of African descent."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Babylon"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Haile Selassie I ruled Ethiopia from 1930 to 1974. Many Rastas, though not all, believe he is the Messiah and the Second Coming of Christ. Others see him as a human prophet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Haile Selassie I"
+   },
+   "cite": [
+    "s3",
+    "s1",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rastas worship one God, called Jah. Many teach that a part of Jah lives within every person."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jah"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rastas call their way of living “livity”. It includes ital food and dreadlocks. Ital means natural, clean, life-giving food. Many are vegetarian or vegan, but practice varies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Livity and ital"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is there one ital rulebook that every Rastafari group follows?",
+    "right": "No. Practice varies between groups.",
+    "wrong": [
+     "Yes, one rulebook written in 1930",
+     "Yes, and every Rasta is vegan",
+     "Yes, the Jamaican government set it"
+    ],
+    "why": "A writer for Rasta Today says there is no single ital rulebook accepted by every Rastafari house or group."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many Rastas wear their hair in dreadlocks. Some use ganja, which is cannabis, as a sacrament for meditation and spiritual “reasoning”. These are practices of some Rastas, not all."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dreadlocks (many Rastas); Ganja as a sacrament (some Rastas); Ital food (many Rastas)"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Music carries Rastafari too. In the 1960s and 70s, reggae and Bob Marley brought it worldwide attention. Nyabinghi is a dance held on sacred occasions."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Hands playing a large drum at an evening gathering, with people dancing in a circle."
+   },
+   "cite": [
+    "s3",
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today Rastafari has no single central authority. It is made up of many groups. Estimates run from 700,000 to 1 million people worldwide."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "700,000 to 1 million (an estimate)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now Modern Paganism. It is a family of religions that revive or reimagine older, pre-Christian traditions. Most scholars see it as many religions, not one."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Modern Paganism"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Common threads are ritual, nature, honouring gods, and seasonal celebrations. Followers use these to connect with nature, the divine, their community, and themselves."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ritual; Nature; Honouring gods; Seasonal celebrations; Community"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take Wicca first. It developed in England in the first half of the 20th century. Its early leading figure was Gerald Gardner, who wrote Witchcraft Today in 1954."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1884–1964: Gerald Gardner’s life; 1954: Witchcraft Today; 1959: The Meaning of Witchcraft"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Gardnerian Wicca honours a Horned God and a Mother Goddess. It keeps eight seasonal festivals, and holds rituals in small groups called covens."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A Horned God and a Mother Goddess; Eight seasonal festivals; Rituals in groups called covens"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Wicca has no central church. Scholar Helen Berger says it stresses ritual and direct experience more than belief. Many forms exist, such as Dianic Wicca, from the 1970s, with female-only covens."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many forms of Wicca"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Wiccans mark eight festivals called sabbats: the Wheel of the Year. They are Yule, Imbolc, Ostara, Beltane, Litha, Lughnasadh, Mabon and Samhain. Yule falls at the winter solstice, the longest night."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Yule; Imbolc; Ostara; Beltane; Litha; Lughnasadh; Mabon; Samhain"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many sabbats are on the Wheel of the Year?",
+    "right": "Eight",
+    "wrong": [
+     "Three",
+     "Four",
+     "Twelve"
+    ],
+    "why": "The Wheel of the Year has eight festivals, called sabbats."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where do the festivals come from? Some are inspired by older Celtic and Germanic seasonal customs. But the eight-part wheel itself is a modern arrangement, shaped in the mid-20th century."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Older roots: Celtic and Germanic seasonal customs | Modern arrangement: the eight-part wheel, shaped by Gerald Gardner and Ross Nichols"
+   },
+   "cite": [
+    "s12",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Heathenry. It draws on ancient Germanic beliefs. Followers use surviving historical, archaeological and folklore evidence to rebuild an older religion, and they differ on how to do it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reconstruction"
+   },
+   "cite": [
+    "s10",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Followers usually call themselves Heathens. “Ásatrú” is modern Icelandic for “Æsir faith”, meaning loyalty to the major tribe of Norse gods. Many Heathens practise alone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ásatrú means “Æsir faith”"
+   },
+   "cite": [
+    "s16",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Iceland, a group founded the Ásatrúarfélagið in 1972, and the state recognised it in 1973. Its members held the first public blót, a Heathen ritual, in Iceland in almost a thousand years."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small group in warm coats gathered in an open Icelandic landscape for an outdoor ritual."
+   },
+   "cite": [
+    "s18",
+    "s16",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In which country was the Ásatrúarfélagið founded in 1972?",
+    "right": "Iceland",
+    "wrong": [
+     "Norway",
+     "Germany",
+     "Canada"
+    ],
+    "why": "The Ásatrúarfélagið is an Icelandic organisation, founded in 1972 and recognised in 1973."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It started tiny: about 70 members in its first decade. By 2025 it had 6,250 members."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6,250 members (2025)"
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Heathens do not all agree on who the religion is for. Some “folkish” groups see it as an ethnic or racial religion. Other Heathens hold a different view. In Iceland, a small faction interested in racial politics left in 1983."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A division about race"
+   },
+   "cite": [
+    "s15",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many Pagans are there? In the UK 2021/22 census, 126,980 people, 0.2 percent, gave a modern Pagan answer. Most wrote “Paganism”, then Wicca."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Modern Pagan paths in the UK census",
+    "chart": "c1"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the United States, Wicca and Druidry arrived from Britain in the 1950s and 60s. Heathenry appeared in the early 1970s. Pew’s 2014 survey found 0.3 percent of Americans identify as Pagan or Wiccan."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map showing Britain with arrows crossing the Atlantic to the United States."
+   },
+   "cite": [
+    "s21",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, Unitarian Universalism. It is a liberal religious tradition. It took its present form in 1961, when two older American groups joined."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1793: Universalist Church of America founded; 1825: American Unitarian Association founded; 1961: the two join as Unitarian Universalism"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Each group had its own idea. Unitarians believe in one God, not a Trinity. Universalists believe God’s love and salvation reach everyone."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Unitarians: one God, not a Trinity | Universalists: God’s love and salvation extend to everyone"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do Universalists emphasise?",
+    "right": "That God’s love and salvation extend to everyone",
+    "wrong": [
+     "That God is one, not a Trinity",
+     "That nobody can know whether God exists",
+     "That only one nation will be saved"
+    ],
+    "why": "The Pluralism Project says Universalists affirm that God’s love and salvation extend to everyone. Believing in one God is the Unitarian idea."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today there is no binding creed. Congregations share seven guiding principles, guiding but not binding. The first is the inherent worth and dignity of every person."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A guide, not a creed"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how one Unitarian Universalist minister puts it."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "“The Principles are not dogma or doctrine, but rather a guide” — Rev. Barbara Wells ten Hove, quoted by the American Humanist Association"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Members hold many beliefs. The tradition began as liberal Christianity. Today it includes religious naturalists and humanists, who find religious value in humanity itself rather than in God or the supernatural."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many beliefs, one community"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the United States, congregations belong to the Unitarian Universalist Association. In Canada it is the Canadian Unitarian Council. Pew’s 2014 survey found about 0.3 percent of Americans identify as Unitarian."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of North America with the United States and Canada shaded."
+   },
+   "cite": [
+    "s26",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now people who live without religion. Pew’s term “religiously unaffiliated” covers atheists, agnostics, and people who say “nothing in particular”."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Atheist; Agnostic; Nothing in particular"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take atheism first. Philosophers define it as the view that there are no gods. A widely used broader sense simply means not believing in a god."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Atheism"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Agnosticism is about knowing. English biologist T. H. Huxley coined “agnostic” in 1869, from Greek words for “without” and “knowledge”."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Agnostic = “without knowledge”"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Huxley’s idea: don’t claim to know something is true without good evidence. Today an agnostic is often someone who believes neither that God exists nor that God does not."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not claiming to know"
+   },
+   "cite": [
+    "s31",
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is agnosticism mainly about?",
+    "right": "Not claiming to know something is true without good evidence",
+    "wrong": [
+     "Worshipping many gods",
+     "Following a holy book written by Huxley",
+     "Believing the universe had no beginning"
+    ],
+    "why": "Huxley’s principle is that it is wrong to claim to know a proposition is true without logically satisfactory evidence."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now humanism. Humanists International calls it a democratic and ethical life stance. People have the right and responsibility to give meaning and shape to their own lives."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A life stance"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their short statement from 1996 is clear about the supernatural."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "“Humanism is not theistic, and it does not accept supernatural views of reality.” — Humanists International, Minimum Statement on Humanism (1996)"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1952 the first World Humanist Congress, in Amsterdam, agreed a statement of principles, the Amsterdam Declaration. It was updated in 2002 and again in 2022."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1952: first Amsterdam Declaration; 2002: updated; 2022: updated again"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The 2022 text says humanists strive to be ethical, rational, and to find fulfilment in their lives. It says no one is infallible. Earlier versions said humanism imposes no creed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Strive to be ethical; Strive to be rational; Strive for fulfilment in their lives"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The 2022 Amsterdam Declaration says humanists strive for which three things?",
+    "right": "To be ethical, to be rational, and to find fulfilment in their lives",
+    "wrong": [
+     "To be wealthy, famous and powerful",
+     "To follow one holy book",
+     "To avoid all science"
+    ],
+    "why": "The 2022 declaration lists three headings: ethical, rational, and fulfilment in their lives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some people describe themselves as “spiritual but not religious”. It is a popular phrase, and its meaning varies. Even some conservative Christians use it for a personal, non-ritual faith."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Spiritual but not religious"
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pew’s 2025 study of 22 countries found that many unaffiliated adults still hold spiritual beliefs, such as life after death. On the whole they hold them less often than religious people do."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unaffiliated is not the same as unbelieving"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Pew find about religiously unaffiliated adults?",
+    "right": "Many hold some spiritual or religious beliefs, though less often than religious people",
+    "wrong": [
+     "None of them hold any spiritual belief",
+     "All of them believe in God",
+     "All of them are atheists"
+    ],
+    "why": "Pew found sizable shares of unaffiliated adults hold spiritual beliefs, though they are generally less likely to than religious people."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Belief in God among the unaffiliated differs by country. In Brazil, 92 percent say they believe. In Italy, 16 percent. In Europe and Australia, unaffiliated adults are much less likely to believe."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Unaffiliated adults who say they believe in God",
+    "chart": "c2"
+   },
+   "cite": [
+    "s37",
+    "s38",
+    "s35"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In the chart, which country has the lowest share of unaffiliated adults who believe in God?",
+    "right": "Italy",
+    "wrong": [
+     "Brazil",
+     "Colombia",
+     "Chile"
+    ],
+    "why": "The chart shows Italy at 16 percent, far lower than the other four countries."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the world picture. In 2020, about 24.2 percent of the world’s people, 1.9 billion, said they had no religious affiliation."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "24.2% (about 1.9 billion people), 2020"
+   },
+   "cite": [
+    "s42",
+    "s41"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That made the unaffiliated the third-largest group in Pew’s study, after Christians at 2.3 billion and Muslims at about 2 billion."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Three largest groups, 2020 (billions of people)",
+    "chart": "c3"
+   },
+   "cite": [
+    "s42",
+    "s41"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In Pew’s 2020 figures, which group was third largest?",
+    "right": "The religiously unaffiliated",
+    "wrong": [
+     "Hindus",
+     "Buddhists",
+     "Jews"
+    ],
+    "why": "Pew’s 2020 estimates put Christians first, Muslims second, and the religiously unaffiliated third."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "China has the most unaffiliated people, and the US is second. In 2020, ten places had an unaffiliated majority, including China, Japan, Vietnam, the Czech Republic, the Netherlands, New Zealand and Uruguay."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with China, Japan, Vietnam, the Czech Republic, the Netherlands, New Zealand and Uruguay shaded to show unaffiliated majorities."
+   },
+   "cite": [
+    "s40",
+    "s42",
+    "s41"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pew says much of the growth came from people raised in a religion, mostly Christianity, who later said they had none. Pew noted that since 2020 this decline appears to have levelled off."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Switching"
+   },
+   "cite": [
+    "s40",
+    "s42"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let’s place today’s groups on the map. Rastafari began in Jamaica. Wicca grew in England. The Ásatrúarfélagið is in Iceland. Unitarian Universalism is centred in the US and Canada. Humanists International began in Amsterdam."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with markers: Jamaica, England, Iceland, the United States and Canada, and Amsterdam."
+   },
+   "cite": [
+    "s1",
+    "s8",
+    "s18",
+    "s26",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A quick recap. Rastafari: Jamaica, 1930s. Modern Paganism: many revived traditions. Unitarian Universalism: two groups joined in 1961. Humanism, atheism and agnosticism: worldviews without gods. Many unaffiliated people still hold spiritual beliefs."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rastafari: Jamaica, 1930s; Modern Paganism: Wicca, Heathenry and more; Unitarian Universalism: formed 1961; Humanism, atheism, agnosticism; Spiritual but not religious"
+   },
+   "cite": [
+    "s1",
+    "s14",
+    "s23",
+    "s27",
+    "s35"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these formed in 1961 when two older groups joined?",
+    "right": "Unitarian Universalism",
+    "wrong": [
+     "Wicca",
+     "Rastafari",
+     "Heathenry"
+    ],
+    "why": "The Universalist Church of America (1793) and the American Unitarian Association (1825) joined in 1961 to form Unitarian Universalism."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thank you for learning with us. In our last class, we put it all together: calendars, sacred places, and how people of many faiths and none live side by side."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Putting It Together"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Modern Pagan paths in the UK census 2021/22 (people)",
+   "rows": [
+    {
+     "label": "Paganism",
+     "value": 93686,
+     "source": "s20"
+    },
+    {
+     "label": "Wicca",
+     "value": 13056,
+     "source": "s20"
+    },
+    {
+     "label": "Shamanism",
+     "value": 7904,
+     "source": "s20"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Religiously unaffiliated adults who say they believe in God (%)",
+   "rows": [
+    {
+     "label": "Brazil",
+     "value": 92,
+     "source": "s37"
+    },
+    {
+     "label": "Colombia",
+     "value": 86,
+     "source": "s37"
+    },
+    {
+     "label": "South Africa",
+     "value": 77,
+     "source": "s37"
+    },
+    {
+     "label": "Chile",
+     "value": 69,
+     "source": "s37"
+    },
+    {
+     "label": "Italy",
+     "value": 16,
+     "source": "s38"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Three largest groups in 2020 (billions of people)",
+   "rows": [
+    {
+     "label": "Christians",
+     "value": 2.3,
+     "source": "s42"
+    },
+    {
+     "label": "Muslims",
+     "value": 2.0,
+     "source": "s42"
+    },
+    {
+     "label": "Religiously unaffiliated",
+     "value": 1.9,
+     "source": "s41"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Rastafari",
+   "links": [
+    "[[Christianity]]",
+    "[[Judaism]]",
+    "[[Traditional Religions of Africa and the African Diaspora]]"
+   ]
+  },
+  {
+   "topic": "Modern Paganism",
+   "links": [
+    "[[Indigenous Religions of the Americas and the Arctic]]",
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  },
+  {
+   "topic": "Wicca and the Wheel of the Year",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  },
+  {
+   "topic": "Heathenry and Ásatrú",
+   "links": [
+    "[[Modern Paganism]]"
+   ]
+  },
+  {
+   "topic": "Unitarian Universalism",
+   "links": [
+    "[[Christianity]]",
+    "[[Humanism]]"
+   ]
+  },
+  {
+   "topic": "Humanism, atheism and agnosticism",
+   "links": [
+    "[[How to Learn About Religions Respectfully]]",
+    "[[Unitarian Universalism]]"
+   ]
+  },
+  {
+   "topic": "Spiritual but not religious",
+   "links": [
+    "[[Humanism, atheism and agnosticism]]",
+    "[[Chinese Traditions: Confucianism, Daoism and Folk Religion]]",
+    "[[Shinto and Other Religions of Japan, Korea and Vietnam]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1869",
+   "elsewhere": "Debate over Darwin’s theory of evolution was lively. T. H. Huxley proposed agnosticism as part of his support for it.",
+   "cite": [
+    "s33"
+   ]
+  },
+  {
+   "when": "1930s",
+   "elsewhere": "Jamaica was a British colony. Marcus Garvey’s Pan-African teaching shaped the setting in which Rastafari grew.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "when": "1952",
+   "elsewhere": "The Cold War shaped the first Amsterdam Declaration, which spoke of a present crisis.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "when": "1961",
+   "elsewhere": "Many Unitarian Universalists became active in the US civil rights movement.",
+   "cite": [
+    "s24"
+   ]
+  },
+  {
+   "when": "1970s",
+   "elsewhere": "Second-wave feminism shaped Dianic Wicca and a push by the UU Women’s Federation for less male-centred wording. Reykjavik’s hippie scene was part of the setting for the Ásatrúarfélagið.",
+   "cite": [
+    "s9",
+    "s25",
+    "s19"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Modern Paganism is many different religions.",
+   "other_view": "Most scholars describe it that way. A few scholars describe modern Paganism as a single religion, with Wicca, Druidry and Heathenry as its denominations.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "claim": "The Wiccan Wheel of the Year is an ancient pagan calendar.",
+   "other_view": "Some of its festivals are inspired by older Celtic, Germanic and seasonal traditions. The eight-part wheel as we know it was shaped in the mid-20th century. Many practitioners value it as a living calendar, not a claim about ancient practice.",
+   "cite": [
+    "s12",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Heathenry is open to everyone.",
+   "other_view": "Heathens disagree about this. Some “folkish” groups treat it as an ethnic or racial religion, which is a central division in the movement. In Iceland’s Ásatrúarfélagið, a small faction interested in racial politics left in 1983.",
+   "cite": [
+    "s15",
+    "s19"
+   ]
+  },
+  {
+   "claim": "Haile Selassie is divine and Rastafari is a religion.",
+   "other_view": "Many, though not all, Rastas see Selassie as the Second Coming of Christ. Others see him as a human prophet, and it is unclear whether Selassie himself supported the belief that he was divine. Some Rastas reject the word “religion” and prefer “way of life”, “philosophy” or “spirituality”.",
+   "cite": [
+    "s1",
+    "s4",
+    "s7",
+    "s3"
+   ]
+  },
+  {
+   "claim": "Atheism and agnosticism are two separate positions.",
+   "other_view": "On narrower philosophical definitions they are distinct. On broader definitions, which separate belief from knowledge, a person can be both an agnostic and an atheist.",
+   "cite": [
+    "s31",
+    "s34"
+   ]
+  },
+  {
+   "claim": "Humanism is not a religion.",
+   "other_view": "Humanists International describes humanism as a non-theistic life stance that does not accept supernatural views. Its 1952 declaration, though, called humanism not a new sect and also used the word “faith”. Some people are humanists within a religious community, as in Unitarian Universalism.",
+   "cite": [
+    "s27",
+    "s29",
+    "s23"
+   ]
+  },
+  {
+   "claim": "People with no religious affiliation hold no spiritual beliefs.",
+   "other_view": "Pew finds that many unaffiliated adults hold some spiritual or religious beliefs, though they are generally less likely to than religious people. The share varies a great deal by country.",
+   "cite": [
+    "s35",
+    "s37",
+    "s38"
+   ]
+  }
+ ]
+}

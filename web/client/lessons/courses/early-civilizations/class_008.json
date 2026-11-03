@@ -1,0 +1,1187 @@
+{
+ "about": {
+  "title": "The Indus Valley II: Script, Beliefs, Trade and Change",
+  "course": "early-civilizations",
+  "class_n": 8,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes, as aimed. There are six topics, one idea per beat, and nine check questions. Pause at each question if you want a slower pace. The 'what else was happening' beat is short because the course returns to the whole timeline in class 13."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Indus script",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Harappan-script",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Why has the language of Harappa not been deciphered? (answers by J. M. Kenoyer, M. Vidale, N. Yadav)",
+   "publisher": "Harappa.com (Harappa Archaeological Research Project)",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/answers/why-has-language-harappa-not-been-deciphered",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Statistical Analysis of the Indus Script Using n-Grams",
+   "publisher": "PLoS ONE (via PubMed Central), doi 10.1371/journal.pone.0009506",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2841631/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Network analysis of a corpus of undeciphered Indus civilization inscriptions indicates syntactic organization",
+   "publisher": "arXiv",
+   "date": "2010",
+   "link": "https://arxiv.org/pdf/1005.4997",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Indus valley civilization (Students)",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/Indus-valley-civilization/275057",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Cities of the Indus Valley Civilization",
+   "publisher": "Lumen Learning, SUNY World Civilization",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/cities-of-the-indus-valley-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Killing the Priest-King: Addressing Egalitarianism in the Indus Civilization",
+   "publisher": "Journal of Archaeological Method and Theory (Springer)",
+   "date": "2020",
+   "link": "https://link.springer.com/article/10.1007/s10814-020-09147-9",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Indus Valley Civilization & Early Cities",
+   "publisher": "OER Project, Big History Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/BHP/Unit5/Indus-River-Valley",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Religion of the Indus Valley Civilisation",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Religion_of_the_Indus_Valley_Civilisation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Great Bath",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Great_Bath",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Not Shiva? Why Audrey Truschke's take on Indus Valley 'Pashupati seal' sparked a row",
+   "publisher": "The Federal",
+   "date": "2026",
+   "link": "https://thefederal.com/category/news/pashupati-seal-debate-us-historian-audrey-truschke-shiva-indus-valley-civilisation-pashupati-seal-244909",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Highlands and Lowlands: Living Together in Cities",
+   "publisher": "Penn Museum, Expedition Magazine",
+   "date": "n.d.",
+   "link": "https://www.penn.museum/sites/expedition/highlands-and-lowlands/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The Middle Asian Interaction Sphere",
+   "publisher": "Penn Museum, Expedition Magazine",
+   "date": "n.d.",
+   "link": "https://www.penn.museum/sites/expedition/the-middle-asian-interaction-sphere/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Carnelian Beads",
+   "publisher": "Harappa.com (Harappa Archaeological Research Project)",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/slide/carnelian-beads",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Etched carnelian beads",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Etched_carnelian_beads",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Daily Life (questions answered by Indus specialists, including Rita Wright)",
+   "publisher": "Harappa.com (Harappa Archaeological Research Project)",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/category/questions/daily-life",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Indus Valley Civilization: Writing, Religion, Buildings, Life and Art",
+   "publisher": "Facts and Details",
+   "date": "n.d.",
+   "link": "https://factsanddetails.com/india/History/sub7_1a/entry-4100.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "India Indus Valley Civilization",
+   "publisher": "History's Histories",
+   "date": "n.d.",
+   "link": "https://www.historyshistories.com/india-indus-valley-civilization.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Centuries of repeated droughts linked to the Indus Valley Civilisation's decline",
+   "publisher": "Nature (research highlight)",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/d44151-025-00241-9",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Why Did This Advanced Ancient Civilization Collapse? New Research Suggests Climate Change Played a Role",
+   "publisher": "Smithsonian Magazine",
+   "date": "2025",
+   "link": "https://www.smithsonianmag.com/smart-news/why-did-this-advanced-ancient-civilization-collapse-new-research-suggests-climate-change-played-a-role-180987799/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Climate Change Likely Caused Migration, Demise of Ancient Indus Valley Civilization",
+   "publisher": "Woods Hole Oceanographic Institution",
+   "date": "2018",
+   "link": "https://www.whoi.edu/press-room/news-release/climate-change-likely-caused-migration-demise-of-ancient-indus-valley-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Disappearance of the Indus Valley Civilization",
+   "publisher": "Lumen Learning, SUNY World Civilization",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/disappearance-of-the-indus-valley-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "End of the Indus Valley Civilization (chapter by Matthew G. Marsh)",
+   "publisher": "Rebus Community, History of Technology",
+   "date": "n.d.",
+   "link": "https://press.rebus.community/historyoftech/chapter/end-of-the-indus-valley-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Oxygen isotope in archaeological bioapatites from India: Implications to climate change and decline of Bronze Age Harappan civilization",
+   "publisher": "Scientific Reports (via PubMed Central)",
+   "date": "2016-05-25",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4879637/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Mohenjo-Daro",
+   "publisher": "Encyclopedia.com (Encyclopedia of India)",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/international/encyclopedias-almanacs-transcripts-and-maps/mohenjo-daro",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Inside Mohenjo Daro, the 5,000-year-old metropolis frozen in time",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/graphics/mohenjo-daro-indus-valley-civilization-pakistan",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Earliest jigsaw (part 1)",
+   "publisher": "Down To Earth",
+   "date": "n.d.",
+   "link": "https://www.downtoearth.org.in/environment/earliest-jigsaw-3853",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Earliest jigsaw (part 2)",
+   "publisher": "Down To Earth",
+   "date": "n.d.",
+   "link": "https://www.downtoearth.org.in/environment/earliest-jigsaw-3855",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "4.2-kiloyear event",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/4.2-kiloyear_event",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Timeline of ancient history",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_ancient_history",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Global megadrought, societal collapse and resilience at 4.2-3.9 ka BP across the Mediterranean and west Asia",
+   "publisher": "PAGES Magazine (Past Global Changes)",
+   "date": "n.d.",
+   "link": "https://pastglobalchanges.org/publications/pages-magazine/pages-magazine/7412",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "The Oldest Civilisation in the Americas: The Pyramid City of Caral, Peru",
+   "publisher": "The Archaeologist",
+   "date": "n.d.",
+   "link": "https://www.thearchaeologist.org/blog/the-oldest-civilisation-in-the-americas-the-pyramid-city-of-caral-peru",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Study: Severe and Persistent River Droughts Led to Collapse of Indus Valley Civilization",
+   "publisher": "Sci.News",
+   "date": "2025",
+   "link": "https://www.sci.news/archaeology/severe-persistent-river-droughts-collapse-indus-valley-civilization-14391.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Why Did The Indus Valley Civilisation Go Into Decline?",
+   "publisher": "The Friday Times",
+   "date": "2024-03-16",
+   "link": "https://www.thefridaytimes.com/16-Mar-2024/why-did-the-indus-valley-civilisation-go-into-decline",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Rakhal Das Banerji: The Bengali explorer who changed history",
+   "publisher": "The Daily Star",
+   "date": "n.d.",
+   "link": "https://www.thedailystar.net/slow-reads/focus/news/rakhal-das-banerji-the-bengali-explorer-who-changed-history-4185291",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "First Dynasty of Ur",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/First_Dynasty_of_Ur",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we walked through the planned cities of the Indus and how they handled water. Today: what those cities left us to read, and what they didn't."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Indus Valley II: Script, Beliefs, Trade and Change"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with a small clue: the seal. A seal is a little stone stamp with a picture and some signs on it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Seal"
+   },
+   "cite": [
+    "s26",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a typical one: a horned animal carved below a line of signs. It was found near Mohenjo-daro. Those signs are the Indus script."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small square soapstone seal. A horned animal is carved in the lower part. A row of unfamiliar signs runs above it."
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These seals are old. The Mature stage of the Indus cities, when Harappa and Mohenjo-daro flourished, ran from about 4,500 to 3,900 years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4,500 to 3,900 years ago"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nobody knew what they were at first. In 1873, Alexander Cunningham reported a few odd little seals at Harappa."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1873: Cunningham reports a few seals at Harappa"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The big step came in the 1920s. Major digs began at Harappa in 1920, Banerji worked at Mohenjo-daro in 1922, and in September 1924 John Marshall announced the civilization to the world."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1873 seals reported at Harappa → 1920 major digs at Harappa → 1922 Banerji at Mohenjo-daro → Sept 1924 Marshall's announcement"
+   },
+   "cite": [
+    "s25",
+    "s35",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what is the script? A few thousand inscriptions, from one sign up to about twenty. Most were written right to left."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A few thousand inscriptions|1 to about 20 signs each|Mostly written right to left"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The average text has only about five signs. Imagine learning a language from a pile of shopping-list scraps."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 5,
+    "layout": "row",
+    "text": "About 5 signs in an average Indus text"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even the longest single-line text is only about fourteen signs. Short texts give very little to work with."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How long are Indus texts?",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second problem: no key. A bilingual text gives the same message in two scripts, one already known. The Rosetta Stone did this for Egyptian hieroglyphs. The Indus has no such text."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bilingual text = a decoding key"
+   },
+   "cite": [
+    "s4",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third problem: we don't know which language, or languages, the signs record. The script also doesn't link to any later writing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Texts are very short|No bilingual key|Language unknown|No link to later scripts"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which set of reasons explains why the Indus script is still undeciphered?",
+    "right": "The texts are very short, there is no bilingual key, and the language is unknown.",
+    "wrong": [
+     "All the seals were destroyed in a fire.",
+     "Scholars have never tried to read it.",
+     "It is simply Egyptian hieroglyphs written backwards."
+    ],
+    "why": "Britannica and the Harappa specialists give the same reasons: brief inscriptions, no bilingual text, and no knowledge of the language."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People have tried hard. More than a hundred attempts are published, and none is widely accepted. So be careful with any headline saying the script is cracked."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Undeciphered"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a new question: who ran these cities? In Egypt and Mesopotamia we meet kings. In the Indus, there is no evidence of kings or queens."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Rulers and law: what the evidence does and doesn't show"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What has not been found: great palaces, grand monuments and royal tombs. Even the large buildings may be granaries."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No royal tombs|No clear palaces|No grand monuments|Largest buildings may be granaries"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Yet the cities were not random. Layouts matched across hundreds of miles, and weights and seals were standardised. That took coordination."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Standard weights, bricks and layouts"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Experts offer several ideas. One single state. Separate city rulers. Priest-kings. Or shared leadership with no kings at all."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One state|Several city rulers|Priest-kings|Shared decision-making, no kings"
+   },
+   "cite": [
+    "s6",
+    "s5",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement is the careful one?",
+    "right": "No palace or royal tomb has been found, and how the cities were governed is still debated.",
+    "wrong": [
+     "The Indus cities definitely had no rulers.",
+     "Indus kings ruled exactly like Egyptian pharaohs.",
+     "Priest-kings certainly ruled from Mohenjo-daro."
+    ],
+    "why": "Missing palaces show only that none has been found so far. The OER Project says plainly that we don't really know how these cities were governed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And law? We have no readable texts, so we cannot read any laws. Standard weights hint at shared rules for trade, but not what those rules said."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rules likely, laws unreadable"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Religion has the same problem. Britannica Kids says it is not known with certainty, and there is no solid evidence of places of worship."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Beliefs: what we can and can't know"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One building is widely thought to be religious: the Great Bath at Mohenjo-daro, possibly for ritual washing. It was built in the third millennium BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large brick-lined pool sunk into the raised citadel mound at Mohenjo-daro, with steps down into it."
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another clue is a seal from Mohenjo-daro. It shows a seated, horned figure among animals. Marshall read it as an early form of the god Shiva."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The 'Pashupati' seal: a seated figure with a horned headdress, surrounded by animals."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everyone agrees. Some historians argue the figure can't be named for certain. The script is unread, and no text links the seal to later traditions."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Marshall's reading: an early Shiva-like god|Cautious reading: figure can't be identified without texts"
+   },
+   "cite": [
+    "s9",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why can't scholars be sure who the seated figure on the seal is?",
+    "right": "The script is undeciphered, so no text explains the figure or links it to later religion.",
+    "wrong": [
+     "The seal was proven to be a modern fake.",
+     "The seal was found in Egypt, not the Indus.",
+     "Nobody has ever looked closely at it."
+    ],
+    "why": "The cautious historians' point is that without readable texts, a later religious name is being projected onto a much older object."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now something firmer: trade. Mesopotamian texts from the Old Akkadian period say ships from Meluhha docked at the city of Akkad. Meluhha is generally identified with the Indus region."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map with the Indus valley in the east and Mesopotamia in the west. An arrow between them is labelled 'Meluhha'."
+   },
+   "cite": [
+    "s12",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Indus sent carnelian, both raw and as beads. It also sent shells, exotic animals and timber."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Carnelian (raw and beads)|Shells|Exotic animals|Timber"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The famous find is the etched carnelian bead, with white patterns. Indus beads were in Ur tombs dated about 2600 to 2450 BCE. Queen Puabi's bead cloak is probably largely Indian beads."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A long, orange-red carnelian bead with a white etched pattern."
+   },
+   "cite": [
+    "s36",
+    "s13",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Those tombs came to light in the Mesopotamian digs of the 1920s and 30s. Those digs also turned up Indus-style seals, beads and pottery."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ur: built c. 2600 BCE, dug up 1920s–30s"
+   },
+   "cite": [
+    "s13",
+    "s36"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Contact went with people too. Indus-style stamp seals turn up in Mesopotamia. Cuneiform records mention people called 'Son of Meluhha' and Meluhhan villages."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Indus-style stamp seals in Mesopotamia|'Son of Meluhha' in cuneiform|Meluhhan villages in the records"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which find best shows that Indus goods reached Mesopotamia?",
+    "right": "Etched carnelian beads and Indus-style seals found at Mesopotamian sites such as Ur.",
+    "wrong": [
+     "The Rosetta Stone.",
+     "A palace of an Indus king found in Ur.",
+     "A bilingual Indus–Sumerian dictionary."
+    ],
+    "why": "Beads and seals made in Indus styles were excavated in Mesopotamia. No bilingual dictionary has been found."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who made the beads is not settled. Some were made in the Indus. Others used Indus methods but Mesopotamian styles, maybe by Indus craftspeople living abroad."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Made in the Indus and exported|Made in Mesopotamian styles, perhaps by migrant Indus artisans"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now home life. The Harappans of the city period ate a varied diet, mainly wheat, barley and millets, with cattle, sheep and goat."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Everyday life: food, clothes, ornaments, toys"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Clothes are harder to know. Cotton was woven and dyed, but our picture of clothing comes mostly from clay figures and the jewellery left behind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Clothing known mostly from figurines"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where does our picture of Indus clothing mostly come from?",
+    "right": "Clay figures and the jewellery that survived.",
+    "wrong": [
+     "Surviving robes kept in sealed tombs.",
+     "Diaries written in the Indus script.",
+     "Egyptian paintings of Indus visitors."
+    ],
+    "why": "Cloth rarely survives, so the evidence is mostly figures and jewellery."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ornaments are better known. Necklaces, earrings, anklets and belts of beads were worn by men and women of all classes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Necklaces|Earrings|Anklets|Bead belts"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And toys. Children had clay birds and animals, rattles, and little carts. Some of those toys may even have copied real carts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small clay toy cart with two wheels, next to a clay bird."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the big question: why did the cities fade? By about 1700 BCE the main cities, Harappa and Mohenjo-daro among them, were abandoned, and long-distance trade dropped."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why did the cities fade?"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Texts about Meluhha stop too: no mentions are known after 1760 BCE. Trade links were fading along with the cities."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1760 BCE: last known mention of Meluhha"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most researchers now describe a slow decline, not a sudden crash. Even Harappa kept a much smaller population afterwards."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"it was not a single event\""
+   },
+   "cite": [
+    "s19",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea one: climate. Woods Hole researchers found that summer rains weakened from about 2500 BCE. People then moved east, toward the Ganges basin, where rain was more reliable."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Summer monsoon weakened from c. 2500 BCE|Farming harder near the cities|People moved east"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 2025 study found four long droughts, each over 85 years, between about 4,400 and 3,400 years ago. After about 4,500 years ago, settlements moved closer to the Indus River."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Repeated long droughts"
+   },
+   "cite": [
+    "s19",
+    "s20",
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea two: rivers. Some scholars point to the drying of the Ghaggar-Hakra river system, perhaps diverted by an earth movement, or to floods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "River change"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea three: invasion. Mortimer Wheeler pointed to skeletons at Mohenjo-daro. Later scholars showed they were hasty burials from different periods, not one massacre."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Wheeler: invaders massacred the city|Later scholars: skeletons from different periods, no clear invasion evidence"
+   },
+   "cite": [
+    "s22",
+    "s28",
+    "s25"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is the invasion idea now mostly set aside?",
+    "right": "The skeletons were not from a single massacre, and there is little archaeological evidence for an invasion.",
+    "wrong": [
+     "Mohenjo-daro had no skeletons at all.",
+     "The Indus script describes a peaceful ending.",
+     "Egyptian records say no invasion happened."
+    ],
+    "why": "The skeletons dated to different periods, and digs have found little sign of an invasion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other ideas mix in. A shift in crops, falling trade, and doubts about whether climate change and collapse line up in time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shifting crops|Falling trade|Debate over timing of climate change"
+   },
+   "cite": [
+    "s24",
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which sentence best sums up current thinking on the decline?",
+    "right": "Several pressures, such as drought, river change and shifting trade and farming, wore the cities down over a long time.",
+    "wrong": [
+     "One huge flood wiped out every city in a day.",
+     "An army destroyed all the cities around 2000 BCE.",
+     "The cities stayed at full size until the 20th century."
+    ],
+    "why": "Most specialists now see no single cause. The decline was gradual, and even the experts still debate the details."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What else was happening? Around 2600 BCE Caral in Peru raised its pyramids, and about 2560 BCE King Khufu completed the Great Pyramid of Giza."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 2600 BCE Caral (Peru) built, and the Mature Harappan phase begins → c. 2560 BCE Great Pyramid of Giza completed"
+   },
+   "cite": [
+    "s32",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Around 2200 BCE a long drought is linked to the end of Egypt's Old Kingdom and the Akkadian Empire. Some think it hit the Indus too, but others dispute how global it was."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The 4.2-kiloyear drought, c. 2200 BCE"
+   },
+   "cite": [
+    "s29",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. We know what Indus goods went abroad and how carefully the cities were planned. We do not know what the script says, who ruled, or what people believed."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Known: goods reached Mesopotamia; planned cities with standard weights; slow decline|Not known: what the script says; who ruled; what people believed; the exact cause of decline"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s12",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these can we say with confidence?",
+    "right": "Indus carnelian beads and seals reached Mesopotamia.",
+    "wrong": [
+     "The seated figure on the seal is Shiva.",
+     "Priest-kings ruled the Indus cities.",
+     "The script records trade contracts."
+    ],
+    "why": "The beads and seals were found in Mesopotamia. The other three are interpretations that cannot be checked while the script remains unread."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Next class we move east to the Yellow River and early China, where writing can be read."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Early China I: The Yellow River, Early Farming and the Shang"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How long are Indus texts? (number of signs)",
+   "rows": [
+    {
+     "label": "Average text",
+     "value": 5,
+     "source": "s2"
+    },
+    {
+     "label": "Longest single-line text",
+     "value": 14,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Indus script",
+   "links": [
+    "[[Mesopotamia II: Writing, Law and Religion]]",
+    "[[Egypt II: Hieroglyphs, Religion and Law]]",
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]"
+   ]
+  },
+  {
+   "topic": "Meluhha and Indus trade with Mesopotamia",
+   "links": [
+    "[[Mesopotamia III: Trade, Everyday Life and Empires]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Great Bath and Pashupati seal",
+   "links": [
+    "[[The Indus Valley I: Planned Cities and Water]]"
+   ]
+  },
+  {
+   "topic": "Decline of the Indus cities",
+   "links": [
+    "[[4.2-kiloyear drought]]",
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  },
+  {
+   "topic": "Sites: built then found (Harappa, Mohenjo-daro, Ur tombs, Caral)",
+   "links": [
+    "[[The Americas I: Caral, the Olmec and Early Cities]]",
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]"
+   ]
+  },
+  {
+   "topic": "Source quality for daily life",
+   "links": [
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 2600 BCE",
+   "elsewhere": "The Mature Harappan phase begins, Caral in Peru is built, and the Great Pyramid of Giza is completed around 2560 BCE. Ur's royal tombs of about 2600–2450 BCE hold Indus carnelian beads.",
+   "cite": [
+    "s30",
+    "s32",
+    "s36"
+   ]
+  },
+  {
+   "when": "Old Akkadian period, Mesopotamia",
+   "elsewhere": "Texts say ships from Meluhha, generally identified with the Indus region, docked at Akkad.",
+   "cite": [
+    "s12",
+    "s15"
+   ]
+  },
+  {
+   "when": "c. 2200 BCE",
+   "elsewhere": "A long drought, the 4.2-kiloyear event, is linked by some researchers to the end of Egypt's Old Kingdom and the Akkadian Empire.",
+   "cite": [
+    "s29",
+    "s31"
+   ]
+  },
+  {
+   "when": "c. 1900–1700 BCE",
+   "elsewhere": "Indus cities such as Harappa and Mohenjo-daro are abandoned by about 1700 BCE. Mentions of Meluhha in Mesopotamian texts are not known after 1760 BCE.",
+   "cite": [
+    "s23",
+    "s15"
+   ]
+  },
+  {
+   "when": "1920s (rediscovery)",
+   "elsewhere": "The same decade saw the Indus cities revealed to the modern world. Mesopotamian excavations were also uncovering Indus seals and beads, including at Ur.",
+   "cite": [
+    "s26",
+    "s13"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The 'Pashupati' seal shows an early form of the god Shiva.",
+   "other_view": "Marshall read the figure as Shiva Pashupati, 'Lord of Animals'. Some historians say it can't be conclusively identified because the script is unread and no text links it to Hindu traditions. Others defend the continuity reading. The question is still argued.",
+   "cite": [
+    "s9",
+    "s11"
+   ]
+  },
+  {
+   "claim": "The Indus had no rulers and was egalitarian.",
+   "other_view": "Some researchers argue the lack of palaces and tombs points to shared, collective governance. Others suggest a single state or priest-kings, because of the standard weights, bricks and layouts. No view has been proven.",
+   "cite": [
+    "s5",
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Climate change, especially drought, was the main driver of the decline.",
+   "other_view": "The 2025 study and Woods Hole work support a climate role. A 2016 isotope study argued that shifting crop patterns, not climate, may explain the decline at Bhirrana, and that climate change and collapse may not line up in time. G. L. Possehl was quoted as saying the climate of the third millennium BCE was not markedly different from today's.",
+   "cite": [
+    "s19",
+    "s21",
+    "s24",
+    "s34"
+   ]
+  },
+  {
+   "claim": "A 4.2-kiloyear drought hit Egypt, Mesopotamia and the Indus at once.",
+   "other_view": "The PAGES review calls it a unique, global megadrought. Other scientists say it was not a global drought and did not happen within a clear timeframe.",
+   "cite": [
+    "s29",
+    "s31"
+   ]
+  },
+  {
+   "claim": "The Indus script is a full writing system recording one language.",
+   "other_view": "Some scholars say it records a Dravidian language. Others argue it is a pictographic system meant for a multilingual population, or a symbol system. More than a hundred decipherment attempts exist and none has widespread agreement.",
+   "cite": [
+    "s1",
+    "s3"
+   ]
+  },
+  {
+   "claim": "Etched carnelian beads at Ur were made in the Indus.",
+   "other_view": "Some were probably made in the Indus. Others used Indus methods and materials but Mesopotamian styles, and may have been made by Indus craftspeople living in Mesopotamia.",
+   "cite": [
+    "s14"
+   ]
+  },
+  {
+   "claim": "Mohenjo-daro was discovered in 1922.",
+   "other_view": "Most accounts give 1922 for Banerji's work, while the 1924 announcement credited Marshall. Some accounts note earlier surveys by others at the site, one of which misjudged its age.",
+   "cite": [
+    "s25",
+    "s26",
+    "s35"
+   ]
+  }
+ ]
+}

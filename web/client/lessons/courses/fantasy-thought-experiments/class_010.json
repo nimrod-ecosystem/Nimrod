@@ -1,0 +1,763 @@
+{
+ "about": {
+  "title": "Your Own Thought Experiment: Fantasy and Science Fiction",
+  "course": "fantasy-thought-experiments",
+  "class_n": 10,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. This is the last class, so it covers building, testing, re-telling and sharing one idea. Learners who want a shorter session can stop after the science fiction re-telling (about 28 minutes) and share later with a friend."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Thought Experiments",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d. (current edition)",
+   "link": "https://plato.stanford.edu/entries/thought-experiment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Merlin (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/literature-and-writing/merlin/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Merlin",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Merlin/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "\"The Physics of Life,\" an undergraduate general education biophysics course",
+   "publisher": "arXiv (preprint 1410.0666)",
+   "date": "2014",
+   "link": "https://arxiv.org/pdf/1410.0666",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Science fiction",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/art/science-fiction",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Science fiction summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/science-fiction",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Motte-and-bailey castle",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/technology/motte-and-bailey-castle",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Motte and Bailey Castle",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Motte_and_Bailey_Castle/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Are Dragons Real? The Unique History and Origins of Mythical Dragons",
+   "publisher": "Discover Magazine",
+   "date": "n.d.",
+   "link": "https://www.discovermagazine.com/the-mysterious-origin-of-dragons-44459",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The Mythology and Origins of Dragons Across Cultures – Part 1",
+   "publisher": "Evolution of Thinking",
+   "date": "n.d.",
+   "link": "https://evolutionofthinking.org/earth/history/the-mythology-and-origins-of-dragons-across-cultures-part-1/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Critical Response Process in Brief (one-page summary)",
+   "publisher": "Liz Lerman",
+   "date": "2020",
+   "link": "https://lizlerman.com/wp-content/uploads/2020/04/Critical-Response-Process-in-Brief_CRP-one-pager_updated-2020_03_24.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The art of useful feedback",
+   "publisher": "ArtsManaged (E. Andrew Taylor)",
+   "date": "n.d.",
+   "link": "https://notes.artsmanaged.org/p/the-art-of-useful-feedback",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Merlin and Wales: The Wizard's Welsh Origins",
+   "publisher": "Histories and Castles",
+   "date": "n.d.",
+   "link": "https://historiesandcastles.com/blogs/merlin/merlin-and-wales-the-wizard-s-welsh-origins",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. Today you build one 'what if' of your own, test it, and tell it twice: once as fantasy, once as science fiction."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Your Own Thought Experiment"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a reminder. A thought experiment is a device of the imagination, and it is usually told as a short story."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Thought experiment"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a thought experiment?",
+    "right": "A device of the imagination, often told as a short story.",
+    "wrong": [
+     "A lab test that must use real chemicals.",
+     "A prediction that is always true.",
+     "A rule that only scientists may use."
+    ],
+    "why": "It is imagination used carefully. It is often told as a story, and it does not need a lab."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: pick your question. Choose a 'what if' from any earlier class, change only one thing, and keep it specific."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What if Prince Vince could talk to the dragon? | What if Robin the Joker ran the magic market? | What if Merlin had to prove a spell works? | What if Dame Gladys redrew the map of Nimrod?"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the best 'what if' to start with?",
+    "right": "What if Prince Vince could talk to the dragon?",
+    "wrong": [
+     "What if everything in Nimrod were different?",
+     "What if dragons?",
+     "What is a dragon?"
+    ],
+    "why": "It changes one thing and is specific enough to follow step by step. The others are too big, unfinished, or not a 'what if' at all."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two: list your assumptions. An assumption is something we agree to treat as true so the story can begin."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Assumption 1: a dragon lives near Nimrod. | Assumption 2: it understands spoken words. | Assumption 3: it is very large."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "For 'What if Prince Vince could talk to the dragon?', which is an assumption?",
+    "right": "The dragon lives near Nimrod and understands words.",
+    "wrong": [
+     "King Kenny will have to change the castle's guard plan.",
+     "Dragons are real animals today.",
+     "The dragon will become Vince's best friend."
+    ],
+    "why": "An assumption is where the story starts. The guard plan and the friendship are what might follow, which we will look at soon. Real dragons are not an assumption we should make."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, give every part one of three labels. REAL means we can check it. LEGEND means people told it for ages and it can't be proven. INVENTED means we made it up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL: history or science you can check | LEGEND: old stories, not proven | INVENTED: made up by us, in Nimrod"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A REAL example: the motte-and-bailey castle. It was a mound topped by a timber palisade and tower, with a fenced yard beside it, and it spread across western Europe in the 11th century."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A drawing of a castle on a steep earth mound with a wooden tower on top, a ditch around it, and a fenced yard below, joined by a raised bridge."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A LEGEND example: Merlin. Around 1136, Geoffrey of Monmouth wrote Merlin into his history, blending a Welsh figure called Myrddin with other tales. The book is real history, but the wizard's powers are legend."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "LEGEND: Merlin"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "An old story says Merlin could see the future. Which label fits that claim?",
+    "right": "LEGEND: an old tale that can't be checked.",
+    "wrong": [
+     "REAL: it is written in a history book.",
+     "INVENTED: we made it up in Nimrod today.",
+     "REAL: Merlin definitely lived and did this."
+    ],
+    "why": "Geoffrey's book is a real document, but it can't prove the prophecies. They come from old tales, so they are LEGEND."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An INVENTED example: all of Nimrod. King Kenny, Queen Rose, Jack, Princess Jess, Prince Vince and Nimrod the cat are ours. Invented is fine, as long as we say so."
+   },
+   "show": {
+    "kind": "list",
+    "text": "King Kenny | Queen Rose | Jack | Robin the Joker | Princess Jess | Prince Vince | Nimrod the cat | Merlin | Sir Michael | Dame Gladys"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which label fits 'Nimrod the cat can talk to Merlin'?",
+    "right": "INVENTED",
+    "wrong": [
+     "REAL, because cats are real animals.",
+     "LEGEND, because wizards are in old stories.",
+     "REAL, because Merlin is a real person."
+    ],
+    "why": "Cats are real, but a cat talking to a wizard is something we made up for Nimrod."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three: follow the consequences. A consequence is what would likely follow from your assumptions, one step at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Vince can talk to the dragon → the dragon can say what it wants → King Kenny can talk instead of fight → Dame Gladys changes the castle's guard plan. (All INVENTED.)"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "If Vince can talk to the dragon, which is a likely consequence?",
+    "right": "The dragon can say what it wants, so talks may replace fighting.",
+    "wrong": [
+     "The dragon turns into a cat for no reason.",
+     "The castle vanishes overnight.",
+     "Every person in Nimrod instantly speaks dragon."
+    ],
+    "why": "A good consequence follows from the assumption. The others add new magic that nothing in the story caused."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real castles were fortifications, built for defence. So a dragon who wants peace would really change how a castle is used. That is a REAL fact helping us think."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Castle = fortification (REAL)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four: test it against real science. Take the dragon's size. Make an animal bigger in every direction and its weight grows with length cubed, while its bone strength grows only with length squared."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Weight: length cubed. Bone strength: length squared."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the doubling example. Double every length: weight goes up 8 times, but bone strength only 4 times. Bigger bodies get relatively weaker."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "If every length doubles",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A dragon is twice as long, tall and wide as another dragon of the same shape. About how many times heavier is it?",
+    "right": "8 times",
+    "wrong": [
+     "2 times",
+     "4 times",
+     "6 times"
+    ],
+    "why": "Weight follows volume, which is length cubed: 2 × 2 × 2 = 8. Four is how much bone strength grows."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A test should improve your idea, not kill it. Real big animals have disproportionately thick bones. So our dragon needs thick, pillar-like legs, or it must be smaller."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Test result: thicker legs, or a smaller dragon"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some tests give no clear answer, and that is fine. One scholar, Adrienne Mayor, argues that old fossil finds helped inspire dragon stories. She also accepts that this can't explain every dragon myth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "LEGEND, with an open question"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "When experts disagree, or the evidence is thin, what should you do?",
+    "right": "Say so, and label the part as LEGEND or uncertain.",
+    "wrong": [
+     "Pick the more exciting answer and call it REAL.",
+     "Leave the idea out completely.",
+     "Hide the doubt so the story sounds sure."
+    ],
+    "why": "Being honest about what can't be checked is part of a good thought experiment."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step five: explain it in four short parts. Short is fine. You can say it, write it, or draw it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. My question. | 2. My assumptions, each labelled REAL, LEGEND or INVENTED. | 3. What likely follows. | 4. What I am unsure of."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why include 'what I am unsure of'?",
+    "right": "It shows honestly which parts can't be checked.",
+    "wrong": [
+     "It makes the idea sound weaker.",
+     "It is only needed for science fiction.",
+     "It replaces the assumptions."
+    ],
+    "why": "Naming your doubts helps others see what to test next."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now part two. Science fiction is fiction that deals mainly with the effect of real or imagined science on society or on individuals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Science fiction"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the difference from fantasy. Science fiction asks questions of scientific and technological plausibility, and fantasy typically does not."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Fantasy: magic needs no explanation | Science fiction: asks 'could this plausibly work?'"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the main difference between science fiction and fantasy, according to Britannica?",
+    "right": "Science fiction asks about scientific plausibility; fantasy typically does not.",
+    "wrong": [
+     "Science fiction has no characters.",
+     "Fantasy is always set in the past.",
+     "Science fiction cannot include animals."
+    ],
+    "why": "Both can have characters, animals and any time period. The difference is whether plausibility is part of the question."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To re-skin your idea, swap the parts and keep the question. The wizard becomes an engineer, the dragon an alien animal, the castle a station, and the spell a machine with a named energy source."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Wizard → engineer | Dragon → alien animal | Castle → station | Spell → machine with a named power source"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our example becomes: what if Vince, a young officer on Station Nimrod, could translate the calls of an alien animal outside? The consequences stay the same shape: it can say what it wants, so talks may replace fighting."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A round station with lit windows in dark space; a large, many-legged alien animal drifts near it; a young officer at a console wears a headset."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "In the science fiction version, what replaces 'magic did it'?",
+    "right": "A named cause, such as a translating machine, with limits.",
+    "wrong": [
+     "Nothing; magic still works the same way.",
+     "A bigger dragon.",
+     "Nothing changes at all."
+    ],
+    "why": "Science fiction needs a cause we can name and test, such as a machine or a body. That cause should have limits."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The REAL parts carry over. The alien animal's body must still hold up its own weight, so the weight-versus-bone test still works. Re-skinning changes the costume, not the checking."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL tests still apply"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, share it with a friend, a carer or a group, or read it aloud to yourself. Liz Lerman, who designed a well-known feedback method, says good feedback is the kind that does one thing."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"The kind that makes you want to go back to work.\" (Liz Lerman)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Her method has four core steps: what was meaningful, the maker's own questions, neutral questions, and opinions with permission. We will take them in turn."
+   },
+   "show": {
+    "kind": "objects",
+    "text": "Four core steps",
+    "object": "block",
+    "count": 4,
+    "layout": "row"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: responders say what was meaningful, interesting or striking. Doubts and negative opinions wait until later."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Step 1: Statements of meaning"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is a step-one response to a friend's story?",
+    "right": "I liked how the dragon's answer changed the King's plan.",
+    "wrong": [
+     "The ending is weak.",
+     "You should rewrite the whole middle.",
+     "It is too long."
+    ],
+    "why": "Step one names what stood out. Criticism and suggestions come later and only if the maker agrees."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In step two the maker asks their own questions, like 'Is the dragon's size believable?' In step three, responders ask neutral questions, which means questions with no opinion hidden inside."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Neutral: What made you choose the dragon's size? | Not neutral: Isn't the dragon far too big?"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is a neutral question?",
+    "right": "What made you choose the dragon's size?",
+    "wrong": [
+     "Don't you think the dragon is too big?",
+     "Why didn't you make it smaller?",
+     "Isn't the ending a bit weak?"
+    ],
+    "why": "A neutral question asks for information. The others hide an opinion or a fix inside the question."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four is opinions, but only with permission. The responder names the subject and asks if the maker wants to hear it. The maker can say yes or no."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Step 4: Opinions, with permission"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time to look back. Each class gave you one tool, and you have just used all of them."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1 What if? | 2 Medieval village | 3 Castle | 4 Dragon myths | 5 Wizards and Merlin | 6 Maps and worldbuilding | 7 Magic market | 8 Dragon science | 9 Wizard science | 10 Your own experiment"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One checkable thing from the course: castles were fortifications. Merlin the wizard first appears in writing around 1136. Dragons may owe something to fossils. Weight grows faster than bone strength."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL: castles were fortifications | LEGEND: Merlin, from Welsh tales and Geoffrey | LEGEND (debated): fossils behind dragon myths | REAL: weight grows with length cubed, bone strength with length squared"
+   },
+   "cite": [
+    "s7",
+    "s3",
+    "s9",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is REAL science you can check?",
+    "right": "Weight grows faster than bone strength as an animal gets bigger.",
+    "wrong": [
+     "Merlin could see the future.",
+     "The dragon in Nimrod breathes fire.",
+     "King Kenny's crown is made of gold."
+    ],
+    "why": "Scaling can be checked with maths. The others are legend or invented."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where next? Write your own one-page 'what if' and label it. Re-skin a friend's idea. Keep a notebook with the three labels. Look for real sources in museums and university sites."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Write one page | Re-skin a friend's idea | Keep a REAL / LEGEND / INVENTED notebook | Check real sources"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. You can now ask a good question, mark what is real, test it, and tell it two ways. Nimrod's gates are always open."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Well done, thinker"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "If every length doubles: how much more?",
+   "rows": [
+    {
+     "label": "Weight (grows with length cubed)",
+     "value": 8,
+     "source": "s4"
+    },
+    {
+     "label": "Bone strength (grows with length squared)",
+     "value": 4,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "thought experiment",
+   "links": [
+    "[[assumption]]",
+    "[[consequence]]",
+    "[[REAL, LEGEND, INVENTED labels]]"
+   ]
+  },
+  {
+   "topic": "REAL, LEGEND, INVENTED labels",
+   "links": [
+    "[[Merlin and Geoffrey of Monmouth]]",
+    "[[motte-and-bailey castle]]",
+    "[[dragon myths and fossils]]"
+   ]
+  },
+  {
+   "topic": "square-cube law",
+   "links": [
+    "[[science of a dragon]]",
+    "[[allometry]]"
+   ]
+  },
+  {
+   "topic": "science fiction re-skin",
+   "links": [
+    "[[science fiction vs fantasy]]",
+    "[[thought experiment]]"
+   ]
+  },
+  {
+   "topic": "Critical Response Process",
+   "links": [
+    "[[useful feedback]]",
+    "[[neutral question]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1136, when Geoffrey of Monmouth wrote Merlin into his history",
+   "elsewhere": "The Normans had been building castles in England since the 1060s, such as the motte-and-bailey castle at York in 1068, so Merlin's story reached readers in a land full of new fortresses.",
+   "cite": [
+    "s3",
+    "s8"
+   ]
+  },
+  {
+   "when": "1926, when the magazine Amazing Stories was founded",
+   "elsewhere": "Science fiction was becoming a self-aware genre, while Merlin the wizard had already been in books for roughly 790 years.",
+   "cite": [
+    "s6",
+    "s3"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Thought experiments can teach us something about nature or ideas without a lab.",
+   "other_view": "Thought experiments can be wrong, and like arguments they can be criticised, so some claims need real experiments to confirm them.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "claim": "Old fossil finds may have helped inspire dragon myths (Adrienne Mayor).",
+   "other_view": "Mayor herself accepts that not every dragon myth can be explained this way. Scandinavia, for example, has rich dragon lore but few big reptiles or dinosaur fossils. Whether fossils started dragon stories is hard to answer.",
+   "cite": [
+    "s10",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Merlin was built from an older Welsh figure, Myrddin, and other tales.",
+   "other_view": "Any historical core to the legend probably rests on a sixth-century Welsh bardic tradition that can't be checked against records from that time, so treat Merlin as LEGEND.",
+   "cite": [
+    "s13",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Science fiction differs from fantasy because it asks about scientific plausibility.",
+   "other_view": "Britannica also describes science fiction more loosely as literary fantasy with a scientific factor, so the border between the two genres is not sharp.",
+   "cite": [
+    "s5",
+    "s6"
+   ]
+  }
+ ]
+}

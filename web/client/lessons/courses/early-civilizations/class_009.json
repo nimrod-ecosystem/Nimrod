@@ -1,0 +1,1206 @@
+{
+ "about": {
+  "title": "Early China I: The Yellow River, Early Farming and the Shang",
+  "course": "early-civilizations",
+  "class_n": 9,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are 36 short beats of roughly one minute each, with 15 check questions. If time is short, skip the Jiahu beat (beat 9) and the 'who found what' beat (beat 22). That brings it to about 35 minutes. The extra material on how the sites were found, which you asked for, is the reason it is not shorter."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Oracle-Bone Inscriptions of the Late Shang Dynasty: On Warfare",
+   "publisher": "Asia for Educators, Columbia University",
+   "date": "n.d.",
+   "link": "https://afe.easia.columbia.edu/main_pop/ps/ps_china-oracle-bone-warfare.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Chinese Oracle-Bone Inscriptions (Memory of the World)",
+   "publisher": "UNESCO",
+   "date": "n.d.",
+   "link": "https://www.unesco.org/en/memory-world/chinese-oracle-bone-inscriptions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Chinese Oracle Bones (Hopkins Collection)",
+   "publisher": "Cambridge University Library, Cambridge Digital Library",
+   "date": "n.d.",
+   "link": "https://cudl.lib.cam.ac.uk/view/MS-CUL-00001-00155",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Shang dynasty (c. 1600-1046 bce), in Chinese bronzes",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/art/Chinese-bronzes/The-Shang-dynasty-c-1600-1046-bce",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Beginnings of Agriculture in China: A Multiregional View",
+   "publisher": "Current Anthropology 52 (S4), University of Chicago Press",
+   "date": "2011",
+   "link": "https://www.journals.uchicago.edu/doi/10.1086/659965",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Exploration of early rice farming in China",
+   "publisher": "Quaternary International (Elsevier), via ScienceDirect",
+   "date": "2010",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S1040618210002351",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Early Mixed Farming of Millet and Rice 7800 Years Ago in the Middle Yellow River Region, China",
+   "publisher": "PLOS ONE, via PubMed Central",
+   "date": "2012",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3524165/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Huang He (Yellow River)",
+   "publisher": "Britannica Kids (Britannica Students)",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/Huang-He-Yellow-River/274966",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "New evidence for rice harvesting in the early Neolithic Lower Yangtze River, China",
+   "publisher": "PLOS ONE, via PubMed Central",
+   "date": "2022-12-07",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9728911/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Jiahu",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Jiahu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Erlitou culture",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Erlitou_culture",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Founding Dynasty or Myth? (Erlitou, China)",
+   "publisher": "Science news feature, by Andrew Lawler (author's archive)",
+   "date": "2010",
+   "link": "https://andrewlawler.com/scimag2010jandynasty/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Can Archaeology Prove China's Ancient Historians Right?",
+   "publisher": "Sixth Tone",
+   "date": "n.d. (undated in the copy read)",
+   "link": "https://www.sixthtone.com/news/1011937",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Shang archaeology",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Shang_archaeology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Late Shang",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Late_Shang",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Fu Hao's Tomb",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/anthropology/fu-haos-tomb",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Great Bronze Age of China: An Exhibition from the People's Republic of China at The Metropolitan Museum of Art",
+   "publisher": "Asia for Educators, Columbia University",
+   "date": "n.d.",
+   "link": "https://afe.easia.columbia.edu/special/china_4000bce_bronze.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Archaeology Queens of the Bronze Age",
+   "publisher": "China Today / New China magazine",
+   "date": "2024-07-01",
+   "link": "http://www.newschinamag.com/newschina/articleDetail.do?article_id=7876&section_id=4&magazine_id=103",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Religion of the Shang dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Religion_of_the_Shang_dynasty",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Ritual and worship in the Shang dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ritual_and_worship_in_the_Shang_dynasty",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Shang dynasty religious practitioners",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Shang_dynasty_religious_practitioners",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Shang Dynasty, 1600 to 1050 BCE",
+   "publisher": "Stanford SPICE (Stanford University)",
+   "date": "n.d.",
+   "link": "https://spice.fsi.stanford.edu/docs/the_shang_dynasty_1600_to_1050_bce",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Shang Dynasty - Achievements, Facts & Government",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/shang-dynasty",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "7 Everyday Objects From the Shang Dynasty",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/everyday-objects-shang-dynasty",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Yinxu",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yinxu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "China's 122-year study of oracle bone scripts",
+   "publisher": "Chinese Social Sciences Today (CSSN)",
+   "date": "2021-05-27",
+   "link": "http://english.cssn.cn/dialogue/202105/t20210527_5336473.shtml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "The discovery and significance of Yin Xu and oracle bones",
+   "publisher": "CGTN",
+   "date": "2023-10-13",
+   "link": "https://news.cgtn.com/news/2023-10-13/The-discovery-and-significance-of-Yin-Xu-and-oracle-bones-1nRU5Me3Hu8/index.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Social hierarchy and the choice of metal recycling at Anyang, the last capital of Bronze Age Shang China",
+   "publisher": "Open-access journal article, via PubMed Central",
+   "date": "c. 2020",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7606620/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Bronze casting moulds reveal Late Shang Dynasty craftsmanship (interview with Wen Yin (Elaine) Cheng)",
+   "publisher": "SciPod",
+   "date": "n.d.",
+   "link": "https://www.scipod.global/assistant-professor-wen-yin-elaine-cheng-bronze-casting-moulds-reveal-late-shang-dynasty-craftsmanship/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Archaeology of the Chinese Bronze Age: From Erlitou to Anyang (Roderick B. Campbell)",
+   "publisher": "Cotsen Institute of Archaeology Press, UCLA (via JSTOR)",
+   "date": "2014",
+   "link": "https://www.jstor.org/stable/j.ctvdjrr9r",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Shang Dynasty",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Shang_Dynasty/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Timeline of ancient history",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_ancient_history",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "13th century BC",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/13th_century_BC",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Erlitou: The Disputed Capital at the Dawn of Chinese Civilisation",
+   "publisher": "Cultural Heritage Online",
+   "date": "n.d.",
+   "link": "https://culturalheritageonline.com/places/erlitou-xia-dynasty-china/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Zheng Zhenxiang",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Zheng_Zhenxiang",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Shang Dynasty Bronzes",
+   "publisher": "Chinese Online Museum",
+   "date": "n.d.",
+   "link": "https://www.comuseum.com/bronzes/shang/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to Early China. Today we ask three things. How did farming communities grow beside China's great rivers? What was a Shang city like? And what do oracle bones tell us?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Early China I: The Yellow River, Early Farming and the Shang"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last class we finished with the Indus. Now we travel east. China has two great rivers. The Yellow River runs in the north, and the Yangtze is the longer one, in the south."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of China. The Yellow River (Huang He) rises on the Tibetan Plateau and flows east across the north. The Yangtze flows east across the south. Mark Erlitou, Anyang and Jiahu near the Yellow River plain."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Yellow River is named for loess. Loess is fine yellow-brown dust that the wind blew onto a high plateau, and the river carries it away. Along the river's middle and lower reaches, Chinese farming first developed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Loess: yellow wind-blown silt that colours the river"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That same silt is a danger. It builds up in the lower river and causes terrible floods. So the Yellow River was nicknamed 'China's sorrow'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'China's sorrow': the river that feeds and floods"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why was the Yellow River nicknamed 'China's sorrow'?",
+    "right": "Its heavy load of silt made the lower river prone to disastrous floods.",
+    "wrong": [
+     "Its water was too salty to drink.",
+     "It froze solid every winter and stopped all travel.",
+     "It flowed too fast for anyone to cross by boat."
+    ],
+    "why": "The river picks up a huge amount of loess silt. This makes the lower reaches prone to flooding."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Climate splits China's early farming in two. The north is cool and dry, and people grew millet. The south is warm and wet, and people grew rice. A rough dividing line is the Qinling Mountains and the Huai River."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "North (Yellow River): cool, dry, millet. South (Yangtze): warm, moist, rice. The boundary is approximate."
+   },
+   "cite": [
+    "s6",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which crop was farmed mainly along the Yellow River?",
+    "right": "Millet",
+    "wrong": [
+     "Rice",
+     "Maize",
+     "Potatoes"
+    ],
+    "why": "Millet farming dominated the cooler, drier Yellow River valley. Rice dominated the warmer, wetter Yangtze valley."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Millet is a small grain that grows well in dry ground. On the middle Yellow River, Peiligang-culture villages were farming broomcorn millet about 7,800 years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Millet: a dry-land grain (foxtail and broomcorn)"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first settled villages appear by about 9,000 years ago. But farmed crops did not supply much of people's food until thousands of years later. Early farming was slow."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "9,000 years ago: first villages"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "When the first villages appeared, did farmed crops already feed most people?",
+    "right": "No. Domesticated crops became a major food source only after several more thousand years.",
+    "wrong": [
+     "Yes, rice fed everyone from the very start.",
+     "Yes, but only in the north.",
+     "No, because villages did not exist yet."
+    ],
+    "why": "Villages appear by about 9,000 years ago. Domesticated millet or rice only became a substantial part of the diet after several more millennia."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the south, rice. At Shangshan and nearby sites in the lower Yangtze, rice farming began around 10,000 years ago. It was a long, slow process, not one invention."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Wet fields of young rice beside a river, with a village of small houses at the edge."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One village sat between the two worlds. Jiahu is near the Yellow River, close to the north-south boundary. People there grew millet and rice, and also hunted and foraged."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jiahu: millet and rice in one village"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Villages grew into towns. Around 1900 to 1500 BCE, a large Bronze Age town stood at Erlitou, near Luoyang in Henan. That is our first big site today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Erlitou: built c. 1900-1500 BCE"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Erlitou had a palace area of about 12 hectares, laid out between four roads. Its foundations and walls were rammed earth. That means soil pounded down hard to make a solid base."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Palace area marked off by four roads | Courtyard palaces on rammed-earth bases | Bronze-casting workshops"
+   },
+   "cite": [
+    "s11",
+    "s12",
+    "s34",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is rammed earth?",
+    "right": "Soil pounded down hard to make firm foundations and walls.",
+    "wrong": [
+     "Mud bricks baked in a kiln.",
+     "Stone blocks pulled up ramps.",
+     "Wet clay poured into moulds."
+    ],
+    "why": "Archaeologists call these pounded-earth (hangtu) foundations."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a puzzle. Later Chinese histories say the first dynasty was the Xia. We only know the Xia from texts written long after, and it left no writing of its own. So where was it?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Xia: a dynasty known only from later texts"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Erlitou is one place scholars have asked about. It was built c. 1900 to 1500 BCE. It was found in 1959, by a survey that was looking for Xia remains."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1900-1500 BCE: Erlitou built and used | 1959: Erlitou found by a survey searching for the Xia"
+   },
+   "cite": [
+    "s12",
+    "s14",
+    "s34"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did archaeologists survey the Erlitou area in 1959?",
+    "right": "They were searching for remains of the Xia, the legendary first dynasty.",
+    "wrong": [
+     "They were hunting for oracle bones.",
+     "They were building a dam on the Yellow River.",
+     "They were looking for Egyptian trade goods."
+    ],
+    "why": "The 1959 team set out to find the seat of the Xia dynasty described in later texts."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Was Erlitou the Xia capital? Experts disagree. Many Chinese archaeologists say yes. Many Western scholars are more cautious. In class we will simply say 'Erlitou culture'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Erlitou culture (the neutral name)"
+   },
+   "cite": [
+    "s12",
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the Shang dynasty, traditionally dated 1600 to 1046 BCE. Its capital moved over time. Erligang near Zhengzhou had a walled city, possibly a middle Shang capital. The last long-lasting capital, Yin, was near Anyang."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "house",
+    "count": 3,
+    "layout": "row",
+    "text": "Three key sites in order: Erlitou, Erligang, Anyang"
+   },
+   "cite": [
+    "s31",
+    "s4",
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which was the last long-lasting Shang capital?",
+    "right": "Yin, near Anyang",
+    "wrong": [
+     "Erlitou",
+     "Erligang",
+     "Luoyang"
+    ],
+    "why": "Yin was the most enduring Shang capital, lasting through the reigns of the last nine (or twelve) kings. It stood near modern Anyang."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Yinxu means 'ruins of Yin'. It was built up as the capital from about 1300 BCE until the Shang fell in 1046 BCE. It had palace foundations, royal tombs and bronze workshops, but no city wall."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Yinxu, c. 1300-1046 BCE | Rammed-earth palace foundations | Royal shaft tombs | Bronze foundries | No city wall"
+   },
+   "cite": [
+    "s33",
+    "s15",
+    "s14",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Shang's most famous objects. Oracle bones are turtle undershells and ox shoulder blades. They were used for divination, which means asking the spirits about hidden answers. Then they were inscribed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Oracle bone: shell or bone used for divination, then inscribed"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is how it worked. A question was put to the spirits. Pits were bored into the bone. Heat was applied, and the bone cracked. The cracks gave the answer."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Ask a question | 2. Bore pits into the bone | 3. Apply heat | 4. Read the cracks | 5. Sometimes inscribe the question and result"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What made the cracks in an oracle bone?",
+    "right": "Heat applied to the bone or shell.",
+    "wrong": [
+     "A hammer blow.",
+     "Cold water.",
+     "A chisel."
+    ],
+    "why": "Omens were read from cracks made by heating or burning the bones."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The carved words are oracle bone script. This is China's earliest known systematic writing. Its building principles match the Chinese script used today."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Cambridge calls them \"by far the oldest written materials in Cambridge University Library.\""
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is oracle bone script so important?",
+    "right": "It is China's earliest known systematic writing, and its principles match Chinese writing today.",
+    "wrong": [
+     "It is the first writing system in the world.",
+     "It was written in ink on paper.",
+     "No one has ever been able to read it."
+    ],
+    "why": "Scholars can read it. Its structure is the same as the Chinese script in use today."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What did the Shang ask? About sacrifices, the king's affairs, weather, harvests, war and journeys. One bone asks whether the king should join General Zhi to attack the Shaofang."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sacrifices | The king's affairs | Weather | Harvest | War | Coming and going"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So who did the asking? The king. In a typical divination the king usually gave the final reading, and in the last decades of the Shang the kings acted as diviners themselves."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The king as chief diviner"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who usually gave the final reading in a Shang divination?",
+    "right": "The king",
+    "wrong": [
+     "A village elder",
+     "A foreign trader",
+     "A Zhou priest"
+    ],
+    "why": "The king usually gave the final prognostication. Later kings took the diviner's role themselves."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The bones also gave us names. In 1917 Wang Guowei read the kings' names and built a family tree. It matched the traditional histories, and some scholars had doubted the Shang existed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scholar's desk with rubbings of inscribed bones laid out beside a list of kings' names."
+   },
+   "cite": [
+    "s25",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A caution. The bones are a selective record. They mostly show what mattered to the king and the elite. They tell us little about ordinary farmers, so we need other evidence too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A selective record: the elite's questions"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now belief. Ancestor worship means making offerings to dead relatives. The Shang believed ancestors stayed active and could help or harm the living. Neglect them, and disaster might follow."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ancestor worship"
+   },
+   "cite": [
+    "s22",
+    "s19"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Why did the Shang make offerings to their ancestors?",
+    "right": "They believed ancestors still affected the living and could help or harm them.",
+    "wrong": [
+     "To pay a tax to the next dynasty.",
+     "To teach children to read.",
+     "To record the harvest."
+    ],
+    "why": "The Shang believed ancestors were still involved in family affairs. They thought neglecting them would bring disasters."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Requests went up a ladder. The king asked his recent ancestors. They could reach older spirits, and those passed requests to the high god Di. Each king's name also held a day-stem that set his sacrifice day in a ten-day week."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 10,
+    "layout": "ten-frame",
+    "text": "A Shang week had ten days"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many days were in the Shang week?",
+    "right": "Ten",
+    "wrong": [
+     "Seven",
+     "Five",
+     "Twelve"
+    ],
+    "why": "The ten day-stems set the schedule of sacrifices within a ten-day week."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We must also say this plainly. Late Shang kings used human sacrifice on a large scale. One Anyang grave from about 1200 BCE held 74 human bodies besides the ruler. It is hard to hear, and it is part of the evidence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Human sacrifice: hard evidence, plainly told"
+   },
+   "cite": [
+    "s15",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now back to Yinxu, the second time. The oracle bones were forgotten in pits for thousands of years. In 1899 scholar Wang Yirong saw carved marks on 'dragon bones' sold as medicine. He recognised early writing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1899: bones recognised as writing"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The bones were traced back to Xiaotun near Anyang. In 1928 a team began digging, led by Li Chi. They made 15 digs by 1937. Local people had been digging illegally and selling bones for years."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1300 BCE: Yin settled as capital | 1046 BCE: Zhou take Yin | 1899: bones recognised as writing | 1928: scientific excavation begins | 1976: Fu Hao's tomb found | 1999: walled city of Huanbei found across the river"
+   },
+   "cite": [
+    "s33",
+    "s31",
+    "s25",
+    "s26",
+    "s27",
+    "s36",
+    "s16",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What led archaeologists to dig at Yinxu?",
+    "right": "They traced the inscribed bones back to where they had been dug up.",
+    "wrong": [
+     "A flood uncovered the palace.",
+     "Aerial photographs showed the city.",
+     "The Shang left a map."
+    ],
+    "why": "The bones, first recognised in 1899, were traced to Xiaotun near Anyang. Excavations began there in 1928."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One name on the bones turns out to be a real woman. Fu Hao was a consort of King Wu Ding, and she also led armies. Her name appears hundreds of times on oracle bones."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bronze wine vessel shaped like an owl, from Fu Hao's tomb."
+   },
+   "cite": [
+    "s18",
+    "s17",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "She was buried at Yinxu around 1200 BCE with great wealth. Her tomb held hundreds of bronzes and jades, over a thousand bone artefacts, and more than 7,000 seashells. It also held 16 human sacrifices."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Some of what was in Fu Hao's tomb",
+    "chart": "c1"
+   },
+   "cite": [
+    "s16",
+    "s36",
+    "s35",
+    "s23"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Her tomb was found in 1976 by Zheng Zhenxiang's team. It was the only intact royal tomb found from this era. It was found during work to level farm land. Bronzes in the tomb were inscribed with her name, Fu Hao, the same name found on the oracle bones."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1200 BCE: Fu Hao buried at Yinxu | 1976: tomb found, unlooted"
+   },
+   "cite": [
+    "s16",
+    "s35",
+    "s18"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How could archaeologists tell whose tomb it was?",
+    "right": "Her name was inscribed on bronzes in the tomb, matching her name in the oracle bones.",
+    "wrong": [
+     "A Zhou ruler wrote it on the door.",
+     "A DNA test in 1976 proved it.",
+     "Her statue stood at the entrance."
+    ],
+    "why": "Inscriptions on bronzes in the tomb carried the name Fu Hao. The same name appears in oracle bone inscriptions. Reports differ on how many bronzes carry it, from about 109 to nearly 200."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: bronze, a hard metal made by mixing metals. The earliest bronze vessels in this region come from Erlitou. Casting means pouring melted metal into a mould, rather than hammering it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bronze casting began at Erlitou"
+   },
+   "cite": [
+    "s14",
+    "s30",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Shang workers did not use the lost-wax method once assumed. They made clay moulds in sections. The sections fitted together to form the outer shape and an inner core, and the metal was poured in."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Clay mould sections fitted around a core, with a gap between them for the molten metal."
+   },
+   "cite": [
+    "s4",
+    "s29"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How were Shang bronze vessels cast?",
+    "right": "In clay moulds built in sections (piece moulds).",
+    "wrong": [
+     "By the lost-wax method.",
+     "By hammering sheets of metal.",
+     "By carving blocks of stone."
+    ],
+    "why": "Bronze vessels were cast in sectional moulds. Many have been found at Shang sites."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What was bronze for? Mostly ritual vessels for offerings, not only tools and weapons. Anyang became one of the biggest metal users in Eurasia, with many specialist workers in five foundry regions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ritual vessels for ancestors | Large scale: one of Eurasia's biggest metal users | Specialist workers | Five foundry regions at Anyang"
+   },
+   "cite": [
+    "s22",
+    "s28",
+    "s29",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What were most surviving Shang bronzes used for?",
+    "right": "Ritual vessels, for rituals such as offerings to gods and ancestors.",
+    "wrong": [
+     "Farm ploughs",
+     "Coins",
+     "Roof tiles"
+    ],
+    "why": "Most surviving pieces are ceremonial vessels. They show a society that valued ritual."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What else was happening in the world? Around 1550 BCE Egypt's New Kingdom began, during the Shang era. In the same era Egyptian and Hittite empires clashed, and the Olmec of Mexico flourished."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1600 BCE: Shang begins | c. 1550 BCE: Egypt's New Kingdom begins | 1500-400 BCE: Olmec flourish | 1274 BCE: Egyptians and Hittites clash | c. 1046 BCE: Zhou overthrow the Shang"
+   },
+   "cite": [
+    "s32",
+    "s33"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Did the Shang dynasty overlap with Egypt's New Kingdom?",
+    "right": "Yes. Egypt's New Kingdom began around 1550 BCE, while the Shang ruled.",
+    "wrong": [
+     "No, the Shang ended before the New Kingdom began.",
+     "No, the New Kingdom came centuries after the Zhou.",
+     "Only after 500 BCE."
+    ],
+    "why": "The Shang dynasty is dated c. 1600 to 1046 BCE. The New Kingdom began around 1550 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 1046 BCE the Zhou king Wu defeated the Shang at Muye, and the Zhou claimed the Mandate of Heaven. The Zhou let Shang descendants keep honouring their ancestors in the state of Song."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "c. 1046 BCE: Zhou conquest"
+   },
+   "cite": [
+    "s31",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up. Rivers and climate shaped millet in the north and rice in the south. Erlitou and Yinxu show early states. Oracle bones show Shang writing, kingship and ancestor belief. Bronze served ritual. Next class: Zhou rule."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rivers: millet north, rice south | Sites: Erlitou, Yinxu, Fu Hao's tomb | Oracle bones: writing, kings, ancestors | Bronze: ritual and skill | Next: the Zhou"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Some of what was found in Fu Hao's tomb (counts as reported)",
+   "rows": [
+    {
+     "label": "Bronze vessels (at least)",
+     "value": 440,
+     "source": "s36"
+    },
+    {
+     "label": "Jade objects",
+     "value": 590,
+     "source": "s36"
+    },
+    {
+     "label": "Bone artefacts",
+     "value": 1928,
+     "source": "s35"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Yellow River and loess",
+   "links": [
+    "[[millet]]",
+    "[[floods]]",
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]"
+   ]
+  },
+  {
+   "topic": "Yangtze rice farming",
+   "links": [
+    "[[Shangshan]]",
+    "[[Jiahu]]"
+   ]
+  },
+  {
+   "topic": "Erlitou",
+   "links": [
+    "[[Xia dynasty debate]]",
+    "[[bronze casting]]",
+    "[[rammed earth]]"
+   ]
+  },
+  {
+   "topic": "Yinxu",
+   "links": [
+    "[[oracle bones]]",
+    "[[Fu Hao]]",
+    "[[Anyang]]"
+   ]
+  },
+  {
+   "topic": "Oracle bones",
+   "links": [
+    "[[divination]]",
+    "[[Chinese writing]]",
+    "[[Egypt II: Hieroglyphs, Religion and Law]]"
+   ]
+  },
+  {
+   "topic": "Ancestor worship",
+   "links": [
+    "[[Di]]",
+    "[[human sacrifice]]",
+    "[[Early China II: Zhou Rule, Ritual, Trade and Daily Life]]"
+   ]
+  },
+  {
+   "topic": "Fu Hao",
+   "links": [
+    "[[Tomb of Fu Hao]]",
+    "[[bronze casting]]"
+   ]
+  },
+  {
+   "topic": "Bronze casting",
+   "links": [
+    "[[piece moulds]]",
+    "[[ritual vessels]]"
+   ]
+  },
+  {
+   "topic": "Mandate of Heaven",
+   "links": [
+    "[[Zhou conquest]]",
+    "[[Early China II: Zhou Rule, Ritual, Trade and Daily Life]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 1600-1550 BCE",
+   "elsewhere": "The Shang dynasty begins in China (traditional date). Around 1550 BCE the New Kingdom begins in Egypt.",
+   "cite": [
+    "s32"
+   ]
+  },
+  {
+   "when": "c. 1500-400 BCE",
+   "elsewhere": "The Olmec civilization flourishes on Mexico's Gulf coast.",
+   "cite": [
+    "s32"
+   ]
+  },
+  {
+   "when": "1274 BCE",
+   "elsewhere": "The Egyptian and Hittite empires clash, during the Late Shang period.",
+   "cite": [
+    "s33"
+   ]
+  },
+  {
+   "when": "c. 1046 BCE",
+   "elsewhere": "The Zhou overthrow the last Shang king and found the Zhou dynasty.",
+   "cite": [
+    "s32"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Erlitou was the capital of the Xia dynasty, China's first dynasty.",
+   "other_view": "Many Chinese archaeologists identify Erlitou with the Xia, or at least an early dynasty. Many Western scholars have reservations. Some younger archaeologists avoid the word 'Xia' and say 'Erlitou culture', and critics note there is no proof the Xia existed.",
+   "cite": [
+    "s12",
+    "s13",
+    "s34"
+   ]
+  },
+  {
+   "claim": "The Shang worshipped a single high god, Di.",
+   "other_view": "Some scholars see Di as a high god. Others argue that di was a generic or collective word for the gods or the most powerful ancestors, not one supreme being. The scholar David Keightley preferred the word 'religiosity' to 'religion', because the bones say so little about people's inner experience.",
+   "cite": [
+    "s19"
+   ]
+  },
+  {
+   "claim": "Oracle bone script is the earliest Chinese writing.",
+   "other_view": "It is the earliest writing we have in large quantity. But writing in China probably existed before the Anyang examples. Earlier examples may simply not have survived.",
+   "cite": [
+    "s1",
+    "s24"
+   ]
+  },
+  {
+   "claim": "The Yellow River alone was the cradle of Chinese civilization.",
+   "other_view": "It was long assumed that Chinese civilization began along the Yellow River. But the lower Yangtze is recognised as an independent centre of rice domestication, so the story has more than one starting place.",
+   "cite": [
+    "s6",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Oracle bones date to one clear period.",
+   "other_view": "Sources give different ranges. UNESCO says about 1400-1100 BCE. Cambridge says about 1400-1200 BCE. World History Encyclopedia says about 1250-1046 BCE.",
+   "cite": [
+    "s2",
+    "s3",
+    "s31"
+   ]
+  },
+  {
+   "claim": "The story of how oracle bones were first recognised is settled.",
+   "other_view": "Accounts differ. One says Wang Yirong, ill with malaria, found the marks on 'dragon bones' bought at a pharmacy. Another says he bought inscribed bones from an antiques dealer. Details of who traced the bones to Xiaotun also vary between accounts.",
+   "cite": [
+    "s25",
+    "s27"
+   ]
+  }
+ ]
+}

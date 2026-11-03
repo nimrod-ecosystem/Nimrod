@@ -1,0 +1,1131 @@
+{
+ "about": {
+  "title": "Art, symbols and the mind: cave paintings and beyond",
+  "course": "prehistory",
+  "class_n": 8,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes, a little over the 30-minute aim. The class covers five forms of early symbolic behaviour, dating problems and two live debates. Each idea gets its own short step and check question, so the pace stays gentle. Pause as long as you like at the questions."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Rock art from at least 67,800 years ago in Sulawesi",
+   "publisher": "Nature (vol. 650)",
+   "date": "2026-01-21",
+   "link": "https://www.nature.com/articles/s41586-025-09968-y",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Hand stencils discovered in an Indonesian cave are oldest-known rock art",
+   "publisher": "ABC News (Australia)",
+   "date": "2026-01-22",
+   "link": "https://www.abc.net.au/news/science/2026-01-22/oldest-rock-art-hand-prints-sulawesi/106245480",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Narrative cave art in Indonesia by 51,200 years ago",
+   "publisher": "Nature",
+   "date": "2024-07-03",
+   "link": "https://www.nature.com/articles/s41586-024-07541-7",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Cave painting in Indonesia is the oldest known 'picture story'",
+   "publisher": "Griffith University News",
+   "date": "2024-07-04",
+   "link": "https://news.griffith.edu.au/2024/07/04/cave-painting-in-indonesia-is-the-oldest-known-picture-story/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Europe's first cave artists were Neandertals, newly dated paintings show",
+   "publisher": "Science (news)",
+   "date": "2018",
+   "link": "https://www.science.org/content/article/europes-first-cave-artists-were-neandertals-newly-dated-paintings-show",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Dates for Neanderthal art and symbolic behaviour are reliable",
+   "publisher": "Nature Ecology & Evolution (reply by Hoffmann and colleagues)",
+   "date": "2018",
+   "link": "https://www.nature.com/articles/s41559-018-0598-z",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Trouble on the dating scene",
+   "publisher": "Nature Ecology & Evolution (Pearce and Bonneau), record on ResearchGate",
+   "date": "2018",
+   "link": "https://www.researchgate.net/publication/324473019_Trouble_on_the_dating_scene",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Scientist questions dating of world's oldest cave art and Neanderthal paintings",
+   "publisher": "Archaeology Magazine (archaeologymag.com)",
+   "date": "2026-05",
+   "link": "https://archaeologymag.com/2026/05/scientist-questions-dating-of-worlds-oldest-cave-art/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "An abstract drawing from the 73,000-year-old levels at Blombos Cave, South Africa",
+   "publisher": "Nature, abstract on PubMed",
+   "date": "2018-09-12",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/30209394/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Chauvet cave",
+   "publisher": "French Ministry of Culture, Archéologie en France",
+   "date": "n.d.",
+   "link": "https://archeologie.culture.gouv.fr/france/en/chauvet-cave",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Chauvet Cave",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/anthropology/chauvet-cave/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Hidden by a Landslide for 21,000 Years, This Cave Holds Humanity's Oldest Masterpieces",
+   "publisher": "Futura-Sciences",
+   "date": "n.d.",
+   "link": "https://www.futura-sciences.com/en/hidden-by-a-landslide-for-21000-years-this-cave-holds-humanitys-oldest-masterpieces_25366/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Lascaux",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Lascaux",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Lascaux Paintings: 5 Facts About the Stunning Cave Art",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/lascaux-paintings-stone-age",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "40,000-year-old bird carvings provide clues to how ice age humans flourished",
+   "publisher": "Nature (news)",
+   "date": "2026",
+   "link": "https://www.nature.com/articles/d41586-026-02312-y",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Visit the Museum of Prehistory Blaubeuren",
+   "publisher": "Ice Age Europe",
+   "date": "n.d.",
+   "link": "https://ice-age-europe.eu/visit-us/museum-of-prehistory-blaubeuren.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Venus of Hohle Fels",
+   "publisher": "Bradshaw Foundation",
+   "date": "n.d.",
+   "link": "https://www.bradshawfoundation.com/sculpture/venus_of_hohle_fels.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Paleolithic flute",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Paleolithic_flute",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The revolution that wasn't: a new interpretation of the origin of modern human behavior (abstract)",
+   "publisher": "Journal of Human Evolution (McBrearty and Brooks), record on Semantic Scholar",
+   "date": "2000",
+   "link": "https://www.semanticscholar.org/paper/The-revolution-that-wasn't:-a-new-interpretation-of-McBrearty-Brooks/06021515512fc56b41e0b766c92598ee722068de",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The revolution that still isn't: The origins of behavioral complexity in Homo sapiens",
+   "publisher": "Journal of Human Evolution, on ScienceDirect",
+   "date": "2023",
+   "link": "https://sciencedirect.com/science/article/pii/S0047248423000350?via=ihub%3D",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Paleolithic Cave Art of France: Meaning(s)",
+   "publisher": "Bradshaw Foundation (Clottes)",
+   "date": "n.d.",
+   "link": "https://www.bradshawfoundation.com/clottes/meanings.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Theories and Interpretations of Prehistoric Art: AP Art History Review",
+   "publisher": "Albert.io",
+   "date": "n.d.",
+   "link": "https://www.albert.io/blog/theories-and-interpretations-of-prehistoric-art-ap-art-history-review/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Margaret Conkey",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Margaret_Conkey",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Humanity's oldest known cave art has been discovered in Sulawesi",
+   "publisher": "The Conversation",
+   "date": "2026",
+   "link": "https://theconversation.com/humanitys-oldest-known-cave-art-has-been-discovered-in-sulawesi-273364",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Humanity's oldest known cave art has been discovered in Sulawesi",
+   "publisher": "The Leakey Foundation",
+   "date": "2026",
+   "link": "https://leakeyfoundation.org/humanitys-oldest-known-cave-art-has-been-discovered-in-sulawesi/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Oldest cave art Indonesia",
+   "publisher": "Southern Cross University",
+   "date": "2024",
+   "link": "https://www.scu.edu.au/news/2024/oldest-cave-art-indonesia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "51,000-year-old Indonesian cave painting may be the world's oldest storytelling art",
+   "publisher": "Live Science",
+   "date": "2024",
+   "link": "https://www.livescience.com/archaeology/51000-year-old-indonesian-cave-painting-may-be-the-worlds-oldest-storytelling-art",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Neanderthals produced cave art, research shows",
+   "publisher": "Euronews",
+   "date": "2018-02-23",
+   "link": "https://www.euronews.com/2018/02/23/neanderthals-produced-cave-art-research-shows",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Prehistoric art",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Prehistoric_art",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Earliest Known Drawing by Human Discovered in South Africa",
+   "publisher": "Sci.News",
+   "date": "2018",
+   "link": "https://www.sci.news/archaeology/earliest-drawing-human-blombos-cave-06408.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "The revolution that wasn't: a new interpretation of the origin of modern human behavior (full paper)",
+   "publisher": "Journal of Human Evolution (McBrearty and Brooks), PDF on in-africa.org",
+   "date": "2000",
+   "link": "https://in-africa.org/wp-content/uploads/2012/12/McBrearty-Brooks-2000-JHE-modern-hum-beh.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Neanderthals Made Cave Paintings Before Modern Humans Even Reached Europe",
+   "publisher": "Hyperallergic",
+   "date": "2018",
+   "link": "https://hyperallergic.com/neanderthal-cave-art-spain/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Art from the European Upper Paleolithic Period",
+   "publisher": "World History Edu",
+   "date": "n.d.",
+   "link": "https://worldhistoryedu.com/art-from-the-european-upper-paleolithic-period/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "UNESCO Caves and Ice Age Art in the Swabian Alb",
+   "publisher": "Tourismus Marketing Baden-Württemberg (visit-bw.com)",
+   "date": "n.d.",
+   "link": "https://www.visit-bw.com/en/tips-and-stories/unesco-caves-and-ice-age-art",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Response to White et al.'s reply: 'Still no archaeological evidence that Neanderthals created Iberian cave art'",
+   "publisher": "Journal of Human Evolution (2020), record on ResearchGate",
+   "date": "2020",
+   "link": "https://www.researchgate.net/publication/341582222_Response_to_White_et_al's_reply_'Still_no_archaeological_evidence_that_Neanderthals_created_Iberian_cave_art'_J_Hum_Evol_2020_102640",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class eight. Today we look at the oldest art in the world, and what it tells us about the minds that made it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Art, symbols and the mind"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you will be able to name the main forms of early symbolic behaviour, and weigh the debate about when it began and who began it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. What a symbol is\n2. Pigment, beads, carved figures, music\n3. Cave art in Europe and Indonesia\n4. How art is dated, and why that is hard\n5. Two big debates\n6. What the art might mean"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one word: symbol. A symbol is a thing that stands for something else."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Symbol: something that stands for something else"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A wedding ring is a good example. It is only a band of metal, but it stands for a promise. Archaeologists look for early symbols, because they hint at minds like ours."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A plain gold ring resting on a table"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which best describes a symbol?",
+    "right": "Something that stands for an idea or thing beyond itself",
+    "wrong": [
+     "Any tool made of stone",
+     "Anything that is very old",
+     "Only things made with paint"
+    ],
+    "why": "A symbol carries a meaning beyond what it physically is, like a ring standing for a promise."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Early symbolic behaviour shows up in five main forms. Pigments, ornaments, carved figures, music, and pictures on walls. We will take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pigments\nOrnaments\nCarved figures\nMusic\nWall art"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, pigment. Ochre is a natural red earth that can be ground into powder or shaped into a crayon. At Blombos Cave in South Africa, someone drew a criss-cross pattern in ochre crayon on a small stone, about 73,000 years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small flat stone flake with thin red crossing lines drawn on it"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That same layer held shell beads and pieces of ochre engraved with patterns. Beads are ornaments, made to be worn. What they meant to the wearer, we can only guess."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Same layer at Blombos:\n- ochre crayon drawing\n- shell beads\n- engraved ochre pieces"
+   },
+   "cite": [
+    "s9",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Blombos is a site, and every site has two dates. One is when people made things there. The other is when we found them."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MADE: about 73,000 years ago (the layers run from about 100,000 to 72,000)\nFOUND: engraved stones reported 2002; the drawing published September 2018"
+   },
+   "cite": [
+    "s9",
+    "s30",
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which date tells us when the Blombos drawing was made?",
+    "right": "About 73,000 years ago",
+    "wrong": [
+     "2002",
+     "2018",
+     "About 100 years ago"
+    ],
+    "why": "2002 and 2018 are when archaeologists reported finds. The drawing itself comes from the 73,000-year-old layer."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now carved figures. At Hohle Fels cave in Germany, someone carved a woman's figure from mammoth ivory about 40,000 years ago. It is only six centimetres tall."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tiny ivory figure of a woman with no face, with a small loop where the head would be"
+   },
+   "cite": [
+    "s16",
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same cave gave up carved ivory animals too: a waterfowl, a horse, an otter and a tiny lion-man. The figure was probably worn as a pendant."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hohle Fels ivory carvings:\n- woman figure (the Venus)\n- waterfowl\n- horse\n- otter\n- 'little lion man'"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hohle Fels has two dates as well. The carving is about 40,000 years old. We found it in 2008, after the team had been digging there since 1997."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MADE: about 40,000 years ago\nFOUND: Venus unearthed 2008; excavation under way since 1997"
+   },
+   "cite": [
+    "s15",
+    "s16",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now music. Less than a metre from the Venus, archaeologists found a flute made from a vulture bone, with finger holes. Flutes of bird bone and ivory from this region are about 40,000 years old."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A slender pale bone flute with a row of small finger holes"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the Hohle Fels flute made from?",
+    "right": "A vulture bone",
+    "wrong": [
+     "Clay",
+     "Wood",
+     "A reed stem"
+    ],
+    "why": "The nearly complete flute found near the Venus was made from the bone of a griffon vulture."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the best-known form: art on cave walls. Start in France, at Chauvet Cave. Its oldest paintings are about 36,000 years old, and they show animals."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Painted horses and rhinoceroses on a pale limestone cave wall"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Chauvet's two dates: about 36,000 years ago for the oldest paintings. Another group of people added more about 5,000 years later. Then it was found on 18 December 1994, by three cavers."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MADE: oldest paintings about 36,000 years ago\nFOUND: 18 December 1994, by three cavers"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why are the paintings so well kept? A rockfall sealed the cave entrance over 21,000 years ago. Today the cave is closed to visitors to protect it, and UNESCO listed it in 2014."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sealed by a rockfall"
+   },
+   "cite": [
+    "s12",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did the Chauvet paintings survive in such good condition?",
+    "right": "A rockfall sealed the entrance for thousands of years",
+    "wrong": [
+     "They were repainted every year",
+     "They were covered in tar",
+     "The cave was open to visitors for centuries"
+    ],
+    "why": "The sealed entrance kept the cave undisturbed until cavers found it in 1994."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, Lascaux, also in France. About 600 paintings and 1,500 engravings. It was found on 12 September 1940 by four teenagers, only months after Germany invaded France."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large painted bull and horses across a curved cave ceiling"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lascaux's two dates: made roughly 17,000 to 21,000 years ago, found in 1940. Sources disagree on the age: one gives about 17,000, another about 21,000."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MADE: roughly 17,000 to 21,000 years ago (estimates differ)\nFOUND: 12 September 1940"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which cave has the older paintings: Chauvet or Lascaux?",
+    "right": "Chauvet, at about 36,000 years against about 17,000 to 21,000",
+    "wrong": [
+     "Lascaux, because it is more famous",
+     "They are the same age",
+     "Neither can be compared"
+    ],
+    "why": "Chauvet's oldest paintings are about twice as old as Lascaux's, even though Lascaux was found first."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Europe is not the whole story. On the Indonesian island of Sulawesi, a cave painting shows human-like figures with a wild pig. That makes it one of the oldest known scenes with a story in it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A red painting of a large wild pig with three small human-like figures near it, on a cave ceiling"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The site is Leang Karampuang. The painting is at least 51,200 years old. Archaeologists found the ceiling panel in 2017."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Humans have probably been telling stories for much longer than 51,200 years\" (Oktaviana, Southern Cross University)"
+   },
+   "cite": [
+    "s3",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Also on Sulawesi: hand stencils. Someone blows paint around a hand pressed to the rock, and the hand leaves a pale outline. At Liang Metanduno cave, on Muna island, two faint stencils were dated."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "hand",
+    "count": 2,
+    "layout": "row",
+    "text": "Two hand stencils at Liang Metanduno"
+   },
+   "cite": [
+    "s24",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The older stencil is at least 67,800 years old, with a margin of about 3,800 years. One fingertip looks deliberately narrowed. The dating was published in January 2026."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MADE: at least 67,800 years ago (the other stencil: at least 60,900)\nDATED AND REPORTED: January 2026 (when it was first noticed by archaeologists, I could not confirm)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How is a hand stencil made?",
+    "right": "By pressing a hand to the wall and blowing pigment around it",
+    "wrong": [
+     "By carving the hand shape into the rock with a chisel",
+     "By painting the hand from memory with a brush",
+     "By pressing a hand covered in clay onto the wall"
+    ],
+    "why": "The pigment lands around the hand, so the hand itself leaves a clean outline."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us line up what we have met. These are minimum or approximate ages. Notice the oldest are not in Europe."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Ages of some early symbolic images, in years",
+    "chart": "c1"
+   },
+   "cite": [
+    "s9",
+    "s1",
+    "s5",
+    "s3",
+    "s15",
+    "s11",
+    "s13"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which item on the chart is the oldest?",
+    "right": "The Blombos Cave drawing, about 73,000 years",
+    "wrong": [
+     "The Lascaux paintings",
+     "The Hohle Fels Venus",
+     "The Chauvet paintings"
+    ],
+    "why": "At about 73,000 years, the Blombos drawing on stone tops the chart. The oldest wall art on the chart is the Sulawesi hand stencil, at least 67,800 years."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do we get these dates? Radiocarbon dating needs carbon, like charcoal. It only reaches back about 50,000 years. Chauvet's charcoal paintings could be dated this way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Radiocarbon: needs carbon, reaches about 50,000 years"
+   },
+   "cite": [
+    "s7",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mineral paint like ochre has little carbon. So scientists date the thin crust of calcite that grew over the art, using uranium-series dating. The art must be older than the crust, so the date is a minimum."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Crust on top of the art = a minimum age"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A calcite crust on top of a painting is dated to 60,000 years. What does that tell us?",
+    "right": "The painting is at least 60,000 years old",
+    "wrong": [
+     "The painting is exactly 60,000 years old",
+     "The painting is younger than 60,000 years",
+     "The painting cannot be dated at all"
+    ],
+    "why": "The crust grew after the paint went on, so it gives a floor, not an exact date. The art could be older."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dates can move. At Leang Bulu' Sipong 4 in Sulawesi, a more sensitive method made a painting at least 4,000 years older than first thought. Lascaux's age is also given as both about 17,000 and about 21,000 years."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Why dates change:\n- better methods\n- minimum ages, not exact ones\n- different experts, different estimates"
+   },
+   "cite": [
+    "s27",
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A new method moved one Sulawesi date to be about 4,000 years older. What does that show?",
+    "right": "Dates can change as methods improve",
+    "wrong": [
+     "The painting was repainted",
+     "Scientists made up the first date",
+     "Dating is useless"
+    ],
+    "why": "Better techniques can correct older results. That is why the dates in this lesson are best read as the current best estimate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the first big debate: did Neanderthals make art? Neanderthals are our close cousins, from class six. In 2018 a team dated crusts over red paint in three Spanish caves and found art at least 64,800 years old."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Did Neanderthals make art?"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is at least 20,000 years before modern humans reached Europe, they said. So they argued Neanderthals painted it. At La Pasiega, later artists added animals to older dots and lines."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MADE: painted at least 64,800 years ago (claimed, and disputed)\nFOUND/DATED: panel first sketched 1913; dated 2018"
+   },
+   "cite": [
+    "s5",
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics pushed back. Many dating experts were sceptical. Some argue uranium can leach out of calcite, which makes dates look too old. A 2026 critique pointed to Nerja Cave, where one crust gave nearly 119,000 years by uranium-thorium but about 14,000 by radiocarbon."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "CLAIM: Neanderthals painted in Spain over 64,800 years ago\nCRITICS: the uranium dates may be too old"
+   },
+   "cite": [
+    "s7",
+    "s35",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The team replied that their dates are reliable. Each crust shows when that crust formed, and the art must be older than the oldest crust. Some scientists accept this; others still doubt it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "For: João Zilhão says Neandertals were mental equals\nAgainst: Harold Dibble says: how good is the dating?"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why does the dating matter so much to the Neanderthal art claim?",
+    "right": "If the art is older than modern humans in Europe, Neanderthals made it; if the dates are too old, the claim falls",
+    "wrong": [
+     "Neanderthals could not hold paint",
+     "Only radiocarbon dates count as science",
+     "The art is not on a cave wall"
+    ],
+    "why": "The claim rests on the art being older than modern humans' arrival. If the dates are inflated, that argument weakens."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The second debate: sudden or slow? One view, the 'human revolution', says modern behaviour such as art appeared suddenly, around 40,000 to 50,000 years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Human revolution: sudden, about 40,000 to 50,000 years ago"
+   },
+   "cite": [
+    "s31",
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the 'human revolution' idea claim?",
+    "right": "Modern behaviours like art appeared suddenly, about 40,000 to 50,000 years ago",
+    "wrong": [
+     "Art appeared slowly over millions of years",
+     "Only Neanderthals made art",
+     "Art began with farming"
+    ],
+    "why": "That is the sudden-change view. The next beat gives the other side."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The other view says it was gradual. McBrearty and Brooks argued that many of these behaviours appear in Africa tens of thousands of years earlier, assembled bit by bit. A 2023 review found the pattern messier than steady growth, but still no sudden revolution."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "SUDDEN: Europe about 40,000 to 50,000 years ago\nSLOW: Africa, step by step, much earlier (messier than a straight line, says a 2023 review)"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which view does the 73,000-year-old Blombos drawing support more?",
+    "right": "The slow, gradual view, because it is far older than 40,000 years",
+    "wrong": [
+     "The sudden view, because it is in Africa",
+     "Neither; it is too small to count",
+     "The view that only Neanderthals made art"
+    ],
+    "why": "The drawing shows symbol-making in Africa tens of thousands of years before the 'revolution'. It does not prove the debate, but it fits the gradual view."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What did the art mean? Nobody knows. Ideas include hunting magic, from Abbé Breuil, and shamanism, from Lewis-Williams and Clottes, linking art to trance visions. Others include totems and Leroi-Gourhan's structural ideas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hunting magic: images help the hunt\nShamanism: art from trance visions\nTotems and structural patterns"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which idea says some art came from trance visions?",
+    "right": "Shamanism",
+    "wrong": [
+     "Hunting magic",
+     "Art for art's sake",
+     "Counting the seasons"
+    ],
+    "why": "The shamanism idea links cave art to altered states of mind."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why can't we be sure? No one left a written explanation. Each idea fits some images, but not all. Not every picture shows animals or hunting. Some animals painted differ from those eaten nearby."
+   },
+   "show": {
+    "kind": "list",
+    "text": "- no written explanations\n- each theory fits only some art\n- many images are not hunting scenes\n- art may have had many meanings"
+   },
+   "cite": [
+    "s22",
+    "s23",
+    "s33"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why can't experts be sure what cave art meant?",
+    "right": "There are no written explanations, and each theory fits only some of the art",
+    "wrong": [
+     "Because all the paintings have been lost",
+     "Because the art has no animals in it",
+     "Because everyone agrees it was decoration"
+    ],
+    "why": "We only have the images. Every idea about meaning is a modern guess that fits some of the evidence."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us gather it up. Early people made pigment, beads, carved figures, music and wall art. Some of it is at least 67,800 years old and found on opposite sides of the world."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Five forms of early symbols\nOldest art is not only in Europe\nDates are minimums and can change\nNeanderthal art: disputed\nSudden or slow: debated\nMeaning: unknown"
+   },
+   "cite": [
+    "s1",
+    "s9",
+    "s16",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Next time we turn to the Ice Age world these artists lived in, and the hard conditions it brought."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Ice Age world"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Ages of some early symbolic images, in years (minimums or approximate)",
+   "rows": [
+    {
+     "label": "Blombos Cave drawing on stone",
+     "value": 73000,
+     "source": "s9"
+    },
+    {
+     "label": "Liang Metanduno hand stencil (minimum)",
+     "value": 67800,
+     "source": "s1"
+    },
+    {
+     "label": "La Pasiega red lines (minimum, disputed)",
+     "value": 64800,
+     "source": "s5"
+    },
+    {
+     "label": "Leang Karampuang pig scene (minimum)",
+     "value": 51200,
+     "source": "s3"
+    },
+    {
+     "label": "Hohle Fels Venus (about)",
+     "value": 40000,
+     "source": "s15"
+    },
+    {
+     "label": "Chauvet oldest paintings (about)",
+     "value": 36000,
+     "source": "s11"
+    },
+    {
+     "label": "Lascaux paintings (estimates 17,000 to 21,000)",
+     "value": 17000,
+     "source": "s13"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "symbolic behaviour",
+   "links": [
+    "[[Our species, our cousins: Homo sapiens, Neanderthals and Denisovans]]",
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  },
+  {
+   "topic": "dating cave art",
+   "links": [
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  },
+  {
+   "topic": "Neanderthal art debate",
+   "links": [
+    "[[Our species, our cousins: Homo sapiens, Neanderthals and Denisovans]]"
+   ]
+  },
+  {
+   "topic": "cave art sites",
+   "links": [
+    "[[The Ice Age world]]",
+    "[[Spreading across the world]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 73,000 years ago (Blombos drawing)",
+   "elsewhere": "By the Spanish team's dating, modern humans reached Europe at least 20,000 years after 64,800 years ago.",
+   "cite": [
+    "s9",
+    "s5"
+   ]
+  },
+  {
+   "when": "About 67,800 years ago (Sulawesi hand stencil)",
+   "elsewhere": "Researchers link this art to the people who later crossed to Australia, where humans may have been present by 65,000 years ago.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "when": "About 40,000 years ago (Hohle Fels)",
+   "elsewhere": "Early modern humans in the Swabian Alb were developing new tool techniques as well as figurines.",
+   "cite": [
+    "s16"
+   ]
+  },
+  {
+   "when": "About 21,000 years ago (Chauvet's entrance sealed)",
+   "elsewhere": "A rockfall sealed the cave at about this time, as Lascaux's paintings may have been made (estimates 17,000 to 21,000).",
+   "cite": [
+    "s12",
+    "s14"
+   ]
+  },
+  {
+   "when": "September 1940 (Lascaux found)",
+   "elsewhere": "It was found months after Nazi Germany invaded France.",
+   "cite": [
+    "s14"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Neanderthals painted in Spanish caves over 64,800 years ago.",
+   "other_view": "Many in the uranium-series community doubted it. Critics argue uranium loss from calcite can make dates too old, and a 2026 critique found a Nerja crust giving about 119,000 years by U-Th but about 14,000 by radiocarbon. The original team replied that each crust marks when it formed, and the art must be older. Neither side has settled it.",
+   "cite": [
+    "s5",
+    "s6",
+    "s7",
+    "s35",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Neanderthals may have had art and adornment, and symbolic thinking, much as early modern humans did.",
+   "other_view": "João Zilhão argues Neandertals were mental equals. Harold Dibble, who has long challenged claims of sophisticated Neandertal behaviour, asks how good the dating is. A 2018 report also said Neanderthal adornment evidence was controversial.",
+   "cite": [
+    "s5",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Modern behaviour such as art appeared suddenly, about 40,000 to 50,000 years ago.",
+   "other_view": "McBrearty and Brooks argued many components appear in Africa tens of thousands of years earlier and were assembled gradually. A 2023 review says the African pattern is more complicated than simple steady accumulation, but finds no sudden revolution.",
+   "cite": [
+    "s31",
+    "s19",
+    "s20"
+   ]
+  },
+  {
+   "claim": "The Sulawesi stencil is the oldest rock art in the world.",
+   "other_view": "The Nature paper calls it the oldest minimum age yet shown for cave art, but only 1.1 thousand years older than the Spanish stencil attributed to Neanderthals. Dating methods behind that record face criticism too. Both results depend on U-series dating of crusts.",
+   "cite": [
+    "s1",
+    "s2",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Some Neanderthal-era bones are early flutes.",
+   "other_view": "Some researchers have proposed a perforated cave-bear bone from Divje Babe I as a Neanderthal flute. Other published work argues that such holes were made by hyenas gnawing bone. The clear early flutes come from Aurignacian caves at about 40,000 years.",
+   "cite": [
+    "s18",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Cave art was mainly hunting magic.",
+   "other_view": "Not all cave art shows animals or hunting scenes. Margaret Conkey notes that painted animals often differ from those eaten nearby. Clottes and Lewis-Williams propose shamanism instead, though critics say it cannot account for the variety of rock art across Europe.",
+   "cite": [
+    "s22",
+    "s23",
+    "s21",
+    "s33"
+   ]
+  }
+ ]
+}

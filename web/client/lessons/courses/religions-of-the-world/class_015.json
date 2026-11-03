@@ -1,0 +1,1235 @@
+{
+ "about": {
+  "title": "Indigenous Religions of Australia and the Pacific",
+  "course": "religions-of-the-world",
+  "class_n": 15,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 27,
+  "length_note": "The class runs about 27 minutes, a little over the 25 aimed for. It covers six topics, and each one gets its own short steps and questions. You can pause between steps. The Pacific sections are brief tastes of a very large region, not full accounts."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Australian Aboriginal and Torres Strait Islander Peoples",
+   "publisher": "Study Australia (Australian Government)",
+   "date": "n.d.",
+   "link": "https://www.studyaustralia.gov.au/en/tools-and-resources/tips-and-advice-for-students/australian-aboriginal-and-torres-strait-islander-peoples",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The Dreaming",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/The-Dreaming/321802",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Walking through a songline",
+   "publisher": "Museums of History NSW",
+   "date": "n.d.",
+   "link": "https://mhnsw.au/whats-on/exhibitions/walking-through-songline/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Country, culture and spirituality",
+   "publisher": "Australian Indigenous HealthInfoNet, Edith Cowan University",
+   "date": "n.d.",
+   "link": "https://healthinfonet.ecu.edu.au/learn/health-topics/social-and-emotional-wellbeing/country-culture-spirituality/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Spirituality and religion among Torres Strait Islanders",
+   "publisher": "Queensland Curriculum and Assessment Authority",
+   "date": "n.d.",
+   "link": "https://www.qcaa.qld.edu.au/about/k-12-policies/aboriginal-torres-strait-islander-perspectives/resources/spirituality-religion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Tagai",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Tagai",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "A shark in the stars: astronomy and culture in the Torres Strait",
+   "publisher": "Duane Hamacher, Nura Gili Indigenous Programs Unit, University of New South Wales (arXiv)",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1412.1785",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Traditional Māori religion – ngā karakia a te Māori: Ngā atua – the gods",
+   "publisher": "Te Ara – the Encyclopedia of New Zealand (NZ Government)",
+   "date": "n.d.",
+   "link": "https://teara.govt.nz/en/traditional-maori-religion-nga-karakia-a-te-maori/page-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Ranginui – the sky",
+   "publisher": "Te Ara – the Encyclopedia of New Zealand (NZ Government)",
+   "date": "n.d.",
+   "link": "https://teara.govt.nz/en/ranginui-the-sky/print",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Polynesian culture",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/Polynesian-culture/631701",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Gender and Religion: Gender and Oceanic Religions",
+   "publisher": "Encyclopedia.com (encyclopedia reference entry)",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/gender-and-religion-gender-and-oceanic-religions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Micronesian mythology",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Micronesian_mythology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Cargo cults",
+   "publisher": "Lamont Lindstrom, Cambridge Encyclopedia of Anthropology",
+   "date": "n.d.",
+   "link": "https://www.anthroencyclopedia.com/entry/cargo-cults",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Ni-Vanuatu Kastom — The Way of Custom",
+   "publisher": "Tianmu Anglican Church (ethnotheology library)",
+   "date": "n.d.",
+   "link": "https://tianmu.org/good-work-library/ethnotheology/pacific/ni-vanuatu-kastom-the-way-of-custom",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Māori prophetic movements – ngā poropiti",
+   "publisher": "Te Ara – the Encyclopedia of New Zealand (NZ Government)",
+   "date": "n.d.",
+   "link": "https://teara.govt.nz/en/maori-prophetic-movements-nga-poropiti/print",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Ringatū",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Ringatu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Religious affiliations of Māori people in New Zealand (2023 Census)",
+   "publisher": "Figure.NZ, using Stats NZ census data",
+   "date": "2023 Census",
+   "link": "https://figure.nz/chart/eDTdoAV5D3B6ucMi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Census of Population and Housing: Reflecting Australia – Stories from the Census, 2016 (Religion)",
+   "publisher": "Australian Bureau of Statistics",
+   "date": "2016 Census",
+   "link": "https://www.abs.gov.au/ausstats/abs@.nsf/Lookup/by%20Subject/2071.0~2016~Main%20Features~Religion%20Article~80",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Kapu (Ke Ao Akua, the godly realm)",
+   "publisher": "Kumukahi (Hawaiian cultural education resource)",
+   "date": "n.d.",
+   "link": "https://kumukahi.org/units/ke-ao-akua/mana/kapu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Topic Explorer – Māori Religious Movements",
+   "publisher": "National Library of New Zealand",
+   "date": "n.d.",
+   "link": "https://natlib.govt.nz/schools/topics/5b42c21412575703bb0ddfb1/maori-religious-movements",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Hawaiian religion",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Hawaiian_religion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "What does the Census tell us about New Zealanders' Religion?",
+   "publisher": "NZ Association of Rationalists and Humanists",
+   "date": "2024",
+   "link": "https://rationalists.nz/articles/journal/what-does-the-census-tell-us-about-new-zealanders-religion/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Indigenous Australians and the Environment",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/Indigenous-Australians-and-the-Environment/629318",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "'Te wehenga o Rangi rāua ko Papa' (mural of the separation of sky and earth)",
+   "publisher": "Te Ara – the Encyclopedia of New Zealand (NZ Government)",
+   "date": "n.d.",
+   "link": "https://teara.govt.nz/en/zoomify/30771/te-wehenga-o-rangi-raua-ko-papa",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "'Aumakua (Guardian Ancestors) in the Context of Hawaiian Religion",
+   "publisher": "University of Hawaiʻi at Mānoa (eVols)",
+   "date": "n.d.",
+   "link": "https://evols.library.manoa.hawaii.edu/server/api/core/bitstreams/21bac485-df7e-41fc-bcc2-4e0b80addf08/content",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Death and Maier: meteors and mortuary rites in the eastern Torres Strait",
+   "publisher": "arXiv preprint",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1810.11276",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Songlines: Tracking the Seven Sisters (exhibition catalogue)",
+   "publisher": "National Museum of Australia",
+   "date": "2017",
+   "link": "https://www.nma.gov.au/about/publications/songlines",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "\"Dancing with the stars\" - astronomy and music in the Torres Strait",
+   "publisher": "arXiv preprint",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1605.08507",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Understanding Aboriginal & Torres Strait Islander Culture and Faith",
+   "publisher": "Australian Catholic Bishops Conference, Justice, Ecology and Development Office (justiceandpeace.org.au)",
+   "date": "n.d.",
+   "link": "https://justiceandpeace.org.au/understanding-aboriginal-torres-strait-islander-culture-and-faith/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class fifteen. Today we visit Australia and the Pacific, and we describe each tradition the way its own people describe it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Indigenous Religions of Australia and the Pacific"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three ideas will come back again and again: story, land and ancestors. We will take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Story · Land · Ancestors"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's start in Australia. It has two distinct Indigenous peoples: Aboriginal peoples and Torres Strait Islander peoples."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Australia. The mainland is marked Aboriginal peoples. The islands at the northern tip, near Papua New Guinea, are marked Torres Strait Islander peoples."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Within those two peoples there are hundreds of communities. Each has its own culture, customs, language and law."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many communities, many traditions"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So when we say Aboriginal spirituality, we mean many traditions, not one. Many of them speak of the Dreaming. In its stories, ancestral spirits created people and the natural world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Dreaming"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Dreaming is not only about the past. It joins past, present and future, and links people to the land and to each other."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Past · Present · Future\nPeople · Land · Each other"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more point. 'The Dreaming' is an English term for an Aboriginal idea. Each language group has its own word for it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One English word, many Aboriginal words"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is true about the word 'Dreaming'?",
+    "right": "It is an English term, and each Aboriginal language group has its own word for the idea.",
+    "wrong": [
+     "It is one Aboriginal word that every group uses.",
+     "It is the title of a single holy book.",
+     "It only describes events in the distant past."
+    ],
+    "why": "Britannica Kids explains that 'The Dreaming' is the English term for an Aboriginal concept and that each language group has its own term. It is also not only about the past."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the second idea, land. Aboriginal and Torres Strait Islander people use the word Country for it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Country"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Country is more than a place on a map. It is the land, the water, the animals, the plants and the people."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Land · Water · Animals · Plants · People"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Places are tied to events in the Dreaming, so many are sacred sites. Connection to Country also brings responsibilities, set out in Aboriginal law and honoured through ceremony."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Connection | Responsibility\nSacred sites tied to the Dreaming | Roles under Aboriginal law, honoured in ceremony"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is an example. Uluru is a sacred site for the Anangu people. They say their ancestors made it in the Dreaming, on what had been a flat plain."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Uluru, a huge red rock rising from a flat desert plain, with caves and cracks along its sides."
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the Anangu understanding, how did the features of Uluru come to be?",
+    "right": "Their ancestors created them during the Dreaming.",
+    "wrong": [
+     "European surveyors built them in the 1800s.",
+     "A king had them carved for a temple.",
+     "Nobody has ever told a story about them."
+    ],
+    "why": "Britannica Kids reports that the Anangu believe their ancestors created the rock in the Dreaming. Their stories also explain its caves, cliffs, boulders and cracks."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stories can tie land and ancestors together at a very large scale. Dreaming stories from the Great Barrier Reef region tell of ancestors who lived on land before the sea rose, more than 10,000 years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A coral reef seen from above, with a faint outline of dry land beneath the shallow water."
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stories also work like maps. A songline, or Dreaming track, follows the route of ancestral beings as they travelled and created the land and its people."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A winding line crossing a desert map, with dots for places along the way where ancestors left parts of the story."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Seven Sisters songlines are among the most extensive. An Aboriginal-led National Museum of Australia exhibition about them was created under the guidance of cultural custodians."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Seven Sisters songlines"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a songline, or Dreaming track, map?",
+    "right": "The routes ancestral beings took as they created the land and its people.",
+    "wrong": [
+     "The roads built by early European explorers.",
+     "The borders of modern Australian states.",
+     "The routes of trading ships."
+    ],
+    "why": "The Museums of History NSW describes songlines as maps of the routes of Ancestral beings, who created the land and its people. They are pathways of knowledge."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Spirituality is not only spoken. Aboriginal and Torres Strait Islander people express it through art, song, story, ceremony and the Dreaming."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Art · Song · Story · Ceremony"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You may hear two phrases at events. A Welcome to Country can only be given by Traditional Owners who have their Elders' permission. An Acknowledgement of Country can be done by anyone."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Welcome to Country | Acknowledgement of Country\nGiven by permitted Traditional Owners | Can be done by anyone in Australia"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who can give a Welcome to Country?",
+    "right": "Traditional Owners who have been given permission by their Elders.",
+    "wrong": [
+     "Any visitor who has read about the area.",
+     "Any government official.",
+     "Any teacher in a school."
+    ],
+    "why": "Study Australia says a Welcome to Country can only be delivered by Traditional Owners with permission from Elders. Anyone can do an Acknowledgement of Country."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to the Torres Strait Islands, between the tip of Cape York and Papua New Guinea. Torres Strait Islanders are a Melanesian sea-faring people, and they live on islands scattered across shallow seas."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Torres Strait: more than 250 small islands between Cape York in Australia and Papua New Guinea. Fourteen are inhabited."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their spirituality draws on the stories of Tagai. Tagai is a great fisherman and spirit being, and Islanders believe he created the world. He is seen as a constellation in the southern sky."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tagai"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In one Tagai story he stands in a canoe. In his left hand he holds a fishing spear, which is the Southern Cross. In his right hand he holds a red fruit called a sorbi."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A figure of stars shaped like a man standing in a canoe, with a spear in his left hand and a red fruit in his right."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In that story, Tagai and his crew of twelve were getting ready for a journey. Before it began, the crew ate all the food and drink they had planned to take. Tellers' versions of the story differ across the Strait."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A canoe at the shore with the crew sitting among empty food baskets."
+   },
+   "cite": [
+    "s5",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The stars also carry practical knowledge. Islander laws, customs and practices, along with knowledge needed for survival, are handed down through story, song, dance and ceremony."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Story · Song · Dance · Ceremony\nLaw · Custom · Survival knowledge"
+   },
+   "cite": [
+    "s7",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What do the Tagai stories focus on?",
+    "right": "The stars. They identify Torres Strait Islanders as sea people who share a way of life.",
+    "wrong": [
+     "Desert rock formations.",
+     "Mountain glaciers.",
+     "Rivers that flow inland."
+    ],
+    "why": "The Queensland Curriculum and Assessment Authority explains that the Tagai stories focus on the stars and identify Torres Strait Islanders as sea people."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many Torres Strait Islanders do not see land and sea as separate. On Mabuiag, heaven is not straight up. It lies on an island called Kibu, to the northwest, and a spirit sails there at sundown."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small sailing canoe heading toward the northwest horizon at sunset."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we cross the sea to Aotearoa New Zealand and the Māori. At the centre of traditional Māori religion were the atua, often called gods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Atua"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Māori belief the natural and supernatural worlds were one, and there was no Māori word for religion. Missionaries introduced the word whakapono, which also means faith and trust."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Māori belief | Word for it\nNatural and supernatural are one | No word for 'religion'\nMissionaries introduced | Whakapono (also faith, trust)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A key creation story is about Ranginui, the sky father, and Papatūānuku, the earth mother. They were locked in an embrace, and their children were trapped between them in darkness. Those children decided to try to separate their parents."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Sky father and earth mother in a tight embrace, with small figures of their children pressed between them in the dark."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The children became atua of the world's parts. Tangaroa is god of the sea, Tāne of the forest, Tāwhirimātea of the wind, and Tūmatauenga of war and people. Rongo and Haumia are gods of cultivated and uncultivated foods."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Atua | Domain\nTangaroa | Sea\nTāne | Forest\nTāwhirimātea | Wind\nTūmatauenga | War and people\nRongo | Cultivated foods\nHaumia | Uncultivated foods"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the Māori creation story, who are Ranginui and Papatūānuku?",
+    "right": "The sky father and the earth mother, parents of the atua.",
+    "wrong": [
+     "Two rival human kings.",
+     "The first Christian missionaries.",
+     "Two sailors who found New Zealand."
+    ],
+    "why": "Te Ara describes Ranginui as the sky father and Papatūānuku as the earth mother. Their children, including Tāne and Tangaroa, are the atua of the forest and sea."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stories also say where people come from. In one telling, Tāne obtained the human aspect from the heavens and placed it in Hineahuone, the first woman. In another tradition, humans descend from the god Tiki."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Where people come from"
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Māori are Polynesian, and two ideas appear across Polynesia, and in parts of Melanesia and Micronesia: mana and tapu. Mana first. It is a sacred power, a state in which a person or thing is under the influence of gods or spirits."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mana"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Chiefs were believed to hold great mana. But mana was not held only by people. Buildings, stones and tools could hold it too, and it could be good or dangerous."
+   },
+   "show": {
+    "kind": "list",
+    "text": "People · Chiefs · Buildings · Stones · Tools"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tapu is the second idea. These are rules protecting what is sacred, often glossed as 'forbidden'. Breaking a tapu was believed to bring misfortune or even death."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tapu = sacred and set apart"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You can still see this respect. In much of Polynesia it is poor manners to step over a person's legs, or to put your head higher than a person of high rank. People believe these actions sap mana."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A guest bending low as they walk past seated elders, taking care not to step over anyone's legs."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Polynesian traditions, what is a tapu?",
+    "right": "A rule that protects what is sacred and set apart, and breaking it was believed to bring misfortune.",
+    "wrong": [
+     "A type of ocean canoe.",
+     "A song sung only at weddings.",
+     "A name for a human chief."
+    ],
+    "why": "Britannica Kids says tapu rules protected sacred things, and breaking a tapu was believed to bring misfortune or even death."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hawaii is another Polynesian tradition. Its religion is also called the kapu system. Four gods are most often named: Kū, Kāne, Lono and Kanaloa. The formal kapu system stayed in place until 1819."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kū · Kāne · Lono · Kanaloa"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hawaiian practice did not stop in 1819. Fishermen still observe a kapu on spawning fish. 'Aumakua, guardian ancestors who can appear as a shark, an owl or even a rock, are still honoured by some Hawaiians today."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A fisher at the edge of the sea, leaving spawning fish alone. Nearby is a carved stone of a guardian ancestor."
+   },
+   "cite": [
+    "s19",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Micronesia is a third region of the Pacific. There is no single belief system there, because each island region has its own beings. In Chuuk, for example, a god named Anulap teaches magic and knowledge to humans."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Micronesia's island groups: the Carolines, Marshalls, Marianas and Gilberts, each with its own stories."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Melanesia, Vanuatu has over a hundred languages across about eighty islands. Its word for traditional ways is kastom. Kastom means the whole mix of knowledge, practice, belief and social life that began before Christianity and continues alongside it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kastom"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "In Vanuatu, what does 'kastom' mean?",
+    "right": "The whole complex of traditional knowledge, practice, belief and social life, which continues alongside Christianity.",
+    "wrong": [
+     "A type of church building.",
+     "A tax collected by the government.",
+     "A single holy book."
+    ],
+    "why": "The ethnotheology profile explains that kastom covers indigenous knowledge, practice, belief, social organisation and spiritual relationship. It predates Christianity and persists alongside it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the spiritual world of kastom there is no separate realm above or below this one. Vanuatu communities often took on Christianity in form while keeping kastom in practice."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Christianity | Kastom\nTaken up in form | Kept in practice"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some Melanesian movements are called cargo cults. In them, villagers used renewed or new rituals to ask ancestral spirits or other powerful beings to provide 'cargo', meaning goods. Scholars debate the label, as you'll see in 'The other side'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'Cargo' = kago, goods"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's look at how these traditions met Christianity. In the Torres Strait, missionaries arrived in 1871 and ended some old ways of life and the fighting between islands."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1871: the Coming of the Light"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That arrival is remembered each year on 1 July as the Coming of the Light. The London Missionary Society reached Erub that day. Today Christianity remains strong in Torres Strait communities, and a major ceremony marks the date."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A community gathering on a beach at dawn for a Coming of the Light celebration."
+   },
+   "cite": [
+    "s27",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For Aboriginal Catholics, one Catholic source says Elders saw many likenesses between Bible stories and their own traditional stories and laws. The same source says traditional rituals, language and spirituality were suppressed or lost as people were forced to integrate."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Similarities noticed | Losses recorded\nBible stories and traditional stories | Rituals, language and spirituality suppressed or lost"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Aotearoa, colonialism led many Māori to become Christian. It also gave rise to new Māori-centred faiths: Pai Mārire, Ringatū and later Rātana."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pai Mārire · Ringatū · Rātana"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Te Ua Haumēne developed Pai Mārire from 1862. Its name means good and peaceful. Te Kooti founded Ringatū, the upraised hand, while held on the Chatham Islands. His Bible study produced a faith that kept traditional taboos and faith healing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Pai Mārire | Ringatū\nFounded by Te Ua Haumēne, from 1862 | Founded by Te Kooti, 1860s\n'Good and peaceful' | 'The upraised hand'"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tahupōtiki Rātana was a farmer who fasted and prayed when his son became very sick. He founded a religious movement, and also a political one that held all the Māori seats in Parliament for many years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rātana"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a timeline of how some of these traditions and Christianity met."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1819: Hawaiian kapu system formally ends\n1862: Te Ua Haumēne develops Pai Mārire\n1860s: Te Kooti founds Ringatū\n1871: Missionaries reach Erub in the Torres Strait"
+   },
+   "cite": [
+    "s22",
+    "s15",
+    "s16",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What about today? In New Zealand's 2023 census, most Māori gave no religion. About 24% gave Christianity and about 7% gave Māori religions, beliefs and philosophies."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Religious affiliation of Māori people, 2023 Census",
+    "chart": "c1"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Māori religions group in the census is mainly three faiths: Rātana, Ringatū and Pai Mārire. Two of them are new faiths, and Pai Mārire grew from the same era."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rātana · Ringatū · Pai Mārire"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which three faiths mainly make up the census category 'Māori religions, beliefs and philosophies'?",
+    "right": "Rātana, Ringatū and Pai Mārire.",
+    "wrong": [
+     "Shinto, Daoism and Jainism.",
+     "Hinduism, Sikhism and Buddhism.",
+     "Zoroastrianism, the Baháʼí Faith and Druze."
+    ],
+    "why": "The NZ Association of Rationalists and Humanists, writing about Stats NZ census results, says this group is principally Rātana, Ringatū and Pai Mārire."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Australia the census shows a different picture. In 2016, under 2% of Aboriginal and Torres Strait Islander people reported Australian Aboriginal traditional religions or beliefs."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Under 2%"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A small number does not mean spirituality has lost its meaning. Country, culture and spirituality are described as central to the identity of many Aboriginal and Torres Strait Islander people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A tick-box is not the whole story"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So where are these traditions practised? In Aboriginal communities across Australia and in the Torres Strait Islands. They are also practised in Aotearoa, Hawaiʻi and Vanuatu, often alongside Christianity."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Australia, the Torres Strait, New Zealand, Hawaiʻi and Vanuatu, each marked as a place where these traditions continue."
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s14",
+    "s19",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's pull it together. Stories explain the world and carry law. Land is a living relative with responsibilities. Ancestors, spirits and atua connect people to both."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Story: explains the world and carries law\nLand: Country, with responsibilities\nAncestors: connect people to story and land"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence best sums up how land works in Aboriginal and Torres Strait Islander spirituality?",
+    "right": "Land, or Country, is tied to ancestors and stories, and it carries responsibilities.",
+    "wrong": [
+     "Land is only a resource to be sold.",
+     "Land has no connection to ancestors or stories.",
+     "Land only matters in the distant past."
+    ],
+    "why": "Study Australia says Country includes land, water, animals, plants and people. It adds that connection to land brings responsibilities in Aboriginal law, honoured through ceremony."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time, in class sixteen, we look at newer movements and non-religious worldviews. If you want to learn whose Country you are on, Study Australia points to the AIATSIS website."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Newer Movements and Non-Religious Worldviews"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Religious affiliation of Māori people, 2023 Census (% of people where information available)",
+   "rows": [
+    {
+     "label": "No religion",
+     "value": 59.61,
+     "source": "s17"
+    },
+    {
+     "label": "Christianity",
+     "value": 24.41,
+     "source": "s17"
+    },
+    {
+     "label": "Māori religions, beliefs and philosophies",
+     "value": 7.05,
+     "source": "s17"
+    },
+    {
+     "label": "Object to answering",
+     "value": 7.61,
+     "source": "s17"
+    },
+    {
+     "label": "Other religions, beliefs and philosophies",
+     "value": 0.89,
+     "source": "s17"
+    },
+    {
+     "label": "Spiritualism and New Age religions",
+     "value": 0.51,
+     "source": "s17"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "The Dreaming",
+   "links": [
+    "[[Country]]",
+    "[[songlines]]",
+    "[[Religions of the world, class 14: Indigenous Religions of the Americas and the Arctic]]"
+   ]
+  },
+  {
+   "topic": "Country",
+   "links": [
+    "[[Welcome to Country]]",
+    "[[Acknowledgement of Country]]",
+    "[[sacred places in class 17]]"
+   ]
+  },
+  {
+   "topic": "Tagai and Torres Strait Islander spirituality",
+   "links": [
+    "[[Coming of the Light]]",
+    "[[stars and navigation]]"
+   ]
+  },
+  {
+   "topic": "Māori atua and creation",
+   "links": [
+    "[[Rangi and Papa]]",
+    "[[mana and tapu]]",
+    "[[Rātana, Ringatū and Pai Mārire]]"
+   ]
+  },
+  {
+   "topic": "Mana and tapu",
+   "links": [
+    "[[Hawaiian kapu]]",
+    "[[Polynesia]]"
+   ]
+  },
+  {
+   "topic": "Kastom and cargo movements",
+   "links": [
+    "[[Vanuatu]]",
+    "[[Melanesia]]"
+   ]
+  },
+  {
+   "topic": "Indigenous traditions and Christianity",
+   "links": [
+    "[[Coming of the Light]]",
+    "[[Māori prophetic movements]]",
+    "[[Christianity (class 7)]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 8,000 years ago",
+   "elsewhere": "Farming villages were spreading across West Asia and other parts of the world. In the Torres Strait, rising seas were flooding the land bridge to Papua New Guinea. Islander culture stretches back to around then.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "1819",
+   "elsewhere": "Singapore was founded as a British trading post. In Hawaii, the formal kapu system came to an end.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "when": "1860s",
+   "elsewhere": "The American Civil War was fought, and Japan's Meiji Restoration began in 1868. In New Zealand, Pai Mārire developed from 1862 and Te Kooti founded Ringatū in the mid-1860s.",
+   "cite": [
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "when": "1871",
+   "elsewhere": "The German Empire was proclaimed. In the Torres Strait, missionaries reached Erub, an event Islanders remember as the Coming of the Light.",
+   "cite": [
+    "s5",
+    "s27"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Some accounts say Māori traditionally believed in one supreme god, Io.",
+   "other_view": "Te Ara explains that some people have searched early manuscripts for evidence of Io. Others think the idea of Io came from the Christian idea of God, and they argue there is no concrete evidence of Io in early Māori traditions. Te Rangi Hīroa, a Māori scholar, wrote that the discovery of a supreme god named Io was a surprise to both Māori and Pākehā.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "claim": "'Cargo cults' are simply attempts to get goods by magic.",
+   "other_view": "Anthropologists have given many explanations for these movements, including greed, deep Melanesian religious beliefs, and colonial inequality and oppression. One scholar writing about Vanuatu's Tanna argues that 'cargo cult' is a Western projection and not a Melanesian reality. Others call such movements forerunners of Melanesian nationalism.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "The census shows that traditional Aboriginal religion is almost gone.",
+   "other_view": "The 2016 census found under 2% of Aboriginal and Torres Strait Islander people reporting traditional religions. Other sources describe Country, culture and spirituality as central to the identity of many Aboriginal and Torres Strait Islander people. A census tick-box measures what people choose to list as a religion, so it may not capture everything. This last point is the class's own inference.",
+   "cite": [
+    "s18",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Missionaries simply ended old ways in the Torres Strait.",
+   "other_view": "Queensland's education authority says missionaries put an end to some old ways of life and to fighting between islands. Torres Strait Islanders of all faiths gather each year to mark the Coming of the Light, and the QCAA says Christianity remains strong in Torres Strait communities.",
+   "cite": [
+    "s5"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,838 @@
+{
+ "about": {
+  "title": "Where Wizards Come From: Merlin and the Real Past",
+  "course": "fantasy-thought-experiments",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "This runs about 30 minutes, a little over the usual 25. It has four short parts: legend, real people, how people thought about magic, and Nimrod's invented Merlin. Each idea gets its own small step and a check question, so nothing is rushed. You can pause after any step. Parts 1 and 2 stand on their own if you want a shorter session."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Arthurian legend",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Arthurian-legend",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Merlin",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Merlin/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Geoffrey of Monmouth and the Merlin Legend (I), Arthurian Literature XXV (summary)",
+   "publisher": "Cambridge University Press",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/books/abs/arthurian-literature-xxv/geoffrey-of-monmouth-and-the-merlin-legend/64BC22AF7E96575D3ED15531CBE98E68",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Dinas Emrys",
+   "publisher": "Oxford Reference",
+   "date": "n.d.",
+   "link": "https://www.oxfordreference.com/display/10.1093/oi/authority.20110803095719163",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Astrology and Medicine",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/science/encyclopedias-almanacs-transcripts-and-maps/astrology-and-medicine",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "From alchemy to astronomy: Practitioners of science and magic in Renaissance Europe",
+   "publisher": "Science Museum Group Blog",
+   "date": "n.d.",
+   "link": "https://blog.sciencemuseumgroup.org.uk/practitioners-of-science-and-magic-in-renaissance-europe/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Roger Bacon",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Roger-Bacon",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Roger Bacon (Fall 2013 Edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2013",
+   "link": "https://plato.stanford.edu/archives/fall2013/entries/roger-bacon/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Fire and Gold: The Art of Alchemy (1450-1850)",
+   "publisher": "Science History Institute",
+   "date": "n.d.",
+   "link": "https://www.sciencehistory.org/visit/exhibitions/fire-and-gold-the-art-of-alchemy-1450-1850/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Al-Kimiya: Notes on Arabic Alchemy",
+   "publisher": "Science History Institute",
+   "date": "n.d.",
+   "link": "https://www.sciencehistory.org/stories/magazine/al-kimiya-notes-on-arabic-alchemy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "What Have We Learned from the Recent Historiography of Alchemy?",
+   "publisher": "University of Chicago Press (journal article)",
+   "date": "n.d.",
+   "link": "https://www.journals.uchicago.edu/doi/full/10.1086/660140",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The Philosophical Background of Medieval Magic and Alchemy (Athanasios Rinotas)",
+   "publisher": "National Kapodistrian University of Athens, via ResearchGate",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/342232543_The_Philosophical_Background_of_Medieval_Magic_and_Alchemy",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Witchcraft: Eight Myths and Misconceptions",
+   "publisher": "English Heritage",
+   "date": "n.d.",
+   "link": "https://www.english-heritage.org.uk/learn/histories/eight-witchcraft-myths/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Wise Women: Traditional Cures and Remedies",
+   "publisher": "Museum of Cambridge",
+   "date": "n.d.",
+   "link": "https://www.museumofcambridge.org.uk/wise-women-traditional-cures-and-remedies/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "A Note from the Collections: Midwives and Healers in the European Witch Trials",
+   "publisher": "International Museum of Surgical Science",
+   "date": "2019-12",
+   "link": "https://imss.org/2019/12/a-note-from-the-collections-midwives-and-healers-in-the-european-witch-trials/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Timeline: Merlin",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/timeline/Merlin/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "What is the difference between astronomy and astrology?",
+   "publisher": "The Planetary Society",
+   "date": "n.d.",
+   "link": "https://www.planetary.org/articles/what-is-the-difference-between-astronomy-and-astrology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Were medieval magicians experimental scientists?",
+   "publisher": "Prospect Magazine",
+   "date": "n.d.",
+   "link": "https://www.prospectmagazine.co.uk/culture/48331/were-medieval-magicians-experimental-scientists",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Bacon, Roger (1214-1292)",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/roger-bacon/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today's question is simple: where did the idea of a wizard come from? We will look at the famous wizard Merlin, and at the real people behind the idea."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where Wizards Come From: Merlin and the Real Past"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will sort everything into three piles. LEGEND is a story told and retold. REAL has evidence behind it. INVENTED is made up by us, for Nimrod's village."
+   },
+   "show": {
+    "kind": "list",
+    "text": "LEGEND: a story told and retold, changing as it goes | REAL: people and things we have evidence for | INVENTED: made up for Nimrod's village"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pile is for a story that people told again and again, changing it each time?",
+    "right": "LEGEND",
+    "wrong": [
+     "REAL",
+     "INVENTED",
+     "SCIENCE"
+    ],
+    "why": "A legend grows as people retell it. That is exactly what happened to Merlin."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part one is the LEGEND pile. Where does Merlin the wizard first appear?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 1 - LEGEND: Where Merlin's story comes from"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around the year 1136. Merlin the wizard first appears in a book by Geoffrey of Monmouth, a Welsh churchman. The book is called History of the Kings of Britain."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1136"
+   },
+   "cite": [
+    "s2",
+    "s16"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Merlin the wizard first appears in a book from about which year?",
+    "right": "1136",
+    "wrong": [
+     "836",
+     "1469",
+     "1936"
+    ],
+    "why": "Geoffrey of Monmouth's History of the Kings of Britain, about 1136, is where Merlin first appears in literature. 1469 is when Malory's later version was written."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The book sounds like real history. But many of its kings were made up. So Merlin begins inside a legend, not inside a record of real events."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sounds like history. Isn't."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Geoffrey did not invent Merlin from nothing. Welsh tradition told of Myrddin, a poet and prophet said to have lived in the 6th century. After a bloody battle, the stories say, he went mad and fled to the woods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Myrddin the Wild"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the second ingredient, from a ninth-century book called the Historia Brittonum. A king, Vortigern, tries to build a fortress on a hill in north Wales. The walls fall down every night."
+   },
+   "show": {
+    "kind": "map",
+    "text": "North Wales, southern edge of the Snowdon mountains: the hill-fort of Dinas Emrys in Gwynedd, marked with a small tower."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His magicians say the king must sacrifice a boy who has no father. The boy refuses to be a victim. He says there is an underground pool, and in it two dragons are fighting."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A boy standing before a king and advisers, pointing at the ground. Beneath the hill, a pool with a red dragon and a white dragon."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In this story, what did the fatherless boy say was under the hill?",
+    "right": "A pool with two fighting dragons",
+    "wrong": [
+     "A buried bell",
+     "A sleeping giant",
+     "A hidden army"
+    ],
+    "why": "The boy revealed two dragons fighting in an underground pool. The dragons stood for two peoples, the Britons and the Saxons."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the REAL part. The hill-fort is real. Digs found people lived there in Roman times and in the 5th century, and signs of a pool nearby. The dragons are legend."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: a hill-fort, with people living there, and signs of a pool | LEGEND: the fatherless boy, the magicians, the two dragons"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In that ninth-century book, the boy is not called Merlin. His name is Ambrosius. Geoffrey, about 300 years later, gave the same scene to Merlin."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ambrosius (9th century) becomes Merlin (12th century)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the ninth-century Historia Brittonum, what is the fatherless boy called?",
+    "right": "Ambrosius",
+    "wrong": [
+     "Arthur",
+     "Vortigern",
+     "Geoffrey"
+    ],
+    "why": "The ninth-century book calls him Ambrosius. Geoffrey of Monmouth is the one who made the boy Merlin."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So Geoffrey blended two older figures: the Welsh prophet Myrddin and the boy-prophet Ambrosius. He added a long prophecy and a new Latin-style name, Merlinus. One reason given for that name: the strict Latin form of Myrddin would have looked like a rude Latin word."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Myrddin, Welsh poet-prophet + Ambrosius, fatherless boy-prophet = Merlin, court wizard"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How was Merlin the wizard created?",
+    "right": "Geoffrey of Monmouth blended older stories and figures into one new character",
+    "wrong": [
+     "Geoffrey wrote down the life of a real wizard he met",
+     "A Roman historian recorded him",
+     "Malory invented him in 1469"
+    ],
+    "why": "Merlin is a composite. Geoffrey joined Myrddin and Ambrosius and added his own ideas."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After Geoffrey, other writers kept changing Merlin. Look at the steps. Each one adds something new."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1136 Geoffrey of Monmouth: prophet and adviser | about 1200 Robert de Boron: Christian prophet linked to the Holy Grail | 1215-1235 Vulgate Cycle | about 1450 Prose Merlin, in English | 1469 Malory, Le Morte d'Arthur"
+   },
+   "cite": [
+    "s16",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Each writer added what his readers wanted. Robert de Boron added a Christian side and tied Merlin to the Holy Grail. Malory's late-15th-century book carried the story to English readers. That is how legends grow."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Legends grow with every retelling"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who made Merlin a Christian prophet linked to the Holy Grail?",
+    "right": "Robert de Boron",
+    "wrong": [
+     "Malory",
+     "Myrddin",
+     "Vortigern"
+    ],
+    "why": "Robert de Boron's verse romance Merlin, about 1200, added the Christian side and the Grail link."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The legend pile holds a fatherless boy, two dragons and a wizard at court. Part two asks a different question: what did real people do that made others think of wizards? There are four groups."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Part 2 - REAL: Healers | Astrologers | Alchemists | Scholars"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Healers first. A museum in the English Fens describes the local wise woman. She made remedies from nearby plants, animals, water and minerals like salt. Knowledge passed from mother to daughter, and she often helped deliver babies."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cottage table with bundles of dried herbs, a mortar and pestle, and a small jar of salt."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An honest note. The body was not understood scientifically then, so many wise women also used charms and spells. Practical remedies and magic sat side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Practical: remedies from local plants, animals, water, minerals | Magic: charms and spells"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where did a village wise woman get most of her remedies, according to the museum?",
+    "right": "From plants, animals, water and minerals found in the local landscape",
+    "wrong": [
+     "From a university laboratory",
+     "From a royal shop in the capital",
+     "Only from spell books"
+    ],
+    "why": "She worked with what the local landscape offered, and often added charms too."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, doctors trained at universities. In the late Middle Ages their learning included medicine, logic, natural philosophy and astrology. Astrology is the belief that the movements of the heavens shape human affairs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Astrology: part of a doctor's training"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was not seen as silly. Universities in Paris, Padua, Bologna and Florence had chairs of astrology. It seemed to link medicine to mathematics and science. Today we separate them: astronomy is science, astrology has no scientific basis."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Then: part of learned medicine | Now: astronomy is science, astrology is a pseudoscience"
+   },
+   "cite": [
+    "s5",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did medieval university doctors study astrology?",
+    "right": "It was seen as part of learned medicine, linking it to mathematics and science",
+    "wrong": [
+     "Modern tests had proved it works",
+     "To frighten patients",
+     "Only monks were allowed to study medicine"
+    ],
+    "why": "At the time it was part of the learned curriculum. Today's evidence-based view is different."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now alchemists. They worked with fire and glass, using heat and distillation to study and change matter. Many of their words came through Arabic books, like alchemy itself, alcohol, elixir and alembic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alchemy: heat, glass and distillation"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these words came into English through Arabic alchemy books?",
+    "right": "Elixir",
+    "wrong": [
+     "Castle",
+     "Village",
+     "Knight"
+    ],
+    "why": "Elixir, alcohol and alembic all show Arabic influence on the language of chemistry."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The REAL result: alchemy gave way to modern chemistry. Centuries of alchemical experiments added to our understanding of matter, materials and medicine. Arabic-language alchemists also gave early descriptions of substances still used today."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Alchemy gave way to modern chemistry (Science History Institute)"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a scholar. Roger Bacon was an English Franciscan friar who lived about 1220 to 1292. He argued for experiment, and studied mathematics, astronomy, optics, alchemy and languages."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Roger Bacon, friar and experimenter"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He had a kind of laboratory, and made careful observations with lenses and mirrors, including work on light and the rainbow. But some of his famous experiments were only described, never done. One was a thin copper balloon filled with liquid fire."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Done: observations with lenses and mirrors, rainbow work | Only described: the copper balloon of liquid fire"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the risk. His religious order condemned him in 1278 for suspected novelties, perhaps because of his interest in astrology and alchemy. He knew that studying alchemy and experiment could get a person denounced for magic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Careful study could look like magic"
+   },
+   "cite": [
+    "s8",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which description fits Roger Bacon best?",
+    "right": "A friar-scholar who studied light, stars and alchemy, and urged experiment",
+    "wrong": [
+     "A made-up wizard from a legend",
+     "A village midwife",
+     "A court cook"
+    ],
+    "why": "Bacon was a real scholar. His curiosity about nature sometimes made others suspicious."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part three: how did people then think about magic, religion and science? They did not keep them in neat boxes. A Swiss doctor, Paracelsus (1493 to 1541), believed chemistry, medicine, alchemy, theology and magic were all connected. He lived just after the Middle Ages, in the Renaissance."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 3 - How magic, religion and science overlapped"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Churchmen worried about magic. One early writer, Augustine, said that the marvels of magicians came from demons. The Church was trying to control magic more than to get rid of it. Later scholars, like Albertus Magnus in the 13th century, tried to define a natural magic."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Natural magic: hidden powers in nature, no demons | Demonic magic: forbidden"
+   },
+   "cite": [
+    "s19",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the question that mattered was often: where does the power come from? If the cause was natural, a scholar could defend it. If it was demonic, it was forbidden. This was an argument among thinkers, not a settled rule."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Where does the power come from?"
+   },
+   "cite": [
+    "s19",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In medieval thinking, what separated natural magic from forbidden magic?",
+    "right": "Whether the power came from nature or from demons",
+    "wrong": [
+     "Whether it was done by a man or a woman",
+     "Whether it was done at night",
+     "Whether it used a wand"
+    ],
+    "why": "Scholars like Albertus Magnus separated natural magic from demonic magic by the supposed source of its power."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part four is the INVENTED pile. Everything from here on is made up by Nimrod. It is built from the real pieces we just met."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 4 - INVENTED: Nimrod's Merlin"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In our village, Merlin lives in a stone tower above the houses. He keeps a herb garden like a wise woman. He keeps star charts like an astrologer, glass jars like an alchemist, and books like a scholar. King Kenny asks his advice, and Nimrod the cat naps on his tables."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tower on a hill above a medieval village: a herb garden at its foot, star charts pinned inside a window, glass jars on a shelf, and a cat asleep on a stack of books."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which pile does Nimrod's Merlin belong in?",
+    "right": "INVENTED",
+    "wrong": [
+     "LEGEND",
+     "REAL",
+     "PROVEN HISTORY"
+    ],
+    "why": "Nimrod's Merlin is made up for this course. He borrows from the legend and from real healers, astrologers, alchemists and scholars."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the thought experiment. How would the villagers tell a wizard from a clever scholar? Here are three questions we can ask. These are our own thinking tools, not medieval rules."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Can he show how he did it? | Can someone else learn it and get the same result? | Does it ever fail, and does he admit it?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Case A: Merlin tells King Kenny the Moon will cover the Sun at noon on Tuesday. He shows his star tables and teaches Princess Jess how to check them. Case B: Robin the Joker puts on a pointy hat and says he will make the well glow, but only if nobody watches."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Case A: Merlin shows his tables and teaches Princess Jess | Case B: Robin's glowing well works only when nobody is looking"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which case looks more like a scholar's work?",
+    "right": "Case A, where the method is shown and others can check it",
+    "wrong": [
+     "Case B, because it is mysterious",
+     "Both, because both are surprising",
+     "Neither, because only wizards predict things"
+    ],
+    "why": "A scholar can show the method, others can repeat it, and the claim can be tested. Case B hides the method and avoids checking."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more twist. A clever scholar can look like a wizard to people who do not know the method. Roger Bacon found that careful study could get you called a magician. In Nimrod's village, the best protection might be sharing how you know what you know."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Share the method, not just the result"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To finish: Merlin the wizard is a LEGEND that grew from 1136 onward. The REAL people behind the wizard idea were healers, astrologers, alchemists and scholars. Nimrod's Merlin is INVENTED. Next time we build a world with maps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "LEGEND: Merlin, grown from Myrddin and Ambrosius | REAL: healers, astrologers, alchemists, scholars | INVENTED: Nimrod's Merlin"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Merlin legend: Geoffrey of Monmouth, Robert de Boron, Malory",
+   "links": [
+    "[[Where Dragons Come From: The Myths]]",
+    "[[What If? How a Thought Experiment Works]]"
+   ]
+  },
+  {
+   "topic": "Real medieval healers, astrologers, alchemists and scholars",
+   "links": [
+    "[[Life in a Medieval Village]]",
+    "[[Inside the Castle]]",
+    "[[Science of a Wizard: Energy, Chemistry and Evidence]]"
+   ]
+  },
+  {
+   "topic": "Natural magic versus demonic magic",
+   "links": [
+    "[[Science of a Wizard: Energy, Chemistry and Evidence]]"
+   ]
+  },
+  {
+   "topic": "Nimrod's Merlin (invented)",
+   "links": [
+    "[[Building a World: Maps and Worldbuilding]]",
+    "[[The Magic Market: Economics with Spells]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "The 9th century, when the Dinas Emrys story was written down in the Historia Brittonum",
+   "elsewhere": "During the same medieval centuries, Arabic-language alchemists were doing practical laboratory work and describing substances still used in chemistry. The source gives no exact dates for these alchemists.",
+   "cite": [
+    "s4",
+    "s10"
+   ]
+  },
+  {
+   "when": "About 1136, when Geoffrey of Monmouth wrote his History",
+   "elsewhere": "In the 12th century, Europe was taking in Greek and Islamic astronomy and astrology, and universities were growing.",
+   "cite": [
+    "s2",
+    "s5"
+   ]
+  },
+  {
+   "when": "The 13th century, the time of Roger Bacon and the Vulgate Cycle",
+   "elsewhere": "Albertus Magnus (1193 to 1280) wrote about both magic and alchemy.",
+   "cite": [
+    "s8",
+    "s2",
+    "s12"
+   ]
+  },
+  {
+   "when": "1469, when Malory wrote Le Morte d'Arthur (he was in prison in London 1468 to 1470)",
+   "elsewhere": "Within a generation, Paracelsus (born 1493) was arguing that medicine, chemistry, alchemy and magic were connected.",
+   "cite": [
+    "s2",
+    "s6"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Merlin was based on a real man named Myrddin.",
+   "other_view": "Some scholars argue that Myrddin arose from a guess about the place-name Carmarthen, which actually comes from a British name meaning sea-town. Others see the figure acquiring features from a northern wild man named Lailoken. Scholars do not agree on a single real person.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "claim": "Alchemy was a kind of magic.",
+   "other_view": "Some scholars see alchemy as part of magic, with astrology and ritual. Others link it with natural philosophy, the medieval study of nature. Another view stresses that alchemists used laboratory experiment together with theory.",
+   "cite": [
+    "s12",
+    "s11"
+   ]
+  },
+  {
+   "claim": "The women accused as witches were wise women, healers and midwives.",
+   "other_view": "Historians disagree. English Heritage calls this a myth and notes that midwives were rarely accused. A museum note says some healers were persecuted, but exact numbers are hard to know because records are incomplete.",
+   "cite": [
+    "s13",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Roger Bacon was an early experimental scientist.",
+   "other_view": "Britannica notes that some of his most famous experiments were only described, never performed. The Stanford Encyclopedia of Philosophy says there is much evidence he did mathematical work and real experiments with light and vision.",
+   "cite": [
+    "s7",
+    "s8"
+   ]
+  }
+ ]
+}

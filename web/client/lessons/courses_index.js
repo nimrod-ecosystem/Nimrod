@@ -1065,6 +1065,21 @@ export const COURSES = [
     "n": 6,
     "title": "Eye gaze and other ways to access a device",
     "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "A short history of AAC",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "How to support a communicator",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Getting professional help and what to do next",
+    "file": "class_009.json"
    }
   ]
  },
@@ -1107,6 +1122,36 @@ export const COURSES = [
     "n": 6,
     "title": "Integrated information theory",
     "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "Predictive processing and the controlled hallucination",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "Strange loops and the self",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Idealism and panpsychism",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "Animal minds",
+    "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "Machine minds",
+    "file": "class_011.json"
+   },
+   {
+    "n": 12,
+    "title": "Putting it together: where do we stand?",
+    "file": "class_012.json"
    }
   ]
  },
@@ -1149,6 +1194,21 @@ export const COURSES = [
     "n": 6,
     "title": "Science: A Method That Improves the Methods",
     "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "The Internet and AI: Fast Copying, New Learners",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "How Knowledge Gets Lost",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "The Extended Mind: Tools as Part of How We Think",
+    "file": "class_009.json"
    }
   ]
  },
@@ -1191,6 +1251,103 @@ export const COURSES = [
     "n": 6,
     "title": "Egypt III: Trade, Everyday Life and Neighbours",
     "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "The Indus Valley I: Planned Cities and Water",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "The Indus Valley II: Script, Beliefs, Trade and Change",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Early China I: The Yellow River, Early Farming and the Shang",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "Early China II: Zhou Rule, Ritual, Trade and Daily Life",
+    "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "The Americas I: Caral, the Olmec and Early Cities",
+    "file": "class_011.json"
+   },
+   {
+    "n": 12,
+    "title": "The Americas II: Maya Writing, Calendars and the Andes",
+    "file": "class_012.json"
+   },
+   {
+    "n": 13,
+    "title": "Putting It All Together: Compare, Connect and Place on One Timeline",
+    "file": "class_013.json"
+   }
+  ]
+ },
+ {
+  "id": "fantasy-thought-experiments",
+  "title": "Fantasy Thought Experiments: Wizards, Castles and Dragons",
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "total": 10,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "What If? How a Thought Experiment Works",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "Life in a Medieval Village",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Inside the Castle",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Where Dragons Come From: The Myths",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Where Wizards Come From: Merlin and the Real Past",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Building a World: Maps and Worldbuilding",
+    "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "The Magic Market: Economics with Spells",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "Science of a Dragon: Size, Flight and Fire",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Science of a Wizard: Energy, Chemistry and Evidence",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "Your Own Thought Experiment: Fantasy and Science Fiction",
+    "file": "class_010.json"
    }
   ]
  },
@@ -1228,6 +1385,11 @@ export const COURSES = [
     "n": 5,
     "title": "Life: a word for a pattern, not a clear line",
     "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Consciousness: the hardest word of all",
+    "file": "class_006.json"
    }
   ]
  },
@@ -1270,6 +1432,26 @@ export const COURSES = [
     "n": 6,
     "title": "Our species, our cousins: Homo sapiens, Neanderthals and Denisovans",
     "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "Spreading across the world",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "Art, symbols and the mind: cave paintings and beyond",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "The Ice Age world",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "The first farms and villages",
+    "file": "class_010.json"
    }
   ]
  },
@@ -1312,6 +1494,61 @@ export const COURSES = [
     "n": 6,
     "title": "Judaism",
     "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "Christianity",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "Islam",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Zoroastrianism and the Baháʼí Faith",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "Smaller Faiths of West Asia: Yazidis, Druze, Mandaeans and Samaritans",
+    "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "Chinese Traditions: Confucianism, Daoism and Folk Religion",
+    "file": "class_011.json"
+   },
+   {
+    "n": 12,
+    "title": "Shinto and Other Religions of Japan, Korea and Vietnam",
+    "file": "class_012.json"
+   },
+   {
+    "n": 13,
+    "title": "Traditional Religions of Africa and the African Diaspora",
+    "file": "class_013.json"
+   },
+   {
+    "n": 14,
+    "title": "Indigenous Religions of the Americas and the Arctic",
+    "file": "class_014.json"
+   },
+   {
+    "n": 15,
+    "title": "Indigenous Religions of Australia and the Pacific",
+    "file": "class_015.json"
+   },
+   {
+    "n": 16,
+    "title": "Newer Movements and Non-Religious Worldviews",
+    "file": "class_016.json"
+   },
+   {
+    "n": 17,
+    "title": "Putting It Together: Calendars, Sacred Places and Living Side by Side",
+    "file": "class_017.json"
    }
   ]
  },
@@ -1349,6 +1586,36 @@ export const COURSES = [
     "n": 5,
     "title": "Diplomacy: The Intergalactic Model UN",
     "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Economics: Scarcity, Trade and Fair Shares",
+    "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "First Contact, Part 1: What Language Is",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "First Contact, Part 2: Building Shared Meaning",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Terraforming, Part 1: What Makes a World Livable",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "Terraforming, Part 2: Methods, Timescales and Ethics",
+    "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "Capstone: Design Your Own Thought Experiment",
+    "file": "class_011.json"
    }
   ]
  },
@@ -1390,6 +1657,31 @@ export const COURSES = [
     "n": 6,
     "title": "Challenges evolution absorbed: when outsiders improved the science",
     "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "Challenges evolution answered: gaps, 'missing links' and irreducible complexity",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "Ancient astronauts: did visitors build the pyramids?",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Real conspiracies and unproven ones: how people weigh evidence",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "Case studies: the Moon landings, a presidential assassination and other open questions",
+    "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "Your own 'What if?': putting the tools to work",
+    "file": "class_011.json"
    }
   ]
  }

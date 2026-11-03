@@ -1,0 +1,1560 @@
+{
+ "about": {
+  "title": "Smaller Faiths of West Asia: Yazidis, Druze, Mandaeans and Samaritans",
+  "course": "religions-of-the-world",
+  "class_n": 10,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "This class covers four communities, so it is a full half hour. There are about 20 questions. Each community takes about six to eight minutes. A good place to pause is after the Druze, which is about halfway. You can also stop after any community and come back."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Yazidi",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Yazidi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Yazidism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yazidism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Yazidi New Year",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yazidi_New_Year",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "From Lalish to the World: Exploring the Deep Spiritual Traditions of Yazidi Festivals",
+   "publisher": "Kurdistan24",
+   "date": "n.d.",
+   "link": "https://www.kurdistan24.net/en/story/908255/from-lalish-to-the-world-exploring-the-deep-spiritual-traditions-of-yazidi-festivals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Lalish",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Lalish",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "'We ran from monsters': Once welcomed by Germany after IS genocide, Yazidis are now deported to a life of limbo in refugee camps",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/we-ran-from-monsters-once-welcomed-by-germany-after-is-genocide-yazidis-are-now-deported-to-a-life-of-limbo-in-refugee-camps-272533",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Yazidis",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yazidis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Fexredîn",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Fexred%C3%AEn",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Yazidi genocide: 12 years after Sinjar, survivors seek justice",
+   "publisher": "The New Arab",
+   "date": "n.d.",
+   "link": "https://www.newarab.com/features/yazidi-genocide-12-years-after-sinjar-survivors-seek-justice",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Yazidis (Simple English)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://simple.wikipedia.org/wiki/Yazidis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Druze",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/ethnic-and-cultural-studies/druze/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Druze",
+   "publisher": "National Library of Israel",
+   "date": "n.d.",
+   "link": "https://www.nli.org.il/en/discover/israel-culture-and-society/groups-in-israeli-society/druze",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "About the Druze",
+   "publisher": "American Druze Foundation",
+   "date": "n.d.",
+   "link": "https://www.americandruzefoundation.org/about-the-druze/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Druze",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Druze",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Syria's Druze recall past life before reincarnation in vivid detail",
+   "publisher": "NPR",
+   "date": "2025-05-06",
+   "link": "https://www.npr.org/2025/05/06/nx-s1-5361071/reincarnation-druze-syria",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Who are the Druze?: 8 Facts",
+   "publisher": "Aish",
+   "date": "n.d.",
+   "link": "https://aish.com/the-druze-of-israel-8-facts/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Druze and al-Hakim: The Religion with No Converts",
+   "publisher": "Adam Matthew Digital",
+   "date": "n.d.",
+   "link": "https://www.amdigital.co.uk/insights/blog/the-druze-and-al-hakim-the-religion-with-no-converts",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Reincarnation and the Legacy of Lebanon's Civil War",
+   "publisher": "New Lines Magazine",
+   "date": "n.d.",
+   "link": "https://newlinesmag.com/reportage/reincarnation-and-the-legacy-of-lebanons-civil-war/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Mandaeans ii. The Mandaean Religion",
+   "publisher": "Encyclopaedia Iranica",
+   "date": "n.d.",
+   "link": "https://www.iranicaonline.org/articles/mandaeans-2-religion/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Masbuta",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Masbuta",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Masbuta",
+   "publisher": "Mandaepedia (community wiki)",
+   "date": "n.d.",
+   "link": "https://mandaepedia.miraheze.org/wiki/Masbuta",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Mandaeans",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mandaeans",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Mandaeans",
+   "publisher": "Mandaepedia (community wiki)",
+   "date": "n.d.",
+   "link": "https://mandaepedia.miraheze.org/wiki/Mandaeans",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Mandaean diaspora",
+   "publisher": "Mandaepedia (community wiki)",
+   "date": "n.d.",
+   "link": "https://mandaepedia.miraheze.org/wiki/Mandaean_diaspora",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Meet the Mandaeans, the Disciples of John the Baptist",
+   "publisher": "Medium (Pauline Montagna)",
+   "date": "n.d.",
+   "link": "https://paulinemontagna.medium.com/meet-the-mandaeans-the-disciples-of-john-the-baptist-7948235720f5",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Mandaean Religion",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/mandaean-religion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "The River That Remembered John",
+   "publisher": "Strange at Circle K (Substack)",
+   "date": "n.d.",
+   "link": "https://strangeatcirclek.substack.com/p/the-river-that-remembered-john",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Yardna",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yardna",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "History of baptism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_baptism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Mount Gerizim",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Mount-Gerizim",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Samaritan Pentateuch",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Samaritan-Pentateuch",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "The very ancient Passover of one of the smallest religions in the world",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/culture/article/samaritan-passover",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Ancient Samaritan Sect, Straddling Israel And Palestine, Celebrates Passover On West Bank Hilltop",
+   "publisher": "Noema Magazine",
+   "date": "n.d.",
+   "link": "https://www.noemamag.com/ancient-samaritan-sect-straddling-israel-and-palestine-celebrates-passover-on-west-bank-hilltop/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Samaritans",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/samaritans-0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "The Confusing Story of the Samaritans and the Jews: Who Split From Whom?",
+   "publisher": "Haaretz",
+   "date": "2026-09-29",
+   "link": "https://www.haaretz.com/archaeology/2026-09-29/ty-article/the-strange-story-of-the-samaritans-and-the-jews-who-split-from-whom/000001a0-e811-db4b-a7a5-fa73d9050000",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "The Samaritan Schism",
+   "publisher": "Biblical Archaeology Society",
+   "date": "n.d.",
+   "link": "https://www.biblicalarchaeology.org/daily/ancient-cultures/daily-life-and-practice/the-samaritan-schism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "Samaritans",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Samaritans",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Mount Gerizim",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mount_Gerizim",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "Passover (Samaritan holiday)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Passover_(Samaritan_holiday)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "What is Samaritanism?",
+   "publisher": "Sefaria (source sheet)",
+   "date": "n.d.",
+   "link": "https://www.sefaria.org/sheets/405597",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s41",
+   "title": "Tawûsgeran",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Taw%C3%BBsgeran",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s42",
+   "title": "Adi ibn Musafir",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Adi_ibn_Musafir",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s43",
+   "title": "The Samaritan Pentateuch",
+   "publisher": "Society of Biblical Literature (Anderson and Giles)",
+   "date": "n.d.",
+   "link": "https://www.sbl-site.org/wp-content/uploads/2024/11/SamaritanPentateuch_SBL_Anderson-Giles.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s44",
+   "title": "Samaritanism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Samaritanism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s45",
+   "title": "Mandaean religion",
+   "publisher": "Mandaepedia (community wiki)",
+   "date": "n.d.",
+   "link": "https://mandaepedia.miraheze.org/wiki/Mandaean_religion",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class ten. Last time we met Zoroastrians and Baháʼís. Today we meet four smaller communities from West Asia: Yazidis, Druze, Mandaeans and Samaritans."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Smaller Faiths of West Asia"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For each one we ask the same things: what do they believe, what do they do, where does their story come from, and where do they live now? We use their own words."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Beliefs • Practices • History • Where they live today"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, size. Yazidis and Druze are each often put at around a million people. Mandaeans are put at 60,000 to 100,000. Samaritans number only about 800. These are estimates."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimated size of each community",
+    "chart": "c1"
+   },
+   "cite": [
+    "s9",
+    "s11",
+    "s22",
+    "s32"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these four communities is the smallest?",
+    "right": "The Samaritans, at about 800 people",
+    "wrong": [
+     "The Yazidis",
+     "The Druze",
+     "The Mandaeans"
+    ],
+    "why": "The chart shows the Samaritans at about 800. The other three are counted in the tens or hundreds of thousands, or in millions."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's begin with the Yazidis. They are a Kurdish-speaking community. Scholars see Yazidism as its own tradition, with deep roots in ancient Iranian beliefs and later Sufi influence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Yazidism"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Yazidis believe in one God. In their account, God placed the world in the care of seven holy beings. The chief of these is Tawûsî Melek, the Peacock Angel."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A peacock. Yazidi sacred images that stand for Tawûsî Melek are shaped like a peacock."
+   },
+   "cite": [
+    "s2",
+    "s1",
+    "s41"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Yazidi belief, who is the chief of the seven holy beings?",
+    "right": "Tawûsî Melek, the Peacock Angel",
+    "wrong": [
+     "A river spirit",
+     "A mountain giant",
+     "A desert prophet"
+    ],
+    "why": "Yazidis teach that one God put the world in the care of seven holy beings. The chief is the Peacock Angel."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Outsiders have often called Yazidis 'devil worshippers', because they linked the Peacock Angel with Satan. Yazidis find this deeply offensive. They say Tawûsî Melek is not a source of evil."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not 'devil worshippers'"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do Yazidis reject the label 'devil worshippers'?",
+    "right": "It wrongly links their Peacock Angel with Satan. They say he is not a source of evil.",
+    "wrong": [
+     "Because Yazidis do not believe in any angels",
+     "Because Yazidis do not believe in God",
+     "Because they say the label is too kind"
+    ],
+    "why": "Yazidis believe in one God and honour the Peacock Angel. They say outsiders made a mistaken link with Satan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In prayer, Yazidis face the Sun. That is why outsiders sometimes called them 'sun worshippers'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prayer facing the Sun"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their holiest place is Lalish, a remote valley northeast of Mosul in northern Iraq. Every year Yazidis make a pilgrimage there."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Northern Iraq: the valley of Lalish, northeast of the city of Mosul."
+   },
+   "cite": [
+    "s42",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At Lalish lies the tomb of Sheikh Adi, a 12th-century figure the Yazidis honour. It sits beneath the highest of six cone-shaped domes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Six cone-shaped domes at Lalish. The tomb of Sheikh Adi lies under the tallest."
+   },
+   "cite": [
+    "s5",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the holiest Yazidi temple?",
+    "right": "The tomb of Sheikh Adi at Lalish",
+    "wrong": [
+     "A mosque in Baghdad",
+     "A large church in Europe",
+     "A mountain-top cave"
+    ],
+    "why": "Lalish is the Yazidi religious centre. The tomb of Sheikh Adi is there."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Much Yazidi teaching is sung. Sacred hymns called qewls are still recited by Yazidis today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Qewl: a sacred hymn"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now festivals. The New Year is called Red Wednesday, in April. Yazidis count each day from sunset. So on Tuesday evening they boil and colour eggs, bake festive bread and visit graves."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Hard-boiled eggs dyed in bright spring colours."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On the evening before Red Wednesday, what do Yazidis do?",
+    "right": "They boil and colour eggs, bake festive bread and visit graves",
+    "wrong": [
+     "They sail down a river in white robes",
+     "They walk to a mountain tomb in Galilee",
+     "They keep a silent fast"
+    ],
+    "why": "Yazidis begin the day at sunset, so the New Year preparations start on Tuesday evening."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On Red Wednesday many visit temples, especially Lalish. On the hills nearby they tie colourful ribbons to wishing trees. At Lalish, the religious leaders also light 365 lamps, one for each day of the year."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Visit temples, especially Lalish • Ribbons on wishing trees • 365 lamps, one for each day of the year"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are other festivals too. In autumn comes the Feast of the Assembly at Lalish. In mid-December, Yazidis fast for three days, then celebrate on Friday."
+   },
+   "show": {
+    "kind": "list",
+    "text": "April: New Year (Red Wednesday) • Autumn: Feast of the Assembly • Mid-December: three-day fast"
+   },
+   "cite": [
+    "s7",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, the Druze. They call themselves al-Muwaḥḥidūn, from an Arabic word linked with oneness with God. They believe in one God. There are an estimated one million Druze."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "al-Muwaḥḥidūn"
+   },
+   "cite": [
+    "s15",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Druze faith began in the early 11th century. It grew out of the Ismāʿīlī branch of Shiʿa Islam, but Druze do not identify as Muslims. Its central text is the Epistles of Wisdom."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Epistles of Wisdom"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the foundational text of the Druze faith?",
+    "right": "The Epistles of Wisdom",
+    "wrong": [
+     "The Qur'an",
+     "The Five Books of Moses",
+     "The Qewl hymns"
+    ],
+    "why": "The Epistles of Wisdom (Rasāʾil al-Ḥikma) is the foundational and central text of the Druze faith."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The ruler al-Hakim has a central place in the faith. In 1035 he went missing on a walk. Some believe he was murdered. The Druze hold that he withdrew from sight, and will return."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1035: al-Hakim goes missing • Druze belief: he withdrew from sight and will return"
+   },
+   "cite": [
+    "s17",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Druze believe in reincarnation. A Druze soul is reborn into a new Druze body, again and again, until it is ready to unite with God."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reincarnation"
+   },
+   "cite": [
+    "s17",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In Druze belief, what happens to a Druze soul after death?",
+    "right": "It is reborn in another Druze body, until it is ready to unite with God",
+    "wrong": [
+     "It is reborn as an animal",
+     "It rests and never returns",
+     "It is reborn into any community"
+    ],
+    "why": "Druze teaching says each soul is reborn as a Druze, over many lives, until it reunites with God, the Cosmic Mind."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Lebanon and Syria, some children are said to remember past lives. They are called natiqeen, 'those who speak'. Not every Druze believes this. Many families welcome those they believe are loved ones returned."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A child and a family sitting together in a village home."
+   },
+   "cite": [
+    "s18",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Druze do not accept converts. They hold that the teachings were fully revealed by about 1043, which was the last chance to join. Druze also rarely marry outside the faith."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A closed community"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why does the Druze faith not accept converts?",
+    "right": "Druze believe the chance to join closed in the 11th century",
+    "wrong": [
+     "Because Druze all live in a single village",
+     "Because the faith has no sacred text",
+     "Because the faith teaches that souls are never reborn"
+    ],
+    "why": "The Druze believe the great truths were revealed by about 1043, and that was the last chance for people to join."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Druze community life values truthfulness and looking after one another. It also stresses equality and self-discipline."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Truthfulness • Care for fellow Druze • Equality • Self-discipline"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The finer points of the faith are kept secret, even from many Druze. They are held by religious leaders called uqqal, 'knowers'. Only about five percent of Druze are uqqal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Uqqal: the 'knowers'"
+   },
+   "cite": [
+    "s16",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who are the uqqal?",
+    "right": "Religious leaders, 'the knowers', who keep the deeper teachings",
+    "wrong": [
+     "Children who remember past lives",
+     "Pilgrims who visit Lalish",
+     "Rulers of the Druze mountains"
+    ],
+    "why": "The uqqal keep the finer points of the faith. Only about five percent of Druze are uqqal."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The most sacred Druze site is the tomb of Nabi Shu'ayb near Hittin in the Galilee. He is linked with Jethro, the father-in-law of Moses. The four-day holiday begins on 25 April. Druze also keep Eid al-Adha, with different practices."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The tomb of Nabi Shu'ayb in the hills near Hittin, in the Galilee."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where is the most sacred site in the Druze faith?",
+    "right": "The tomb of Nabi Shu'ayb in the Galilee",
+    "wrong": [
+     "Lalish in Iraq",
+     "A valley in Sweden",
+     "A temple in Holon"
+    ],
+    "why": "The National Library of Israel describes the tomb of Nabi Shu'ayb as the most sacred site in the Druze faith."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Mandaeans. They honour John the Baptist and practise frequent baptism. They use an ancient language, Mandaic, in worship."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mandaeism"
+   },
+   "cite": [
+    "s20",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mandaeans believe in one God, whom they call the Great Life. One Mandaean leader says their symbol for God is living water."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Great Life • Living Water"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their teaching describes two worlds: a World of Light and a World of Darkness. The World of Light is ruled by a sublime being, who is called by several names, including Life."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "World of Light: ruled by Life | World of Darkness"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In this story the soul comes from the Light but lives in a body of this world. Saving the soul is the main concern of Mandaean religion. Its true home is the World of Light."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The soul's home: the World of Light"
+   },
+   "cite": [
+    "s19",
+    "s45"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In Mandaean teaching, what is the soul's true home?",
+    "right": "The World of Light",
+    "wrong": [
+     "The World of Darkness",
+     "The river itself",
+     "A far-off mountain"
+    ],
+    "why": "Mandaeans describe the soul as an exile, whose home and origin is the World of Light."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their main scripture is the Ginza Rba, the 'Great Treasure'. Its Right part turns to creation and cosmic rule. Its Left part follows the soul through death and ascent."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Right Ginza: creation and cosmic rule | Left Ginza: the soul's journey after death"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mandaeans honour John the Baptist, called Yahya, as a teacher, healer and messenger of Light and Truth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Yahya (John the Baptist)"
+   },
+   "cite": [
+    "s25",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their central rite is baptism, called masbuta. It is repeated through life. It is for purification, not a one-time initiation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Masbuta: repeated purification"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is Mandaean baptism a one-time initiation?",
+    "right": "No. It is repeated, as purification.",
+    "wrong": [
+     "Yes, once at birth",
+     "Yes, once on a deathbed",
+     "Yes, once a year at New Year"
+    ],
+    "why": "Mandaeans practise frequent baptism as ritual purification, not as initiation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Baptism takes place on Sundays. People wear a white robe called a rasta. It must happen in flowing water, such as a river."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "People in white robes standing in a flowing river."
+   },
+   "cite": [
+    "s20",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Such flowing water is called a yardna, like a 'Jordan'. Water cleanses, and it also stands for the World of Light. Other Mandaean rites can only be done in a yardna too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Yardna: living water"
+   },
+   "cite": [
+    "s28",
+    "s26"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is flowing water such as a river needed for Mandaean baptism?",
+    "right": "The ritual requires flowing water (yardna), which stands for the World of Light",
+    "wrong": [
+     "Because lakes are forbidden by law",
+     "Because the water must be heated",
+     "Because it is only done in winter"
+    ],
+    "why": "For Mandaeans, baptism must take place in a yardna. Water both cleanses and stands for the Lightworld."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rite has steps. There are three full immersions, three anointings of the forehead, and three sips of water. The priest then places a myrtle ring on the forehead. A handshake called kušṭa, 'hand of truth', ends it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Three immersions • Three anointings • Three sips • Myrtle ring • Handshake (kušṭa)"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many full immersions are in the baptism?",
+    "right": "Three",
+    "wrong": [
+     "One",
+     "Seven",
+     "Twelve"
+    ],
+    "why": "The rite has three immersions, three anointings and three sips."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, the Samaritans. They call themselves 'Israelite Samaritans', and also Shamerim, which means 'Guardians' or 'Keepers'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shamerim: 'Guardians'"
+   },
+   "cite": [
+    "s37"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Samaritans base their religious life on the Pentateuch, their own version of the first five books of the Torah. They call themselves 'Children of Israel'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Samaritan Pentateuch"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the Samaritans' scripture?",
+    "right": "The Samaritan Pentateuch, their version of the first five books",
+    "wrong": [
+     "The Epistles of Wisdom",
+     "The Ginza Rba",
+     "The Qewl hymns"
+    ],
+    "why": "The Samaritans base their religious observance solely on the Pentateuch."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The key difference is a place. Samaritans hold that God chose Mount Gerizim. Jewish tradition holds that God chose Mount Zion in Jerusalem. The Samaritan text also adds a commandment to build an altar on Gerizim."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Samaritans: Mount Gerizim | Jewish tradition: Mount Zion, Jerusalem"
+   },
+   "cite": [
+    "s31",
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mount Gerizim is in the West Bank, near Nablus and biblical Shechem. Samaritans climb it three times a year: at Passover, Shavuot and Sukkot."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The West Bank: Mount Gerizim, just south of the city of Nablus."
+   },
+   "cite": [
+    "s30",
+    "s38"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which mountain is the centre of Samaritan religion?",
+    "right": "Mount Gerizim",
+    "wrong": [
+     "Mount Lalish",
+     "Mount Hittin",
+     "Mount Sinjar"
+    ],
+    "why": "Gerizim is the place Samaritans hold God chose. They climb it three times a year."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is their history in brief. A Samaritan shrine was built on Gerizim around the 4th century BCE. The temple was destroyed in 112 to 111 BCE. Revolts and repression in the 5th and 6th centuries CE cut their numbers sharply."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "4th century BCE: shrine on Gerizim • 112–111 BCE: temple destroyed • 5th–6th centuries CE: revolts and repression"
+   },
+   "cite": [
+    "s30",
+    "s38",
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At Passover, Samaritans sacrifice sheep on Gerizim, following Exodus 12. After sunset the sheep are slaughtered, roasted in pits in the earth, and eaten at a midnight meal."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Men gathered on a hilltop at night around fires, waiting for roasted meat."
+   },
+   "cite": [
+    "s34",
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today the ceremony is held lower on the slope, because an ancient Muslim cemetery lies at the summit. It falls on the 14th of Nisan. The Samaritan calendar differs from the Jewish one, so it is often about a month later than Jewish Passover."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Passover: 14th of Nisan"
+   },
+   "cite": [
+    "s30",
+    "s35",
+    "s39"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How do Samaritans mark Passover?",
+    "right": "They gather on Mount Gerizim to slaughter and roast sheep, and share a night meal",
+    "wrong": [
+     "They sail down a river",
+     "They fast for three days",
+     "They light 365 lamps"
+    ],
+    "why": "Samaritans carry out the Passover sacrifice on Gerizim as described in Exodus 12."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Samaritans also keep the Sabbath, Sukkot and Shavuot, and follow purity and food laws. They do not keep Purim or Hanukkah. Their religion centres on a hereditary high priesthood."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sabbath • Sukkot • Shavuot • Purity and food laws • Hereditary high priest"
+   },
+   "cite": [
+    "s40",
+    "s34",
+    "s37"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, why are these communities small? Take the Samaritans. They are said to have numbered over a million in the fifth century. Oppression and conversions cut that to just over 100 in the early to mid 1900s. Today about 800."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Samaritan numbers over time",
+    "chart": "c2"
+   },
+   "cite": [
+    "s33",
+    "s32"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What happened to Samaritan numbers by the early to mid 1900s?",
+    "right": "They fell to just over 100, after revolts, repression and conversions",
+    "wrong": [
+     "They grew steadily",
+     "They stayed at about a million",
+     "They did not change"
+    ],
+    "why": "Samaritan numbers fell from a reported million-plus in the fifth century to just over 100."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Mandaeans of Iraq tell a recent story. Before 2003 there were about 60,000 to 70,000. After the Iraq war most left for Iran, Syria and Jordan, or for countries far away. By 2007 about 5,000 remained. A 2019 estimate says 3,000."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Mandaeans in Iraq",
+    "chart": "c3"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Yazidis have faced persecution, partly because their beliefs were misunderstood. In August 2014 the group called IS attacked Sinjar, and over 350,000 Yazidis fled their homes. Germany formally recognised a genocide in January 2023."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "August 2014: attack on Sinjar • January 2023: German parliament recognises genocide"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Druze are a different case. They do not take converts and rarely marry outside, so they are a closed community. They also often blend into the cultures around them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Closed, but part of the neighbourhood"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how do small communities keep their traditions? Each in its own way, as this list shows."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Yazidis: festivals at Lalish • Druze: truthfulness, secrecy and close community • Mandaeans: baptism in local rivers • Samaritans: Passover and a hereditary priesthood"
+   },
+   "cite": [
+    "s4",
+    "s13",
+    "s16",
+    "s28",
+    "s34",
+    "s37"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For Mandaeans abroad, rivers matter. In Australia the Nepean and Georges Rivers are the yardnas most commonly used."
+   },
+   "show": {
+    "kind": "map",
+    "text": "New South Wales, Australia: the Nepean River and the Georges River."
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How do Mandaeans in Australia keep up baptism?",
+    "right": "They use local flowing rivers, such as the Nepean and Georges Rivers",
+    "wrong": [
+     "They switch to indoor pools",
+     "They hold baptism only in Iraq",
+     "They have given up baptism"
+    ],
+    "why": "Baptism needs flowing water, so Mandaeans use rivers near them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, where each lives. Most Yazidis live in Iraq, with big communities around Sinjar and Sheikhan. The largest Yazidi community abroad is in Germany, at over 230,000."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Northern Iraq: Sinjar, near the Syrian border, and Sheikhan, northeast of Mosul. A second pin marks Germany."
+   },
+   "cite": [
+    "s10",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Druze live mainly in Syria, Lebanon, Israel, Palestine and Jordan, with others in the US, Europe, Australia and elsewhere. The oldest, most crowded communities are on Mount Lebanon and in southern Syria."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Levant: Mount Lebanon, southern Syria, northern Israel, Jordan."
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most Mandaeans now live outside Iraq. Estimates put roughly 10,000 to 15,000 in Australia, about 10,000 to 13,000 in Sweden, and thousands in the United States. Smaller communities remain in Iraq, Iran and Jordan."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Pins in Australia, Sweden and the United States, with smaller pins in Iraq, Iran and Jordan."
+   },
+   "cite": [
+    "s24",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where do most Mandaeans live today?",
+    "right": "Outside Iraq, especially in Australia, Sweden and the United States",
+    "wrong": [
+     "Almost all still live in Iraq",
+     "Almost all live in Lebanon",
+     "Almost all live in Israel"
+    ],
+    "why": "Only about 3,000 Mandaeans are estimated to remain in Iraq, against 60,000 to 100,000 worldwide."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Samaritans, about 800 people, are split almost evenly between Kiryat Luza on Mount Gerizim and Holon near Tel Aviv. Many hold both Israeli and Palestinian ID cards, and most speak Hebrew and Arabic."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Two pins: Kiryat Luza on Mount Gerizim, and Holon near Tel Aviv."
+   },
+   "cite": [
+    "s32",
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it together. Yazidis: the Peacock Angel and Lalish. Druze: reincarnation and a closed community. Mandaeans: baptism in flowing water. Samaritans: Mount Gerizim and the Passover sacrifice."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Yazidis: Peacock Angel, Lalish • Druze: reincarnation, closed community • Mandaeans: baptism in flowing water • Samaritans: Gerizim, Passover sacrifice"
+   },
+   "cite": [
+    "s1",
+    "s11",
+    "s20",
+    "s31",
+    "s34"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which community is best known for repeated baptism in flowing water?",
+    "right": "The Mandaeans",
+    "wrong": [
+     "The Yazidis",
+     "The Druze",
+     "The Samaritans"
+    ],
+    "why": "Mandaeans practise frequent baptism (masbuta) in flowing water as purification."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Next class we travel east to China, to Confucianism, Daoism and folk religion."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Chinese Traditions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimated size of each community (people; estimates vary, Mandaeans shown at the low end of 60,000 to 100,000)",
+   "rows": [
+    {
+     "label": "Yazidis (about a million)",
+     "value": 1000000,
+     "source": "s9"
+    },
+    {
+     "label": "Druze (about a million)",
+     "value": 1000000,
+     "source": "s11"
+    },
+    {
+     "label": "Mandaeans (low estimate)",
+     "value": 60000,
+     "source": "s22"
+    },
+    {
+     "label": "Samaritans (about 800)",
+     "value": 800,
+     "source": "s32"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Samaritan population over time (people)",
+   "rows": [
+    {
+     "label": "5th century (said to be over a million)",
+     "value": 1000000,
+     "source": "s33"
+    },
+    {
+     "label": "Early to mid 1900s (just over 100)",
+     "value": 100,
+     "source": "s33"
+    },
+    {
+     "label": "Today (a little more than 800)",
+     "value": 800,
+     "source": "s32"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Mandaeans in Iraq (people; before 2003 shown at the low end of 60,000 to 70,000)",
+   "rows": [
+    {
+     "label": "Before 2003",
+     "value": 60000,
+     "source": "s23"
+    },
+    {
+     "label": "By 2007",
+     "value": 5000,
+     "source": "s23"
+    },
+    {
+     "label": "2019 estimate",
+     "value": 3000,
+     "source": "s23"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Yazidism",
+   "links": [
+    "[[Zoroastrianism and the Baháʼí Faith]]",
+    "[[Islam]]"
+   ]
+  },
+  {
+   "topic": "Druze faith",
+   "links": [
+    "[[Islam]]",
+    "[[Hinduism]]"
+   ]
+  },
+  {
+   "topic": "Mandaeism",
+   "links": [
+    "[[Christianity]]",
+    "[[Judaism]]"
+   ]
+  },
+  {
+   "topic": "Samaritanism",
+   "links": [
+    "[[Judaism]]",
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  },
+  {
+   "topic": "Reincarnation in different traditions",
+   "links": [
+    "[[Hinduism]]",
+    "[[Jainism]]",
+    "[[Buddhism]]"
+   ]
+  },
+  {
+   "topic": "How to learn about religions respectfully",
+   "links": [
+    "[[How to Learn About Religions Respectfully]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "4th century BCE",
+   "elsewhere": "The Samaritan shrine on Mount Gerizim is dated to the early Second Temple period. The ancient writer Josephus links the temple to the days of Alexander the Great.",
+   "cite": [
+    "s30",
+    "s35"
+   ]
+  },
+  {
+   "when": "1035 to 1043 CE",
+   "elsewhere": "The Druze say al-Hakim went into hiding in 1035, and that the door to joining the faith closed by about 1043. Sheikh Adi, honoured by Yazidis, was born a few decades later, in the 1070s.",
+   "cite": [
+    "s17",
+    "s11",
+    "s42"
+   ]
+  },
+  {
+   "when": "Early 12th century CE",
+   "elsewhere": "Sheikh Adi leaves Baghdad and settles in the valley of Lalish. Yazidi tradition holds that he restored an ancient sanctuary there.",
+   "cite": [
+    "s42",
+    "s5"
+   ]
+  },
+  {
+   "when": "2003 to 2014 CE",
+   "elsewhere": "After the Iraq war, the Mandaean community in Iraq collapsed, and many fled. In August 2014 the Yazidis of Sinjar were attacked, and over 350,000 fled their homes.",
+   "cite": [
+    "s23",
+    "s6"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Yazidi Peacock Angel is the same as the Devil.",
+   "other_view": "Yazidis reject this. They say Tawûsî Melek is not a source of evil, and the label 'devil worshippers' is deeply offensive to them. Britannica says the label arose because outsiders identified the Peacock Angel with Satan.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Lalish has always been a Yazidi holy place.",
+   "other_view": "Yazidi tradition says an ancient sanctuary was taken over by Christians and restored to the Yazidis by Sheikh Adi. A different account, by a monk named Ramisho, says Lalish was built as a Christian monastery in the 7th century and was later taken by force. The date of construction is not established.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "claim": "The Druze are simply a branch of Islam.",
+   "other_view": "The Druze faith grew out of Ismāʿīlī Shiʿa Islam, as historians describe it. But the Druze themselves do not identify as Muslims, and their central text is the Epistles of Wisdom.",
+   "cite": [
+    "s14"
+   ]
+  },
+  {
+   "claim": "The Druze number about one million.",
+   "other_view": "There is no exact census. Some sources say about one million, while the American Druze Foundation says one to two and a half million.",
+   "cite": [
+    "s11",
+    "s13"
+   ]
+  },
+  {
+   "claim": "John the Baptist founded Mandaeism and started its baptism.",
+   "other_view": "Mandaean sacred history places baptism before John. In the Mandaean texts he neither founds the religion nor starts the Jordan baptism, and Mandaeans see their religion as coming from the World of Light. Outside scholars have linked Mandaeans to ancient baptist groups, partly because Mandaeans believe they are John's disciples.",
+   "cite": [
+    "s27",
+    "s26",
+    "s29"
+   ]
+  },
+  {
+   "claim": "The Samaritans split away from Judaism at one clear moment.",
+   "other_view": "Scholars disagree about when and how. One view ties the break to the building of the Gerizim temple. Another says the real bitterness came centuries later, when that temple was destroyed. Samaritans trace their separate history to a far earlier time, soon after the Israelites entered the land. Jewish rabbinic literature did not accept the Samaritans as Jews, because they would not give up their belief in Mount Gerizim.",
+   "cite": [
+    "s43",
+    "s35",
+    "s36",
+    "s44",
+    "s37"
+   ]
+  }
+ ]
+}

@@ -222,9 +222,9 @@ export function objectsFromText(text) {
 }
 // (2026-11-03, chat's note EQ) `map`: the history courses describe a map in words ("A map of Africa and Asia. An arrow
 // runs from East Africa ..."), as their pictures are described. It is read as that picture until maps are drawn: the
-// courses' own word, so no "Read as".
+// courses' own word, so no "Read as". (Note ER) `number_line` the same way: its text describes the line and its marks.
 const COURSE_KINDS = Object.freeze({ key_word: 'word', keyword: 'word', big_number: 'word', number: 'word',
-  list: 'lines', timeline: 'lines', two_columns: 'lines', map: 'picture' });
+  list: 'lines', timeline: 'lines', two_columns: 'lines', map: 'picture', number_line: 'picture' });
 /** A course's show (CK) as one of SHOW_KINDS; a picture that counts things as `objects`, said as a guess. */
 function courseShow(o, guess, at) {
   if (!isObj(o) || !o.kind) return o;

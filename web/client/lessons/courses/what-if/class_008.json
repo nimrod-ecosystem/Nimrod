@@ -1,0 +1,974 @@
+{
+ "about": {
+  "title": "Ancient astronauts: did visitors build the pyramids?",
+  "course": "what-if",
+  "class_n": 8,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are six topics, and each gets a few short beats with a check question after the key ideas. Three famous claims (Nazca, Easter Island, Pakal's tomb lid) get one claim beat and one finding beat each, so the class does not feel rushed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "This ancient diary reveals how Egyptians built the Great Pyramid",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/premium/article/red-sea-scrolls-pyramids-egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Oldest papyrus (Diary of Merer)",
+   "publisher": "Guinness World Records",
+   "date": "n.d.",
+   "link": "https://www.guinnessworldrecords.com/world-records/711805-oldest-papyrus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The Egyptian pyramid chain was built along the now abandoned Ahramat Nile Branch",
+   "publisher": "Communications Earth & Environment (Nature Portfolio)",
+   "date": "2024-05-16",
+   "link": "https://www.nature.com/articles/s43247-024-01379-7",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Discovery of the Tombs of the Pyramid Builders at Giza",
+   "publisher": "Zahi Hawass (guardians.net)",
+   "date": "n.d.",
+   "link": "https://www.guardians.net/hawass/buildtomb.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Taking a new look at life and death in Giza: how the pyramids built Egypt",
+   "publisher": "Current World Archaeology (the-past.com)",
+   "date": "n.d.",
+   "link": "https://the-past.com/feature/taking-a-new-look-at-life-and-death-in-giza-how-the-pyramids-built-egypt/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Believe in Atlantis? These archaeologists want to win you back to science",
+   "publisher": "Science (AAAS)",
+   "date": "2019",
+   "link": "https://www.science.org/content/article/believe-atlantis-these-archaeologists-want-win-you-back-science",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Ehrich von Däniken: A Legacy of Pseudoscience",
+   "publisher": "Skeptical Inquirer (Kenneth L. Feder)",
+   "date": "2026",
+   "link": "https://skepticalinquirer.org/exclusive/ehrich-von-daniken-a-legacy-of-pseudoscience/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The SAA Archaeological Record, November 2019, Volume 19 Number 5: Introduction",
+   "publisher": "Society for American Archaeology",
+   "date": "2019-11",
+   "link": "https://onlinedigeditions.com/publication/?i=634462&article_id=3531891&view=articleBrowser",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Easter Island's statues actually 'walked' - and physics backs it up",
+   "publisher": "Binghamton University",
+   "date": "2025",
+   "link": "https://www.binghamton.edu/news/story/5830/easter-islands-statues-actually-walked-and-physics-backs-it-up",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Scientists just proved the moai could walk, solving a 500-year mystery",
+   "publisher": "ScienceDaily",
+   "date": "2025-10-08",
+   "link": "https://www.sciencedaily.com/releases/2025/10/251008030938.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The walking moai hypothesis: Archaeological evidence, experimental validation, and response to critics",
+   "publisher": "Journal of Archaeological Science (ScienceDirect)",
+   "date": "2025",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0305440325002328",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Nazca Lines (archaeological site), Peru",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/social-sciences-and-humanities/nazca-lines-archaeological-site-peru/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Nazca lines",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Nazca_lines",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Pakal's Tomb: The Greatest Archaeological Discovery in the Americas",
+   "publisher": "mayan.org",
+   "date": "n.d.",
+   "link": "https://mayan.org/ruins/pakal-tomb/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Erich von Däniken",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Erich_von_D%C3%A4niken",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Ancient astronauts",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ancient_astronauts",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Pseudoarchaeology and the Racism Behind Ancient Aliens",
+   "publisher": "Hyperallergic (Sarah Bond)",
+   "date": "n.d.",
+   "link": "https://hyperallergic.com/pseudoarchaeology-and-the-racism-behind-ancient-aliens/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "'I'm Not Saying it was Aliens': An Archaeological and Philosophical Analysis of Ancient Aliens Theory (preprint)",
+   "publisher": "Turner and Turner",
+   "date": "n.d.",
+   "link": "https://www.derekdturner.com/uploads/5/2/0/1/52016939/turner___turner_%7C__22im_not_saying_it_was_aliens_22_%7C_preprint.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Searching for Signs of Intelligent Life: Technosignatures",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/universe/search-for-life/searching-for-signs-of-intelligent-life-technosignatures/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "UAP FAQs: NASA Unidentified Anomalous Phenomena Study",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/uap/faqs/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Aliens' technology could be giving them away. Here's how scientists are searching for it",
+   "publisher": "BBC Sky at Night Magazine",
+   "date": "n.d.",
+   "link": "https://www.skyatnightmagazine.com/space-science/alien-technosignatures",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Ancient astronauts in popular culture",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ancient_astronauts_in_popular_culture",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Ancient Aliens",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ancient_Aliens",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Diary of Merer",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Diary_of_Merer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Papyrus",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Papyrus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Ancient inscriptions reveal identity of Great Pyramid builders",
+   "publisher": "The Jerusalem Post",
+   "date": "n.d.",
+   "link": "https://www.jpost.com/archaeology/archaeology-around-the-world/article-860097",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "How the Statues of Easter Island Walked Into Place",
+   "publisher": "Nautilus",
+   "date": "n.d.",
+   "link": "https://nautil.us/how-the-statues-of-easter-island-walked-into-place-1242270",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "How Easter Island's moai statues walked themselves into history",
+   "publisher": "The Brighter Side of News",
+   "date": "n.d.",
+   "link": "https://www.thebrighterside.news/post/how-easter-islands-moai-statues-walked-themselves-into-history/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Discovery may explain why Egyptian pyramids were built along long-lost Ahramat branch of the Nile",
+   "publisher": "Phys.org",
+   "date": "2024-05",
+   "link": "https://phys.org/news/2024-05-discovery-egyptian-pyramids-built-lost.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "April 1968: The film 2001: A Space Odyssey gets (some of) the science right",
+   "publisher": "APS News (American Physical Society)",
+   "date": "2026-03",
+   "link": "https://www.aps.org/apsnews/2026/03/film-space-odyssey-1968",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class eight. Today's question is a big one: did visitors from space build the pyramids? I'm the contrary voice. B will bring the evidence."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ancient astronauts: did visitors build the pyramids?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, where this idea stands. The honest tier is popular speculation. That means many people share it, but academics and archaeologists do not take it seriously as history."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Where this idea stands: popular speculation"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The accepted view is simple. Ancient people built these monuments. Over this class we will look at the logbooks, towns, graves and experiments that show how."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Accepted view: people built the monuments | Evidence: texts, towns, graves, experiments | Idea's tier: popular speculation"
+   },
+   "cite": [
+    "s16",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which tier does the ancient-astronaut idea sit in?",
+    "right": "Popular speculation: widely shared, but not backed by evidence that researchers accept",
+    "wrong": [
+     "Mainstream consensus",
+     "Active research debate",
+     "Minority scholarly view"
+    ],
+    "why": "Archaeologists do not accept it as history, so it is not consensus, a live research debate, or a scholarly minority view. Its popularity is real, though."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And it is popular. In a 2018 survey, 41 percent of Americans said aliens visited Earth long ago. If you are curious about this, you are in very big company."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Two beliefs in a 2018 survey of Americans",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what does the idea claim? That beings from other worlds visited long ago, and shaped early human culture. Some versions say they helped build monuments."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Visitors came long ago | They influenced early cultures | Monuments, art and myths are read as clues"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The idea became famous with Erich von Däniken's 1968 book, Chariots of the Gods. Two years before, scientists Carl Sagan and Iosif Shklovskii had speculated in print that contact might have happened."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1966: Sagan and Shklovskii speculate about contact | 1968: Chariots of the Gods? is published | 2009: the Ancient Aliens TV special airs"
+   },
+   "cite": [
+    "s15",
+    "s17",
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Whose 1968 book made the ancient-astronaut idea famous?",
+    "right": "Erich von Däniken",
+    "wrong": [
+     "Carl Sagan",
+     "Iosif Shklovskii",
+     "The makers of a 2009 TV special"
+    ],
+    "why": "Sagan and Shklovskii speculated about contact in 1966. It was von Däniken's 1968 book, Chariots of the Gods?, that made the idea famous."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the accepted view of how monuments were built. Let's take the biggest example: the Great Pyramid of Khufu at Giza."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The accepted view: how the Great Pyramid was built"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Egyptologists see the Giza pyramids as complexes built for kings and nobles. The Great Pyramid is estimated to hold about 2.3 million stone blocks."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.3 million estimated stone blocks"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That number is exactly why people ask 'how?' It is a fair question. So here is the first piece of evidence: a logbook."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "How?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 2013 a French team led by Pierre Tallet found papyrus logbooks at Wadi al-Jarf, on the Red Sea coast. They were written about 4,500 years ago by an inspector named Merer."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Papyrus scrolls tied with string, found wedged in a rock tunnel beside an ancient harbour"
+   },
+   "cite": [
+    "s24",
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Merer's log reads like a work diary. His crew loaded limestone at Tura and sailed it to Akhet-Khufu, the pyramid's original name, 'Horizon of Khufu'. One round trip took four days."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A simple route map: the Tura quarries, a boat route on the Nile, the Great Pyramid at Giza"
+   },
+   "cite": [
+    "s24",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does Merer's logbook record?",
+    "right": "His crew's boat trips carrying limestone for the Great Pyramid",
+    "wrong": [
+     "A message from visitors from space",
+     "A list of the pharaoh's favourite foods",
+     "A map of the stars"
+    ],
+    "why": "It is a practical work diary. It shows Egyptian crews moving stone by boat to the pyramid."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Boats need water. In 2024 researchers reported a long-lost branch of the Nile, about 64 kilometres long, buried near 31 pyramids. They suggest it carried workers and stone."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A satellite-style view of a faint, dried-up river channel running beside a line of pyramids"
+   },
+   "cite": [
+    "s3",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who did the work? Archaeologists Mark Lehner and Zahi Hawass dug the tombs of the pyramid builders, just south of the pyramids. People who built it were buried within sight of it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Small mud-brick tombs on a desert slope, with the pyramids on the skyline behind"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What the graves show: the builders were not slaves. They worked in rotating crews under skilled artisans, and they made their own modest tombs."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The pyramid builders were not slaves but peasants conscripted on a rotating part-time basis"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the builders' cemetery at Giza show?",
+    "right": "The builders were organised crews, buried in tombs of their own near the pyramids",
+    "wrong": [
+     "The builders were slaves with no graves",
+     "The builders were visitors from space",
+     "Nobody was ever buried there"
+    ],
+    "why": "Excavations found the builders' own tombs. Hawass concludes they were rotating crews of peasants under skilled artisans, not slaves."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ancient-astronaut writers also point far beyond Egypt. Notice how spread out these places are in time. Let's test three famous claims, one at a time: the claim, then the finding."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 2560-2550 BCE: Merer's logbooks, Egypt | 400 BCE-500 CE: Nazca lines, Peru | Roughly 1,000 to 400 years ago: moai carved, Rapa Nui"
+   },
+   "cite": [
+    "s25",
+    "s13",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Claim one: the Nazca lines in Peru are huge desert drawings, best seen from the air. Von Däniken and others said they point to visitors."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An aerial view of a giant animal figure traced in pale lines on a dark desert plain"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The finding: the Nazca culture made them, between about 400 BCE and 500 CE. They removed the dark surface stones to show lighter ground below. Basic surveying was enough."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Made by the Nazca culture | Dark surface stones cleared away | Basic surveying methods"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How were the Nazca lines made?",
+    "right": "By clearing dark surface stones to reveal lighter ground, using basic surveying",
+    "wrong": [
+     "They were burned into the desert by engines",
+     "They were cut with tools from space",
+     "They were painted on with chemicals"
+    ],
+    "why": "Researchers say simple tools and surveying were enough to make the lines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the fair part. The 'why' is still debated. Maria Reiche argued for stars and calendars. Many researchers now lean toward social and religious purposes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Settled: who made the lines and how | Still debated: why they were made"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Claim two: the giant stone statues of Easter Island, called moai, are too heavy for islanders to have moved."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of tall stone moai statues standing on a grassy slope"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The finding: researchers Carl Lipo and Terry Hunt studied 962 moai. They tested rocking a statue upright with ropes, so it 'walks'. Just 18 people moved a 4.35-tonne replica 100 metres in about 40 minutes."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 18,
+    "layout": "group",
+    "text": "Each dot is one of the 18 people who moved the replica"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why do researchers say the moai 'walked'?",
+    "right": "A replica was moved this way in an experiment, and the statues' shapes and roads fit the method",
+    "wrong": [
+     "Because the statues were hollow",
+     "Because nobody has tested any method",
+     "Because robots from space left instructions"
+    ],
+    "why": "The team studied the statues' shapes, tested a replica, and found the method fits Rapa Nui oral traditions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Notice the careful word the researchers use: 'likely'. This is the best-supported method so far, and their paper answers critics, so the debate has not fully ended."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Likely, not certain"
+   },
+   "cite": [
+    "s9",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Claim three: a Maya king's tomb lid at Palenque shows an astronaut in a rocket. Von Däniken said so in 1968."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A carved stone lid: a figure leaning back beneath a cross-shaped tree, with a monster's open jaws below"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The finding: Maya scholars read the lid as King Pakal at the moment of death, falling toward the underworld below the World Tree. He is reborn as the Maize God. The 'exhaust' is tree roots."
+   },
+   "show": {
+    "kind": "list",
+    "text": "World Tree above | Underworld below | Pakal reborn as the Maize God"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the scholars' reading, what is the 'rocket' on Pakal's lid?",
+    "right": "Maya symbols: the World Tree and its roots reaching the underworld",
+    "wrong": [
+     "A real rocket engine",
+     "A drawing of the Moon",
+     "A small pyramid"
+    ],
+    "why": "Scholars read the carving using Maya beliefs about death and rebirth, and the 'exhaust' is the tree's roots."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the pattern. Each claim starts with the answer, picks the pieces that fit, and leaves out the culture that made them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Starting from the answer"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the problem with starting from the answer?",
+    "right": "You may notice only what fits and ignore context that explains it another way",
+    "wrong": [
+     "Nothing, it is how all science works",
+     "It takes too long",
+     "It is against the law"
+    ],
+    "why": "Archaeologists say this approach ignores context and tries to support a fixed idea rather than test it. A good test has to be able to fail."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the fun part: where this idea lives happily, in stories. A tale from 1898, Edison's Conquest of Mars, may be the first to show visitors shaping early civilization."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1898: Edison's Conquest of Mars | 1953: Encounter in the Dawn | April 1968: the film 2001: A Space Odyssey"
+   },
+   "cite": [
+    "s22",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Arthur C. Clarke's 1953 story became the basis for the start of 2001. Later, a TV series, Ancient Aliens, presented these claims in a documentary style. Historians and archaeologists criticise it for treating them as fact."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Enjoy as fiction: stories like 2001 | Check as history: ask what the evidence is"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which came first: ancient-astronaut stories in fiction, or von Däniken's 1968 book?",
+    "right": "The stories, as early as 1898",
+    "wrong": [
+     "Von Däniken's 1968 book",
+     "The 2009 TV special",
+     "They appeared in the same year"
+    ],
+    "why": "Edison's Conquest of Mars was published in 1898, long before the 1968 book and the 2009 TV special."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Time for a thought experiment. Suppose visitors really did come. What would convince an archaeologist? And what would not?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thought experiment: what would proof of a visit look like?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What would count? An object that several independent labs agree could not have been made on Earth, found in a properly dated dig. Anyone could then check it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A clearly non-Earth object | Tested by independent labs | Found in a dated dig layer | Open for anyone to check"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists already hunt for this kind of proof in space. 'Technosignatures' are signs of technology, such as narrow radio signals, pulsed lasers, or pollution in a planet's air."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Technosignatures"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One astronomy magazine says a radio signal spelling out pi would be definitive. But for odd signals, astronomers often say 'It's never aliens', meaning check ordinary causes first."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Would count: a clearly artificial signal or object, independently checked | Would not count: 'it looks too hard', 'it looks like a helmet', 'nobody has explained it yet'"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these would be the strongest evidence of a visit?",
+    "right": "An object that several independent labs agree is not from Earth, found in a dated dig layer",
+    "wrong": [
+     "A statue that looks like it wears a helmet",
+     "A huge monument nobody has fully explained",
+     "A TV show saying a visit is possible"
+    ],
+    "why": "Strong evidence can be checked by others. 'Looks like' and 'not explained yet' do not show a visit; they only show a question."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: giving credit. If 'visitors did it' were true, the builders would lose their credit. Some archaeologists say the idea can quietly suggest that people in Egypt, Peru or Rapa Nui could not manage alone."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Giving credit to the people who built the monuments"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "I love the question, and wondering about space is good. I just think the builders deserve their names. Merer was a middle-ranking inspector. Ankhhaf was a royal architect and the king's half-brother."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Merer, inspector, led a boat crew | Ankhhaf, royal architect | Workers titled 'artisan' and 'overseer of the side of the pyramid'"
+   },
+   "cite": [
+    "s24",
+    "s1",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On Rapa Nui, oral tradition said the statues walked. Now field experiments show how it could be done. Lipo says this shows how capable the Rapa Nui people were."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A team of people pulling ropes to rock a tall stone statue forward"
+   },
+   "cite": [
+    "s11",
+    "s27",
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the main point of 'giving credit'?",
+    "right": "The evidence shows people built these monuments, and they deserve the credit",
+    "wrong": [
+     "Curious people are foolish",
+     "Mocking believers is the best way to teach",
+     "The monuments are not really impressive"
+    ],
+    "why": "Archaeologists say the evidence points to the builders, and that mocking people who hold the idea harms the cause. The aim is to share the evidence kindly."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up. The idea is popular speculation. The evidence points to builders: logbooks, towns, graves, experiments. Proof of a visit would need to be checkable. Wonder is welcome. Next class: real conspiracies and unproven ones."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tier: popular speculation | Evidence: logbooks, towns, graves, experiments | Proof must be checkable | Credit the builders"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "2018 survey of Americans: percent who held each belief",
+   "rows": [
+    {
+     "label": "Aliens visited Earth in the ancient past",
+     "value": 41,
+     "source": "s6"
+    },
+    {
+     "label": "Atlantis or other advanced ancient civilizations existed",
+     "value": 57,
+     "source": "s6"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Pseudoarchaeology",
+   "links": [
+    "[[How to play 'What if?': the five tiers and the evidence toolkit]]",
+    "[[Real conspiracies and unproven ones: how people weigh evidence]]"
+   ]
+  },
+  {
+   "topic": "Technosignatures",
+   "links": [
+    "[[Cycles and bounces: universes that begin again]]"
+   ]
+  },
+  {
+   "topic": "Argument from 'too impressive to be human'",
+   "links": [
+    "[[Civilizations before the end of the Ice Age?]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "400 BCE to 500 CE",
+   "elsewhere": "The Nazca people of southern Peru were making the desert lines, while Egypt's Great Pyramid was already about 2,000 years old.",
+   "cite": [
+    "s13",
+    "s25"
+   ]
+  },
+  {
+   "when": "Roughly 1,000 to 400 years ago",
+   "elsewhere": "Rapa Nui carvers were making the moai statues.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "when": "1898",
+   "elsewhere": "Writers were already imagining visitors shaping early civilization, in the novel Edison's Conquest of Mars.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "when": "1968",
+   "elsewhere": "Von Däniken's Chariots of the Gods? was published, and the film 2001: A Space Odyssey premiered on April 2.",
+   "cite": [
+    "s15",
+    "s30"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Calling ancient aliens 'pseudoarchaeology' is enough of an answer.",
+   "other_view": "Some scholars say it is better to explain where the reasoning goes wrong than to use a label. One analysis calls it inquiry that strips away context. The Society for American Archaeology warns that mocking fringe ideas makes archaeology look elitist.",
+   "cite": [
+    "s18",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Aliens might exist and might have visited, so researchers should keep looking.",
+   "other_view": "Searching for signs of extraterrestrial technology is real science, and Sagan and Shklovskii speculated about contact in 1966. But the searches look to space, and archaeologists do not accept the claimed evidence for ancient visits. NASA says there are no data supporting the idea that unidentified phenomena are alien technology.",
+   "cite": [
+    "s19",
+    "s17",
+    "s16",
+    "s20"
+   ]
+  },
+  {
+   "claim": "The 'walking moai' method is proven.",
+   "other_view": "The researchers say 'likely', and their paper includes a response to critics. The question of how the moai moved has been debated for over a century. Earlier ideas had the statues moved lying down on wooden devices.",
+   "cite": [
+    "s9",
+    "s11"
+   ]
+  },
+  {
+   "claim": "The Nazca lines were made as an astronomical calendar.",
+   "other_view": "Maria Reiche studied the lines for forty years and argued for astronomy and calendars. Many scholars say the purpose was more social and religious. How the lines were made is clearer than why.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "A lost Nile branch carried the pyramid stones.",
+   "other_view": "This is a proposal from satellite imagery, soil cores and geophysical surveys. The authors say the branch 'may' have been used, and it is still being studied alongside texts like Merer's diary.",
+   "cite": [
+    "s3",
+    "s29"
+   ]
+  }
+ ]
+}

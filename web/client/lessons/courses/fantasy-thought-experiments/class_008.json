@@ -1,0 +1,1032 @@
+{
+ "about": {
+  "title": "Science of a Dragon: Size, Flight and Fire",
+  "course": "fantasy-thought-experiments",
+  "class_n": 8,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 33,
+  "length_note": "This class teaches five small ideas (size, flight, fire, food, and the village sums), each with a check question. That takes a little over the usual 30 minutes. The beats are short, and the learner can pause between steps."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "How some beetles produce a scalding defensive spray",
+   "publisher": "MIT News",
+   "date": "2015-04-30",
+   "link": "https://news.mit.edu/2015/how-bombardier-beetles-produce-defensive-spray-0430",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Bombardier beetle (Featured Creature, with comments from a British Museum beetle curator)",
+   "publisher": "Shape of Life",
+   "date": "2023-10-03",
+   "link": "https://www.shapeoflife.org/news/featured-creature/2023/10/03/bombardier-beetle",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Spitting cobra",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "not shown on page",
+   "link": "https://www.britannica.com/animal/spitting-cobra-group",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "How the Cobra Got Its Flesh-Eating Venom: Cytotoxicity as a Defensive Innovation and Its Co-Evolution with Hooding, Aposematic Marking, and Spitting",
+   "publisher": "Toxins (journal), via PubMed Central",
+   "date": "2017-03-13",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5371858/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Convergent Evolution of Pain-Inducing Defensive Venom Components in Spitting Cobras (preprint)",
+   "publisher": "bioRxiv",
+   "date": "2020 (preprint)",
+   "link": "https://www.biorxiv.org/content/10.1101/2020.07.08.192443.full.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Physics of Life, an undergraduate general education biophysics course",
+   "publisher": "arXiv",
+   "date": "2014",
+   "link": "https://arxiv.org/pdf/1410.0666",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Allometry",
+   "publisher": "Wikipedia",
+   "date": "not shown on page",
+   "link": "https://en.wikipedia.org/wiki/Allometry",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Scaling of bird wings and feathers for efficient flight",
+   "publisher": "Science Advances",
+   "date": "2018",
+   "link": "https://www.science.org/doi/10.1126/sciadv.aat4269",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Wing loading",
+   "publisher": "Wikipedia",
+   "date": "not shown on page",
+   "link": "https://en.wikipedia.org/wiki/Wing_loading",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Wings in Action",
+   "publisher": "Ducks Unlimited",
+   "date": "not shown on page",
+   "link": "https://www.ducks.org/conservation/waterfowl-research-science/wings-in-action",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The Biomechanics of Flight (lecture notes, GEOL 431)",
+   "publisher": "University of Maryland, Department of Geology",
+   "date": "not shown on page",
+   "link": "https://www.geol.umd.edu/~jmerck/geol431/lectures/d12wflight.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Anatomical and Physiological Adaptations for Flight",
+   "publisher": "USDA ARS, via University of Nebraska-Lincoln Digital Commons",
+   "date": "not shown on page",
+   "link": "https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=3325&context=usdaarsfacpub",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Quetzalcoatlus (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "not shown on page",
+   "link": "https://www.ebsco.com/research-starters/anthropology/quetzalcoatlus/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "An extinct reptile with a massive wingspan leapt 8 feet in the air to take off",
+   "publisher": "CNN (reporting on a Society of Vertebrate Paleontology research collection)",
+   "date": "2021-12-08",
+   "link": "https://www.cnn.com/2021/12/08/world/pterosaur-quetzalcoatlus-reptile-flying-scn",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Quetzalcoatlus",
+   "publisher": "Wikipedia",
+   "date": "not shown on page",
+   "link": "https://en.wikipedia.org/wiki/Quetzalcoatlus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Quetzalcoatlus and Other Giant Pterosaurs were Short-Range Flyers, Study Suggests",
+   "publisher": "Sci.News",
+   "date": "not shown on page",
+   "link": "https://www.sci.news/paleontology/quetzalcoatlus-flight-10828.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Peerless Pterosaur Could Fly Long-Distance For Days (transcript)",
+   "publisher": "NPR",
+   "date": "not shown on page",
+   "link": "https://www.npr.org/transcripts/131362653",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Kleiber's law",
+   "publisher": "Wikipedia",
+   "date": "not shown on page",
+   "link": "https://en.wikipedia.org/wiki/Kleiber's_law",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "On the thermodynamic origin of metabolic scaling",
+   "publisher": "Scientific Reports, via PubMed Central",
+   "date": "2018",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5780499/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The relationship between body mass and field metabolic rate among individual birds and mammals",
+   "publisher": "PubMed Central",
+   "date": "not shown on page",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3840704/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Ectothermism and Endothermism",
+   "publisher": "North Carolina State University, College of Sciences",
+   "date": "not shown on page",
+   "link": "https://projects.cos.ncsu.edu/bio140/wrap/reptiles/reptile_text/ectothermism.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Phoenix from the Ashes: Fire, Torpor, and the Evolution of Mammalian Endothermy",
+   "publisher": "Frontiers in Physiology, via PubMed Central",
+   "date": "2017-11-02",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5673639/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Komodo Dragon",
+   "publisher": "Louisville Zoo",
+   "date": "not shown on page",
+   "link": "https://louisvillezoo.org/animalsandplants/komodo-dragon/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Komodo dragon",
+   "publisher": "Smithsonian's National Zoo",
+   "date": "not shown on page",
+   "link": "https://nationalzoo.si.edu/animals/komodo-dragon",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Fire Triangle (overview)",
+   "publisher": "ScienceDirect Topics (Elsevier)",
+   "date": "not shown on page",
+   "link": "https://www.sciencedirect.com/topics/engineering/fire-triangle",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Fire triangle",
+   "publisher": "Wikipedia",
+   "date": "not shown on page",
+   "link": "https://en.wikipedia.org/wiki/Fire_triangle",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Researchers Reveal How Bombardier Beetles Produce Their Defensive Sprays",
+   "publisher": "Entomology Today (Entomological Society of America)",
+   "date": "2015-05-01",
+   "link": "https://entomologytoday.org/2015/05/01/researchers-reveal-how-bombardier-beetles-produce-their-defensive-sprays/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we test a dragon with real science. What would make a giant, flying, fire-breathing animal hard to build, and how could we fix it?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Science of a Dragon: Size, Flight and Fire"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We take four steps: size, flight, fire and food. I will say REAL when a fact comes from science, and INVENTED when we made it up for Nimrod."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Size: why big bodies are hard. 2. Flight: lift and wings. 3. Fire: what it would need. 4. Food: what it does to the village."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: size. Think of a leg bone as a pillar. Its strength depends on how thick it is, meaning the area of a slice across it. Weight depends on volume."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL: Strength follows area. Weight follows volume."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now double an animal in every direction: twice as long, wide and tall. A slice across the bone gets four times bigger, but the body gets eight times heavier."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Doubling an animal: bone strength x4, body weight x8",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "We double an animal in every direction. What happens to its weight and to the strength of its leg bones?",
+    "right": "Weight goes up eight times, but bone strength only four times.",
+    "wrong": [
+     "Both go up two times.",
+     "Both go up eight times.",
+     "Strength goes up eight times, but weight only four times."
+    ],
+    "why": "Strength follows the area of a slice across the bone, which grows four times. Weight follows volume, which grows eight times."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So a giant copy of a normal animal would be crushed by its own weight. Real giants fix this with thicker bones. An elephant's bones are much thicker for its size than a mouse's."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two leg bones drawn at the same height: a thin mouse bone beside a very thick elephant bone."
+   },
+   "cite": [
+    "s7",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is our first rule for Nimrod's dragon. Its legs must be thick and strong, not just a bigger copy of a lizard's legs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rule 1: giants need thick, strong legs"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: flight. A wing pushes air down, and the air pushes the wing up. That upward push is lift. In steady, level flight, lift equals weight."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL: In level flight, lift = weight"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A bird flies level at a steady speed. How does its lift compare with its weight?",
+    "right": "They are equal.",
+    "wrong": [
+     "Lift is much smaller than weight.",
+     "Lift is twice the weight.",
+     "Lift does not matter once it is flying."
+    ],
+    "why": "In steady level flight the lift balances the weight. If lift were smaller, the bird would sink."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists measure how hard flight is with wing loading: body weight divided by wing area. The lower that number, the easier it is to get airborne."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL: Wing loading = weight ÷ wing area"
+   },
+   "cite": [
+    "s9",
+    "s12",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For a Canada goose to match a cardinal's wing loading, its wings would need to be nearly ten times larger. Heavy birds with small wings, like swans, need long runs to take off."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LOW wing loading: big wings, light body, easy lift. || HIGH wing loading: small wings, heavy body, needs speed or a long run."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Two birds weigh the same. Bird A has bigger wings than Bird B. Which gets airborne more easily?",
+    "right": "Bird A, because its wing loading is lower.",
+    "wrong": [
+     "Bird B, because small wings flap faster.",
+     "Neither. Only weight matters.",
+     "Bird B, because small wings make more lift."
+    ],
+    "why": "The same weight spread over a bigger wing area means a lower wing loading, so it is easier to get airborne."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the catch, and it is the square-cube idea again. Wing area grows with the square of size, but weight grows with the cube."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bigger flyer = more weight for each bit of wing"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Muscles hit a limit too. In most birds the flight muscles already take as big a share of the body as they can. Estimates put a flapping bird's limit near 12 to 16 kilograms."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12–16 kg: estimated weight limit for a flapping flyer (an estimate, not a hard law)"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "As a flyer gets bigger, what happens to its weight compared with its wing area?",
+    "right": "Weight grows faster than wing area.",
+    "wrong": [
+     "Wing area grows faster than weight.",
+     "They grow at exactly the same rate.",
+     "Weight stops growing at a certain size."
+    ],
+    "why": "Wing area grows with the square of size and weight with the cube, so weight pulls ahead."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a surprise. Quetzalcoatlus was a real flying reptile, not a dinosaur. Estimates give it a wingspan of 10 to 12 metres and a weight of 75 to 544 kilograms."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "The bird flight limit compared with Quetzalcoatlus estimates (kg)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s13",
+    "s17",
+    "s12"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why is Quetzalcoatlus a puzzle for the flapping-bird weight limit?",
+    "right": "Its estimated weight is far above the limit, yet scientists think it flew.",
+    "wrong": [
+     "It was lighter than a sparrow.",
+     "It had no wings.",
+     "Its wings were smaller than those of a bird of the same weight."
+    ],
+    "why": "The estimates run from 75 to 544 kilograms, far above 12 to 16. So it must have flown in a different way from a small flapping bird."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did it fly? It was lightly built, with hollow bones. Its long wings suggest soaring on wind more than flapping. A 2021 study suggests it launched with a leap of about eight feet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL clues: hollow, light bones. Very long wings. Soaring on moving air. A leap to launch."
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the numbers are wide. Wingspan estimates have ranged from about 5 to nearly 26 metres, because the fossils are partial. We give the other side of the debate at the end."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL, but uncertain: the size estimates"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So here is a believable fix for a giant flyer, built from real science: very long wings, a light body, and soaring more than flapping."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rule 2: huge wings + light body + soaring"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which design makes a giant flyer most believable?",
+    "right": "Huge wings, light hollow bones, and soaring on moving air.",
+    "wrong": [
+     "Tiny wings and thick, heavy bones.",
+     "Small wings that flap very fast on a very heavy body.",
+     "A heavy armour shell over the whole body."
+    ],
+    "why": "Large wings and a light body lower the wing loading. Soaring saves muscle power."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three: fire. A fire needs three things: fuel to burn, oxygen from the air, and heat to start it. Take away any one and the fire stops."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL: 1. Fuel. 2. Oxygen. 3. Heat (a spark or ignition)."
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which three things does a fire need?",
+    "right": "Fuel, oxygen and heat.",
+    "wrong": [
+     "Fuel, water and wind.",
+     "Oxygen, smoke and ash.",
+     "Heat, water and oxygen."
+    ],
+    "why": "Fire needs fuel, oxygen and heat. Remove any one and it stops."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So a fire-breather needs fuel, a way to ignite it, and a safe place to keep both inside its body. Oxygen is free in the air. Storage is the hard part. This is our own reasoning."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fuel + ignition + safe storage"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real animals do make chemical defences. The bombardier beetle keeps two chemicals, hydrogen peroxide and hydroquinone, in a storage bladder, where they just sit. A separate chamber holds enzymes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A diagram of a beetle's rear end: a storage bladder with two chemicals, a small door, and a thick-walled chamber."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When the beetle is excited, a muscle opens a small door. The chemicals meet in the thick-walled chamber, so the spray is made at the instant of use. It is boiling hot liquid, not flame."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL: two safe parts, mixed only at the moment of use"
+   },
+   "cite": [
+    "s2",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The beetle's spray is much hotter than other insects' sprays, and it shoots out five times faster. The beetle itself is not harmed."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5×: how much faster the beetle's jet is than other insects' sprays"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How does the bombardier beetle avoid harming itself?",
+    "right": "It keeps the chemicals apart and mixes them only in a special chamber when it needs them.",
+    "wrong": [
+     "It breathes in the heat.",
+     "It keeps one chemical boiling hot all the time.",
+     "Its spray is cold, so it is safe."
+    ],
+    "why": "The two chemicals just sit apart until the beetle opens its small door. The reaction happens only in the protective chamber."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another real example: spitting cobras. They squeeze muscles around their venom glands and spray venom from the fangs, as far as about 3 metres. They aim for the eyes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cobra with its hood spread, spraying a fine mist of venom from the front of its fangs."
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Spitting is for defence. It evolved three separate times in cobras, so nature does invent 'spray it at an attacker' more than once. Neither animal makes flame."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL: sprays at attackers, but no flame"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do the beetle and the cobra show us about a dragon's 'fire'?",
+    "right": "Real animals can store a harmful chemical safely and spray it at attackers, but neither makes flame.",
+    "wrong": [
+     "Real animals can breathe flame if they are big enough.",
+     "Chemical defences only work on very large animals.",
+     "Real animals never store chemicals in their bodies."
+    ],
+    "why": "The beetle and the cobra both keep a harmful liquid safely inside and fire it out. Neither one burns."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "INVENTED fix, borrowed from the beetle: two liquids kept in two separate pouches, safe alone. At the mouth they mix and react hot enough to ignite. A thick-walled chamber takes the heat. A story fix, not a proven design."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL beetle: two chemicals apart, mixed in a thick-walled chamber, hot spray. || INVENTED dragon: two liquids in two pouches, mixed at the mouth, hot enough to ignite."
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four: food. Bigger animals eat more in total, but less per kilo of body. This is Kleiber's law. A cat 100 times a mouse's mass uses only about 32 times the energy."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "32×: energy used by a cat 100 times heavier than a mouse"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A cat has 100 times the mass of a mouse. About how much more energy does it use each day?",
+    "right": "About 32 times as much.",
+    "wrong": [
+     "About 100 times as much.",
+     "About 10 times as much.",
+     "The same amount."
+    ],
+    "why": "Energy use grows more slowly than mass, so the cat uses about 32 times as much, not 100."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Warm-blooded animals burn much of their food just to stay warm. A cold-blooded animal such as a reptile can need about one-twentieth to one-sixth of the food. At rest, warm-blooded animals burn four to eight times more energy."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "WARM-blooded: much food goes to making body heat. || COLD-blooded: far less food, but slower when cool."
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does a cold-blooded animal need less food?",
+    "right": "It does not burn food to make its own body heat.",
+    "wrong": [
+     "It never moves at all.",
+     "It always digests food faster.",
+     "It is always smaller than a warm-blooded animal."
+    ],
+    "why": "A warm-blooded animal uses a large share of its food to make body heat. A cold-blooded animal does not."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is a cost. A cold-blooded animal works poorly when it is cool and cannot move fast. So it has to warm up first. Remember that when we ask it to fly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL trade-off: less food, but a slow start when cool"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real example: the Komodo dragon, a giant lizard. It can eat up to 80 percent of its body weight in one meal. A 100-pound one needs about 30 pounds of meat a month. A cat or wolf of that weight needs about 300."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10×: how much more meat a wolf or large cat needs than a Komodo dragon of the same weight"
+   },
+   "cite": [
+    "s24",
+    "s23"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A 100-pound Komodo dragon and a 100-pound wolf. Which needs more meat each month?",
+    "right": "The wolf, about ten times as much.",
+    "wrong": [
+     "The Komodo dragon, about ten times as much.",
+     "Both need the same.",
+     "The Komodo dragon, about twice as much."
+    ],
+    "why": "A zoo reports about 30 pounds a month for the Komodo and about 300 for a large cat or wolf of the same weight."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we build the Nimrod dragon. Everything here is INVENTED, but each part follows a real rule. Our dragon weighs about 250 kilograms, inside the 75 to 544 range for Quetzalcoatlus."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL RULE: weight grows faster than strength / wing loading / fire needs safe storage / warm bodies eat a lot. || NIMROD DRAGON (INVENTED): thick strong legs / wingspan about 10 m, light hollow wings, leaps off the cliff and soars / two-liquid mouth glands / cold-blooded style, basks in the sun first."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture it. In the morning the dragon basks on the sunny castle wall to warm up. Merlin checks our sums with a quill. Nimrod the cat, as always, is not impressed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grey-green dragon with long thin wings spread on a sunny castle wall. Merlin stands below with a quill and scroll. Nimrod the cat sits nearby, bored."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Thought experiment: how much would it eat? The Komodo needs about 30 percent of its body weight in meat each month. For 250 kilograms, that is about 75 kilograms a month. A rough guess."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "75 kg a month: 0.3 × 250 kg (our own arithmetic, a rough guess)"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let one sheep be about 40 kilograms of food. That is our assumption, and real sheep give less, so the true number could be higher. Then 75 kilograms is about 2 sheep a month, or about 22 a year."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "sheep",
+    "count": 2,
+    "layout": "row",
+    "text": "About 2 sheep a month for a cold-blooded style dragon"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now suppose the dragon were warm-blooded and ate like the wolf, ten times more. That is 750 kilograms a month: about 19 sheep a month, and about 225 a year."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "sheep",
+    "count": 19,
+    "layout": "scattered",
+    "text": "About 19 sheep a month for a warm-blooded style dragon"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Suppose the village keeps 200 sheep. That number is INVENTED. The cold-blooded dragon eats about one in nine of them each year. The warm-blooded one eats the whole flock, and more."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Sheep eaten per year (our estimates)",
+    "chart": "c3"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What does the dragon's body type mean for a village with 200 sheep?",
+    "right": "A cold-blooded style dragon eats about a ninth of the flock a year, so the village could survive. A warm-blooded one would eat it all.",
+    "wrong": [
+     "The body type makes no difference to the village.",
+     "The warm-blooded dragon eats less, because it is more efficient.",
+     "Both dragons eat about 2 sheep a year."
+    ],
+    "why": "About 22 sheep is roughly a ninth of 200. About 225 sheep is more than the whole flock."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So King Kenny has choices: share the flock, hunt wild deer, or find the dragon a home further away. Dame Gladys would want the sheep counted. A flying giant is a very hungry neighbour."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A dragon's appetite changes a village"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Pick one rule: size, flight, fire or food. Say what makes your dragon hard to believe, then propose a fix."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Try this: 'My dragon is hard to believe because ___ (the rule). My fix: ___.'"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A story dragon weighs 5,000 kg, has small wings and flaps all day. Which single fix helps most?",
+    "right": "Give it much bigger wings and a lighter body, so it can soar.",
+    "wrong": [
+     "Make its bones even thicker and heavier.",
+     "Make it warm-blooded so it eats more.",
+     "Give it a second fire gland."
+    ],
+    "why": "Bigger wings and a lighter body lower the wing loading. Thicker bones add weight, and fire does not help flight."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To finish: weight grows faster than strength, so giants need thick legs. Flight needs big wings and a light body. Fire needs fuel, ignition and safe storage. A cold-blooded body keeps the food bill small."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Size: thick legs. 2. Flight: big wings, light body, soar. 3. Fire: two safe parts, mixed at the mouth. 4. Food: cold-blooded style."
+   },
+   "cite": [
+    "s6",
+    "s9",
+    "s25",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Doubling an animal in every direction: how much more?",
+   "rows": [
+    {
+     "label": "Strength of a leg bone (times more)",
+     "value": 4,
+     "source": "s7"
+    },
+    {
+     "label": "Weight of the body (times more)",
+     "value": 8,
+     "source": "s7"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Weight in kilograms: flapping-bird limit vs Quetzalcoatlus estimates",
+   "rows": [
+    {
+     "label": "Estimated limit for a flapping bird (higher estimate)",
+     "value": 16,
+     "source": "s12"
+    },
+    {
+     "label": "Quetzalcoatlus, lowest estimate",
+     "value": 75,
+     "source": "s13"
+    },
+    {
+     "label": "Quetzalcoatlus, highest estimate",
+     "value": 544,
+     "source": "s13"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Sheep a 250 kg dragon would eat per year (our estimates, 40 kg per sheep)",
+   "rows": [
+    {
+     "label": "Cold-blooded style dragon (about 2 sheep a month)",
+     "value": 22,
+     "source": "s23"
+    },
+    {
+     "label": "Warm-blooded style dragon (about 19 sheep a month)",
+     "value": 225,
+     "source": "s23"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Square-cube law",
+   "links": [
+    "[[Wing loading]]",
+    "[[Where Dragons Come From: The Myths]]"
+   ]
+  },
+  {
+   "topic": "Wing loading",
+   "links": [
+    "[[Square-cube law]]",
+    "[[Quetzalcoatlus]]"
+   ]
+  },
+  {
+   "topic": "Quetzalcoatlus",
+   "links": [
+    "[[Wing loading]]",
+    "[[Where Dragons Come From: The Myths]]"
+   ]
+  },
+  {
+   "topic": "Fire triangle and chemical defences",
+   "links": [
+    "[[Science of a Wizard: Energy, Chemistry and Evidence]]"
+   ]
+  },
+  {
+   "topic": "Kleiber's law and cold-blooded animals",
+   "links": [
+    "[[The Magic Market: Economics with Spells]]",
+    "[[Life in a Medieval Village]]"
+   ]
+  },
+  {
+   "topic": "Your Own Thought Experiment",
+   "links": [
+    "[[What If? How a Thought Experiment Works]]",
+    "[[Your Own Thought Experiment: Fantasy and Science Fiction]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A flapping flyer cannot weigh more than about 12 to 16 kilograms, so giant flyers must have used a different method.",
+   "other_view": "Estimates for Quetzalcoatlus run from 75 to 544 kilograms, and wingspan estimates have ranged very widely because the fossils are partial. Scientists agree it probably flew, but they still debate how, and how well. One study found it poor at soaring because of its high wing loading. Another computer model suggested long flights.",
+   "cite": [
+    "s11",
+    "s12",
+    "s13",
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Quetzalcoatlus could fly very long distances.",
+   "other_view": "One computer model said it could fly about 80 mph for 7 to 10 days. A pterosaur researcher at the University of Leicester agreed it could fly but was not convinced about the distance. Another study found its large body made soaring in thermals limited.",
+   "cite": [
+    "s17",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Metabolic rate scales with body mass to the power of three-quarters (Kleiber's law), so a bigger animal eats less per kilo.",
+   "other_view": "The exact exponent is debated. A surface-to-volume argument predicts two-thirds, and field measurements in birds and mammals give values nearer 0.64 to 0.71. The general pattern, that bigger animals use less energy per kilo, is not in dispute.",
+   "cite": [
+    "s18",
+    "s19",
+    "s20"
+   ]
+  },
+  {
+   "claim": "A cold-blooded dragon would be the cheapest to feed.",
+   "other_view": "The trade-off is real. A cold-blooded animal works poorly when cool and cannot move fast. The same source notes that some large living reptiles lean towards warm-blooded behaviour, so a flyer might be a middle case that eats more than our estimate.",
+   "cite": [
+    "s21"
+   ]
+  }
+ ]
+}

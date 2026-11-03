@@ -1,0 +1,842 @@
+{
+ "about": {
+  "title": "Inside the Castle",
+  "course": "fantasy-thought-experiments",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 32,
+  "length_note": "About 32 minutes, a little over the usual 30. There are 37 short beats, one idea each, and 11 check questions. Each part ends on a check, so you can pause between parts. Allow extra time if you sketch your own castle during the final thought experiment."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Castles Through Time",
+   "publisher": "English Heritage",
+   "date": "undated",
+   "link": "https://www.english-heritage.org.uk/castles/castles-through-time/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Medieval castles",
+   "publisher": "The National Archives (UK)",
+   "date": "undated",
+   "link": "https://www.nationalarchives.gov.uk/education/resources/medieval-castles/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "castle summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/summary/castle-architecture",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "moat",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/technology/moat",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "keep",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/technology/donjon",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Military technology: the castle",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/technology/military-technology/The-castle",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Gatehouse (Lost Empires: Trebuchet)",
+   "publisher": "PBS NOVA",
+   "date": "undated",
+   "link": "https://www.pbs.org/wgbh/nova/lostempires/trebuchet/gatehouse.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Medieval Castle Defence: Defending a Castle",
+   "publisher": "Exploring Castles",
+   "date": "undated",
+   "link": "https://www.exploring-castles.com/castle_designs/medieval_castle_defence/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Parts of a Medieval Castle: The Curtain Wall",
+   "publisher": "Medieval Britain",
+   "date": "undated",
+   "link": "https://medievalbritain.com/type/medieval-life/architecture/parts-of-a-medieval-castle-the-curtain-wall/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Bound to service",
+   "publisher": "National Library of Australia (Digital Classroom)",
+   "date": "undated",
+   "link": "https://www.library.gov.au/learn/digital-classroom/medium-aevum-middle-age/bound-service",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Knights and Feudal Society (How Knights Work)",
+   "publisher": "HowStuffWorks",
+   "date": "undated",
+   "link": "https://history.howstuffworks.com/historical-figures/knight1.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Fiefs and Vassals: The Medieval Evidence Reinterpreted (publisher's description)",
+   "publisher": "Oxford University Press",
+   "date": "1994 (book)",
+   "link": "https://global.oup.com/academic/product/fiefs-and-vassals-9780198206484",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Edward Dallingridge: Builder of Bodiam Castle",
+   "publisher": "Medievalists.net",
+   "date": "2014-04",
+   "link": "https://www.medievalists.net/2014/04/edward-dallingridge-builder-bodiam-castle/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Bodiam (tag page)",
+   "publisher": "Castle Studies Trust",
+   "date": "undated",
+   "link": "https://castlestudiestrust.org/blog/tag/bodiam/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Himeji-jo",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "undated",
+   "link": "https://whc.unesco.org/en/list/661/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Himeji Castle",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Himeji_Castle/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 3. Today we go inside a castle. We will see why castles were built, how their parts worked, and who lived there. At the end, you design one."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Inside the Castle"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One promise first. Real history always comes with sources. Anything from Nimrod's village is invented, and I will say so out loud."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: castles in the Middle Ages (checked against sources) | INVENTED: Nimrod's castle and the people in it"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Start with the word itself. A castle was a strong medieval building. It was usually the fortified home of a king or a lord."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Castle = a fortified home of a king or lord"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which sentence best describes a medieval castle?",
+    "right": "A strong building that was usually the fortified home of a king or lord.",
+    "wrong": [
+     "A market square with a low fence around it.",
+     "A church built only for prayer.",
+     "A tent camp for an army on the move."
+    ],
+    "why": "A castle was a fort and a home in one. Britannica describes it as the fortified dwelling of the king or lord of the area."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Job one was defence. In England, early castles were mostly forts. They helped the Normans guard land they had just conquered."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Job 1: defence"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a word you will need. A siege is when an army surrounds a place and tries to break in. Defence mostly means surviving a siege."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Siege = an army surrounds a place and tries to take it"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Job two was running things. Once the Normans were settled, a castle could be a centre for local government, administration and justice."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Job 2: government, administration, justice"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Job three was being a home. A 1396 record from Portchester Castle lists new building work: a hall, a kitchen, chambers and offices."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hall | Kitchen | Chambers | Offices"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Besides defence, which job could a medieval castle do?",
+    "right": "Act as a centre for local government, administration and justice.",
+    "wrong": [
+     "Print books for the whole kingdom.",
+     "Grow all the food for every village.",
+     "Run a ferry across the sea."
+    ],
+    "why": "The National Archives says castles could serve as centres of local government, administration and justice. The Portchester record shows homes and offices being built inside."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the defences. Picture layers, like an onion: moat, wall, gate, keep. We take them one at a time, from the outside in."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Moat | 2 Curtain wall | 3 Gate | 4 Keep"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the moat. It is a ditch around a castle. It was usually, but not always, filled with water."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Moat = a ditch around the castle"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why dig one? Once castles had stone walls, a moat kept moving towers and battering rams away from the walls until attackers filled the ditch."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Attackers pushing a tall wooden tower toward a wall, stopped at the edge of a wide ditch"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did a moat do for the defenders?",
+    "right": "It kept siege towers and battering rams from reaching the walls until the ditch was filled.",
+    "wrong": [
+     "It let the castle be seen from far away.",
+     "It gave attackers a quick way inside.",
+     "It let defenders shoot arrows farther."
+    ],
+    "why": "Britannica explains that the moat blocked moving towers and rams from reaching the walls until it was filled."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the curtain wall. It is the wall that joins the towers together and circles the castle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Curtain wall = a wall connecting towers"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The top of the wall was built for fighting. It had battlements to shelter behind. Defenders could shoot from behind cover, and a wall walk let them move along the top."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A stone wall seen from the side, with a walkway along the top and notched battlements"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the wall walk for?",
+    "right": "Defenders could fight from it or move along the top of the wall.",
+    "wrong": [
+     "Merchants sold goods on it.",
+     "It was where the moat was dug.",
+     "It was the king's bedroom."
+    ],
+    "why": "The wall walk sat behind the battlements. Defenders used it to fight or to move between parts of the castle."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the gate, and here is the puzzle. A castle needs a way in. People and supplies must pass in peacetime. But in a siege, that entrance is the most vulnerable point."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "door",
+    "count": 1,
+    "layout": "row",
+    "text": "One way in: the part attackers want most"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fix was the gatehouse. Builders packed it with obstacles, and the weakest spot became one of the strongest."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gatehouse = the entrance, heavily defended"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A drawbridge could be lifted. A portcullis, an iron-covered wooden grill, slid down in front of the door. Beams could be slid behind the doors to hold them shut."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Drawbridge | Portcullis (sliding grill) | Wooden beams behind the doors"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Inside, the passage was a trap. A lowered gate could catch attackers there. Murder holes in the roof let defenders drop things like hot sand or scalding water on them."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A narrow stone passage with a grill at each end, and openings in the roof above"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did builders put so many defences at the gate?",
+    "right": "The entrance was the most vulnerable point, so they made it strong.",
+    "wrong": [
+     "Gates were the only part made of stone.",
+     "Attackers never went near the gate.",
+     "It was cheaper than building walls."
+    ],
+    "why": "A castle needed an entrance, and that made it the weak point in a siege. Builders answered with a heavily defended gatehouse."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At the centre was the keep. It was the strongest part of the castle, the place of last resort if the rest fell. It could be a single tower or a larger fortified enclosure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Keep = the last place to fall back to"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put it together, outside in. A moat surrounded the outer wall. A heavily protected gateway led in. Walled courtyards, called baileys, surrounded the keep."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bird's-eye plan: a ring of water, then a wall with one gate, then courtyards, then a tower in the middle"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In a siege, which part was the place of last resort?",
+    "right": "The keep",
+    "wrong": [
+     "The moat",
+     "The wall walk",
+     "The drawbridge"
+    ],
+    "why": "The keep was the strongest part of the castle and the final place to fall back to."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Castles did not stay the same. Here is the story in four steps. We will take each one in turn."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "10th-11th centuries: wood and earth (motte and bailey) | then: stone replaces wood | late 12th-13th centuries: concentric castles | 15th-16th centuries: firearms end the age"
+   },
+   "cite": [
+    "s6",
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First came the motte and bailey. The motte was a mound topped by a wooden tower. The bailey was a defended yard beside it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grassy mound with a wooden tower on top, and a fenced yard alongside"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Often the wooden defences were later replaced in stone. At Totnes Castle, for example, stone took the place of wood."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Wood, then stone"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came concentric castles. They had two rings of towered walls, one inside the other. Attackers had to take them section by section, and then face a second set of defences."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A castle plan with a low outer wall ringing a taller inner wall, towers on both"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What made a concentric castle so hard to attack?",
+    "right": "It had two rings of towered walls, one inside the other.",
+    "wrong": [
+     "It was built on a single mound of earth.",
+     "It had no gate at all.",
+     "It was made only of wood."
+    ],
+    "why": "English Heritage describes two mutually supporting rings of towered walls. Attackers had to break through one ring and then another."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What ended the castle age? Firearms. As they spread in the 15th and 16th centuries, the age of the medieval castle came to an end."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Firearms ended the castle age"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What ended the age of the medieval castle?",
+    "right": "The increasing use of firearms.",
+    "wrong": [
+     "Moats drying up everywhere.",
+     "Kings giving away all their land.",
+     "Walls becoming too thin to build."
+    ],
+    "why": "Britannica says the medieval castle age ended with the increasing use of firearms in the 15th and 16th centuries."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the people. First, the lord. In the usual classroom picture, a king granted pieces of land, called fiefs, to nobles. These were lords or barons, and they owed loyalty and service in return."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lord = a noble who held land"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the knight. A king could also grant land to knights in exchange for military service. Many knights were professional warriors in a lord's army. In return the lord gave them lodging, food, armour, weapons, horses and money."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Knight = a mounted warrior who served"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Knights were not only fighters. In peacetime they often managed estates. They oversaw repairs, handled money, inspected goods and food, and made sure rent and taxes were collected."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Repairs | Money | Checking goods and food | Collecting rent and taxes"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the difference is this. A lord held land and ruled it. A knight served a lord, mostly as a warrior and manager. The lines could overlap, because an estate might be owned by a lord or a knight."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LORD: holds land, rules it, often lives in a castle | KNIGHT: serves a lord or the king, fights, often manages an estate"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the main difference between a lord and a knight?",
+    "right": "A lord held land and ruled it; a knight served a lord or the king, mainly as a mounted warrior.",
+    "wrong": [
+     "Lords fought in battle and knights never did.",
+     "Knights owned all the castles and lords lived in villages.",
+     "There was no difference; they were the same word."
+    ],
+    "why": "Lords held land granted by the king. Knights served in a lord's army and often ran estates in peacetime."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair warning. This is the tidy classroom version. Some historians argue that the neat picture of fiefs and vassals is too simple. See the other side notes for more."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A tidy picture?"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we leave history and make things up. INVENTED: King Kenny and Queen Rose rule from a castle above Nimrod's village. Like real castles, it is a home, an office and a fort."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "INVENTED: Nimrod's castle"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "INVENTED: Sir Michael is the castle's defender. Like a real knight, he serves his king. His job is to keep the walls, the gate and the people safe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sir Michael: defender (invented)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "INVENTED: Princess Jess and Prince Vince grow up here. To them it is simply home, with a hall, a kitchen and rooms of their own. Nimrod the cat patrols the wall walk, as cats do."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two children in a stone hall by a fire, with a cat sitting on a high window ledge"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time for the thought experiment. Robin the Joker says: build the castle with no door, then nobody can get in! Ha. Why would that fail?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thought experiment: where do you put the weak point?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Because people and supplies must get in and out in peacetime. So every castle has a way in. Real builders could not remove the weak point. They chose where it was and how strong to make it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "You cannot remove the weak point. You can choose it."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why can a castle not simply have no entrance?",
+    "right": "People and supplies need to get in and out in peacetime.",
+    "wrong": [
+     "Doors were against the law.",
+     "Walls were too thick to build around a door.",
+     "Kings preferred to climb in with ladders."
+    ],
+    "why": "Exploring Castles says the entrance was essential in peacetime, even though it was the most vulnerable point during a siege."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is your brief. Design a simple castle for King Kenny and Queen Rose. Decide each part below, and above all, decide where the gate goes and why."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Moat: yes or no? | 2 Curtain wall and towers | 3 The gate: WHERE, and why? | 4 The keep | 5 Homes for Kenny, Rose, Jess and Vince | 6 An office where Kenny holds court | 7 Sir Michael's wall walk"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One possible answer, in the story. Put the gate on the side facing the village road. Add a drawbridge, a portcullis at each end of a long passage, and holes in the roof. If attackers get in, they are trapped, and Sir Michael's archers wait."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A gate on the village side: a drawbridge over the moat, then a passage with a grill at each end and archers above"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Sketch your castle and mark the weak point. Then check your thinking with this question. There is more than one good design."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Your turn: sketch it, mark the weak point"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which gate design best follows the idea 'put the weak point where it is hardest to attack'?",
+    "right": "A gate behind a drawbridge, at the end of a passage with two portcullises, covered by archers.",
+    "wrong": [
+     "A gate in the middle of a flat wall with no towers.",
+     "A gate with no door, so it can never break.",
+     "Two gates side by side with nobody guarding them."
+    ],
+    "why": "The real gatehouse turned the weak point into a trap. It had a drawbridge, portcullises and defenders able to fire down into the passage."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us finish with the big ideas. A castle was a fort, an office and a home. Its moat, wall, gate and keep worked as layers. Designs changed over time. A lord held land, and a knight served."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fort, office and home | Layers: moat, wall, gate, keep | Wood to stone to concentric | Lord holds land, knight serves | Choose your weak point"
+   },
+   "cite": [
+    "s3",
+    "s2",
+    "s5",
+    "s1",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class, we leave the castle for the sky. We will look at where dragons come from, and the real myths behind them. Well done today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Where Dragons Come From"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Castle parts: moat, curtain wall, gatehouse, keep",
+   "links": [
+    "[[Life in a Medieval Village]]",
+    "[[Science of a Dragon: Size, Flight and Fire]]"
+   ]
+  },
+  {
+   "topic": "Knights and lords",
+   "links": [
+    "[[Life in a Medieval Village]]",
+    "[[Where Wizards Come From: Merlin and the Real Past]]"
+   ]
+  },
+  {
+   "topic": "Designing a weak point",
+   "links": [
+    "[[Building a World: Maps and Worldbuilding]]",
+    "[[Your Own Thought Experiment: Fantasy and Science Fiction]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "10th-11th centuries",
+   "elsewhere": "Motte-and-bailey castles appeared in continental Europe, between the Rhine and Loire rivers, and later spread across most of western Europe. In England, a chronicler noted that Normans' castles were scarcely known there before them.",
+   "cite": [
+    "s6",
+    "s1"
+   ]
+  },
+  {
+   "when": "1601-1609",
+   "elsewhere": "In Japan, Himeji Castle was rebuilt and expanded in these years. A fort had first stood on its hill in 1333. Meanwhile, in western Europe, firearms had already ended the age of the medieval castle.",
+   "cite": [
+    "s15",
+    "s16",
+    "s3"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Castles were built mainly to defend against attack.",
+   "other_view": "Some historians since the 1990s argue that late medieval castles were built mainly to show status. At Bodiam Castle (1385) they point to features such as an easy-to-drain moat, thin walls and badly placed gunports. Others say Bodiam had a real military purpose. Some scholars now say the 'defence versus status' argument is too simple, and that Bodiam changed across several periods.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "In the Middle Ages, lords gave land (fiefs) to knights (vassals) in exchange for service.",
+   "other_view": "This is the traditional textbook picture. Historian Susan Reynolds argued in 1994 that the ideas of fiefs and vassalage rest on a misreading of the medieval sources. Historians still discuss whether 'feudalism' is a useful label, so treat the lord-and-knight chart as a simplified model.",
+   "cite": [
+    "s11",
+    "s12"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1373 @@
+{
+ "about": {
+  "title": "Shinto and Other Religions of Japan, Korea and Vietnam",
+  "course": "religions-of-the-world",
+  "class_n": 12,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class covers four traditions (Shinto, Tenrikyo, Korean shamanic practice and Cao Dai) plus where each is practised today. Shinto gets the most time because it has several parts: kami, shrines, purification, festivals and New Year visits. Each of the other three gets about five minutes. You can pause after any tradition and pick up later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Shinto",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Shinto",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Shinto: Rituals, Kami, Shrines (Ritual practices and institutions)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Shinto/Ritual-practices-and-institutions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "What Are the Traditions and Practices of Shinto Worship?",
+   "publisher": "Learn Religions",
+   "date": "n.d.",
+   "link": "https://www.learnreligions.com/shinto-worship-traditions-practices-4570821",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Shinto: Japan's Religion of Kami and Shrines (figures from the Religious Yearbook 2025, Agency for Cultural Affairs)",
+   "publisher": "CCN Co., Ltd.",
+   "date": "n.d.",
+   "link": "https://ccn.jp/terakoya/en/japan/shinto.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Understanding Shinto Practices and Beliefs in Japan",
+   "publisher": "Japan Living Life",
+   "date": "n.d.",
+   "link": "https://japanlivinglife.com/articles/shinto-practices-beliefs-explained",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Hatsumode in Japan: New Year Shrine and Temple Visits",
+   "publisher": "Jeepe",
+   "date": "n.d.",
+   "link": "https://www.jeepe.jp/en/articles/japan-hatsumode-guide-1725",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Guide to Hatsumode",
+   "publisher": "Rakuten Travel",
+   "date": "n.d.",
+   "link": "https://travel.rakuten.com/contents/usa/en-us/guide/hatumode-guide/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Hatsumode",
+   "publisher": "HIS USA",
+   "date": "n.d.",
+   "link": "https://www.his-usa.com/destination-japan/blog/hatsumode.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Hatsumode: Japan's New Year Shrine Visit Tradition",
+   "publisher": "Omikuji Japan",
+   "date": "n.d.",
+   "link": "https://omikujijapan.com/en/journal/hatsumode",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Japanese Temples vs Shrines: Differences and Etiquette",
+   "publisher": "embjapan.org",
+   "date": "n.d.",
+   "link": "https://www.embjapan.org/japanese-temples/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Gion Matsuri Kyoto: July Yamaboko Floats and Yoiyama Nights",
+   "publisher": "Jeepe",
+   "date": "n.d.",
+   "link": "https://www.jeepe.jp/en/articles/kyoto-gion-matsuri-guide-1010",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The Gion Matsuri - 1,000 years and more of warding off evil spirits",
+   "publisher": "National Diet Library, Japan",
+   "date": "n.d.",
+   "link": "https://www.ndl.go.jp/en/imagebank/column/gion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Nakayama Miki",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/nakayama-miki",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Tenrikyo (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/religion-and-philosophy/tenrikyo/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Tenrikyo",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Tenrikyo",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "History of Tenrikyo",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_Tenrikyo",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Tenrikyo: Beliefs, Rituals and Facts",
+   "publisher": "Study.com",
+   "date": "n.d.",
+   "link": "https://study.com/academy/lesson/tenrikyo-beliefs-rituals-facts.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Doctrine of Tenrikyo",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/The_Doctrine_of_Tenrikyo",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Korean shamanism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Korean_shamanism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Mu (shaman)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mu_(shaman)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Sinbyeong",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sinbyeong",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "In South Korea, shamans are shunned and revered",
+   "publisher": "The World (PRX)",
+   "date": "2025-01-31",
+   "link": "https://theworld.org/stories/2025/01/31/in-south-korea-shamans-are-shunned-and-revered",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Shamanism and Spirits in Korea",
+   "publisher": "Facts and Details",
+   "date": "n.d.",
+   "link": "https://factsanddetails.com/korea/Korea/Religion/entry-7221.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Why Korean Horror Films Keep Casting Real Shamans",
+   "publisher": "K Deep Cut",
+   "date": "n.d.",
+   "link": "https://kdeepcut.com/posts/why-does-korean-horror-keep-returning-to-shamans-and-exorcisms/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Cao Dai",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Cao-Dai",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Cao Dai",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/philosophy-and-religion/other-religious-beliefs-and-general-terms/miscellaneous-religion/cao-dai",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "A visit to the Holy See of Vietnam's homegrown religion",
+   "publisher": "CGTN",
+   "date": "n.d.",
+   "link": "https://news.cgtn.com/news/3d3d774d314d444f34457a6333566d54/index.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Cao Dai Religion: History, Beliefs and Rituals",
+   "publisher": "Study.com",
+   "date": "n.d.",
+   "link": "https://study.com/academy/lesson/caodaism-beliefs-rituals.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Cao Dai",
+   "publisher": "Simple English Wikipedia",
+   "date": "n.d.",
+   "link": "https://simple.wikipedia.org/wiki/Cao_Dai",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Freedom of religion in Japan",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Freedom_of_religion_in_Japan",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "All About Cao Dai Holy See, A Temple In Tay Ninh, Vietnam",
+   "publisher": "Outlook Traveller",
+   "date": "n.d.",
+   "link": "https://www.outlooktraveller.com/explore/culture/all-about-cao-dai-holy-see-a-temple-in-tay-ninh-vietnam",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Tay Ninh Holy See: Distinctive spiritual symbol of Cao Dai religion",
+   "publisher": "Vietnam Airlines",
+   "date": "n.d.",
+   "link": "https://www.vietnamairlines.com/dk/en/plan-book/travel/travel-guide/toa-thanh-tay-ninh",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Caodaism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Caodaism",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 12. Today we visit Japan, Korea and Vietnam, and meet four traditions: Shinto, Tenrikyo, Korean shamanic practice and Cao Dai."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Shinto and Other Religions of Japan, Korea and Vietnam"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you can describe Shinto and three more traditions, name key practices and festivals, and say where each is practised today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shinto; Tenrikyo (Japan); Korean shamanic practice (Korea); Cao Dai (Vietnam)"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "As always, we describe each tradition the way its own followers and scholars describe it. We do not rank them or say which is true."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A calm map of East Asia with Japan, the Korean peninsula and Vietnam softly lit one after another"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We start with Shinto. Its central idea is the kami, said KAH-mee."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "kami"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kami are spirits or sacred presences. One source describes them as the essence of spirit that can be present in all things."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The essence of spirit that can be present in all things."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is not just one. A saying about 'eight million kami' points to how many and how varied they are."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "8,000,000 (a saying meaning 'very many')"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In Shinto, what is a kami?",
+    "right": "A spirit or sacred presence that can be found in many things",
+    "wrong": [
+     "A priest who leads a weekly service",
+     "A holy book",
+     "A kind of shrine gate"
+    ],
+    "why": "Kami are the spirits or sacred presences that Shinto honours. They are not priests, books or gates."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kami are honoured at shrines, called jinja. A shrine is a place where a kami is enshrined or summoned."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "jinja (shrine)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Shrines usually have a gateway called a torii, a basin of water for purification, and an inner sanctuary holding a sacred symbol of the kami."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A red torii gate, a stone water basin with ladles, and beyond them the main sanctuary building"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do people worship? Shinto has no weekly service. People visit shrines when it suits them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No weekly service; visit when convenient; some visit on the 1st and 15th of the month; festivals several times a year"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One source also notes that Shinto has no single sacred text and no central doctrine. Practice matters more than a creed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Practice before creed"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement fits what we have learned about visiting a Shinto shrine?",
+    "right": "People visit when it suits them, and some go on the 1st and 15th of the month",
+    "wrong": [
+     "Everyone must attend every Sunday",
+     "Visitors may only go once in a lifetime",
+     "Only priests may enter the shrine grounds"
+    ],
+    "why": "Shinto has no weekly service. People visit when convenient, and some go on set days or at festivals."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next idea: purification. Shinto stresses a true heart and purification, both physical and spiritual, so people can approach the kami."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "harae (purification)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The everyday form is simple. Visitors wash their hands and rinse their mouth at the shrine's water basin before they pray."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A visitor ladling water over their hands at a shrine basin"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are bigger forms too. In misogi, people immerse themselves in water, which priests and serious practitioners do."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "misogi (water purification)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And twice a year, at the end of June and December, shrines hold the 'great purification' to purify everyone."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Everyday: rinse hands and mouth; Special: misogi, water immersion; Twice a year: great purification, end of June and December"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is the simple, everyday purification that visitors do at a shrine?",
+    "right": "Rinsing hands and mouth at the water basin",
+    "wrong": [
+     "Standing in a river for an hour",
+     "Walking backwards through the torii",
+     "Fasting for a week"
+    ],
+    "why": "Rinsing at the basin is the common everyday rite. Misogi immersion is a bigger practice, done mostly by priests and serious practitioners."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At the shrine hall, a common pattern is an offering, then two bows, two claps and one bow."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Offering; bow twice; clap twice; bow once"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now festivals. A festival is called a matsuri. They happen several times a year at shrines."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "matsuri (festival)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A grand festival begins with purification. Special rites may include a sacred palanquin procession, a lion dance, sumo or archery. Afterwards, people often drink the offered sake."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Purification; offerings; procession of a sacred palanquin; dance, sumo, archery; sharing the offered sake"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is one example. Gion Matsuri is the annual festival of Yasaka Shrine in Kyoto. It runs through July and is rooted in rites to pray for protection from epidemics."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Tall decorated floats moving slowly down a Kyoto street among crowds in summer clothes"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its float parades are held on 17 July and 24 July. Japan has designated the festival an Important Intangible Folk Cultural Property."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 to 31 July: festival month; 17 July: first float parade; 24 July: second float parade"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is a matsuri?",
+    "right": "A festival at a shrine, often with offerings and processions",
+    "wrong": [
+     "A gate at the front of a shrine",
+     "A water basin for washing hands",
+     "A small shrine kept at home"
+    ],
+    "why": "Matsuri are shrine festivals. Gion Matsuri in Kyoto is one famous example."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another occasion is New Year. The first shrine visit of the year is called hatsumode."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "hatsumode (first shrine visit of the year)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People go during the first three days of January, and some go late on New Year's Eve. The aim is to give thanks for the past year and pray for good health and luck."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Late 31 Dec to 3 Jan; give thanks; pray for health and luck"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Visitors also draw fortune slips, buy new good-luck charms, and return last year's charms. Big shrines in large cities can draw over a million visitors."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fortune slips (omikuji); good-luck charms (omamori); return old charms; festival food stalls"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Shinto sits beside Buddhism in Japan. For hatsumode people may visit a Shinto shrine or a Buddhist temple. On New Year's Eve, Buddhist temples ring their bells 108 times."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Shinto shrine: kami, purification, hatsumode | Buddhist temple: bells rung 108 times on 31 December"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "For hatsumode, where can people go?",
+    "right": "To a Shinto shrine or a Buddhist temple",
+    "wrong": [
+     "Only to a Shinto shrine",
+     "Only to a Buddhist temple",
+     "Only to Kyoto"
+    ],
+    "why": "Hatsumode can be done at a shrine or a temple, depending on a person's or family's tradition."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many shrines are there? Around 80,000 are registered as religious corporations in Japan, and many other shrines are honoured too."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 80,000 registered shrines in Japan"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we move to a religion that began in Japan in the 1800s: Tenrikyo, said ten-ree-KYOH."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Tenrikyo"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It comes from Nakayama Miki, a peasant woman from what is now Nara Prefecture. Followers call her Oyasama. Tenrikyo dates its teachings from 26 October 1838."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A quiet farmhouse in rural Nara with a few followers gathered outside, mid-1800s"
+   },
+   "cite": [
+    "s14",
+    "s16",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Followers call God 'God the Parent', and use the divine name Tenri-O-no-Mikoto in prayer."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "God the Parent"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They believe the world was created at a spot called the Jiba, in Tenri city, Nara. Salvation is expected to spread from there to the whole world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jiba: the place of creation"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One teaching is 'a thing lent, a thing borrowed'. Followers think of their minds as their own but their bodies as not fully theirs."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A thing lent, a thing borrowed"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tenrikyo also teaches about 'dust' on the heart, such as the Eight Mental Dusts. The goal is the Joyous Life, a life of kindness and charity."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dust on the heart; Eight Mental Dusts; kindness and charity; the Joyous Life"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "According to Tenrikyo tradition, where was the world created?",
+    "right": "At the Jiba, in Tenri, Nara",
+    "wrong": [
+     "At Mount Fuji",
+     "At Yasaka Shrine in Kyoto",
+     "At a mountain in Korea"
+    ],
+    "why": "Tenrikyo teaches that creation happened at the Jiba, which sits at the centre of its headquarters in Tenri."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its central ritual is the Service. The Kagura Service is performed around the Jiba. Tenrikyo holds a monthly service on the 26th that re-enacts the creation story."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kagura Service around the Jiba; monthly service on the 26th; ritual dance (Teodori)"
+   },
+   "cite": [
+    "s17",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many followers make pilgrimages to Tenri, called 'returning to the Jiba'. Hotels there greet guests with 'welcome home'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A sign reading 'welcome home' at a guesthouse in Tenri city"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In its early decades, followers faced persecution from local authorities and established religions. From 1908, the government treated Tenrikyo as a Shinto sect."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1870s: persecution from authorities | 1908: classed as a Shinto sect"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today there are over 2 million followers worldwide, about 1.75 million in Japan, and over 16,000 churches in Japan."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Over 2 million followers worldwide"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are more than twenty centres abroad, mostly in Southeast Asia and the Americas."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Tenri in Nara, Japan, highlighted, with smaller points across Southeast Asia and the Americas"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Roughly how many Tenrikyo followers are there worldwide?",
+    "right": "Over 2 million",
+    "wrong": [
+     "About 2,000",
+     "About 20,000",
+     "About 200 million"
+    ],
+    "why": "Estimates give over 2 million followers worldwide, with about 1.75 million of them in Japan."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now to Korea. Korean shamanic practice is called Muism or musok."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Korean shamanic practice (Muism)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its ritual specialists are called mudang, said MOO-dahng. Most are women. They act as go-betweens for people and the world of gods, ancestors and spirits."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "mudang: a go-between with the spirit world"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their main ritual is the gut, said 'goot'. The mudang offers food and drink to gods and spirits and entertains them with story, song and dance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "gut (ritual)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A gut is held for the welfare of individuals and society. In Seoul, one head shaman led a daylong gut for a woman whose father-in-law had a stroke."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A shaman in bright robes dancing before an altar of food offerings in a small temple in a Seoul park"
+   },
+   "cite": [
+    "s20",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a gut?",
+    "right": "A ritual led by a mudang, with offerings, song and dance for the spirits",
+    "wrong": [
+     "A weekly prayer meeting in a temple",
+     "A holy book of Korean shamanism",
+     "A type of shrine gate"
+    ],
+    "why": "A gut is the central ritual of Korean shamanic practice. It is held for the welfare of individuals and society."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How does someone become a mudang? Some are called through a spirit illness and initiated in a ritual called naerim-gut. Others come from hereditary families."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A calling through spirit illness, then an initiation rite | A hereditary line of ritual specialists"
+   },
+   "cite": [
+    "s21",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mudang have long been marginalised. Many Koreans do not like to say they use shamanic services. Yet shamans are now found online and in Korean films."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Long marginalised; services often kept private; now on social media and in films"
+   },
+   "cite": [
+    "s19",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One ritual is recognised by UNESCO. It is Jeju Chilmeoridang Yeongdeunggut, inscribed in 2009. It is held in the second lunar month to pray for calm seas and a good harvest and catch."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Divers on Jeju Island's coast making offerings to a sea goddess at dawn"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the Jeju Yeongdeunggut ritual held to pray for?",
+    "right": "Calm seas, a good harvest and a plentiful catch",
+    "wrong": [
+     "Rain in the middle of summer",
+     "Success in school exams",
+     "A safe journey to Japan"
+    ],
+    "why": "UNESCO describes this Jeju ritual as praying for calm seas, an abundant harvest and a plentiful sea catch."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nobody agrees on how many people practise. Estimates run from about 10,500 registered workers to 300,000 people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No agreed count"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our last tradition comes from southern Vietnam: Cao Dai, said 'cow DYE'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Cao Dai"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cao Dai was formally established in 1926 in Tay Ninh. The name means 'high tower', an old Taoist title for the supreme god."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cao Dai: 'high tower'"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians say Ngo Van Chieu, a French colonial official, received a message from the supreme deity at a séance. Followers say God himself founded the religion."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Historians: Ngo Van Chieu and a séance | Followers: God founded Cao Dai"
+   },
+   "cite": [
+    "s25",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its symbol is an eye in a circle, the Divine Eye. Its teachings include universalism and vegetarianism."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large painted eye inside a circle above a temple altar"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cao Dai draws on several traditions. Confucian ethics, Taoist practices, Buddhist ideas of karma and rebirth, and a Catholic-style hierarchy with a pope."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Confucianism: ethics | Taoism: occult practices | Buddhism: karma and rebirth | Catholicism: a hierarchy with a pope"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these did Cao Dai take from Roman Catholicism?",
+    "right": "A hierarchy that includes a pope",
+    "wrong": [
+     "The ideas of karma and rebirth",
+     "Ethical rules from Confucius",
+     "Taoist occult practices"
+    ],
+    "why": "Cao Dai took karma and rebirth from Buddhism, ethics from Confucianism and occult practices from Taoism. Its pope and cardinals follow the Catholic pattern."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its pantheon of saints includes the Buddha, Confucius, Jesus and Muhammad. It also includes figures like Joan of Arc, Victor Hugo and Sun Yat-sen."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Buddha; Confucius; Jesus; Muhammad; Joan of Arc; Victor Hugo; Sun Yat-sen"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Worshippers hold daily ceremonies at home and in temples. Priests' robe colours show their branch: red for Confucianism, blue for Taoism, yellow for Buddhism."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Daily ceremonies at home and in temples; red, blue and yellow robes"
+   },
+   "cite": [
+    "s28",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Holy See is in Tay Ninh, about 83 kilometres northwest of Ho Chi Minh City. A festival for the Supreme Being there gathers thousands of believers."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Tay Ninh marked northwest of Ho Chi Minh City in southern Vietnam"
+   },
+   "cite": [
+    "s31",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cao Dai grew fast, to half a million followers by 1930. After a period of restriction, it was granted legal recognition in 1997."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1926: formally established | By 1930: half a million followers | 1997: legal recognition"
+   },
+   "cite": [
+    "s25",
+    "s26",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cao Dai is the third largest religion in Vietnam. Estimates of followers there run from about 2 to 6 million. Centres also exist in Vietnamese communities abroad."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 2 to 6 million followers (estimates)"
+   },
+   "cite": [
+    "s29",
+    "s26"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Where is the Cao Dai Holy See?",
+    "right": "Tay Ninh, in southern Vietnam",
+    "wrong": [
+     "Seoul, in South Korea",
+     "Tenri, in Japan",
+     "Kyoto, in Japan"
+    ],
+    "why": "Tay Ninh in southern Vietnam is the headquarters of Cao Dai."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we gather up where each tradition is practised today."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Japan: Shinto shrines across the country, and Tenri in Nara. Korea: Seoul and Jeju Island. Vietnam: Tay Ninh."
+   },
+   "cite": [
+    "s4",
+    "s14",
+    "s23",
+    "s22",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One way to compare is to count places of worship. This chart shows three counts. They measure different kinds of building."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Places of worship (not numbers of believers)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4",
+    "s14",
+    "s28"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A bigger count does not mean a better or truer religion. It only shows how many buildings there are. Korean shamanic practice has no matching count."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Counts describe; they do not rank"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the key dates we met, side by side."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1838: Tenrikyo teachings begin | 1908: Tenrikyo classed as a Shinto sect | 1926: Cao Dai formally established | 1997: Cao Dai legally recognised | 2009: Jeju Yeongdeunggut on the UNESCO list"
+   },
+   "cite": [
+    "s16",
+    "s17",
+    "s25",
+    "s33",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: Shinto honours kami at shrines, with purification, matsuri and hatsumode. Tenrikyo gathers at the Jiba in Tenri. Korean shamans lead gut rituals. Cao Dai worships at Tay Ninh."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shinto: kami, shrines, matsuri, hatsumode; Tenrikyo: Jiba, Service; Muism: mudang, gut; Cao Dai: Divine Eye, Tay Ninh"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s6",
+    "s14",
+    "s19",
+    "s26"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pair is matched correctly?",
+    "right": "Tenrikyo and the Jiba in Tenri",
+    "wrong": [
+     "Cao Dai and the gut ritual",
+     "Shinto and the Divine Eye",
+     "Muism and the Kagura Service"
+    ],
+    "why": "The Jiba in Tenri is central to Tenrikyo. The gut belongs to Korean shamanic practice, the Divine Eye to Cao Dai, and the Kagura Service to Tenrikyo."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Next class we travel to Africa to meet traditional religions and the African diaspora."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Traditional Religions of Africa and the African Diaspora"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Places of worship: shrines, churches and temples (different kinds of building, not numbers of believers)",
+   "rows": [
+    {
+     "label": "Shinto shrines in Japan (about)",
+     "value": 80000,
+     "source": "s4"
+    },
+    {
+     "label": "Tenrikyo churches in Japan (over)",
+     "value": 16000,
+     "source": "s14"
+    },
+    {
+     "label": "Cao Dai temples in Vietnam (more than)",
+     "value": 1000,
+     "source": "s28"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Kami",
+   "links": [
+    "[[Shinto shrines]]",
+    "[[Purification]]",
+    "[[Animism and nature spirits]]"
+   ]
+  },
+  {
+   "topic": "Shinto shrines",
+   "links": [
+    "[[Kami]]",
+    "[[Torii]]",
+    "[[Matsuri]]"
+   ]
+  },
+  {
+   "topic": "Purification (harae and misogi)",
+   "links": [
+    "[[Shinto shrines]]",
+    "[[Rites of purification in other religions]]"
+   ]
+  },
+  {
+   "topic": "Matsuri and hatsumode",
+   "links": [
+    "[[Shinto shrines]]",
+    "[[Buddhism]]",
+    "[[Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  },
+  {
+   "topic": "Tenrikyo",
+   "links": [
+    "[[Japanese new religions]]",
+    "[[Pilgrimage]]"
+   ]
+  },
+  {
+   "topic": "Korean shamanic practice (Muism)",
+   "links": [
+    "[[Gut]]",
+    "[[Mudang]]",
+    "[[Indigenous and shamanic traditions]]"
+   ]
+  },
+  {
+   "topic": "Cao Dai",
+   "links": [
+    "[[Syncretism]]",
+    "[[Confucianism, Daoism and Folk Religion]]",
+    "[[Buddhism]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Shinto is a religion with no single sacred text and no central doctrine, centred on practice.",
+   "other_view": "Some writers point out that Japan's state treated shrine Shinto as 'not a religion' to give it special standing, until postwar legal changes ended that. So what counts as 'religion' or 'Shinto' has been argued over in Japan.",
+   "cite": [
+    "s3",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Tenrikyo is its own religion that began in Japan with Nakayama Miki.",
+   "other_view": "From 1908 the government classed it as a Shinto sect, and one research summary says it is closely tied to Shinto. Followers do not consider themselves Shinto.",
+   "cite": [
+    "s17",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Korean shamanic practice (Muism) is a religion in its own right.",
+   "other_view": "An anthropologist calls defining it 'really problematic'. Some scholars treat it as one part of Korean folk religion. Official categories class shamans as service practitioners, not religious practitioners.",
+   "cite": [
+    "s19",
+    "s23"
+   ]
+  },
+  {
+   "claim": "Cao Dai was founded in 1926 by Ngo Van Chieu and his associates.",
+   "other_view": "Followers say the High God himself founded Cao Dai. They honour Ngo Van Chieu but credit God with the founding.",
+   "cite": [
+    "s25",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Cao Dai has a certain number of followers in Vietnam.",
+   "other_view": "Estimates vary widely. Britannica reports about two million adherents worldwide in the early 1990s. A newer summary gives 2 to 6 million in Vietnam, and a travel guide gives 7 to 8 million. Counts depend on who is counted.",
+   "cite": [
+    "s25",
+    "s29"
+   ]
+  }
+ ]
+}

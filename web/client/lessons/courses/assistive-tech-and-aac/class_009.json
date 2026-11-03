@@ -1,0 +1,845 @@
+{
+ "about": {
+  "title": "Getting professional help and what to do next",
+  "course": "assistive-tech-and-aac",
+  "class_n": 9,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 16,
+  "length_note": "A little over the usual 15 minutes. This last class covers seven topics: the team, assessment, funding, communities, a reminder, questions to bring and a checklist. Funding needed three country examples (US, England, Australia), and I did not want to rush them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Augmentative and Alternative Communication (AAC) - Practice Portal",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/practice-portal/professional-issues/augmentative-and-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Augmentative and Alternative Communication (AAC): Working With a Speech-Language Pathologist",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/public/speech/disorders/aac/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Augmentative and Alternative Communication (AAC): Decision Making About AAC Systems and Interventions",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/njc/aac/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Who Does What?",
+   "publisher": "AAC Community (aaccommunity.net)",
+   "date": "n.d.",
+   "link": "https://aaccommunity.net/ccc/who-does-what/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Assistive Technology Professional (ATP) certification",
+   "publisher": "RESNA (Rehabilitation Engineering and Assistive Technology Society of North America)",
+   "date": "n.d.",
+   "link": "https://www.resna.org/Certification/Assistive-Technology-Professional-ATP",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Augmentative and Alternative Communication (AAC) - information for professionals (acquired brain injury)",
+   "publisher": "Queensland Health, Queensland Government",
+   "date": "n.d.",
+   "link": "https://www.health.qld.gov.au/__data/assets/pdf_file/0027/674172/aac_pro.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Augmentative and alternative communication (AAC) clinical guidance",
+   "publisher": "Royal College of Speech and Language Therapists (RCSLT)",
+   "date": "n.d.",
+   "link": "https://www.rcslt.org/members/clinical-guidance/augmentative-and-alternative-communication/augmentative-and-alternative-communication-guidance/?download-tabbed-content-as-pdf=1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "AAC Evaluation: A Parent's Step-by-Step Guide",
+   "publisher": "ProAACtive SLP (a speech-language pathology practice)",
+   "date": "n.d.",
+   "link": "https://www.proaactiveslp.com/post/aac-evaluation-parent-s-guide-post",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Guidance for commissioning AAC services and equipment",
+   "publisher": "NHS England",
+   "date": "2016",
+   "link": "https://www.england.nhs.uk/commissioning/wp-content/uploads/sites/12/2016/03/guid-comms-aac.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "AAC WEST referral",
+   "publisher": "North Bristol NHS Trust",
+   "date": "n.d.",
+   "link": "https://www.nbt.nhs.uk/bristol-centre-enablement/services-at-centre/aac-west/aac-west-referral",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "AAC for All",
+   "publisher": "Communication Matters",
+   "date": "n.d.",
+   "link": "https://www.communicationmatters.org.uk/aac-for-all/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Medicare Coverage Policy on Speech-Generating Devices",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/practice/reimbursement/medicare/sgd_policy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "LCD - Speech Generating Devices (SGD) (L33739)",
+   "publisher": "Centers for Medicare & Medicaid Services (CMS)",
+   "date": "n.d.",
+   "link": "https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=33739&DocID=L33739",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "NDIS and assistive technology",
+   "publisher": "NSW Health",
+   "date": "n.d.",
+   "link": "https://www.health.nsw.gov.au/disability/Pages/ndis-and-assistive-technology.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "AAC Under the NDIS",
+   "publisher": "Able Aide Health (a provider guide)",
+   "date": "n.d.",
+   "link": "https://ableaidehealth.com.au/resources/aac-augmentative-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "ISAAC Chapters",
+   "publisher": "United States Society for Augmentative and Alternative Communication (USSAAC)",
+   "date": "n.d.",
+   "link": "https://www.ussaac.org/isaac-chapters/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "About Us",
+   "publisher": "Communication Matters",
+   "date": "n.d.",
+   "link": "https://www.communicationmatters.org.uk/about-us/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Busting AAC myths for good",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/learn-aac/busting-aac-myths-for-good",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Referral criteria for specialised AAC services, Draft v0.4",
+   "publisher": "Ace Centre (hosting NHS England referral guidance)",
+   "date": "2015-08",
+   "link": "https://acecentre.org.uk/docs/NHS%20Eligibility%20guidance%20and%20decision%20chart.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "KM CAT for health professionals",
+   "publisher": "East Kent Hospitals University NHS Foundation Trust",
+   "date": "n.d.",
+   "link": "https://www.ekhuft.nhs.uk/health-professionals/services/kmcat-for-professionals/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "AAC Awareness Month - October Communication Event",
+   "publisher": "Disabled World (republishing ISAAC material)",
+   "date": "2018-09-27 (updated 2026-02-21)",
+   "link": "https://www.disabled-world.com/disability/awareness/isaac-aac.php",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. You now know the toolbox. Today we answer a simple question: who do you ask for help, and what happens next?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Getting professional help and what to do next"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first person to know is the speech-language pathologist, or SLP. In the UK the same job is called a speech and language therapist, or SLT."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Speech-language pathologist (SLP) / speech and language therapist (SLT)"
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "ASHA says SLPs play a central role in screening, assessment, diagnosis and treatment for people who need AAC. Here is what that means for you in practice."
+   },
+   "show": {
+    "kind": "list",
+    "text": "An SLP can: assess communication needs and find technology that fits; recommend tools for the person's physical needs; teach the person to use them; teach the people around them; work with teachers and therapists."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is a main job of an SLP in AAC?",
+    "right": "Assessing communication needs and finding tools that fit them",
+    "wrong": [
+     "Choosing a device without any trial",
+     "Working alone and keeping family out of it",
+     "Selling the device to the family"
+    ],
+    "why": "The SLP assesses needs and recommends tools. The SLP also teaches the person and the people around them, and works with other professionals."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many people worry they must be \"ready\" before asking for help. Current evidence says otherwise."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"no individual should go without communication\" (ASHA)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to ASHA, must someone show particular skills, such as pointing or reaching a certain age, before starting AAC?",
+    "right": "No. The evidence suggests there are no specific prerequisites.",
+    "wrong": [
+     "Yes, they must reach a minimum age",
+     "Yes, they must be able to point accurately",
+     "Yes, they must pass a language test first"
+    ],
+    "why": "ASHA says current evidence suggests no specific prerequisites for age, thinking, language or movement. Plans are built around the person."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "An SLP rarely works alone. Next, other team members. First, the occupational therapist, or OT."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Occupational therapist (OT): how the person accesses the system"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Queensland Health describes the OT as focusing on how a person accesses the system, and on their sensory skills. Access means how they reach the buttons, whether by touch, switch or eye."
+   },
+   "show": {
+    "kind": "list",
+    "text": "OT: access (hands, switches, eyes); sensory skills (seeing, hearing, touch)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the physiotherapist. Queensland Health says a physiotherapist may advise on seating and positioning. If you sit comfortably and steadily, using the device is easier."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Physiotherapist: seating and positioning"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A third group is assistive technology specialists. In North America, one credential is the Assistive Technology Professional, or ATP, from RESNA. It recognises skill in analysing needs, helping select technology and training people to use it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Assistive technology professional (ATP)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Job titles differ between countries, and the RCSLT even says \"or an equivalent term\" for some roles. If a title is unfamiliar, just ask what the person does."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "SLP: communication and language, and referring on. | OT: access and sensory needs. | Physio: seating and positioning. | AT specialist: selecting and training on technology."
+   },
+   "cite": [
+    "s7",
+    "s4",
+    "s6",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A person can communicate well but cannot reach the screen with their hand. Who helps look at how they access the device?",
+    "right": "An occupational therapist, working with the SLP",
+    "wrong": [
+     "Only the person's teacher",
+     "No one, because the device must simply be changed",
+     "Only the device supplier"
+    ],
+    "why": "OTs look at access and may suggest switches, mounts or keyguards. The SLP can refer to the OT and other team members."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "With the team in mind, let's look at what an AAC assessment can look like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What an AAC assessment and trial can look like"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Families often picture trying a few apps at a table. One practice says device trials may be part of it, but a good evaluation is much broader."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A parent and child sit at a table with a speech-language pathologist. Notebooks, a paper symbol board and a tablet lie on the table."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "ASHA describes a broad look at speech, language and overall communication. It includes family and caregivers. The assessment also checks vision, hearing and sensory access."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Looks at: speech, language and overall communication; vision, hearing and sensory access; family and team input"
+   },
+   "cite": [
+    "s1",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then comes a key idea called feature matching."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Feature matching"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The team first lists the person's strengths and needs. Then they fit that list to tools that have those features. For example, a touch screen, a head mouse and an eye-gaze camera are different ways to reach the same vocabulary."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. List strengths and needs. 2. Find tools with those features. 3. Trial the likeliest ones."
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does feature matching mean?",
+    "right": "Start with the person's strengths and needs, then find tools that have the features they need",
+    "wrong": [
+     "Pick the most expensive device available",
+     "Try every device on the market",
+     "Choose whichever device the evaluator knows best"
+    ],
+    "why": "Feature matching starts with the person. The needs list is fitted to tools that have those features."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Once there are good candidates, you get a trial, where you use the system for real."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trial period"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "ASHA lists providing trial periods and collecting data as part of the SLP's role. One practice notes that a longer trial lets the person and team use a system in real activities before recommendations are final."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Trial: more than one system may be tried; used in real activities; data collected"
+   },
+   "cite": [
+    "s1",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the trial, you get a written report. It sets out strengths, needs, systems considered, trial results and recommendations."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Report: strengths and needs; access needs; systems tried; results; recommendations"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Does an AAC assessment always end with a new device?",
+    "right": "No. Recommendations may be high-tech, low-tech, unaided communication, or a mix.",
+    "wrong": [
+     "Yes, always a speech-generating device",
+     "Yes, but only a paper board",
+     "No, it never recommends any tools"
+    ],
+    "why": "The practice's parent guide says recommendations rest on demonstrated needs, input and trial results, and may mix several kinds of support."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For adults after a brain injury, this fits. Queensland Health says an AAC system may be used permanently or temporarily, and that finding the right one is highly individualised."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "AAC may be permanent or temporary, and each plan is individual."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the practical question: who pays? The honest answer is that it varies by country and service."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Funding and access routes differ"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "ASHA says some AAC tools are covered by insurance and some are not, and an SLP can help you navigate the options."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask early: what is covered, and who applies?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example one is the US. Medicare covers speech-generating devices as durable medical equipment. Its local rules include an evaluation by an SLP."
+   },
+   "show": {
+    "kind": "list",
+    "text": "US Medicare: covered as durable medical equipment; SLP evaluation required; severe expressive speech impairment criteria apply"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example two is England. NHS England's guidance estimates that around 90% of people who use AAC need local services and about 10% need specialised ones."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Local and specialised AAC need, England (NHS estimate)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Specialised services in England are few. AAC WEST says it is one of 15. At AAC WEST, speech and language therapists complete the full referral form, and the service checks whether the person meets the criteria."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15 specialised AAC services in England"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If someone does not meet those criteria, AAC WEST says they might still benefit, but local services should fund it. A charity statement also raises concern that not every local NHS board is yet commissioning AAC. So ask your local team what applies."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Not specialised? Local services may fund. Provision can vary by area."
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example three is Australia. The NDIS funds supports that are reasonable and necessary for eligible participants. One provider's guide says high-tech AAC sits under Capital Supports after a speech pathologist's assessment and report."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Australia (NDIS): eligible participants; reasonable and necessary supports; SLP report for high-tech AAC; assessment and training funded as therapy"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rules and budgets change, so treat these as examples, not promises. Always check with your own provider, plan or funder."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check your own country and service"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement about AAC funding is best?",
+    "right": "It differs by country and service, and an SLP can help you work out the options.",
+    "wrong": [
+     "It works the same way everywhere",
+     "It is always free",
+     "It is never covered by anyone"
+    ],
+    "why": "The US, England and Australia examples all differ. ASHA notes that some tools are covered and some are not, and that an SLP can help."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Help also comes from people who live with AAC. Let's look at communities."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "AAC user communities and trusted organisations"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "ISAAC, the International Society for AAC, was founded in 1983. It has chapters in 17 countries or regions. Its website lists them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "ISAAC: founded 1983, 17 chapters"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the UK, the chapter is Communication Matters. It is a charity whose members include AAC users and their families, as well as professionals and researchers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Communication Matters: UK charity; ISAAC's UK chapter; members include AAC users and family members"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "ISAAC also launched AAC Awareness Month in October in 2007. It's a good time to find events and stories from people who use AAC."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "AAC Awareness Month: October, since 2007"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A tip for trusting a website: check who runs it, and whether AAC users have a voice there. Treat shop and sales pages as shops, not neutral advice."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Check: who runs it? Are AAC users involved? Are they selling something?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A reminder, and it matters. This course is general learning. It is not clinical advice, and it can't know your person."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "General learning, not clinical advice"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who should give advice about one particular person's AAC?",
+    "right": "An SLP and the team who can assess that person",
+    "wrong": [
+     "This course",
+     "A stranger in an online forum",
+     "Whichever app has the most downloads"
+    ],
+    "why": "ASHA says it is essential to consult an SLP to find the system that works best, and that SLPs provide personalised assessments, training and guidance."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what do you bring to a first appointment? Here are questions to write down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Who will be on the team? Which tools will we trial? How long is the trial? What will the report cover? What funding routes exist? Who will train the family and others?"
+   },
+   "cite": [
+    "s1",
+    "s8",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a checklist for families and caregivers. Keep whatever communication already works. Note what the person wants to say and where it breaks down. Write your questions down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Keep current communication going. 2. Note wants and trouble spots. 3. Write questions."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Short video clips can help. One NHS service in Kent publishes guidance on filming people who use AAC. Then ask about funding, and look for a community near you."
+   },
+   "show": {
+    "kind": "list",
+    "text": "4. Gather short video clips. 5. Ask about funding early. 6. Find a community."
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The most important step is the first one. Contact a speech-language pathologist or your local service."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First step: contact an SLP or your local AAC service"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the best first step?",
+    "right": "Contact an SLP or local service, and bring notes and questions",
+    "wrong": [
+     "Wait until you are completely sure AAC is needed",
+     "Buy the most expensive device straight away",
+     "Stop all current ways of communicating"
+    ],
+    "why": "There are no prerequisites to start, and the SLP can assess, arrange trials and explain funding. Existing ways of communicating should be kept going."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thank you for taking the whole course. Everyone has something to say, and the right tools and people help make it heard."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two people at a kitchen table. One taps a symbol board, the other waits, smiling, with a cup of tea."
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Share of the AAC population by service need, England (NHS England estimate)",
+   "rows": [
+    {
+     "label": "Local AAC services",
+     "value": 90,
+     "source": "s9"
+    },
+    {
+     "label": "Specialised AAC services",
+     "value": 10,
+     "source": "s9"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Choosing who to ask: SLP, OT, physiotherapist, AT specialist",
+   "links": [
+    "[[core and fringe vocabulary]]",
+    "[[how to support a communicator]]"
+   ]
+  },
+  {
+   "topic": "Feature matching and trials",
+   "links": [
+    "[[switches and scanning]]",
+    "[[eye gaze and other ways to access a device]]",
+    "[[symbol sets and how pages are laid out]]"
+   ]
+  },
+  {
+   "topic": "Funding differs by country",
+   "links": [
+    "[[the AAC toolbox]]"
+   ]
+  },
+  {
+   "topic": "AAC communities",
+   "links": [
+    "[[a short history of AAC]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "There are no prerequisite skills for starting AAC.",
+   "other_view": "ASHA and AssistiveWare both say current evidence points to no prerequisites. In practice, funders set conditions. For example, Medicare's local rule covers a speech-generating device when the person's medical condition causes a severe expressive speech impairment, and requires an SLP evaluation. So the clinical view and the paperwork can feel different. Ask your SLP how local rules apply.",
+   "cite": [
+    "s3",
+    "s18",
+    "s13",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Give people robust, comprehensive AAC as soon as a communication need is identified.",
+   "other_view": "AssistiveWare argues for this and warns against starting with minimal \"beginning\" systems. Some referral guidance takes a different approach. A 2015 draft of NHS England referral criteria said a referral to specialised services should show that low-tech AAC was considered, or explain why not. This is a draft from 2015, so check current criteria with your local service.",
+   "cite": [
+    "s18",
+    "s19"
+   ]
+  }
+ ]
+}

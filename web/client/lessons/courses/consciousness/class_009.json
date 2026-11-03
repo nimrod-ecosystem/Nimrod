@@ -1,0 +1,944 @@
+{
+ "about": {
+  "title": "Idealism and panpsychism",
+  "course": "consciousness",
+  "class_n": 9,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are five topics, and each idea gets its own short beat followed by a check question. I kept the dualism and neutral monism part brief, as the course notes asked."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Panpsychism",
+   "publisher": "Stanford Encyclopedia of Philosophy (current entry)",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/panpsychism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Panpsychism (Winter 2017 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2017",
+   "link": "https://plato.stanford.edu/archives/win2017/entries/panpsychism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Panpsychism (Winter 2012 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2012",
+   "link": "https://plato.stanford.edu/archives/win2012/entries/panpsychism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Panpsychism (Fall 2010 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2010",
+   "link": "https://plato.stanford.edu/archives/fall2010/entries/panpsychism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Panpsychism (Spring 2024 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2024",
+   "link": "https://plato.stanford.edu/archives/spr2024/entries/panpsychism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Idealism",
+   "publisher": "Stanford Encyclopedia of Philosophy (current entry)",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/idealism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Idealism (Fall 2022 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2022",
+   "link": "https://plato.stanford.edu/archives/fall2022/entries/idealism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "George Berkeley",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/berkeley/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "The Combination Problem for Panpsychism (David J. Chalmers)",
+   "publisher": "consc.net (author's site)",
+   "date": "n.d.",
+   "link": "https://consc.net/papers/combination.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Panpsychism's combination problem is a problem for everyone (Angela Mendelovici)",
+   "publisher": "PhilArchive",
+   "date": "n.d.",
+   "link": "https://philarchive.org/archive/MENPCP",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Neutral Monism",
+   "publisher": "Stanford Encyclopedia of Philosophy (current entry)",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/neutral-monism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Neutral Monism (Spring 2005 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2005",
+   "link": "https://plato.stanford.edu/archives/spr2005/entries/neutral-monism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Neutral Monism (Fall 2014 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2014",
+   "link": "https://plato.stanford.edu/archives/fall2014/entries/neutral-monism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Dualism",
+   "publisher": "Stanford Encyclopedia of Philosophy (current entry)",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/dualism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Dualism (Fall 2020 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2020",
+   "link": "https://plato.stanford.edu/archives/fall2020/entries/dualism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Dualism (Spring 2012 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2012",
+   "link": "https://plato.stanford.edu/archives/spr2012/entries/dualism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Russellian Monism",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/russellian-monism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Integrated Information Theory of Consciousness",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/integrated-information-theory-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The Integrated Information Theory of Consciousness (Hedda Hassel Mørch)",
+   "publisher": "Philosophy Now, issue 121",
+   "date": "n.d.",
+   "link": "https://philosophynow.org/issues/121/The_Integrated_Information_Theory_of_Consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "An Integration of Integrated Information Theory with Fundamental Physics",
+   "publisher": "arXiv (preprint 1407.4706)",
+   "date": "2014",
+   "link": "https://arxiv.org/pdf/1407.4706",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Is the Integrated Information Theory of Consciousness Compatible with Russellian Panpsychism? (Hedda Hassel Mørch)",
+   "publisher": "PhilArchive",
+   "date": "n.d.",
+   "link": "https://philarchive.org/archive/MRCITI-2",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Integrated information theory: the good, the bad and the misunderstood",
+   "publisher": "arXiv (preprint 2604.11482)",
+   "date": "2026",
+   "link": "https://arxiv.org/html/2604.11482v1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "In defense of scientifically and philosophically (not politically) critiquing neurobiological theories of consciousness",
+   "publisher": "APA Blog (American Philosophical Association)",
+   "date": "2023-11-14",
+   "link": "https://blog.apaonline.org/2023/11/14/in-defense-of-scientifically-and-philosophically-not-politically-critiquing-neurobiological-theories-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Kastrup's Analytic Idealism",
+   "publisher": "Landscape of Consciousness, Closer To Truth",
+   "date": "n.d.",
+   "link": "https://loc.closertotruth.com/theory/kastrup-s-analytic-idealism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Analytic Idealism",
+   "publisher": "OpenMindSpace (science)",
+   "date": "n.d.",
+   "link": "https://science.openmindspace.org/consciousness/analytic-idealism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Analytic idealism",
+   "publisher": "The Map of Consciousness",
+   "date": "n.d.",
+   "link": "https://mapadelaconsciencia.es/en/theory/analytic-idealism/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 9. So far, most of our theories have started with the brain and asked how it makes experience."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Idealism and panpsychism"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today we turn that question around. First, one word we will need: 'fundamental'. It means not built from anything simpler."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fundamental = not built from anything simpler"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Think of a wall built from bricks. Which one is the more fundamental, the brick or the wall?",
+    "right": "The brick, because the wall is built from bricks.",
+    "wrong": [
+     "The wall, because it is bigger.",
+     "Neither, they are the same thing.",
+     "The paint on the wall."
+    ],
+    "why": "Something fundamental is not built from anything simpler. The wall is made of bricks, so the brick is more fundamental in this example."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The usual picture says matter is fundamental and mind is built from it. The hard problem from class 2 asks how that building could work."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Usual picture: matter first. Mind is built from matter. Puzzle: how does that building work?"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two big ideas flip the picture. Idealism says mind is the only fundamental thing. Panpsychism says mind is fundamental too, and it is found everywhere."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Idealism: mind is all there is. | Panpsychism: mind is in everything."
+   },
+   "cite": [
+    "s7",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's take idealism first. In its core form it says that everything that exists is, in some way, mental."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Idealism: everything that exists is in some way mental"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The classic case is George Berkeley, a bishop who lived in the eighteenth century. He defended the view that reality is made only of minds and their ideas."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Berkeley: reality = minds + their ideas"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So for Berkeley a tree is a bundle of ideas: what you see, touch and smell. He argued there is no mind-free material stuff behind it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A tree = what you see + what you touch + what you smell. No extra mind-free stuff behind it."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "On Berkeley's view, what does reality consist of?",
+    "right": "Minds and their ideas",
+    "wrong": [
+     "Only atoms and empty space",
+     "Two separate worlds, one of mind and one of matter",
+     "Nothing at all"
+    ],
+    "why": "Berkeley defended idealism, the view that reality consists exclusively of minds and their ideas."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why believe it? One of Berkeley's claims was that an idea can be like nothing but an idea. So, he said, an idea cannot copy a mind-free material thing."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"An idea can be like nothing but an idea.\" (Berkeley, 1710)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He also thought the real choice was idealism or skepticism. Skepticism means doubting that we can truly know the world at all."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Berkeley: idealism or skepticism"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is a modern version too. Bernardo Kastrup says consciousness is fundamental, and everything else is a pattern within it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Analytic idealism (Kastrup)"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What does that solve? If mind is basic, nothing has to produce it. Supporters say this removes the hard problem and uses only what we know exists: experience."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mind is basic. Nothing has to make it. The hard problem has no gap to cross."
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which problem is idealism trying to get around?",
+    "right": "The hard problem: how matter could produce experience",
+    "wrong": [
+     "How to measure brain waves",
+     "How to build faster computers",
+     "Why animals sleep"
+    ],
+    "why": "Supporters argue that if consciousness is fundamental, nothing needs to produce it, so the hard problem does not arise."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the critics. Here is the oldest objection. If to be is to be perceived, a desk in an empty room would stop existing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Objection: what about things nobody is perceiving?"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Berkeley's answer was God. God is a mind that is always present, so God's perceiving keeps things in being."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Berkeley's reply: God perceives everything"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did Berkeley answer the puzzle of the desk in the empty room?",
+    "right": "God's perception keeps it in being.",
+    "wrong": [
+     "The desk's owner is always secretly watching it.",
+     "Desks do not need anything to keep them in being.",
+     "Desks are made of tiny atoms, so they stay."
+    ],
+    "why": "In the Three Dialogues Berkeley invoked God, an omnipresent being, to give physical objects a continuous existence."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics found problems even there. One is that God's ideas are eternal, but physical objects usually last only a while. Berkeley convinced few people in his own day."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Problem: God's ideas are eternal, objects are not. Few of Berkeley's contemporaries were persuaded."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Modern idealists face a different question. How does one basic mind show up as many separate minds, like yours and mine?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One mind, many minds?"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Kastrup's answer is dissociation. Critics say the mechanism is never explained, and that the clinical analogy may not stretch to the whole cosmos."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Reply: dissociation. Critics: where is the mechanism? Does the analogy stretch that far?"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second flip is panpsychism. It says mentality is fundamental and found throughout the natural world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Panpsychism: mind is fundamental and everywhere"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The word literally means 'everything has a mind'. But the versions taken seriously today are about experience, not thinking."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Experience, not thought"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Does serious modern panpsychism say that electrons think about their day?",
+    "right": "No. It says basic things may have simple experience, not thought.",
+    "wrong": [
+     "Yes, electrons reason like small people.",
+     "Yes, but only when they are inside brains.",
+     "It says nothing about experience at all."
+    ],
+    "why": "Contemporary analytic philosophy takes the experience-based form seriously. That form says experience is fundamental and everywhere, not thought."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture the simplest experience you can, far simpler than any feeling you know. Panpsychists say something like that might belong to the basic building blocks of the world."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A very faint glow, much simpler than any human feeling, sitting inside a tiny particle"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Argument one is called anti-emergence. Ordinary physical ideas help explain things like liquidity. Experience seems a different kind of thing, so maybe it is not built at all."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Liquidity: explained by physical ideas. Experience: no such explanation. So maybe experience is basic."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Argument two is the intrinsic nature argument. Physics describes structure and change, but it says nothing about what underlies that structure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Physics describes structure, not what underlies it"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The astronomer Eddington thought it silly to assume matter's nature clashes with mind, and then wonder where mind comes from. Our own experience may be the one clue we have."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A road map shows how places connect. It does not show what is inside the buildings. Experience may be the clue to what is inside."
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the heart of the intrinsic nature argument?",
+    "right": "Physics shows what matter does, not what it is, and experience is the only inner nature we know.",
+    "wrong": [
+     "Physics has proved that rocks feel pain.",
+     "Brains are made of a special kind of matter.",
+     "Experience cannot be real."
+    ],
+    "why": "Panpsychists argue that physics leaves matter's underlying nature open. They add that the only intrinsic nature we are familiar with is consciousness itself."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Argument three is simplicity. Goff argues that the simplest idea is that matter outside brains is the same kind of stuff as matter inside brains, with an experience side."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Simplicity argument (Goff)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the link to class 6. Integrated information theory ties consciousness to a quantity called phi, and it implies a kind of panpsychism."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "IIT: consciousness linked to integrated information (phi)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But IIT does not give experience to everything. Only systems that are local peaks of integrated information count, though even a very simple one may have a tiny amount."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Not everything is conscious. Only local peaks of integrated information. A very simple system may have a very little."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One philosopher puts it carefully. IIT strongly suggests panpsychism, but does not strictly require it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "IIT suggests panpsychism, but does not strictly entail it"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How does IIT relate to panpsychism?",
+    "right": "It gives some consciousness to any system with a local peak of integrated information, even simple ones, but not to everything.",
+    "wrong": [
+     "It says every object is equally conscious.",
+     "It says only humans are conscious.",
+     "It has nothing to do with panpsychism."
+    ],
+    "why": "IIT attributes consciousness only to local maxima of integrated information. That means some simple systems have a minimal degree, but it is not indiscriminate."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Critics did not like this. Searle said it would spread consciousness 'thinly like a jam across the universe'. A 2023 open letter signed by 124 researchers called IIT pseudoscience."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Searle: absurd. 2023 open letter, 124 researchers: 'pseudoscience'. Defenders disagree. See 'the other side'."
+   },
+   "cite": [
+    "s20",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the hardest objection to panpsychism. It is called the combination problem."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The combination problem"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It asks how tiny experiences could combine into a bigger one, like yours. Even supporters say it is the hardest problem, and that no wholly adequate solution exists yet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Many tiny experiences, one big experience. How? Even supporters say there is no wholly adequate answer yet."
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of ten people, each holding one word of a sentence in mind. Nobody ends up with a mind that reads the whole sentence. So why would tiny experiences add up to one big one?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Ten people in a row, each holding one word card. No one holds the whole sentence."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Chalmers splits the problem in three. How do tiny experiencers merge into one? How do simple qualities become rich ones? How does small-scale structure become large-scale structure?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Subjects: how do micro-subjects become one macro-subject? 2. Qualities: how do simple qualities become rich ones? 3. Structure: how do small structures become big ones?"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which question asks how many tiny experiencers become one experiencer?",
+    "right": "The subject combination problem",
+    "wrong": [
+     "The quality combination problem",
+     "The structure combination problem",
+     "The hard problem of sleep"
+    ],
+    "why": "The subject combination problem asks how microsubjects combine to yield macrosubjects. The other two are about qualities and structure."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some philosophers reply that this puzzle is not special to panpsychism. Everyone must explain how our experiences hang together as one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reply: a problem for everyone"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another objection is that panpsychism has no empirical test that could decisively confirm or refute it. Supporters answer that opponents should offer a better account of what matter is like inside."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Objection: no decisive empirical test. Reply: where is the better account of what matter is like inside?"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Panpsychism avoids 'how does experience come from non-experience?' What new problem does it meet?",
+    "right": "How tiny experiences combine into a bigger one",
+    "wrong": [
+     "How to measure phi in a photodiode",
+     "Whether Berkeley was a bishop",
+     "How atoms bond"
+    ],
+    "why": "Panpsychism puts experience in from the start. That makes the combination problem its hardest challenge."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two other options, briefly. Dualism says mind and body are radically different kinds of thing. Descartes was a substance dualist."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dualism: mind and body are different kinds of thing"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dualism is one of three classic answers to the mind-body problem, with materialism and idealism. Its most influential objection is the problem of interaction: how do the two sides affect each other?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Three classic answers: materialism, idealism, dualism. Biggest objection to dualism: interaction."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Neutral monism says reality is all one kind. But that kind is neither mental nor physical. Mach, James and Russell held versions of it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Neutral monism: one kind of thing, neither mental nor physical"
+   },
+   "cite": [
+    "s12",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The usual objection is that the neutral stuff is secretly mental. Neutral monism also differs from panpsychism, which does not reduce mind and matter to something neutral."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Objection: 'neutral' may really be mental. Difference: panpsychism does not say basic reality is neutral."
+   },
+   "cite": [
+    "s13",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which view says that basic reality is neither mental nor physical?",
+    "right": "Neutral monism",
+    "wrong": [
+     "Idealism",
+     "Substance dualism",
+     "Panpsychism"
+    ],
+    "why": "Neutral monism holds that ultimate reality is all of one kind, and that kind is neither mental nor physical."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put the two main ideas side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Idealism: only mind is fundamental; solves the hard problem; faces unperceived things and 'how one mind becomes many'. | Panpsychism: mind and matter both fundamental; solves emergence; faces the combination problem."
+   },
+   "cite": [
+    "s7",
+    "s25",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nobody here has proved anything, and thoughtful people disagree. The aim is to see what each view tries to fix and what it costs. Next class we ask about animal minds."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Animal minds"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Idealism",
+   "links": [
+    "[[The hard problem]]",
+    "[[Berkeley]]",
+    "[[Analytic idealism]]"
+   ]
+  },
+  {
+   "topic": "Panpsychism",
+   "links": [
+    "[[Integrated information theory]]",
+    "[[Combination problem]]",
+    "[[Russellian monism]]"
+   ]
+  },
+  {
+   "topic": "Combination problem",
+   "links": [
+    "[[Panpsychism]]",
+    "[[Hard problem]]"
+   ]
+  },
+  {
+   "topic": "Dualism and neutral monism",
+   "links": [
+    "[[Mind-body problem]]",
+    "[[Panpsychism]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Idealism gets around the hard problem by making mind fundamental.",
+   "other_view": "Berkeley's defenders say his system is strong and flexible enough to answer most objections. Even so, it persuaded few of his contemporaries and strikes many people as counter-intuitive. Modern idealism must explain how one mind becomes many, and critics say the dissociation story lacks a mechanism. Materialists call it a return to premodern thinking, while dualists say it dodges the interaction problem by being a convenient monism.",
+   "cite": [
+    "s8",
+    "s25",
+    "s26"
+   ]
+  },
+  {
+   "claim": "Panpsychism is a serious answer to the problem of consciousness.",
+   "other_view": "Critics say there is no empirical test that could decisively confirm or refute it. Panpsychists agree the combination problem is unsolved. Defenders reply that a similar combination puzzle faces every theory, and that opponents should explain what matter's inner nature is.",
+   "cite": [
+    "s3",
+    "s1",
+    "s10",
+    "s2"
+   ]
+  },
+  {
+   "claim": "IIT's link to panpsychism is a strength, not a flaw.",
+   "other_view": "Searle called the implication absurd, and a 2023 open letter by 124 researchers labelled IIT pseudoscience. Koch and Tononi replied that only local maxima of integrated information are conscious, so consciousness is not spread everywhere. A recent preprint argues that the panpsychism IIT implies is compatible with empirical science.",
+   "cite": [
+    "s20",
+    "s23",
+    "s22"
+   ]
+  },
+  {
+   "claim": "Dualism is undermined by the problem of interaction.",
+   "other_view": "The interaction problem is the most influential objection to dualism. Interactionists answer that the human body is not a causally isolated system, so the energy-conservation worry does not apply. Proponents of hylomorphic dualism say their version fares better on interaction, though it may not meet the claim that the physical world is causally closed.",
+   "cite": [
+    "s14",
+    "s16"
+   ]
+  }
+ ]
+}

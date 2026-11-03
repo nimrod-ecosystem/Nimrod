@@ -1,0 +1,862 @@
+{
+ "about": {
+  "title": "Strange loops and the self",
+  "course": "consciousness",
+  "class_n": 8,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. This class covers five linked ideas, and each gets a few short steps and a check question. I left out Gödel's proof in detail so the pace stays calm. If you need more time, stop after any question and come back later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "I Am a Strange Loop (book review)",
+   "publisher": "Physics Today (American Institute of Physics)",
+   "date": "n.d.",
+   "link": "https://physicstoday.aip.org/reviews/i-am-a-strange-loop",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Hofstadter's Strange Loops - Landscape of Consciousness",
+   "publisher": "Closer To Truth",
+   "date": "n.d.",
+   "link": "https://loc.closertotruth.com/theory/hofstadter-s-strange-loops",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Review of Hofstadter, Douglas R.: I Am a Strange Loop",
+   "publisher": "Journal of Artificial Societies and Social Simulation (JASSS)",
+   "date": "n.d.",
+   "link": "https://www.jasss.org/10/3/reviews/doran.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "I Am A Strange Loop by Douglas Hofstadter (review, issue 78)",
+   "publisher": "Philosophy Now",
+   "date": "n.d.",
+   "link": "https://philosophynow.org/issues/78/I_Am_A_Strange_Loop_by_Douglas_Hofstadter",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Strange loop",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Strange_loop",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Gödel, Escher, Bach",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/G%C3%B6del,_Escher,_Bach",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Higher-Order Theories of Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/consciousness-higher/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Higher-Order Theories of Consciousness",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/higher-order-theories-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "What is Illusionism?",
+   "publisher": "Keith Frankish (author's eprint)",
+   "date": "n.d.",
+   "link": "https://keithfrankish.github.io/articles/Frankish_What%20is%20illusionism_eprint.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Dennett's Illusionism - Landscape of Consciousness",
+   "publisher": "Closer To Truth",
+   "date": "n.d.",
+   "link": "https://loc.closertotruth.com/theory/dennett-s-illusionism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Illusionism (philosophy of mind)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Illusionism_(philosophy_of_mind)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Illusionism as a Theory of Consciousness (Keith Frankish)",
+   "publisher": "Semantic Scholar",
+   "date": "n.d.",
+   "link": "https://www.semanticscholar.org/paper/Illusionism-as-a-Theory-of-Consciousness-Frankish/b722f31e2faeb5b28a71d2983ed8c0acce8453e7",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Going loopy over consciousness (book review)",
+   "publisher": "Physics World",
+   "date": "n.d.",
+   "link": "https://physicsworld.com/a/going-loopy-over-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Gödel, Hofstadter, & the Self: A Critical Review of Douglas Hofstadter's I Am a Strange Loop",
+   "publisher": "Numéro Cinq Magazine (Adam Westra)",
+   "date": "2010-07-01",
+   "link": "https://numerocinqmagazine.com/2010/07/01/godel-hofstadter-the-self-an-essay-by-adam-westra/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Hofstadter's Loop",
+   "publisher": "ongoing by Tim Bray",
+   "date": "2007-04-04",
+   "link": "https://www.tbray.org/ongoing/When/200x/2007/04/04/Hofstadter",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Marvelling at the mystery of consciousness through a scientific lens (Anil Seth)",
+   "publisher": "Nature",
+   "date": "n.d.",
+   "link": "https://www.nature.com/articles/d41586-023-00545-9",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Seth's 'Beast Machine' Theory - Landscape of Consciousness",
+   "publisher": "Closer To Truth",
+   "date": "n.d.",
+   "link": "https://loc.closertotruth.com/theory/seth-s-beast-machine-theory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "A Reflection on The Loopy Self (book review)",
+   "publisher": "The Harvard Crimson",
+   "date": "2007-04-27",
+   "link": "https://www.thecrimson.com/article/2007/4/27/a-reflection-on-the-loopy-self/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Gödel's Incompleteness Theorems (Panu Raatikainen)",
+   "publisher": "Stanford Encyclopedia of Philosophy, Winter 2013 edition (via PhilPapers)",
+   "date": "2013",
+   "link": "https://philpapers.org/rec/RAAGIT",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Kurt Gödel's Incompleteness Theorems",
+   "publisher": "1000-Word Philosophy: An Introductory Anthology",
+   "date": "2024-06-01",
+   "link": "https://1000wordphilosophy.com/2024/06/01/godel/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Consciousness and Intentionality: Consciousness of Self",
+   "publisher": "Stanford Encyclopedia of Philosophy (Winter 2025 edition)",
+   "date": "2025",
+   "link": "https://plato.stanford.edu/archives/win2025/entries/consciousness-intentionality/consciousness-self.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Philosophy of Mathematics",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/philosophy-mathematics/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Phenomenological Approaches to Self-Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/self-consciousness-phenomenological/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 8. Last time we met the brain as a prediction machine. Today we ask about the 'I' that seems to sit behind your eyes."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Strange loops and the self"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what is the 'I'? Is it a tiny person inside your head, or something else? One thinker, Douglas Hofstadter, says it is a pattern he calls a strange loop."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The 'I'"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, plain loops. A loop feeds its own output back in. Two ordinary examples are a noisy feedback squeal at a concert and an endless corridor of TV screens."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Loop = output fed back in"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hofstadter says the self is not a loop of that ordinary kind. It is a strange loop. That means a paradoxical feedback loop that crosses between levels."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Strange loop = a paradoxical, level-crossing feedback loop"
+   },
+   "cite": [
+    "s5",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a picture of it. In Escher's 'Drawing Hands', each hand draws the other hand. Follow the chain and you end up back at the start."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Escher's lithograph 'Drawing Hands': two hands, each one drawing the other into existence"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In 'Drawing Hands', what makes the picture loop-like?",
+    "right": "Each hand draws the other, so following the chain brings you back to where you started.",
+    "wrong": [
+     "It shows one very long staircase with no top.",
+     "It shows a brain with a camera inside it.",
+     "It has no hands in it at all."
+    ],
+    "why": "A strange loop is a chain that moves across levels (the drawn hand and the drawing hand) and then returns to its own start."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hofstadter's idea has three dates. 1931: Gödel's mathematics. 1979: Hofstadter's book Gödel, Escher, Bach. 2007: I Am a Strange Loop, which applies the idea to the self."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1931 Gödel proves incompleteness | 1979 Gödel, Escher, Bach | 2007 I Am a Strange Loop"
+   },
+   "cite": [
+    "s22",
+    "s6",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Gödel's maths, kept simple. He showed that in a consistent system with enough arithmetic, some statements can be neither proved nor disproved inside it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gödel: some statements can't be settled inside the system"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The key trick is self-reference. Gödel's statement talks about its own provability, a bit like the liar sentence talks about its own truth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Self-reference: a statement about itself"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hofstadter tells a playful version of this. A record player is destroyed by a record titled 'I Cannot Be Played on Record Player X'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A phonograph labelled 'Record Player X' shaking apart as it plays a record with a label that names the player"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What made Gödel's key statement self-referential?",
+    "right": "It said something about itself, namely whether it can be proved.",
+    "wrong": [
+     "It listed every number in order.",
+     "It copied a sentence from another book.",
+     "It proved all of mathematics at once."
+    ],
+    "why": "The statement points back at its own provability. That pointing-back is the self-reference at the heart of the loop."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is Hofstadter's leap. The brain's symbols can also point back at the brain itself. The most central of them is the symbol for 'I'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'I' = the brain's most central symbol"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what is the 'I'? On this view it is not a substance or a tiny person. It is a dynamic pattern that keeps itself going."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A pattern, not a thing"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of temperature. One molecule has no temperature, yet a room does. A reviewer notes that Hofstadter treats the looping 'I' as a collective effect like temperature."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A thermometer in a room, beside a single molecule labelled 'no temperature of its own'"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does Hofstadter compare the 'I' to temperature?",
+    "right": "Both exist as a pattern of many small parts, not in any single part.",
+    "wrong": [
+     "Both are measured in degrees.",
+     "Both sit inside one special neuron.",
+     "Both are made by a soul."
+    ],
+    "why": "Temperature and the 'I' are both collective effects. They show up at the high level and disappear when you look at one tiny part."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How does the brain build it? One reviewer sums up the idea like this. The 'I' comes from the brain's ability to monitor itself, plus its inability to process a fully detailed description of itself."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Brain can monitor itself | Brain cannot hold a full detailed picture of itself"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In this summary, what two things together give rise to the 'I'?",
+    "right": "The brain's ability to monitor itself, and its inability to process a fully detailed description of itself.",
+    "wrong": [
+     "Good memory and a loud voice.",
+     "One special neuron and a soul.",
+     "The eyes and the ears working together."
+    ],
+    "why": "The summary says the 'I' comes from self-monitoring combined with the limit on how detailed the brain's picture of itself can be."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the best case for the idea. We feel like one steady 'I' in charge. If the brain keeps one central 'I' symbol, then feeling like one 'I' is just what we would expect."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Best case: why the self feels real and unified"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "On this view, why does the self feel like one thing?",
+    "right": "Because the brain keeps one central 'I' symbol, so there seems to be one 'I'.",
+    "wrong": [
+     "Because a tiny person lives in one part of the brain.",
+     "Because the self is a separate non-physical substance.",
+     "Because the self never changes."
+    ],
+    "why": "The loop view says a single central symbol, built by the brain, is what makes one 'I' seem to be in charge."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The pattern is not powerless either. Hofstadter treats the self as a looping pattern with real causal power. That is part of why it can feel so solid."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A pattern that still does things"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hofstadter puts the feeling in a memorable line. A mirage is not nothing. It is something real that is not what it seems."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "We are 'self-perceiving, self-inventing, locked-in mirages' - Douglas Hofstadter"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This links to illusionism. Illusionists say we are wrong to think experience has special 'phenomenal' properties. They say that belief comes from an introspective illusion."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Illusionism"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dennett, the best-known illusionist, calls consciousness a 'user-illusion'. It is made by the brain's unconscious processes, a bit like icons on a computer screen."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A computer desktop where the icons are the 'user-illusion' and the circuits behind them are hidden"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful here. Illusionists do not say you have no experiences. They say consciousness is not what it seems."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not 'no experience' but 'not what it seems'"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do illusionists claim?",
+    "right": "That experience is real, but it lacks the special 'phenomenal' properties we think it has.",
+    "wrong": [
+     "That you have no experiences at all.",
+     "That brains do not exist.",
+     "That only the self is real."
+    ],
+    "why": "Illusionists say the brain makes it seem that experience has special properties. They are not saying that experience itself is missing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where the loop and illusionism meet: both say the feeling is built by the brain. Where they differ: Hofstadter focuses on the 'I', which he treats as the same as consciousness, and he offers a loop as the mechanism."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MEET: the felt 'I' is brain-made | DIFFER: illusionism targets 'phenomenal' properties; the loop explains the 'I'"
+   },
+   "cite": [
+    "s9",
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dennett's own phrase for the self is a 'center of narrative gravity'. In that view the self is a story the brain tells, not a thing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The self as a story"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, higher-order theories from class 5. They say a mental state is conscious when another state in you is directed at it. That is a mind that is about itself, which already sounds loop-like."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Higher-order: a state about a state"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One version says the state represents itself, as part of a single state. That is the closest to a loop. The two are still different theories."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Higher-order: what makes one state conscious? | Loop: where does the 'I' come from?"
+   },
+   "cite": [
+    "s8",
+    "s7",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What do higher-order theories say makes a mental state conscious?",
+    "right": "A higher-order representation directed at that state.",
+    "wrong": [
+     "Being stored in long-term memory.",
+     "Being very strong or loud.",
+     "Being linked to a physical body."
+    ],
+    "why": "Higher-order theories explain the difference between conscious and unconscious states by a higher-order representation of the state."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now predictive processing from class 7. Anil Seth says the self is itself a kind of perception, one more controlled hallucination."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The self as a prediction"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The meeting point: both views call the self brain-made. The difference: Seth ties the self to the living body, because prediction evolved to regulate the body. Hofstadter says the pattern matters, not the physical stuff."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Seth: self rooted in the living body | Hofstadter: the pattern is what matters"
+   },
+   "cite": [
+    "s17",
+    "s4",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is a real difference between Hofstadter and Seth?",
+    "right": "Hofstadter says the pattern matters more than the physical material, while Seth ties the self to the living body.",
+    "wrong": [
+     "Seth says the self is a non-physical soul.",
+     "Hofstadter says the self is a separate substance.",
+     "They disagree about whether brains exist."
+    ],
+    "why": "Hofstadter stresses the symbolic pattern over its substrate. Seth stresses that prediction serves to keep a living body going."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What about global workspace and integrated information from classes 4 and 6? One reviewer says Hofstadter relates his ideas little to mainstream philosophy of mind. We will bring all the views together in class 12."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Comparing all the views: class 12"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the critics. First question: does a loop explain feeling? Hofstadter himself admits that troubling issues remain about how the loop gives us our experience of 'I'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Critics: does a loop explain feeling?"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Illusionism has the same worry. Even if the feeling is an illusion, why does it seem the way it does? Frankish calls that the illusion problem."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The illusion problem"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the 'illusion problem'?",
+    "right": "Explaining why experiences seem to have special phenomenal properties.",
+    "wrong": [
+     "Explaining why optical illusions fool the eye.",
+     "Proving that the brain does not exist.",
+     "Explaining how magicians perform tricks."
+    ],
+    "why": "Even if the feeling is an illusion, we still need to explain why the brain produces it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "John Searle pressed this against Dennett. He said that where consciousness is concerned, the appearance is the reality. The hard problem from class 2 is close by."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Searle: the appearance is the reality"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second question: is the idea clear enough to test? A reviewer in Physics Today notes the book has no laboratory experiment and does not show how the brain keeps the loop going."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Critics: can it be tested?"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Others doubt the maths comparison. One critic says the Gödel analogy is at its weakest at the key point. Another calls it forced."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Is the Gödel analogy too loose?"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is a criticism about testing the loop idea?",
+    "right": "The book gives no experiment and does not show how the brain keeps the loop going.",
+    "wrong": [
+     "It has too many laboratory experiments.",
+     "It has been proven false by one experiment.",
+     "It says brains cannot hold any symbols."
+    ],
+    "why": "The reviewer's concern is that the claim is hard to check, because no experiment or brain mechanism is offered."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To be fair, reviewers are split. One in Physics World found the loop half convincing and the 'we are simply mistaken' half less so. Another reviewer thought Hofstadter was onto something."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Loop half: found convincing | 'We are mistaken' half: found unconvincing"
+   },
+   "cite": [
+    "s13",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. A strange loop is a level-crossing, self-referring loop. The 'I' is a pattern the brain builds. It meets illusionism, higher-order and predictive ideas. Critics ask if it explains feeling and if it can be tested."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Strange loop: self-reference across levels | 2. The 'I' is a pattern the brain builds | 3. Meets illusionism, higher-order and predictive views | 4. Critics: does it explain feeling? Can it be tested?"
+   },
+   "cite": [
+    "s5",
+    "s2",
+    "s9",
+    "s7",
+    "s16",
+    "s3",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A last thought. A pattern is not less yours for being a pattern. Scientists are still arguing about this, so you do not need to settle it today. Here is one last question."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hofstadter's 'I'"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "In one sentence, what is Hofstadter's 'I'?",
+    "right": "A self-referential pattern built by the brain's symbols, not a separate thing.",
+    "wrong": [
+     "A tiny person who watches the brain's screen.",
+     "A non-physical soul that enters the body.",
+     "A single neuron that never changes."
+    ],
+    "why": "For Hofstadter the 'I' is a strange loop: a self-referring pattern of symbols in the brain, not a separate substance."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Strange loop",
+   "links": [
+    "[[Self-reference]]",
+    "[[Gödel's incompleteness theorems]]",
+    "[[Escher's Drawing Hands]]"
+   ]
+  },
+  {
+   "topic": "The self as a pattern",
+   "links": [
+    "[[Narrative self]]",
+    "[[Illusionism]]",
+    "[[Emergence]]"
+   ]
+  },
+  {
+   "topic": "How the loop view compares with other theories",
+   "links": [
+    "[[Higher-order theories]]",
+    "[[Predictive processing and the controlled hallucination]]",
+    "[[The hard problem]]",
+    "[[Putting it together: where do we stand?]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The 'I' is a strange loop, a self-referring pattern the brain builds.",
+   "other_view": "One physicist-reviewer says the book offers no experiment and does not show how the brain sustains the loop. Two other critics doubt that the Gödel comparison works. Others, such as one Philosophy Now reviewer, think Hofstadter is onto something.",
+   "cite": [
+    "s1",
+    "s14",
+    "s15",
+    "s4"
+   ]
+  },
+  {
+   "claim": "The sense of a unified self is an illusion or a story.",
+   "other_view": "John Searle argues that for consciousness the appearance is the reality. Some philosophers say a purely narrative view of the self leaves out our basic experience of ourselves as agents. Phenomenologists say a basic pre-reflective self-awareness is present in all experience and does not depend on telling a story.",
+   "cite": [
+    "s11",
+    "s21",
+    "s23"
+   ]
+  },
+  {
+   "claim": "Hofstadter's loop treats the pattern as what matters, not the material the brain is made of.",
+   "other_view": "Seth's beast machine view ties the self to the living body, and holds that prediction evolved to regulate the body's internal state.",
+   "cite": [
+    "s17",
+    "s1"
+   ]
+  }
+ ]
+}

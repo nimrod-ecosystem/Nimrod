@@ -1,0 +1,1020 @@
+{
+ "about": {
+  "title": "Real conspiracies and unproven ones: how people weigh evidence",
+  "course": "what-if",
+  "class_n": 9,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. Four short case studies, two thinking habits, one thought experiment and a five-step checklist fit in that time with pauses for the questions. Each section stands alone, so you can stop and resume between sections."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "On the Viability of Conspiratorial Beliefs",
+   "publisher": "PLOS ONE (via PubMed Central), D. R. Grimes",
+   "date": "2016-01-26",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4728076/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Equation shows that large-scale conspiracies would quickly reveal themselves",
+   "publisher": "Phys.org (report on the Grimes study)",
+   "date": "2016-01",
+   "link": "https://phys.org/news/2016-01-equation-large-scale-conspiracies-quickly-reveal.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "On the Viability of Conspiratorial Beliefs (abstract and background)",
+   "publisher": "Semantic Scholar record of the PLOS ONE paper",
+   "date": "2016-01-26",
+   "link": "https://www.semanticscholar.org/paper/On-the-Viability-of-Conspiratorial-Beliefs-Grimes/e1d5a7d472529164a48fe8bb1b9a822b1d5563f7",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Federal Conspiracy Law",
+   "publisher": "Federal Law Enforcement Training Centers (FLETC)",
+   "date": "undated",
+   "link": "https://www.fletc.gov/audio/federal-conspiracy-law-mp3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "American Originals: Resignation of President Richard M. Nixon",
+   "publisher": "U.S. National Archives and Records Administration",
+   "date": "undated",
+   "link": "https://www.archives.gov/exhibits/american_originals/contemp.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Watergate Files",
+   "publisher": "Gerald R. Ford Presidential Library and Museum",
+   "date": "undated",
+   "link": "https://www.fordlibrarymuseum.gov/exhibits/watergate-files",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Existence of Watergate tapes is revealed in live testimony",
+   "publisher": "HISTORY",
+   "date": "undated",
+   "link": "https://www.history.com/this-day-in-history/july-16/watergate-tapes-revealed-in-live-testimony",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Listening to Nixon: An Archivist's Reflections on His Work with the White House Tapes",
+   "publisher": "Prologue, U.S. National Archives",
+   "date": "2007 (Fall)",
+   "link": "https://www.archives.gov/publications/prologue/2007/fall/tapes.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Volkswagen AG Sentenced in Connection with Conspiracy to Cheat U.S. Emissions Tests",
+   "publisher": "U.S. Department of Justice",
+   "date": "undated",
+   "link": "https://www.justice.gov/archives/opa/pr/volkswagen-ag-sentenced-connection-conspiracy-cheat-us-emissions-tests",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Volkswagen Engineer Pleads Guilty for His Role in Conspiracy to Cheat U.S. Emissions Tests",
+   "publisher": "U.S. Department of Justice",
+   "date": "undated",
+   "link": "https://www.justice.gov/archives/opa/pr/volkswagen-engineer-pleads-guilty-his-role-conspiracy-cheat-us-emissions-tests",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Former CEO of Volkswagen AG Charged with Conspiracy and Wire Fraud in Diesel Emissions Scandal",
+   "publisher": "U.S. Environmental Protection Agency archive (Justice Department release)",
+   "date": "undated",
+   "link": "https://www.epa.gov/archive/epa/newsreleases/former-ceo-volkswagen-ag-charged-conspiracy-and-wire-fraud-diesel-emissions-scandal.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Newly Declassified National Security Agency History Questions Early Vietnam War Communications Intelligence",
+   "publisher": "National Security Archive, George Washington University",
+   "date": "2005-12-01",
+   "link": "https://nsarchive2.gwu.edu/NSAEBB/NSAEBB132/press20051201.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Vietnam Mishaps Revealed in Newly Declassified Papers (interview with historian John Prados)",
+   "publisher": "NPR",
+   "date": "undated",
+   "link": "https://www.npr.org/transcripts/18045569",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Project MKULTRA, the CIA's Program of Research in Behavioral Modification (joint Senate hearing, statement of the CIA Director)",
+   "publisher": "U.S. Senate Select Committee on Intelligence; copy in the CIA Reading Room",
+   "date": "1977-08-03",
+   "link": "https://cia.gov/readingroom/print/982079",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Lacking Control Increases Illusory Pattern Perception",
+   "publisher": "Science, J. Whitson and A. Galinsky",
+   "date": "2008-10-03",
+   "link": "https://www.science.org/doi/10.1126/science.1159845",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Lacking control drives false conclusions, conspiracy theories and superstitions",
+   "publisher": "National Geographic",
+   "date": "undated",
+   "link": "https://www.nationalgeographic.com/science/article/lacking-control-drives-false-conclusions-conspiracy-theories-and-superstitions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Proportionality Bias Definition and Examples",
+   "publisher": "The Behavioral Scientist",
+   "date": "undated",
+   "link": "https://www.thebehavioralscientist.com/glossary/proportionality-bias",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Belief in Conspiracy Theories and Susceptibility to the Conjunction Fallacy",
+   "publisher": "Applied Cognitive Psychology (Wiley), R. Brotherton and C. French",
+   "date": "2014",
+   "link": "https://onlinelibrary.wiley.com/doi/full/10.1002/acp.2995",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Lateral Reading: Reading Less and Learning More When Evaluating Digital Information",
+   "publisher": "Teachers College Record, S. Wineburg and S. McGrew (SSRN record)",
+   "date": "2017-10-06",
+   "link": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3048994",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Teaching Lateral Reading",
+   "publisher": "Digital Inquiry Group (formerly Stanford History Education Group)",
+   "date": "undated",
+   "link": "https://cor.inquirygroup.org/curriculum/collections/teaching-lateral-reading/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Analytic thinking reduces belief in conspiracy theories",
+   "publisher": "Cognition (ScienceDirect)",
+   "date": "2014",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0010027714001632",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today's idea: big events are secretly arranged by hidden groups. Where this idea stands: popular speculation, when it is used as a blanket explanation."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where this idea stands: popular speculation"
+   },
+   "cite": [
+    "s3",
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hold on. Conspiracies do happen, don't they?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Conspiracies do happen"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They do. That is the accepted view. Some conspiracies are real and documented, and each claim has to stand on its own evidence."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Accepted view: real conspiracies exist | Each claim is judged on its own evidence"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Plenty of thoughtful people hold these beliefs. They are found across all parts of society. Nobody here is being mocked."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Not everyone who believes in a conspiracy is unreasonable or unthinking.\" Dr David Robert Grimes"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a plain definition. In law, a conspiracy is two or more people who agree to break the law, and then take a step to act on it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Conspiracy = agreement + a step taken"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "In law, what two things make a conspiracy?",
+    "right": "An agreement by two or more people, and a step taken to carry it out",
+    "wrong": [
+     "One person's secret wish, and a rumour that others repeat",
+     "A big event, and no obvious cause",
+     "A plan that was never discussed with anyone"
+    ],
+    "why": "The agreement is the heart of it, but talk alone is not enough. Someone must take a step after the agreement."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 'conspiracy theory' is something different. It is a claim that a secret plot by several people explains an event."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Conspiracy theory = a claim that a secret plot explains an event"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So a claim becomes a documented conspiracy only when evidence backs it. Many grand claims are hard to test, and some have little evidence behind them."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Documented conspiracy: records, recordings, court findings | Unsupported theory: hard to test, little evidence"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's watch real ones come to light. Four cases. Notice what kind of evidence each one needed."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Four real cases"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Case one: Watergate. On the night of June 17, 1972, five burglars broke into the Democratic National Committee offices in Washington."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "Five burglars"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Investigators followed the trail of abuses to the highest levels of the Nixon administration, and in the end to the President himself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A trail that led to the top"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part of it was a plan to mislead. Nixon ordered the CIA to ask the FBI to call off its investigation, as if the break-in were a national security matter."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Misleading the FBI"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The key evidence was Nixon's own recordings. In July 1973, a Senate hearing learned that a secret taping system had recorded his conversations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Secret tapes"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nixon wanted those tapes kept secret. The Supreme Court later ordered them handed over, and he resigned on August 9, 1974."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "June 17, 1972: break-in | July 1973: tapes revealed | July 1974: Supreme Court orders tapes handed over | August 9, 1974: Nixon resigns"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What finally settled the Watergate cover-up?",
+    "right": "Recordings and records obtained through investigations and a court order",
+    "wrong": [
+     "An anonymous letter nobody could check",
+     "A feeling that the event was too big to be an accident",
+     "The president's falling popularity"
+    ],
+    "why": "Real evidence did the work: the tapes and the court-ordered records. A hunch that the event was big did not."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Case two: Volkswagen. Engineers wrote software that could tell when a car was being emissions-tested, so the car could cheat the test."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Software that cheated emissions tests"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This affected hundreds of thousands of diesel cars. The Justice Department described a conspiracy that lasted nearly ten years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Nearly 10 years"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It came out through outside testing. A study published in spring 2014 found a gap between test and road results. In 2015, Volkswagen admitted it had installed defeat devices."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Outside testing found the gap"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The company later pleaded guilty to three felonies, including conspiracy to defraud the United States. An engineer pleaded guilty and agreed to cooperate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Guilty pleas"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Case three: the Gulf of Tonkin, 1964. The U.S. said its ships were attacked twice. The National Security Agency's own declassified history confirms there was no second attack, on August 4."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No second attack"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That claim was used to support air strikes and a Congressional resolution that gave the White House freedom of action in Vietnam."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A claim that carried real weight"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So it was a plot to start a war?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Plot, or mistake kept alive?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful. The agency's historian found no smoking gun of a cover-up. He did find signs of an effort to make the intelligence fit the claim. Documented does not mean fully explained."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Documented: the attack did not happen | Still argued: how deliberate the misreporting was"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Case four: MKUltra. It was a closely held CIA research project that ran from 1953 to 1964."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "MKUltra: a closely held CIA project"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its code name became public in 1975 during the Rockefeller Commission and Church Committee investigations. In 1977 the CIA reported finding seven more boxes of documents."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1953: project begins | 1975: becomes public | 1977: seven boxes of documents reported"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Four cases, four routes into the open. Look for the pattern."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Recordings plus a court order (Watergate) | Outside testing plus an insider's guilty plea (Volkswagen) | A declassified internal study (Gulf of Tonkin) | Official investigations plus records found later (MKUltra)"
+   },
+   "cite": [
+    "s7",
+    "s8",
+    "s10",
+    "s11",
+    "s12",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is roughly how long each took to be officially confirmed. These are rounded."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Years until official records confirmed each case (rounded)"
+   },
+   "cite": [
+    "s5",
+    "s10",
+    "s12",
+    "s14"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But you only know about the secrets that failed. What about the ones that never leaked?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "We only see the exposed ones"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is a fair point, and a real limit. Real cases show conspiracies exist. They can't tell us how many hidden ones there are, or whether a particular claim is one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real cases prove possible, not probable"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is a documented conspiracy?",
+    "right": "The Watergate cover-up, shown by tapes, court records and testimony",
+    "wrong": [
+     "A hidden group runs everything, but no records have ever been found",
+     "Everything bad that happens was planned by someone",
+     "This event was so huge that someone must have planned it"
+    ],
+    "why": "A documented conspiracy rests on checkable evidence. The other three are claims with nothing checkable behind them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the mind. Why do some theories feel so convincing? Two habits first, then a third."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why theories feel convincing"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Habit one: pattern-seeking. In six experiments, people who felt out of control saw more patterns, even among random or unrelated things."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pattern-seeking"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Feeling out of control is very human. The same research suggests that feeling more secure and in control can reduce the habit."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Feeling secure helps"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In those experiments, what happened when people felt a loss of control?",
+    "right": "They saw more patterns, even in random things",
+    "wrong": [
+     "They stopped noticing patterns",
+     "They only noticed patterns that were really there",
+     "Nothing changed"
+    ],
+    "why": "Lacking control increased illusory pattern perception. In other words, people saw meaning in random or unrelated things."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Habit two: big events seem to need big causes. Psychologists call it proportionality bias."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Big event, big cause"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In one study, people read about an attack on a president. More of them chose a conspiracy explanation when the president died than when he survived."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "President survived: fewer conspiracy answers | President died: more conspiracy answers"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two cautions. This is one possible influence, not the whole story. And a large outcome can have a simple cause, so check the evidence itself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One influence, not the whole story"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Two people read about a car crash involving a political leader. One reads that the leader died, the other that the leader survived. Who is more likely to suspect a plot?",
+    "right": "The reader who was told the leader died",
+    "wrong": [
+     "The reader who was told the leader survived",
+     "Both the same, every time",
+     "Neither, because people never suspect plots"
+    ],
+    "why": "In studies like this, a bigger outcome made people more ready to accept a bigger cause."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Habit three: distrust. After Watergate, being wary of officials is reasonable. The habit to watch is when distrust replaces evidence, instead of asking for it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Distrust: ask for evidence, don't swap it"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thought experiment time. How many people can keep a secret?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thought experiment: how many people can keep a secret?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture a secret known to one person. Now two. Now a thousand. Each extra person is one more chance for it to slip out, on purpose or by accident."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Each person is another chance to leak"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Physicist David Grimes turned that idea into an equation. It covers a whistle-blower telling on purpose, or a bungler giving it away by accident. Large conspiracies quickly became untenable."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Whistle-blowers and bunglers"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He tried it on a claim that the Moon landings were faked. His estimate was that it would have leaked in about three years and eight months. We'll look at that case in class ten."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 years 8 months"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In this thought experiment, what makes a secret more likely to leak?",
+    "right": "More people in on it, and more time passing",
+    "wrong": [
+     "Fewer people in on it",
+     "A bigger event",
+     "Nothing: secrets leak at the same rate whatever the size"
+    ],
+    "why": "The model's chance of a leak grows with the number of people and the number of years."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But MKUltra stayed secret for decades. Doesn't that break the model?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Secrets that lasted"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fair. It's a model built on estimated leak rates, not a proof. It says small, tight groups can last a long time, and it can't judge any one claim alone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A model is an estimate, not a verdict"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the checklist. Five questions to ask before you weigh any claim. First two."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. What exactly is claimed, and could it be tested? | 2. What is the evidence: records, recordings, court findings?"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next two. Leave the page and see what other trusted sources say. Then ask how many people would need to keep quiet, and for how long."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3. What do other trusted sources say? | 4. How many people, for how many years?"
+   },
+   "cite": [
+    "s19",
+    "s20",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last one. Is there a simpler explanation? And what would change my mind? Judge the evidence, not how big the event feels."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5. Is there a simpler explanation, and what would change my mind?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try it on an invented claim: a secret club of 3,000 people has quietly arranged every traffic light in a country for 30 years. No documents have been found."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "An invented claim to test"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which checklist questions flag the biggest problem with that claim?",
+    "right": "How many people for how long (3,000 for 30 years), and what evidence exists (none found)",
+    "wrong": [
+     "Only that the claim sounds unusual",
+     "Only that traffic lights are boring",
+     "None: the claim passes every question"
+    ],
+    "why": "A large group keeping quiet for decades, with no documents, fails questions two and four. Unusual-sounding is not the test. Evidence and plausibility are."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To wrap up: real conspiracies exist, and evidence is what shows them. Minds love patterns and big causes, so slow down and use the checklist."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Documented conspiracy = evidence you can check | Habits: pattern-seeking, big event/big cause, distrust | Tool: the five-question checklist"
+   },
+   "cite": [
+    "s5",
+    "s15",
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which habit says 'a huge event needs a huge cause'?",
+    "right": "Proportionality bias",
+    "wrong": [
+     "Lateral reading",
+     "An overt act",
+     "A defeat device"
+    ],
+    "why": "Proportionality bias is the tendency to expect a big event to have a big cause. Lateral reading is a checking tool, an overt act is a legal step, and a defeat device was Volkswagen's cheating software."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "About how many years before official records confirmed each case (rounded)",
+   "rows": [
+    {
+     "label": "Watergate (1972 break-in to 1974 resignation)",
+     "value": 2,
+     "source": "s5"
+    },
+    {
+     "label": "Volkswagen (scheme ran nearly 10 years)",
+     "value": 10,
+     "source": "s10"
+    },
+    {
+     "label": "MKUltra (1953 start to 1975 public)",
+     "value": 22,
+     "source": "s14"
+    },
+    {
+     "label": "Gulf of Tonkin (1964 to 2005 declassification)",
+     "value": 41,
+     "source": "s12"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Conspiracy (legal meaning)",
+   "links": [
+    "[[overt act]]",
+    "[[agreement]]"
+   ]
+  },
+  {
+   "topic": "Watergate",
+   "links": [
+    "[[Nixon tapes]]",
+    "[[conspiracy]]",
+    "[[Gulf of Tonkin]]"
+   ]
+  },
+  {
+   "topic": "Volkswagen emissions scheme",
+   "links": [
+    "[[defeat device]]",
+    "[[whistle-blower]]"
+   ]
+  },
+  {
+   "topic": "Pattern-seeking and control",
+   "links": [
+    "[[illusory pattern perception]]",
+    "[[proportionality bias]]"
+   ]
+  },
+  {
+   "topic": "Proportionality bias",
+   "links": [
+    "[[big event big cause]]",
+    "[[conspiracy theory]]"
+   ]
+  },
+  {
+   "topic": "How many people can keep a secret?",
+   "links": [
+    "[[Grimes model]]",
+    "[[Moon landings]]"
+   ]
+  },
+  {
+   "topic": "Lateral reading",
+   "links": [
+    "[[evidence checklist]]",
+    "[[fact-checking]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Large secrets leak quickly, so grand conspiracies are very unlikely (the Grimes model).",
+   "other_view": "The model depends on estimated leak rates and is not proof about any one claim. Some philosophers (called particularists) say each theory should be judged on its own evidence rather than by general odds. Real cases such as MKUltra stayed hidden for about two decades.",
+   "cite": [
+    "s2",
+    "s3",
+    "s14"
+   ]
+  },
+  {
+   "claim": "The Gulf of Tonkin misreporting was a deliberate cover-up.",
+   "other_view": "The NSA historian found no smoking gun of a cover-up, though he saw an active effort to make intelligence fit the claim. Historian John Prados argues that the story was in effect created inside the Defense Department and the Navy. How deliberate it was is still argued.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Proportionality bias explains why people believe conspiracy theories.",
+   "other_view": "It is one possible influence, not a full explanation of anyone's beliefs. Big outcomes can have complex causes, so the question is always what the evidence supports.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "claim": "Because real conspiracies exist, unproven ones deserve equal weight.",
+   "other_view": "Real cases show conspiracies are possible. They don't show a particular claim is true, and we only see the ones that were exposed. Particularists would say judge each claim on its own merits.",
+   "cite": [
+    "s3"
+   ]
+  }
+ ]
+}

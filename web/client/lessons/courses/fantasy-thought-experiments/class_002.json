@@ -1,0 +1,1017 @@
+{
+ "about": {
+  "title": "Life in a Medieval Village",
+  "course": "fantasy-thought-experiments",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has 26 short steps with a question after most of them, and the learner can pause after any question. The last section (the failed harvest) can be taken as a second sitting if 30 minutes is too long in one go."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Feudalism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/feudalism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Daily Medieval Life",
+   "publisher": "Lumen Learning (Western Civilization course)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/daily-medieval-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "FC63 The agricultural revolution in medieval Europe",
+   "publisher": "Flow of History",
+   "date": "n.d.",
+   "link": "http://www.flowofhistory.com/category/export/html/207.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Farming in the Middle Ages",
+   "publisher": "Spartacus Educational",
+   "date": "n.d.",
+   "link": "https://spartacus-educational.com/MEDfarming.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "What Was Feudalism?",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/feudalism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Assessing the Dark Ages",
+   "publisher": "OER Project (World History Origins, Unit 5)",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/World-History-Origins/Unit-5/Assessing-the-Dark-Ages",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Great Famine (1315–1317)",
+   "publisher": "Smith College, Climate in Arts and History",
+   "date": "n.d.",
+   "link": "https://www.science.smith.edu/climatelit/the-great-famine/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Great Famine: Northern Europe in the Early Fourteenth Century (book page, by William Jordan)",
+   "publisher": "Princeton University Press",
+   "date": "1997 (paperback; copyright 1996)",
+   "link": "https://press.princeton.edu/node/51160",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "10 Things to Know About the Great Famine",
+   "publisher": "Medievalists.net",
+   "date": "2019",
+   "link": "https://www.medievalists.net/2019/06/great-famine/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Hendre'r-ywydd Uchaf, Llangynhafal (site record NPRN 27306)",
+   "publisher": "Coflein, Royal Commission on the Ancient and Historical Monuments of Wales",
+   "date": "2004 (record)",
+   "link": "https://coflein.gov.uk/en/site/27306",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Medieval Building from Hangleton",
+   "publisher": "Weald & Downland Living Museum",
+   "date": "n.d.",
+   "link": "https://www.wealddown.co.uk/buildings/medieval-building-hangleton/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Vernacular Architecture in the British Isles",
+   "publisher": "BuildingHistory.org",
+   "date": "n.d.",
+   "link": "https://www.buildinghistory.org/style/vernacular.shtml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "What Did Medieval People Eat Every Day?",
+   "publisher": "HistoryMedieval.com",
+   "date": "n.d.",
+   "link": "https://historymedieval.com/what-did-medieval-people-eat-every-day/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "What Did Medieval Peasants Eat? Pottage, Ale, And Empty Stomachs",
+   "publisher": "Tales of the Middle Ages",
+   "date": "n.d.",
+   "link": "https://talesofthemiddleages.com/what-did-medieval-peasants-eat/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Obsolete Occupations from the Middle Ages",
+   "publisher": "Medievalists.net",
+   "date": "2024",
+   "link": "https://www.medievalists.net/2024/05/obsolete-occupations-middle-ages/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "50 Jobs in the Middle Ages",
+   "publisher": "Medievalists.net",
+   "date": "2025",
+   "link": "https://www.medievalists.net/2025/08/50-jobs-middle-ages/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Feudalism in Europe: Feudalism in Medieval Europe",
+   "publisher": "TimeMaps",
+   "date": "n.d.",
+   "link": "https://timemaps.com/encyclopedia/medieval-europe-feudalism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Serfdom: Life Under the Lord of the Manor",
+   "publisher": "HistoryMedieval.com",
+   "date": "n.d.",
+   "link": "https://historymedieval.com/serfdom-life-under-the-lord-of-the-manor/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Feudalism",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Feudalism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "What did court jesters actually do?",
+   "publisher": "Classic City News (republishing a HistoryFacts article)",
+   "date": "n.d.",
+   "link": "https://www.classiccitynews.com/post/what-did-court-jesters-actually-do",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Travel and Trade in Later Medieval Africa",
+   "publisher": "American Historical Association",
+   "date": "n.d.",
+   "link": "https://www.historians.org/resource/travel-and-trade-in-later-medieval-africa/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "1325",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1325",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Medieval Life",
+   "publisher": "History Guild",
+   "date": "n.d.",
+   "link": "https://historyguild.org/medieval-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Agriculture in the Middle Ages",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Agriculture_in_the_Middle_Ages",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Great Famine of 1315–1317 facts for kids",
+   "publisher": "Kiddle",
+   "date": "n.d.",
+   "link": "https://kids.kiddle.co/Great_Famine_of_1315%E2%80%931317",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Bread, Pottage, and Ale: The Food Regimen of Medieval Peasants and Serfs",
+   "publisher": "Brewminate",
+   "date": "n.d.",
+   "link": "https://brewminate.com/medieval-peasant-serf-food-diet/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Straw, Sticks and Bricks",
+   "publisher": "John Moore Museum",
+   "date": "n.d.",
+   "link": "https://www.johnmooremuseum.org/wp-content/uploads/2021/03/Straw-sticks-and-bricks.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The Great Famine: Europe's Dark Years",
+   "publisher": "HistoryMedieval.com",
+   "date": "n.d.",
+   "link": "https://historymedieval.com/the-great-famine-europes-dark-years/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class two: life in a medieval village. Some of what we say is REAL history. Some is INVENTED for Nimrod. We will label every part."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Life in a Medieval Village: REAL history and INVENTED Nimrod"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, who lived in the real medieval countryside? Picture ten people. Around nine of them worked the land. Estimates run from about 80 to 90 out of every 100."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 9,
+    "layout": "ten-frame",
+    "text": "REAL: about 9 in every 10 people lived by farming"
+   },
+   "cite": [
+    "s2",
+    "s24"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Out of ten people in medieval Europe, about how many worked the land?",
+    "right": "About eight or nine",
+    "wrong": [
+     "About one or two",
+     "About three",
+     "None of them; most were knights"
+    ],
+    "why": "Historians estimate that around 80 to 90 percent of people were farmers or peasants. Knights and lords were a small group."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Those farmers lived on a manor. A manor was an estate controlled by a lord. The village sat nearby, with houses, barns and animal pens close together."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "MANOR: an estate run by a lord, worked by the people of the village"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was a manor?",
+    "right": "An estate controlled by a lord, worked by the villagers",
+    "wrong": [
+     "A tall tower at the corner of a castle",
+     "A market for buying magic goods",
+     "A type of grain"
+    ],
+    "why": "The manor was the centre of work and life. The lord controlled it and the peasants farmed it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the land itself. Around most villages lay three big fields. Two grew crops each year. The third was left fallow, which means resting with nothing planted."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "REAL: the three fields in one year",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A village has three fields. How many are planted in one year?",
+    "right": "Two",
+    "wrong": [
+     "One",
+     "Three",
+     "None"
+    ],
+    "why": "Two fields grow crops and one rests. Next year the jobs rotate."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why was the three-field way a big deal? Older villages often used two fields and rested half the land. Let us count it for a village of 60 acres."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "REAL: acres planted each year, 60-acre village",
+    "chart": "c2"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A village has 60 acres split into three equal fields. With two fields planted, how many acres are planted?",
+    "right": "40 acres",
+    "wrong": [
+     "20 acres",
+     "30 acres",
+     "60 acres"
+    ],
+    "why": "Each field is 20 acres. Two planted fields make 40 acres. That is a third more than the 30 acres planted with two fields."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fields were cut into long strips. Good land and poor land were mixed, so each family held strips in all three fields."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big open field divided into long narrow strips, with each family's strips scattered among their neighbours' strips"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did each family get strips in all three fields?",
+    "right": "So everyone had a fair share of the good land",
+    "wrong": [
+     "So they could sell the strips to the king",
+     "So no field ever needed to rest",
+     "So the lord could count them more easily"
+    ],
+    "why": "Spreading each family's strips across all the fields shared out the good and poor land."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the farming year was a loop. Fields were ploughed three times. There were sowings in autumn and in spring. Animals grazed the common land. At harvest, workers were fed bread and some cheese."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "REAL farming year: plough three times | sow in autumn and spring | graze animals on common land | harvest | store the grain"
+   },
+   "cite": [
+    "s4",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What did people eat? Mostly dark bread, a thick stew called pottage, and weak ale. Meat was a treat, often bacon from the family pig."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL food: dark bread | pottage (a thick stew of grain, peas and vegetables) | weak ale | cheese and dairy | meat as a treat"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was pottage?",
+    "right": "A thick stew of grain, peas or vegetables",
+    "wrong": [
+     "A kind of beer",
+     "A hard cheese",
+     "A loaf of white bread"
+    ],
+    "why": "Pottage was the pot that was always on the fire. It went with bread and ale at most meals."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now homes. Walls were a timber frame filled with wattle and daub. Wattle is woven sticks, often hazel or willow. Daub is a sticky plaster that covers them. The roof was thatch."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A low timber-framed cottage with walls of woven sticks covered in clay plaster and a thick straw roof"
+   },
+   "cite": [
+    "s27",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is wattle and daub?",
+    "right": "Woven sticks covered with a sticky plaster, used to fill the walls",
+    "wrong": [
+     "A roof made of straw",
+     "A heavy oak beam",
+     "A stone foundation"
+    ],
+    "why": "Wattle is the woven stick lattice. Daub is the plaster covering it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One Welsh farmhouse from about 1470 to 1500 had an earth floor and a fire in the hall. The smoke left through windows with no glass. A cowhouse sat at the other end of the building. Very few small houses like it survive."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Inside a long farmhouse: a hall with a central fire, beaten earth floor, no glass in the windows, and a cowhouse at one end"
+   },
+   "cite": [
+    "s10",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everyone only farmed. A village also had a blacksmith, a miller, bakers, and alewives. Alewives brewed and sold ale, and in many English villages they were mostly women."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL village jobs: farmer | blacksmith (nails, horseshoes, tools) | miller (grain into flour) | baker | alewife (brews and sells ale)"
+   },
+   "cite": [
+    "s16",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who brewed and sold ale in many English villages?",
+    "right": "Alewives, usually women",
+    "wrong": [
+     "Only knights",
+     "Only the village blacksmith",
+     "Only the king's cooks"
+    ],
+    "why": "Ale spoiled quickly, so villagers made and sold it in small batches. Local records suggest that nearly every adult woman in a village took part."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now power. A lord owned or controlled the manor. Many peasants were serfs: tied to the land and not free to leave without the lord's permission. A serf was not a slave, because serfs were not bought and sold."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "LORD and SERF: the lord controls the manor; the serf works the land and needs permission to leave"
+   },
+   "cite": [
+    "s1",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Could a serf move away whenever they chose?",
+    "right": "No, they needed the lord's permission",
+    "wrong": [
+     "Yes, at any time",
+     "Only in winter",
+     "Only when the king visited"
+    ],
+    "why": "Serfs lacked freedom of movement. They also needed permission for things like marriage."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It worked like a trade. Peasants gave labour, rent and a share of what they grew. The lord gave protection, justice and land to farm."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL. Peasants gave: work on the lord's land, rent, a share of produce || The lord gave: protection, justice, land to farm"
+   },
+   "cite": [
+    "s1",
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these did the lord give in return for the peasants' work?",
+    "right": "Protection",
+    "wrong": [
+     "A weekly wage in gold",
+     "A new house every year",
+     "The whole harvest of the king's fields"
+    ],
+    "why": "The lord gave protection, a way to get justice, and the right to farm certain fields."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Lords had bosses too. A vassal received land and owed their lord military service, advice and money. So power ran up a ladder to the king. In Nimrod, that king is King Kenny."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The ladder. REAL: king | great lords | lesser lords and knights (vassals) | peasants. INVENTED: King Kenny sits at the top of Nimrod's ladder"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did a vassal owe the lord who gave them land?",
+    "right": "Military service, advice and financial support",
+    "wrong": [
+     "Three goats every year",
+     "Spells and potions",
+     "Only a promise to be friendly"
+    ],
+    "why": "Vassals held land from a lord. In return they owed fighting, counsel and money."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, where is our picture too simple? Many people think the Middle Ages were a 'dark' time with no progress. Many historians dislike that label. Later thinkers made it up to make their own age look brighter."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "TOO SIMPLE #1: 'The Dark Ages'"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do many historians avoid the label 'Dark Ages'?",
+    "right": "It is misleading, and later thinkers invented it to make their own time look better",
+    "wrong": [
+     "Because medieval people had no farms",
+     "Because it was invented by medieval peasants",
+     "Because every record from that time was lost"
+    ],
+    "why": "The label is seen as an oversimplified idea. Some writers made the Middle Ages look dark to make their own era look advanced."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The word 'feudalism' is debated too. Medieval people never used it. In 1974 historian Elizabeth Brown argued it was a construct made by later scholars. Some historians now use 'feudalism' for lords and vassals, and 'manorialism' for lords and peasants."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "TOO SIMPLE #2: 'feudalism' (still debated)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do many historians use the word 'feudalism' with care?",
+    "right": "Medieval people did not use it, and one label can hide how different places really were",
+    "wrong": [
+     "It is a spell word from old stories",
+     "It means only castles and knights",
+     "Nobody has ever studied it"
+    ],
+    "why": "Many historians think the single label is too simple for the real web of relationships in medieval Europe."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And peasants were not all the same. Some were free farmers. Serfs' duties varied a lot, from a few days a year to about three days a week. Towns could offer a way out: a serf who stayed a year and a day uncaught could become free."
+   },
+   "show": {
+    "kind": "list",
+    "text": "TOO SIMPLE #3: all peasants were the same | free farmers existed | serf duties varied by place and time | in towns, a serf might become free after a year and a day"
+   },
+   "cite": [
+    "s19",
+    "s18",
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "True or false: every peasant had exactly the same duties everywhere in medieval Europe.",
+    "right": "False. Duties and freedom varied by place and time",
+    "wrong": [
+     "True. The rules were identical in every village",
+     "True, but only in winter",
+     "False, but only because the king changed them daily"
+    ],
+    "why": "There were free farmers as well as serfs. Duties could be light or heavy depending on time and place."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we step into Nimrod village. From here, what we say is INVENTED. We borrow real details from what we just learned so it feels true."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "INVENTED: a day in Nimrod village"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "INVENTED: Jack is a village farmer. He works strips in all three fields. At dawn he eats bread, ploughs his strips, and some days works the lord's land. At night it is pottage by the fire."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED day for Jack: dawn: bread and ale | morning: plough his strips | some days: work on the lord's land | afternoon: animals on the common land | evening: pottage by the fire"
+   },
+   "cite": [
+    "s4",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which real fact explains why Jack has strips in all three fields?",
+    "right": "Families got strips in every field for a fair share of good land",
+    "wrong": [
+     "Every serf was ordered to plant dragons' eggs",
+     "Jack is rich enough to buy the whole village",
+     "The fields were never fallow"
+    ],
+    "why": "In real villages, strips were shared out across all three fields. Jack's day copies that."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "INVENTED: Dame Gladys is the village alewife. Ale spoils in a few days, so she brews small batches often. She sells to neighbours and hears all the news."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED day for Dame Gladys: brew a small batch | sell to neighbours | trade news | save barley for the next brew. REAL link: alewives, and ale that spoiled within days"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why would Gladys brew fresh ale again and again?",
+    "right": "Ale spoiled quickly and had to be drunk within a few days",
+    "wrong": [
+     "The king ordered a new batch every night",
+     "Barley grows back overnight",
+     "Old ale turns into pottage"
+    ],
+    "why": "Ale did not keep. That is why many villages had alewives making and selling small batches."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "INVENTED: Robin the Joker has no strips of his own. He performs at feasts and at the castle. His jokes can say what others dare not. Real court fools did something like this."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED day for Robin: tell jokes at the alehouse | perform at feasts | carry news | speak truth through humour. REAL link: court fools were entertainers and sometimes clever advisers"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Besides making people laugh, what could real court jesters sometimes do?",
+    "right": "Advise rulers and criticise them under the cover of humour",
+    "wrong": [
+     "Collect the rent for the lord",
+     "Forge horseshoes",
+     "Train dragons"
+    ],
+    "why": "Many jesters were intelligent and trusted advisers. Humour let them comment on the nobles' behaviour."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a thought experiment, like in class one. The question is: what happens to Nimrod village if one harvest fails? We change one thing and keep everything else the same."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thought experiment: what if one harvest fails?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a real clue. Between 1000 and 1347, Europe's population grew from about 35 to 80 million. With so many people, there was little spare food, so even a small shortfall could hurt."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "35 million to 80 million (Europe, 1000 to 1347)"
+   },
+   "cite": [
+    "s2",
+    "s28"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why could a slightly poor harvest around 1315 cause hunger?",
+    "right": "There were so many people that there was little spare food",
+    "wrong": [
+     "Fields were too small to plough",
+     "Nobody knew how to bake bread",
+     "All the farmers had left for the cities"
+    ],
+    "why": "The population was at a high, so any shortfall in the harvest could have severe results."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second, count the grain. One source says that in the 1200s a farmer might get up to ten bushels for each one sown. In the Great Famine that fell by a third to a half. We keep one bushel to plant again."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Grain back per 1 sown: a good year and the famine years",
+    "chart": "c3"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A good year gives 10 back for each 1 sown. The harvest is cut by half. How many do you get back?",
+    "right": "5",
+    "wrong": [
+     "3",
+     "7",
+     "15"
+    ],
+    "why": "Half of 10 is 5. Keep 1 to plant next year and only 4 are left to eat and to pay dues."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the chain reaction in Nimrod. All of this is INVENTED, based on real patterns. Jack must choose between eating his grain and saving seed. Gladys has less grain for ale. Robin's neighbours have little to spare. King Kenny gets less, and hungry people grow angry."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED chain: Jack: eat now or keep seed? | Gladys: weaker ale | Robin: fewer feasts, fewer coins | King Kenny: less rent, angry villagers. REAL link: weaker ale and thinner pottage when grain ran short; famine brought class conflict and unrest"
+   },
+   "cite": [
+    "s26",
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Jack harvests far less grain than he hoped. What hard choice does he face?",
+    "right": "Eat the grain now, or save some as seed for next year's crop",
+    "wrong": [
+     "Whether to buy a castle",
+     "Whether to turn the grain into gold",
+     "Whether to move the three fields into two"
+    ],
+    "why": "If he eats all the grain, he has nothing to plant. If he saves seed, he goes hungrier now."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What really happened? In 1315, heavy rain ruined harvests across northern Europe. It was not one bad year: bad weather lasted into 1317, and animals fell sick. About 5 to 12 out of every 100 people in northern Europe died. Recovery took years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "REAL: about 5 to 12 in every 100 died in the Great Famine of 1315 to 1317"
+   },
+   "cite": [
+    "s7",
+    "s28",
+    "s9",
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What made the Great Famine so deadly, beyond one failed harvest?",
+    "right": "Harvests failed over several years, animals sickened, and food was already tight",
+    "wrong": [
+     "One failed harvest always killed half of Europe",
+     "The farmers forgot to leave a field fallow",
+     "Lords stopped owning land"
+    ],
+    "why": "Wet weather lasted from 1315 into 1317, and disease hit animals. The population was large, so there was little spare food."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us finish by sorting REAL from INVENTED. Real: three fields, serfs, lords, famine. Invented: Jack, Gladys, Robin and King Kenny. Next class, we go inside the castle."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL: three fields, one fallow | bread, pottage, ale | lords and serfs, with duties both ways | the Great Famine. INVENTED: Jack, Dame Gladys, Robin, King Kenny. TOO SIMPLE: 'Dark Ages' and 'feudalism'"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is INVENTED?",
+    "right": "Dame Gladys brewing ale for Nimrod village",
+    "wrong": [
+     "Villages had three fields, with one fallow each year",
+     "Serfs needed permission to leave the manor",
+     "The Great Famine began with heavy rain in 1315"
+    ],
+    "why": "Nimrod village and its people are invented. The other three are real history."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "The three fields in one year (each field is one third of the farmland)",
+   "rows": [
+    {
+     "label": "Planted: wheat or rye",
+     "value": 1,
+     "source": "s4"
+    },
+    {
+     "label": "Planted: oats, barley, peas or beans",
+     "value": 1,
+     "source": "s4"
+    },
+    {
+     "label": "Fallow (resting, nothing planted)",
+     "value": 1,
+     "source": "s4"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Acres planted each year in a 60-acre village",
+   "rows": [
+    {
+     "label": "Two-field system (half rests)",
+     "value": 30,
+     "source": "s3"
+    },
+    {
+     "label": "Three-field system (one third rests)",
+     "value": 40,
+     "source": "s3"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Grain harvested per 1 sown (teaching model; the 6.7 is 10 reduced by one third, rounded)",
+   "rows": [
+    {
+     "label": "Good year (up to, per one source)",
+     "value": 10,
+     "source": "s9"
+    },
+    {
+     "label": "Famine year, harvest cut by one third",
+     "value": 6.7,
+     "source": "s9"
+    },
+    {
+     "label": "Famine year, harvest cut by one half",
+     "value": 5,
+     "source": "s9"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Medieval village life",
+   "links": [
+    "[[Three-field system]]",
+    "[[Manor]]",
+    "[[Serfdom]]",
+    "[[Pottage]]",
+    "[[Wattle and daub]]"
+   ]
+  },
+  {
+   "topic": "Power and obligation",
+   "links": [
+    "[[Lord and vassal]]",
+    "[[Manorialism]]",
+    "[[Feudalism debate]]"
+   ]
+  },
+  {
+   "topic": "Great Famine 1315-1317",
+   "links": [
+    "[[Thought experiment]]",
+    "[[Harvest failure]]",
+    "[[Class 7: The Magic Market]]"
+   ]
+  },
+  {
+   "topic": "Nimrod village (INVENTED)",
+   "links": [
+    "[[Jack]]",
+    "[[Robin the Joker]]",
+    "[[Dame Gladys]]",
+    "[[King Kenny]]",
+    "[[Class 3: Inside the Castle]]"
+   ]
+  },
+  {
+   "topic": "Editor note: the course notes do not say what Jack, Robin the Joker or Dame Gladys do. This lesson assumes Jack is a village farmer, Gladys is the village alewife and Robin is a joker who performs at feasts and at the castle. Mike to confirm or change these.",
+   "links": []
+  },
+  {
+   "topic": "Editor note on sources: no OpenStax chapter was read for this lesson. Several sources are general education or history websites, not academic works, and some give no date. The Welsh farmhouse record (s10) is from a national heritage body. The Great Famine book page (s8) is from a university press, but only its description was read. Figures such as peasant share of population and grain yields are estimates and differ between sources.",
+   "links": []
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1315 to 1317: the Great Famine in northern Europe",
+   "elsewhere": "In 1324 Mansa Musa, ruler of Mali, set out on a pilgrimage to Mecca. In 1325 the Moroccan traveller Ibn Battuta set out on his own journey east. In the same year the Mexica founded Tenochtitlan.",
+   "cite": [
+    "s21",
+    "s22"
+   ]
+  },
+  {
+   "when": "The mid-1300s: the Black Death followed the famine",
+   "elsewhere": "The plague also struck North Africa and Central Asia, not only Europe.",
+   "cite": [
+    "s7"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Medieval society was a clear 'feudal system' with the king at the top and the peasants at the bottom.",
+   "other_view": "Elizabeth Brown argued in 1974 that 'feudalism' is a later construct that oversimplifies medieval life. Many medieval historians dislike the word. Others still use it, often limiting it to the lord-vassal bond and calling the lord-peasant bond manorialism.",
+   "cite": [
+    "s5",
+    "s6",
+    "s1"
+   ]
+  },
+  {
+   "claim": "Serfs were trapped and overworked.",
+   "other_view": "Britannica stresses that serfs lacked freedoms such as moving, marrying or changing job without the lord's permission. A popular history site argues that serfdom gave more freedom and stability than we assume, with duties that could be light. Obligations varied by time and place, so both views can be partly right. The second source is less academic.",
+   "cite": [
+    "s1",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The Middle Ages were a 'dark age' with little progress.",
+   "other_view": "Scholars debate the idea, and many reject the label. Some defend it only for the earliest part of the period.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "claim": "In a good medieval year, a farmer got about ten grains back for each one sown.",
+   "other_view": "One source uses a figure of up to ten. Another gives about seven in a good year and about two in a bad one. The exact numbers vary by source, so the lesson's chart is a teaching model, not an exact measure.",
+   "cite": [
+    "s9",
+    "s25"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,861 @@
+{
+ "about": {
+  "title": "Putting it together: where do we stand?",
+  "course": "consciousness",
+  "class_n": 12,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 20,
+  "length_note": "About 20 minutes. This class recaps eight views and then teaches how to hold a view when the science is unsettled, so it can run a little longer if you stop on every question. It splits cleanly at the heading 'What is still unknown'. Idealism is only mentioned briefly because I did not read a dedicated source on it for this class."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness",
+   "publisher": "Nature (vol. 642)",
+   "date": "2025-04-30",
+   "link": "https://www.nature.com/articles/s41586-025-08888-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness (abstract)",
+   "publisher": "PubMed, U.S. National Library of Medicine",
+   "date": "2025-06",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/40307561/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness (full text)",
+   "publisher": "PubMed Central / Nature Portfolio",
+   "date": "2025-04-30",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12137136",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Theories of consciousness",
+   "publisher": "Nature Reviews Neuroscience (Seth and Bayne)",
+   "date": "2022-07",
+   "link": "https://www.nature.com/articles/s41583-022-00587-4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Neuroscience of Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "undated encyclopedia entry",
+   "link": "https://plato.stanford.edu/entries/consciousness-neuroscience/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "undated encyclopedia entry",
+   "link": "https://plato.stanford.edu/entries/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Hard Problem of Consciousness",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "undated encyclopedia entry",
+   "link": "https://iep.utm.edu/hard-problem-of-conciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Panpsychism",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "undated encyclopedia entry",
+   "link": "https://plato.stanford.edu/entries/panpsychism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Professor advances understanding of animal consciousness",
+   "publisher": "York University (YFile)",
+   "date": "2024-07-05",
+   "link": "https://www.yorku.ca/yfile/2024/07/05/professor-advances-understanding-of-animal-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The New York Declaration on Animal Consciousness (text as posted)",
+   "publisher": "Silene",
+   "date": "2024-04-19",
+   "link": "https://www.silene.ong/en/news/the-new-york-declaration-on-animal-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Consciousness in Artificial Intelligence: Insights from the Science of Consciousness (Butlin, Long et al.)",
+   "publisher": "Semantic Scholar (listing of the 2023 report)",
+   "date": "2023",
+   "link": "https://www.semanticscholar.org/paper/Consciousness-in-Artificial-Intelligence:-Insights-Butlin-Long/25bb684f8b25f05d8c212d8381c25265865a55e4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Identifying indicators of consciousness in AI systems",
+   "publisher": "Trends in Cognitive Sciences (Cell Press)",
+   "date": "2025",
+   "link": "https://www.cell.com/trends/cognitive-sciences/fulltext/S1364-6613(25)00286-4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "In defense of scientifically and philosophically (not politically) critiquing neurobiological theories of consciousness",
+   "publisher": "APA Blog, American Philosophical Association",
+   "date": "2023-11-14",
+   "link": "https://blog.apaonline.org/2023/11/14/in-defense-of-scientifically-and-philosophically-not-politically-critiquing-neurobiological-theories-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "How Does Consciousness Work? Dueling Scientists Tested Two Big Theories but Found No Winner",
+   "publisher": "Singularity Hub",
+   "date": "2025-05-06",
+   "link": "https://singularityhub.com/2025/05/06/how-does-consciousness-work-dueling-scientists-tested-two-big-theories-but-found-no-winner/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Landmark experiment sheds new light on the origins of consciousness",
+   "publisher": "Allen Institute via EurekAlert",
+   "date": "2025-04-30",
+   "link": "https://www.eurekalert.org/news-releases/1082009",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Rethinking Consciousness: When Science Puts Itself to the Test",
+   "publisher": "Max Planck Neuroscience",
+   "date": "2025-05-14",
+   "link": "https://maxplanckneuroscience.org/rethinking-consciousness-when-science-puts-itself-to-the-test/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Real Problem of Consciousness",
+   "publisher": "Psychology Today",
+   "date": "2022-02",
+   "link": "https://www.psychologytoday.com/us/blog/hot-thought/202202/the-real-problem-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Being You - Part I (summary of Anil Seth's book)",
+   "publisher": "Conscious(ness) Realist",
+   "date": "undated blog",
+   "link": "https://www.consciousnessrealist.com/being-you-I/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Do Loops Explain Consciousness? (review of I Am a Strange Loop)",
+   "publisher": "Notices of the American Mathematical Society",
+   "date": "2007-07",
+   "link": "https://www.ams.org/notices/200707/tx070700852p.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Cognitive Scientist: Strange Loops All the Way Down",
+   "publisher": "John Horgan, Mind-Body Problems",
+   "date": "undated",
+   "link": "https://johnhorgan.org/books/mind-body-problems/chapter-two",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Consciousness",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "undated encyclopedia entry",
+   "link": "https://iep.utm.edu/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Anil Seth on AI Consciousness",
+   "publisher": "theconsciousness.ai (a secondary summary of Seth's position)",
+   "date": "undated",
+   "link": "https://theconsciousness.ai/researchers/anil-seth/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "It's 'irresponsible' to ignore widespread consciousness across animal world, dozens of scientists argue",
+   "publisher": "The Hill",
+   "date": "2024-04",
+   "link": "https://thehill.com/policy/energy-environment/4605739-widespread-animal-consciousness-irresponsible-to-ignore-new-york-declaration-scientists/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness (record and abstract)",
+   "publisher": "NASA Astrophysics Data System (Harvard)",
+   "date": "2025-06",
+   "link": "https://ui.adsabs.harvard.edu/abs/2025Natur.642..133C/abstract",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "The NY Declaration on Animal Consciousness: New or Very Old News?",
+   "publisher": "Impact Ethics (Dalhousie University network)",
+   "date": "2024-07-16",
+   "link": "https://impactethics.ca/2024/07/16/the-ny-declaration-on-animal-consciousness-new-or-very-old-news/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. Today we put everything side by side and ask: where do we stand?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Putting it together: where do we stand?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will take four steps. Recap each view. See where they agree and clash. Name what is still unknown. Then learn how to hold a view when science is unsettled."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Recap the views\n2. Agree and clash\n3. What is still unknown\n4. How to hold a view"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One word will matter all day: prediction. A theory makes a prediction when it says what we should find if the theory is true. Then we can look and check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prediction"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the map. One major review in 2022 looked closely at four families of theory: higher-order, global workspace, re-entry and predictive processing, and integrated information."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 families of theory in one major review"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But the full map is bigger than four. One review listed 22 theories based on the biology of the brain. A wider count in 2024 passed 200."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How many theories? It depends on how you count.",
+    "chart": "c1"
+   },
+   "cite": [
+    "s14",
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "One review listed how many theories based on the biology of the brain?",
+    "right": "22",
+    "wrong": [
+     "4",
+     "2",
+     "200 or more"
+    ],
+    "why": "The review listed 22. Four was the number of families it studied closely, and 200 or more was a wider count made in 2024."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's recap each view. Global workspace: consciousness is information broadcast widely across the brain. Best case: a clear mechanism and a place in the brain. Critics: in the 2025 test, not all contents could be read from the front of the brain, and the expected 'ignition' was not found."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Best case: a clear broadcast mechanism, tied to the front of the brain | Critics: not all contents decoded from prefrontal cortex; no ignition when the stimulus began"
+   },
+   "cite": [
+    "s3",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, integrated information theory, or IIT. It says consciousness is a network's power to influence itself, measured as 'phi'. Best case: a precise measure, tied to the back of the brain. Critic: the 2025 test found no sustained synchronization there."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Best case: a precise measure of 'phi', tied to the posterior cortex | Critics: no sustained synchronization in the posterior cortex was found"
+   },
+   "cite": [
+    "s3",
+    "s14",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which theory measures consciousness with integrated information, called phi?",
+    "right": "Integrated information theory",
+    "wrong": [
+     "Global workspace theory",
+     "Neither of them",
+     "Both are the same theory"
+    ],
+    "why": "Global workspace theory is about broadcasting information. IIT is the one built on integrated information, or phi."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third, higher-order theory. A state is conscious when you are aware of it through another state about it. Critics: some reports say people missing prefrontal tissue still see consciously. Others say animals and infants may lack the concepts it needs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Best case: a direct answer to why some states are conscious | Critics: prefrontal reports; animals and infants may lack the needed concepts"
+   },
+   "cite": [
+    "s7",
+    "s5",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fourth, predictive processing. The brain makes best guesses and corrects them with the senses. Seth calls this a controlled hallucination. One reviewer says it does not explain particular kinds of experience."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Best case: one idea that reaches from the world to the self | Critic: does not explain particular qualities of experience"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fifth, strange loops. Hofstadter says the 'I' is a pattern looping back on itself, built from smaller loops. Koch replies that it gives no testable predictions and is more about the self than about consciousness."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Best case: shows how a self could arise from matter that is not itself a self | Critic: no testable predictions (Koch)"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sixth, panpsychism. It says experience is a basic feature of the world. Its best case is that the puzzle comes from missing hidden features of physical things. Its hardest problem is how tiny experiences add up to a mind like ours. Class 9 also covered idealism."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Best case: no need to get experience from non-experience | Critic: the combination problem"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Seventh, animal minds. In 2024 a declaration said there is strong support for consciousness in mammals and birds, and a realistic possibility in all vertebrates and many invertebrates. It stops short of proof, and the debate was heated."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Best case: strong evidence from behaviour and brains | Critic: not proven; scientists disagreed openly"
+   },
+   "cite": [
+    "s25",
+    "s10",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Eighth, machine minds. A 2023 report built a checklist of 'indicator properties' from the brain theories. Its analysis suggested no current AI is conscious. It also saw no obvious technical barrier to building systems that meet the indicators."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Case for taking it seriously: theories give checkable indicators | Critic: Seth ties consciousness to living bodies"
+   },
+   "cite": [
+    "s11",
+    "s22"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did the 2023 report's analysis suggest about current AI systems?",
+    "right": "None looked conscious, but there was no obvious technical barrier to meeting the indicators.",
+    "wrong": [
+     "All of them were conscious.",
+     "AI can never be conscious.",
+     "The report did not use any theories of consciousness."
+    ],
+    "why": "The report drew indicators from brain-based theories. It judged that no current system is conscious, while leaving the door open for the future."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That's the recap. Now we compare. Let's start with where the views agree."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where the views agree and clash"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Agreement one: experience and brain activity go together. The 2025 test found information about what people saw in several brain areas. That matched some predictions of both theories. Many theories share some predictions, so a test of one can touch others."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Agreement 1: conscious content can be read from brain activity\nAgreement 2: theories share some predictions, so tests reach beyond two theories"
+   },
+   "cite": [
+    "s2",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Agreement three is about action, not theory. Many animal researchers agree that when an animal might have experiences, it is irresponsible to ignore that in decisions that affect it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Don't ignore a realistic possibility"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the clashes. First clash: where. Global workspace points to the prefrontal cortex and linked areas. IIT points to the posterior cortex, at the back."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Global workspace: prefrontal cortex and linked areas | IIT: posterior cortex"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pairing is right?",
+    "right": "Global workspace: prefrontal and linked areas. IIT: posterior cortex.",
+    "wrong": [
+     "Global workspace: posterior cortex. IIT: prefrontal cortex.",
+     "Both: only the heart.",
+     "Both: only the cerebellum."
+    ],
+    "why": "The 2025 test was built on this contrast: front and linked areas for global workspace, back of the cortex for IIT."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second clash: the hard problem. It asks why any physical state is conscious rather than not. Some philosophers deny there is such a problem, and many neuroscientists set it aside."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The hard problem: why is any physical state conscious at all?"
+   },
+   "cite": [
+    "s7",
+    "s5",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the hard problem of consciousness?",
+    "right": "Explaining why any physical state is conscious rather than not.",
+    "wrong": [
+     "Measuring how fast neurons fire.",
+     "Finding which brain area is biggest.",
+     "Building a faster computer."
+    ],
+    "why": "The hard problem is about why experience exists at all. Speed, size and computers are different questions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how rivals can settle a clash. In 2025, 256 people were scanned in three different ways. Both sides agreed beforehand what would count as a win."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "256 people scanned"
+   },
+   "cite": [
+    "s2",
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So who won? Neither. The results matched some predictions of each theory and seriously challenged key claims of both."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Neither theory came out on top"
+   },
+   "cite": [
+    "s1",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the 2025 adversarial test show?",
+    "right": "Some predictions of each theory held, but key claims of both were challenged.",
+    "wrong": [
+     "IIT clearly won.",
+     "Global workspace clearly won.",
+     "Consciousness is not in the brain."
+    ],
+    "why": "The study reported mixed results for both theories. It was not a clean win for either."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Clashes can get heated. In 2023, 124 researchers signed a letter calling IIT pseudoscience. Nature reported an uproar. Other scholars replied that the letter's reasons were unclear."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The letter: IIT is pseudoscience | The reply: the reasons given were unclear"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That brings us to the third step. What is still unknown?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What is still unknown"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "No theory has won. The 2025 authors say the field needs a quantitative way to test theories systematically. And it is open whether the hard problem will be solved, or marks a limit of what science can explain."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No winning theory yet\nNo shared framework for testing theories\nUnsettled: does the hard problem have an answer?\nOpen: which animals, and any machines"
+   },
+   "cite": [
+    "s14",
+    "s24",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why is this so hard to test? Brains adapt and have backup routes, so showing a brain area is necessary is very difficult. It is also hard to tell experience apart from being able to report it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Brains adapt and have backups\nExperience and report are hard to separate"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why is it hard to show a brain area is necessary for consciousness?",
+    "right": "Brains adapt and have redundancy, so removing one part may not show what it does.",
+    "wrong": [
+     "All brain areas are identical.",
+     "Nobody has ever scanned a brain.",
+     "Consciousness happens only in the heart."
+    ],
+    "why": "Neuroplasticity, redundancy and convergent evolution make necessity claims hard to support with experiments."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last step: how do we hold a view when nobody knows? Let's learn the tools."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How to hold a view when the science is unsettled"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first tool is credence. It means how strongly you believe something, like 70 out of 100. The AI-consciousness researchers use it: indicators are properties that should shift your credence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Credence: how strongly you believe"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The animal declaration shows credence in practice. It gives strong support for mammals and birds, and only a realistic possibility for others. It also says to weigh welfare risks."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mammals and birds: strong scientific support | Other vertebrates and many invertebrates: realistic possibility"
+   },
+   "cite": [
+    "s25",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sounds like holding a view with a credence?",
+    "right": "I think it is more likely than not, and I will update if new evidence arrives.",
+    "wrong": [
+     "I know for sure and nothing could change it.",
+     "Nobody can know, so my view is worthless.",
+     "I will believe whichever theory is most popular."
+    ],
+    "why": "A credence is a strength of belief that can move with evidence. It is neither certainty nor giving up."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Habit one: ask in advance what would change your mind. In the 2025 test, rival teams agreed on the predictions first. Your view should change when a fair test goes against it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What would change my mind?"
+   },
+   "cite": [
+    "s14",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Habit two: split the question. A view can be strong in one place and weak in another. In the 2025 test, some predictions of each theory held while others failed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Strong here, weak there"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Habit three: let risk guide decisions. You may be unsure, yet still be careful. The declaration says it is irresponsible to ignore a realistic possibility of experience."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unsure is not the same as careless"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a worked example using all three habits. Question: could today's AI be conscious? Best guess: probably not yet, as the 2023 report's analysis suggested. How sure: moderately. What would change it: systems meeting more indicators."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Question: could today's AI be conscious?\nBest guess: probably not yet\nHow sure: moderately\nWhat would change it: more indicators met, or a theory failing a test"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why does the example say 'moderately sure' and not 'certain'?",
+    "right": "Because the answer depends on which theory is right, and none is settled.",
+    "wrong": [
+     "Because AI has been proven conscious.",
+     "Because the report ignored theories.",
+     "Because credence means always saying 50-50."
+    ],
+    "why": "The indicators come from theories that have not been settled. So the honest answer is a credence that can change."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Pick one question, like 'Is a bee conscious?' Write your best guess, how sure you are, and what would change your mind. Thank you for twelve classes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "My best guess\nHow sure I am\nWhat would change my mind"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How many theories of consciousness? It depends on how you count.",
+   "rows": [
+    {
+     "label": "Families studied closely in one 2022 review",
+     "value": 4,
+     "source": "s4"
+    },
+    {
+     "label": "Brain-based theories listed in a review",
+     "value": 22,
+     "source": "s14"
+    },
+    {
+     "label": "Theories counted in 2024 (wider scope, 'more than 200')",
+     "value": 200,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Credence and updating",
+   "links": [
+    "[[The hard problem]]",
+    "[[Animal minds]]",
+    "[[Machine minds]]"
+   ]
+  },
+  {
+   "topic": "Adversarial collaboration (2025 test of IIT and global workspace)",
+   "links": [
+    "[[Global workspace theory]]",
+    "[[Integrated information theory]]",
+    "[[Looking for consciousness in the brain]]"
+   ]
+  },
+  {
+   "topic": "Where the views clash: location, the hard problem, who has experience",
+   "links": [
+    "[[Higher-order theories]]",
+    "[[Predictive processing and the controlled hallucination]]",
+    "[[Idealism and panpsychism]]",
+    "[[Strange loops and the self]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "IIT is pseudoscience.",
+   "other_view": "In 2023, 124 researchers signed a letter saying so. A philosopher writing on the APA blog said the letter's reasons were unclear, and that implications such as organoids were not good grounds for the label. So experts disagree about whether the label is fair.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "claim": "The hard problem is the central problem of consciousness.",
+   "other_view": "Some philosophers deny the hard problem, and many neuroscientists set it aside. Some think it rests on a confusion, and anyone who thinks so must say where the confusion lies.",
+   "cite": [
+    "s5",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Higher-order awareness is what makes a state conscious.",
+   "other_view": "Some reports say patients with prefrontal tissue removed still keep perceptual consciousness, and that electrical stimulation of the prefrontal cortex does not change consciousness. If so, higher-order theories are probably wrong. These findings are themselves debated.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "claim": "Predictive processing explains consciousness.",
+   "other_view": "One critic says it does not explain particular kinds of experience, such as why emotions feel as they do.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "claim": "There is a realistic possibility of consciousness across all vertebrates and many invertebrates.",
+   "other_view": "The declaration does not claim proof. At its launch, scientists debated the state of the science and whether to release such a statement at all.",
+   "cite": [
+    "s23"
+   ]
+  },
+  {
+   "claim": "AI systems could one day meet the indicators of consciousness.",
+   "other_view": "Seth's view is that experience comes from a living system regulating itself. On that view, a system with no metabolism has nothing for consciousness to be made of, however capable it becomes.",
+   "cite": [
+    "s11",
+    "s22"
+   ]
+  }
+ ]
+}

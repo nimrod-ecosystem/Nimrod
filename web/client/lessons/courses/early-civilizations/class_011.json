@@ -1,0 +1,1409 @@
+{
+ "about": {
+  "title": "The Americas I: Caral, the Olmec and Early Cities",
+  "course": "early-civilizations",
+  "class_n": 11,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are six topics of roughly six or seven minutes each, with a short question after most ideas. There is a natural break after the Caral section (after the Caral 'built and found' timeline). If a learner wants to go slowly, split the class there and expect about 50 minutes in total."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Sacred City of Caral-Supe (World Heritage list no. 1269)",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "undated",
+   "link": "https://whc.unesco.org/en/list/1269/lother=es",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Archaeologists Shed New Light On Americas' Earliest Known Civilization",
+   "publisher": "ScienceDaily (report on a Nature paper by Haas, Creamer and Ruiz)",
+   "date": "2005-01-04",
+   "link": "https://www.sciencedaily.com/releases/2005/01/050104112957.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "New insight into ancient Americans",
+   "publisher": "CNN",
+   "date": "2005-01-04",
+   "link": "https://www.cnn.com/2005/TECH/science/01/04/norte.chico/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Caral Civilization (World Civilization course)",
+   "publisher": "Lumen Learning / SUNY HCCC",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/the-caral-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Caral",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Caral",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Norte Chico civilization",
+   "publisher": "New World Encyclopedia",
+   "date": "undated",
+   "link": "https://www.newworldencyclopedia.org/entry/Norte_Chico_civilization",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Caral-Supe: The Oldest City That Rewrites History",
+   "publisher": "machupicchu.org",
+   "date": "undated",
+   "link": "https://www.machupicchu.org/caral-supe-the-oldest-city-that-rewrites-history.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Casma-Sechin culture",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Casma%E2%80%93Sechin_culture",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Huaricanga",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Huaricanga",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Caral Peru: Oldest Ceremonial City In The Americas",
+   "publisher": "Hidden Inca Tours",
+   "date": "undated",
+   "link": "https://hiddenincatours.com/caral-peru-oldest-ceremonial-city-in-the-americas/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Ancient Pyramid Cities of Peru: A Catalogue of Swift Decline",
+   "publisher": "Ancient Origins",
+   "date": "undated",
+   "link": "https://www.ancient-origins.net/ancient-places-americas/pyramid-cities-0012437",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The 5,000-year-old Pyramid City of Caral",
+   "publisher": "Ancient Origins",
+   "date": "undated",
+   "link": "https://www.ancient-origins.net/ancient-places-americas/5000-year-old-pyramid-city-caral-002016",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "San Lorenzo (ancient city, Mexico)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/place/San-Lorenzo-ancient-city-Mexico",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Olmec Art",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "undated",
+   "link": "https://www.metmuseum.org/essays/olmec-art",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Olmec: Colossal Masterworks of Ancient Mexico at the de Young (press release)",
+   "publisher": "Fine Arts Museums of San Francisco",
+   "date": "2011 (exhibition 19 Feb to 8 May 2011)",
+   "link": "https://www.famsf.org/press-room/olmec-colossal-masterworks-of-ancient-mexico-at-the-de-young",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Olmec Civilization",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Olmec_Civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Ancient Agrarian Societies: The Olmec and Chavin",
+   "publisher": "OER Project",
+   "date": "undated",
+   "link": "https://www.oerproject.com/en/oer-materials/oer-media/html-articles/origins/unit3/ancient-agrarian-societies-olmec-and-chavin",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "La Venta (archaeological site)",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/anthropology/la-venta-archaeological-site",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "La Venta",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/La_Venta",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Olmec: Masterworks of Ancient Mexico (educator guide)",
+   "publisher": "Los Angeles County Museum of Art",
+   "date": "2010 (exhibition guide)",
+   "link": "https://www.lacma.org/sites/default/files/module-uploads/E4E_Olmec.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Stone cold masterpieces: the art of the Olmecs",
+   "publisher": "Apollo Magazine",
+   "date": "undated",
+   "link": "https://apollo-magazine.com/stone-cold-masterpieces-the-art-of-the-olmecs/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Origins of the Mesoamerican ballgame: Earliest ballcourt from the highlands found at Etlatongo, Oaxaca, Mexico",
+   "publisher": "Science Advances (via PubMed Central)",
+   "date": "2020-03-13",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7069692",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Mesoamerican ballgame",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Mesoamerican_ballgame",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Olmec figurine",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Olmec_figurine",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Rethinking the Corny History of Maize",
+   "publisher": "Smithsonian Magazine",
+   "date": "undated",
+   "link": "https://www.smithsonianmag.com/smart-news/rethinking-corny-history-maize-180971038/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Scientists thought they understood maize's origins. They were missing something big",
+   "publisher": "Science (AAAS news)",
+   "date": "undated",
+   "link": "https://www.science.org/content/article/scientists-thought-they-understood-maizes-origins-they-were-missing-something-big",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "UNM researchers document the first use of maize in Mesoamerica",
+   "publisher": "University of New Mexico News",
+   "date": "2020-06-01",
+   "link": "https://news.unm.edu/news/releases-20200601-6803126",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Documenting plant domestication: The consilience of biological and archaeological approaches",
+   "publisher": "PNAS (via PubMed Central)",
+   "date": "undated (about 2001)",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC33375/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Agriculture in Mesoamerica",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Agriculture_in_Mesoamerica",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "The potato's travel through ages and continents",
+   "publisher": "Food and Agriculture Organization of the United Nations (FAO)",
+   "date": "2024-05-30",
+   "link": "https://www.fao.org/newsroom/story/the-potatos-travel-through-ages-and-continents/en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "We finally solved the mystery of how potatoes evolved",
+   "publisher": "Natural History Museum, London",
+   "date": "2025-07",
+   "link": "https://www.nhm.ac.uk/discover/news/2025/july/we-finally-solved-the-mystery-of-how-potatoes-evolved.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we visit two places in the Americas: the dry coast of Peru, and the Gulf Coast of Mexico."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Americas I: Caral, the Olmec and Early Cities"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Keep four places in mind: the Balsas River in Mexico, the Olmec Gulf Coast, Lake Titicaca, and Caral on Peru's coast."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Americas with four marked places: the Balsas River valley in Guerrero, Mexico; the Gulf Coast states of Veracruz and Tabasco; Lake Titicaca on the Peru-Bolivia border; and Caral, about 200 km north of Lima."
+   },
+   "cite": [
+    "s26",
+    "s14",
+    "s30",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a big idea. An independent origin means a society grew its own farms, cities and rulers without copying another civilization."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Independent origin"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Coastal Peru is counted as one of six places in the world where civilization arose on its own. That is why the Americas matter."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6 places in the world where civilization arose independently (coastal Peru is one)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does 'independent origin' mean?",
+    "right": "A society developed farming, cities and rulers on its own, without copying another civilization.",
+    "wrong": [
+     "It copied Egypt's pyramids and writing.",
+     "It began only after Europeans arrived.",
+     "It never had any farming."
+    ],
+    "why": "Independent means the ideas grew locally. The Americas are one of the few places where that happened."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The crops tell the same story. Each one was bred from a wild plant that grew right here in the Americas."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mexico: wild teosinte grass became maize | Andes: wild potato plants became the potato"
+   },
+   "cite": [
+    "s25",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the crops that fed these societies. We start with maize."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Crops: maize, squash, beans, potatoes"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Maize began as a wild grass called teosinte. Its ear is tiny, and each kernel sits in a tough shell."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small, thin teosinte ear with a few hard kernels, beside a big modern maize cob."
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Farmers in the Balsas River Valley, in today's Guerrero, Mexico, began picking the best plants about 9,000 years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 9,000 years ago: maize domestication begins"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how long ago did farmers in Mexico begin to domesticate maize?",
+    "right": "About 9,000 years ago",
+    "wrong": [
+     "About 900 years ago",
+     "About 2,000 years ago",
+     "About 20,000 years ago"
+    ],
+    "why": "Genetic and archaeological work points to about 9,000 years ago in the Balsas River region."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Maize then travelled south. It reached Panama about 7,800 years ago, and Peru about 6,700 years ago."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "9,000 years ago: Balsas River, Mexico | 7,800 years ago: Panama | 6,700 years ago: Peru"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Squash came first of all. Farmers in Oaxaca, in southern Mexico, were growing it about 10,000 years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Squash: about 10,000 years ago, Oaxaca"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Beans and maize were tamed in separate steps. The whole set took perhaps 6,000 years or more."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Squash first | Maize in its own steps | Beans in their own steps | All spread over 6,000 years or more"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Maize, beans and squash are called the Three Sisters. Grown together, they help keep nutrients in the soil."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Maize | Beans | Squash"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which three crops are the 'Three Sisters'?",
+    "right": "Maize, beans and squash",
+    "wrong": [
+     "Potatoes, cotton and anchovies",
+     "Jade, rubber and obsidian",
+     "Wheat, barley and lentils"
+    ],
+    "why": "Maize, beans and squash were the key staples of ancient Mesoamerica, and they work well planted together."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Andes. Hunter-gatherers began domesticating wild potatoes around Lake Titicaca about 8,000 years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 8,000 years ago: potato domestication around Lake Titicaca"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Andean farmers also dried potatoes into chuño. Chuño keeps for years and fed people through dry periods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chuño: dried potato that keeps for years"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is chuño?",
+    "right": "Potatoes dried so they keep for years",
+    "wrong": [
+     "A kind of maize beer",
+     "A pyramid at Caral",
+     "A knotted cord for counting"
+    ],
+    "why": "Chuño is dehydrated potato, a way to store food for dry times."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Put the dates side by side. Farming is thousands of years older than the first big monuments. San Lorenzo is an Olmec site we meet soon."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Roughly how many years ago? (approximate)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s28",
+    "s25",
+    "s30",
+    "s1",
+    "s13"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Looking at the chart, which came first?",
+    "right": "Farming of squash, maize and potatoes began thousands of years before Caral was built.",
+    "wrong": [
+     "Caral was built before any crops were farmed.",
+     "Maize was first farmed after the Olmec colossal heads were carved.",
+     "Potatoes and Caral are exactly the same age."
+    ],
+    "why": "The bars for squash, maize and potatoes are longer, so they are older than Caral and the Olmec."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now to Peru. Norte Chico is a dry coastal region about 200 km north of Lima. Caral is its best-known site. Three rivers cross it: the Fortaleza, Pativilca and Supe."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of coastal Peru: the Norte Chico region north of Lima, with three rivers (Fortaleza, Pativilca, Supe) running from the Andes to the sea, and Caral marked in the Supe valley."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Radiocarbon dates show this society lasted more than 1,200 years, from about 3000 to 1800 BCE."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "More than 1,200 years: about 3000 to 1800 BCE"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Plainly: Caral was active when Egypt's pyramids were built. Sumer in Mesopotamia had arisen about a thousand years before."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Sumer arises | about 1,000 years later: Caral society arises, same era as the Egyptian pyramids | about 1800 BCE: Caral's era ends"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "When did the Norte Chico civilization flourish?",
+    "right": "About 3000 to 1800 BCE",
+    "wrong": [
+     "About 500 to 100 BCE",
+     "About 1000 to 1500 CE",
+     "About 6000 to 5000 BCE"
+    ],
+    "why": "Radiocarbon dating puts its rise and fall from roughly 3000 to 1800 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meet the site itself: Caral. It covers 626 hectares and has six large pyramid-shaped platforms."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 6,
+    "layout": "group",
+    "text": "Six large pyramid structures at Caral"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The tallest temple is about 28 metres high. Plazas and ordinary houses stand around it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "28 metres: the tallest temple at Caral"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many Norte Chico sites have a sunken circular plaza: a round open space dug below ground, about 20 to 40 metres across."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sunken circular plaza"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a sunken circular plaza?",
+    "right": "A round open space set below ground level",
+    "wrong": [
+     "A tall stepped pyramid",
+     "A storage jar for cotton",
+     "A knotted record cord"
+    ],
+    "why": "Sunken means dug below the ground. These plazas were about 20 to 40 metres across."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The pyramids and plazas show signs of ceremony. That points to a powerful shared religion."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A stepped stone platform with a round sunken plaza in front of it, on a desert terrace above a green river valley."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Workers carried stone in mesh bags woven from reeds and wild cane. The buildings were rebuilt again and again."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Workers hauling rocks in woven reed bags up a growing platform."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Trade held it together. Inland farmers grew cotton for fishing nets, and got fish such as anchovies in return."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Inland: cotton for nets | Coast: anchovies and shellfish"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did inland Norte Chico farmers trade to the coast?",
+    "right": "Cotton, used for fishing nets",
+    "wrong": [
+     "Pottery bowls",
+     "Bronze tools",
+     "Silver coins"
+    ],
+    "why": "Inland people grew cotton for nets, and in return received fish and shellfish."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two things were missing. Norte Chico people made no pottery, and left no writing we can read. So we cannot know whether Caral had written laws."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No pottery | No writing we can read | Written laws: unknown"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But a knotted cord, called a quipu, was found at Caral. The excavators think it was used to keep records."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quipu: knotted cords, possibly for records"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a quipu?",
+    "right": "A set of knotted cords that may have been used to keep records",
+    "wrong": [
+     "A kind of pyramid",
+     "A fishing boat",
+     "A pottery bowl"
+    ],
+    "why": "A quipu is a record-keeping system made of knots tied in rope. The excavators think Caral's was an early one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Everyday life had music. Flutes made from condor and pelican bones were found, and people lived in houses beside the temples."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Houses and plazas | Flutes of condor and pelican bone | Elite who did not farm (Shady's view): priests, planners, architects"
+   },
+   "cite": [
+    "s4",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The dig found no weapons, walls or mutilated bodies. So Ruth Shady suggests a peaceful society. That is her reading."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No weapons found: Shady's reading"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Caral was built about 5,000 years ago, but found much later. UNESCO says why it survived so well."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Caral is remarkably intact, largely because of its early abandonment and late discovery. (UNESCO)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is Caral twice. First built, about 3000 to 1800 BCE. Then found: Paul Kosok in 1948, and Ruth Shady's dig from 1994."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 3000-1800 BCE: Caral built and used | 1948: Paul Kosok studies it; others doubt its age | October 1994: Ruth Shady begins systematic excavation | 2001: Science paper on dating Caral | 2004: Nature paper dates the wider region"
+   },
+   "cite": [
+    "s2",
+    "s5",
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who began systematic excavations at Caral in 1994?",
+    "right": "Ruth Shady",
+    "wrong": [
+     "Paul Kosok",
+     "Spanish explorers in the 1500s",
+     "Nobody; it was never excavated"
+    ],
+    "why": "Kosok studied the site in 1948, but Shady began the systematic excavations in October 1994."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Mexico. The Olmec lived on the Gulf Coast, in Veracruz and Tabasco, between 1200 and 400 BCE."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of southern Mexico highlighting the Gulf Coast states of Veracruz and Tabasco, with San Lorenzo and La Venta marked."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The name Olmec comes from an Aztec word for this region, meaning 'place of rubber'. They arrived nearly two thousand years after Caral."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Olmec = 'place of rubber' (Aztec name)"
+   },
+   "cite": [
+    "s14",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "San Lorenzo is the oldest known Olmec centre. It dates to about the 12th century BCE."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 1200 BCE: San Lorenzo"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It peaked from 1200 to 900 BCE. It sat safe from flooding and controlled local trade."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Peak: 1200-900 BCE | Safe from floods | Controlled local trade"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "San Lorenzo is famous for colossal heads: stone portraits up to about 9 feet, or 2.5 metres, tall."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Colossal Head 5 from San Lorenzo: a huge basalt head of a man with a flat nose, full cheeks and a helmet-like cap. Made 1200-900 BCE."
+   },
+   "cite": [
+    "s13",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A head weighs around 20 tons. The basalt came from mountains tens of kilometres away, perhaps moved by raft."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 20 tons per head; stone carried tens of kilometres"
+   },
+   "cite": [
+    "s17",
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many see the heads as portraits of rulers, because each face is different."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Colossal heads: portraits of rulers?"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, La Venta. It began about 1100 BCE and rose to power after San Lorenzo declined."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 1200-900 BCE: San Lorenzo at its peak | About 1100 BCE: La Venta begun | After 900 BCE: La Venta at its height | About 400 BCE: La Venta all but abandoned"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "La Venta's Great Pyramid is built almost entirely of clay and stands about 34 metres high. It is one of the earliest pyramids in Mesoamerica."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "34 metres: La Venta's clay Great Pyramid"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which Olmec centre came first?",
+    "right": "San Lorenzo",
+    "wrong": [
+     "La Venta",
+     "They began in the same year",
+     "Caral"
+    ],
+    "why": "San Lorenzo is the oldest known Olmec centre. La Venta rose after it declined."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now these Olmec sites a second time: found. The heads have fascinated people since the mid-1800s. La Venta was uncovered in 1925."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Mid-1800s: colossal heads first fascinate scholars | 1925: Frans Blom uncovers La Venta | 1946: Colossal Head 5 found at San Lorenzo | 1955: Offering 4 found at La Venta"
+   },
+   "cite": [
+    "s15",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "La Venta fell out of use around 400 BCE, so it stayed lost for over two thousand years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "La Venta: built about 1100 BCE; uncovered 1925"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In what year was La Venta uncovered by Frans Blom?",
+    "right": "1925",
+    "wrong": [
+     "1948",
+     "1955",
+     "1994"
+    ],
+    "why": "1948 and 1994 are Caral dates, and 1955 is when Offering 4 was found at La Venta."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Olmec left no writing we can read. So art and buried offerings are how we learn what they believed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No readable writing: use art and offerings"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Olmec art blends human and animal features into supernatural beings. It links rulers with sacred power."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small carving of a half-human, half-jaguar figure with a cleft in its head."
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jade carvings show an Olmec Maize God. The jade came from the Motagua River valley in Guatemala."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Jade celts carved with the Maize God | Jade from the Motagua valley, Guatemala | La Venta grew as jade flowed in"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do archaeologists rely on art and buried offerings to learn about Olmec beliefs?",
+    "right": "The Olmec left no writing we can read.",
+    "wrong": [
+     "The Olmec wrote everything down but it was lost in a flood.",
+     "Colossal heads each carry a written story.",
+     "Because Caral's quipu explains the Olmec."
+    ],
+    "why": "With no readable writing, objects and images are the main evidence of belief."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "La Venta was a sacred place, with few homes. It had buried offerings, such as floors of greenstone slabs, and Offering 4: sixteen small standing figures set with stone celts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sacred precinct, great plaza and Great Pyramid | Floors of greenstone slabs buried as offerings | Offering 4: sixteen figures with celts, found 1955"
+   },
+   "cite": [
+    "s19",
+    "s14",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Olmec figurines from San Lorenzo show people playing a rubber-ball game. This is the Mesoamerican ballgame."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mesoamerican ballgame"
+   },
+   "cite": [
+    "s13",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rubber balls turned up at a ceremonial site near San Lorenzo. The oldest ballcourt found so far is on Mexico's Pacific coast."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rubber balls on the Gulf Coast | Ballplayer figurines at San Lorenzo | Oldest known ballcourt: Pacific coast"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rubber balls were buried with offerings, so the game was tied to ritual. It later became part of how states worked."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ballgame = sport + ritual"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why are the Olmec linked to the start of the ballgame?",
+    "right": "Ballplayer figurines at San Lorenzo, and rubber balls at a ceremonial site in its realm.",
+    "wrong": [
+     "The rules were carved on the colossal heads.",
+     "Olmec books describe the first match.",
+     "The oldest ballcourt ever found is at La Venta."
+    ],
+    "why": "The link rests on figurines and rubber balls. No formal ballcourt has been found in the Olmec heartland."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Olmec elite goods came from far away: jade, obsidian, serpentine, mica, rubber and feathers. Obsidian is volcanic glass."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Jade | Obsidian (volcanic glass) | Serpentine | Mica | Rubber | Feathers"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Trade moved ideas too. Exchange networks spread beliefs and art styles as well as goods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trade carried goods and ideas"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does jade at Olmec sites suggest?",
+    "right": "Long-distance trade networks",
+    "wrong": [
+     "Jade grew on the Olmec coast",
+     "The Olmec had no rulers",
+     "The Olmec had no art"
+    ],
+    "why": "The most valued jade came from the Motagua valley in Guatemala, far from the Olmec heartland."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Everyday life: the fertile coast allowed two crops a year. People farmed, fished and hunted."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Two crops a year | Farming | Fishing | Hunting"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Small figurines are often found in household rubbish and building fill. That hints they were part of ordinary home life."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small clay Olmec figurine with a bald, elongated head, lying in a pit of household rubbish."
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's compare. Caral and the Olmec were both early, both built monuments, and neither has writing we can read."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Caral: stone and earth pyramids, sunken circular plazas, cotton-for-fish trade, no pottery, knotted-cord quipu | Olmec: clay mounds and colossal basalt heads, jade and obsidian trade, ballgame, jaguar-human art"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s10",
+    "s16",
+    "s19",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which feature belongs to Caral rather than the Olmec?",
+    "right": "Cotton-for-fish trade and sunken circular plazas",
+    "wrong": [
+     "Colossal basalt heads",
+     "Jade from Guatemala",
+     "A famous ballgame"
+    ],
+    "why": "Cotton-for-fish trade and sunken plazas are Caral. Heads, jade and the ballgame belong to the Olmec."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: civilization arose on its own in the Americas, built on local crops, with pyramids, trade and ritual."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Independent origins | Maize, squash, beans, potatoes | Caral: about 3000-1800 BCE | Olmec: about 1200-400 BCE | Next class: Maya writing and the Andes"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Roughly how many years ago? (approximate)",
+   "rows": [
+    {
+     "label": "Squash domesticated (Oaxaca)",
+     "value": 10000,
+     "source": "s28"
+    },
+    {
+     "label": "Maize domesticated (Balsas River)",
+     "value": 9000,
+     "source": "s25"
+    },
+    {
+     "label": "Potato domesticated (Lake Titicaca)",
+     "value": 8000,
+     "source": "s30"
+    },
+    {
+     "label": "Caral (built)",
+     "value": 5000,
+     "source": "s1"
+    },
+    {
+     "label": "San Lorenzo (12th century BCE)",
+     "value": 3200,
+     "source": "s13"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Independent origins of civilization",
+   "links": [
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[Egypt I: The Nile, Unification and the Pharaoh]]",
+    "[[Early China I: The Yellow River, Early Farming and the Shang]]",
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  },
+  {
+   "topic": "Crops: maize, squash, beans and potatoes",
+   "links": [
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[The Americas II: Maya Writing, Calendars and the Andes]]"
+   ]
+  },
+  {
+   "topic": "Site: Caral-Supe, built about 3000-1800 BCE",
+   "links": [
+    "[[Egypt I: The Nile, Unification and the Pharaoh]]",
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  },
+  {
+   "topic": "Site: Caral-Supe, found 1948 (Kosok) and excavated from 1994 (Shady)",
+   "links": [
+    "[[Site: Caral-Supe, built about 3000-1800 BCE]]"
+   ]
+  },
+  {
+   "topic": "Site: San Lorenzo, built (peak about 1200-900 BCE)",
+   "links": [
+    "[[Site: La Venta, built from about 1100 BCE]]"
+   ]
+  },
+  {
+   "topic": "Site: San Lorenzo, found (Colossal Head 5 in 1946)",
+   "links": [
+    "[[Site: San Lorenzo, built (peak about 1200-900 BCE)]]"
+   ]
+  },
+  {
+   "topic": "Site: La Venta, built from about 1100 BCE",
+   "links": [
+    "[[Site: San Lorenzo, built (peak about 1200-900 BCE)]]"
+   ]
+  },
+  {
+   "topic": "Site: La Venta, uncovered 1925 (Blom); Offering 4 found 1955",
+   "links": [
+    "[[Site: La Venta, built from about 1100 BCE]]"
+   ]
+  },
+  {
+   "topic": "Quipu (knotted cords)",
+   "links": [
+    "[[The Americas II: Maya Writing, Calendars and the Andes]]",
+    "[[Mesopotamia II: Writing, Law and Religion]]",
+    "[[Egypt II: Hieroglyphs, Religion and Law]]"
+   ]
+  },
+  {
+   "topic": "The Mesoamerican ballgame",
+   "links": [
+    "[[The Americas II: Maya Writing, Calendars and the Andes]]"
+   ]
+  },
+  {
+   "topic": "Trade networks (cotton and fish; jade and obsidian)",
+   "links": [
+    "[[Mesopotamia III: Trade, Everyday Life and Empires]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]",
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 3000-1800 BCE (Caral and Norte Chico)",
+   "elsewhere": "Caral's society arose about a thousand years after Sumer in Mesopotamia, and at the time Egypt's pyramids were being built.",
+   "cite": [
+    "s4",
+    "s2"
+   ]
+  },
+  {
+   "when": "About 1200-900 BCE (San Lorenzo at its peak)",
+   "elsewhere": "The Olmec came nearly two thousand years after Caral. By then Norte Chico's rise and fall, from about 3000 to 1800 BCE, was already long over.",
+   "cite": [
+    "s4",
+    "s2",
+    "s16"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Caral is the oldest city in the Americas.",
+   "other_view": "UNESCO calls the Supe Valley the earliest known manifestation of civilisation in the Americas, but the claim has been challenged. A plaza at nearby Sechin Bajo is dated to about 3500 BCE, and other ancient sites near Caral have been found.",
+   "cite": [
+    "s1",
+    "s5",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Norte Chico grew up around farming.",
+   "other_view": "Early reports stressed cotton and fish, and the lack of a staple grain. Some archaeologists propose a 'maritime hypothesis', in which rich sea resources let coastal societies thrive before irrigated farming. A later study reported maize starch and phytoliths in tested remains.",
+   "cite": [
+    "s3",
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Caral was a peaceful society.",
+   "other_view": "This is Ruth Shady's reading, based on finding no weapons, walls or mutilated bodies in the areas dug. It is an interpretation, and the evidence for it is the absence of such finds.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "claim": "The knotted cord at Caral is a quipu, and quipus may record language.",
+   "other_view": "The excavators argue this. Sources say only that quipus may also have recorded language-like information, as writing does. It remains an open question rather than a settled fact.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "claim": "Maize was domesticated once, about 9,000 years ago, in the Balsas River region.",
+   "other_view": "The Balsas origin is the widely accepted view. A genetic study found that maize later mixed with a highland teosinte, and that 15-25% of genes in existing maize come from that mixing. Another study found that the last stages of domestication happened more than once, in more than one place. A study of ancient skeletons suggests maize became a staple only about 4,000 years ago.",
+   "cite": [
+    "s25",
+    "s26",
+    "s27"
+   ]
+  },
+  {
+   "claim": "The potato was first domesticated about 8,000 years ago.",
+   "other_view": "Sources give different ranges. FAO says about 8,000 years ago, the Natural History Museum says as early as 7,000 years ago, and one review says 6,000 to 10,000 years ago.",
+   "cite": [
+    "s30",
+    "s31"
+   ]
+  },
+  {
+   "claim": "The colossal heads are portraits of rulers.",
+   "other_view": "Many scholars read them as rulers. Britannica notes the helmet-like headgear may have been protective gear for the rubber-ball game. Sources also disagree on whether the basalt was local or imported over long distances.",
+   "cite": [
+    "s16",
+    "s13",
+    "s14",
+    "s17",
+    "s21"
+   ]
+  },
+  {
+   "claim": "The Olmec were the 'mother culture' that started the ballgame and other Mesoamerican traditions.",
+   "other_view": "Related forms elsewhere were often selectively adopted and locally reinterpreted. Evidence from Etlatongo, Oaxaca, suggests highland villagers also helped create the formal ballgame, which challenges the lowland-only picture.",
+   "cite": [
+    "s16",
+    "s22"
+   ]
+  }
+ ]
+}

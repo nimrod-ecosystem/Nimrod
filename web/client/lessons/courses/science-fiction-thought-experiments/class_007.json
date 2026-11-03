@@ -1,0 +1,836 @@
+{
+ "about": {
+  "title": "First Contact, Part 1: What Language Is",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 7,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are 28 short beats and 14 check questions. Each idea gets its own beat, so nothing is rushed. Learners who want more time can pause at any question. The last two beats can be dropped if time is short."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "8.2: Introduction to Language (Child Development, Lumen Learning)",
+   "publisher": "LibreTexts Social Sciences",
+   "date": "n.d.",
+   "link": "https://socialsci.libretexts.org/Courses/Lumen_Learning/Book:_Child_Development_(Lumen)/08:_Module_6-_Language_Development/8.02:_Introduction_to_Language",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Intro to Language (course handout)",
+   "publisher": "Charles University, Institute of Formal and Applied Linguistics",
+   "date": "2010",
+   "link": "https://ufal.mff.cuni.cz/~hana/teaching/2010su-lang/HO01-Intro.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Language and Its Development",
+   "publisher": "Brewminate (reprint of an open textbook chapter)",
+   "date": "n.d.",
+   "link": "https://brewminate.com/language-and-its-development/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Overview and challenges of machine translation for contextually appropriate translations",
+   "publisher": "ScienceDirect (review article)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/pii/S2589004224021035",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Common translation problems and how to overcome them",
+   "publisher": "Smartling",
+   "date": "n.d.",
+   "link": "https://www.smartling.com/blog/common-challenges-of-translation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "About Fieldwork and Language Documentation",
+   "publisher": "UC Berkeley Department of Linguistics",
+   "date": "n.d.",
+   "link": "https://lx.berkeley.edu/about-fieldwork-and-language-documentation-0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Language documentation (Book of Knowledge)",
+   "publisher": "Languages in Danger",
+   "date": "n.d.",
+   "link": "http://languagesindanger.eu/book-of-knowledge/language-documentation/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Indeterminacy of Translation and Radical Interpretation",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/indeterm/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Concept Alignment (preprint)",
+   "publisher": "arXiv",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2401.08672",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Social Indeterminacy and Quine's Indeterminacy of Translation",
+   "publisher": "PhilArchive",
+   "date": "n.d.",
+   "link": "https://philarchive.org/archive/MANSIA-5",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Waggle Dance - an overview",
+   "publisher": "ScienceDirect Topics",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/topics/veterinary-science-and-veterinary-medicine/waggle-dance",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Honeybees' Distance Perception Changes with Terrain of Flight Path",
+   "publisher": "PLoS Biology, via PubMed Central",
+   "date": "2004",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449905/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Sperm Whale Phonetic Alphabet Proposed for the First Time",
+   "publisher": "Project CETI",
+   "date": "2024-05-07",
+   "link": "https://www.projectceti.org/blog-posts/sperm-whale-phonetic-alphabet-proposed-for-the-first-time",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "UC Berkeley and Project CETI study shows sperm whales communicate in ways similar to humans",
+   "publisher": "UC Berkeley College of Letters & Science",
+   "date": "n.d.",
+   "link": "https://ls.berkeley.edu/node/1987",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "We're one step closer to understanding the sperm whale 'alphabet'",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/animals/article/sperm-whale-vowel-patterns-communication-discovery",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Aping Language: Historical Perspectives on the Quest for Semantics, Syntax, and Other Rarefied Properties of Human Language in the Communication of Primates and Other Animals",
+   "publisher": "Frontiers in Psychology (Rendall)",
+   "date": "2021",
+   "link": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2021.675172/xml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Dancing Bees: Karl von Frisch and the Discovery of the Honeybee Language (book page)",
+   "publisher": "University of Chicago Press",
+   "date": "n.d.",
+   "link": "https://press.uchicago.edu/ucp/books/book/chicago/D/bo15220404.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 7. Today we ask one big question: what is a language made of? Then we ask why translating an unknown one is so hard."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "First Contact, Part 1: What Language Is"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One rule first. A tag that says REAL means checked science. A tag that says STORY means we made it up for this course."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL = checked science. STORY = invented."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In this course, what does the tag STORY tell you?",
+    "right": "The idea was made up for the course and is not a real discovery.",
+    "wrong": [
+     "It is a real discovery that scientists have confirmed.",
+     "It is a quote from a textbook.",
+     "It is something scientists are still arguing about."
+    ],
+    "why": "STORY marks invented material, such as the visitors in today's lesson. REAL marks science we have sources for."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "STORY. A silent ship, the Tern, parks above Pelorus Station. It sends no radio. It flashes patterns of light. Your team must work out what they mean."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "STORY (invented): a dark ship above a small space station, flashing short and long pulses of light."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To crack a code like that, we first need to know what a language is made of. REAL: linguists often split language into six parts. We will take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Phonetics. Phonology. Morphology. Syntax. Semantics. Pragmatics."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part one is sounds. Phonetics studies speech sounds themselves. Phonology studies the sounds that matter inside one particular language."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sounds: phonetics and phonology"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A phoneme is the smallest sound that can change a meaning. On its own it means nothing. Change one sound and 'bake' becomes 'brake'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "bake | brake. One sound changes, and the meaning changes."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a phoneme?",
+    "right": "The smallest sound that can change a meaning, but has no meaning by itself.",
+    "wrong": [
+     "A whole word that has its own meaning.",
+     "A rule for building sentences.",
+     "A gesture that replaces speech."
+    ],
+    "why": "A phoneme is a sound unit. 'Bake' and 'brake' show that one sound can change a meaning, even though the sound alone means nothing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part two is words and word pieces. This is morphology. It studies words and smaller meaningful bits, such as prefixes and suffixes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Words and word pieces: morphology"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A morpheme is the smallest piece that carries meaning. 'Cats' has two: 'cat', and the 's' that says 'more than one'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "cats = cat (the animal) + s (more than one)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is the 's' on 'cats' a morpheme?",
+    "right": "It is a small piece that carries meaning: more than one.",
+    "wrong": [
+     "It is a sound that never carries any meaning.",
+     "It is a whole sentence.",
+     "It is an idiom."
+    ],
+    "why": "A morpheme is the smallest meaningful piece. That 's' adds a meaning, so it counts. A phoneme, by contrast, has no meaning by itself."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part three is sentences. Syntax is the set of rules for building sentences from words and phrases. Every language has some syntax, but the rules differ."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dog bites man | Man bites dog"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "'Dog bites man' and 'Man bites dog' use the same words. What makes the meaning differ?",
+    "right": "The word order, which is a matter of syntax.",
+    "wrong": [
+     "The speech sounds are different.",
+     "One of them has a prefix.",
+     "One of them is an idiom."
+    ],
+    "why": "Syntax covers how words are arranged. Same words, different order, different meaning."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Parts four and five are about meaning. Semantics is the literal meaning. Pragmatics is the meaning the speaker intends, in context."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Semantics = literal meaning | Pragmatics = intended meaning"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take 'Can you pass the salt?' Literally, it asks about your ability. In real life, it is a polite request."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Can you pass the salt?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "At dinner someone asks 'Can you pass the salt?' Which part of language explains why you pass it instead of just saying 'yes'?",
+    "right": "Pragmatics, which is about intended meaning in context.",
+    "wrong": [
+     "Phonetics, which is about speech sounds.",
+     "Morphology, which is about word pieces.",
+     "Syntax, which is about sentence rules only."
+    ],
+    "why": "The literal meaning is a question about ability. The intended meaning is a request. Pragmatics covers that gap."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick recap. Sounds come in two kinds of study. Then words, then sentences, then meaning in two kinds. Six parts, one working system."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sounds: phonetics, phonology. Words: morphology. Sentences: syntax. Meaning: semantics, pragmatics."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, how do languages differ? One way is word order. English puts the verb in the middle: subject, verb, object. Farsi puts the verb last."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "English: Subject-Verb-Object | Farsi: Subject-Object-Verb"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In a subject-object-verb language, where does the verb go?",
+    "right": "At the end of the sentence.",
+    "wrong": [
+     "At the start of the sentence.",
+     "In the middle of the sentence.",
+     "Nowhere, because there are no verbs."
+    ],
+    "why": "The name gives the order: subject, then object, then verb. Farsi is one example."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is the first reason word-for-word translation fails. Swap each word and keep the order, and you can get wrong or confusing sentences. Translators often have to rearrange a whole sentence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reason 1: different word order"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second reason is idioms. 'Kick the bucket' means 'to die'. Translate it word by word and the meaning is lost."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "kick the bucket = to die"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Machine translators tend to do just that with idioms. A figurative phrase can turn into nonsense."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reason 2: idioms"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why does word-for-word translation fail on 'kick the bucket'?",
+    "right": "The meaning, 'to die', is not found in the separate words.",
+    "wrong": [
+     "It has too many phonemes.",
+     "It uses subject-object-verb order.",
+     "It has no syntax at all."
+    ],
+    "why": "The phrase works as one unit with its own meaning. Translating each word separately misses it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So a dictionary is not enough. But what if there is no dictionary at all? That is your team's problem with the Tern. REAL linguists face it with languages nobody has documented."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "REAL: how linguists document a language"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The main method is fieldwork. Linguists work directly with speakers. At Berkeley, students train for this in a two-semester course, working with a speaker of a little-documented language."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fieldwork: learning a language from its speakers"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One fieldwork tool is elicitation. It means asking speakers for the kind of data you need, by a plan, instead of waiting for it to come up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Elicitation: collecting wanted data from speakers, by a plan"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two examples. A basic word list, called a Swadesh list, covers everyday words. Or you show picture prompts and record what the speaker says."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Swadesh word list. Picture prompts, with recording instructions."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is elicitation?",
+    "right": "Collecting the data you want directly from speakers, following a plan.",
+    "wrong": [
+     "Waiting for the right words to come up in conversation.",
+     "Translating a text with a machine.",
+     "Guessing a word's meaning from a dictionary."
+    ],
+    "why": "Elicitation means asking for specific data on purpose, for example with word lists or pictures."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Asking 'how do you say this English word?' is a common shortcut. But the source we read says translation-based elicitation has many drawbacks. So linguists mix methods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Translation questions have drawbacks"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Methods vary. Some linguists use only conversation, with no shared language. Others use a contact language, or work from texts written by literate speakers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Monolingual fieldwork. A contact language. Texts written by speakers."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A linguist and a community share no common language. Which approach fits?",
+    "right": "Monolingual fieldwork, learning from conversation and context.",
+    "wrong": [
+     "Asking everything through a shared contact language.",
+     "Reading texts written by literate speakers.",
+     "Using only a Swadesh list translated from English."
+    ],
+    "why": "With no shared language, the linguist relies on conversational data and context. The other approaches need a shared language or written texts."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the hardest case. A philosopher, W. V. Quine, imagined a translator meeting speakers of a language nobody knows. A rabbit runs past. A speaker says 'gavagai'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rabbit runs through grass. A speaker points and says 'gavagai'."
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is a thought experiment, not a field report. Does 'gavagai' mean 'rabbit'? Or 'rabbit stage'? Or 'rabbit part'? The evidence fits all of them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many meanings fit the same evidence"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why can't one 'gavagai' settle the word's meaning?",
+    "right": "Several different meanings fit the same evidence.",
+    "wrong": [
+     "The speaker must be lying.",
+     "Rabbits cannot be named in any language.",
+     "'Gavagai' has no phonemes."
+    ],
+    "why": "Pointing at a rabbit does not tell you whether the word means the animal, a stage of it, or a part of it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "STORY, invented. The Tern flashes three short glows, then one long glow. It does this each time Pelorus Station's moon, Ilex, rises."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "STORY (invented): three short pulses, one long pulse, as a pale moon rises. No real-world counterpart."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Like 'gavagai', it could mean 'moon', 'rising', 'night' or 'hello'. Same evidence, many meanings. The team needs more data, as field linguists do."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pattern seen. Meaning still open."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the story, what can the team safely say so far?",
+    "right": "The glow pattern and the moonrise go together, and the meaning is still open.",
+    "wrong": [
+     "The pattern means 'moon'.",
+     "The pattern is a greeting.",
+     "The glows contain nouns and verbs."
+    ],
+    "why": "Seeing two things happen together is evidence, not a translation. Like 'gavagai', many meanings still fit."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "REAL, and a change of scene. Humans are not the only ones who communicate. Honeybees do a waggle dance. Karl von Frisch won a Nobel Prize in 1973 for work showing it carries information."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A honeybee on a honeycomb, waggling in a straight run between two half-circles."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The length of the waggle run goes with distance. Its angle goes with direction. Other bees follow the dance and learn where the food is."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Run length = distance. Run angle = direction."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does the waggle dance tell other bees about food?",
+    "right": "How far away it is and in which direction.",
+    "wrong": [
+     "The name of the flower in bee words.",
+     "What the weather will be tomorrow.",
+     "Which bee is the queen."
+    ],
+    "why": "Von Frisch showed that the dance carries distance and direction."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even here, scientists are still learning. Researchers found the dance run grew faster with distance over land than over water. Bees seem to judge distance by what they see."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Even the bee dance is still being studied"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "REAL, and harder. Sperm whales make bursts of clicks called codas. In 2024, Project CETI researchers proposed a 'phonetic alphabet' of coda patterns."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Codas: bursts of clicks"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another study analysed over 1,100 codas from whales off Dominica. It found two vowel-like patterns, a little like our 'a' and 'i'."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,100+ codas analysed"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the honest line. The researchers find structure. They say they do not yet understand what the sounds mean. Finding patterns is not the same as translating."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Known: codas have structure, including vowel-like patterns. | Not yet known: what the codas mean."
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Can scientists today translate sperm whale codas into words?",
+    "right": "No. They have found structure, but the meanings are still unknown.",
+    "wrong": [
+     "Yes, there is a full whale dictionary.",
+     "Yes, but only the vowel-like parts.",
+     "No, because whales make no sounds."
+    ],
+    "why": "The researchers report patterns and structure. They say the meaning is not yet understood."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more lesson in care. In 1980, a famous paper claimed vervet monkey alarm calls carried word-like meaning. Forty years on, that claim has been revised."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1980: vervet alarm-call paper. About 40 years later: claims of word-like meaning revised."
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": null
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today you learned six parts of language, two reasons word-for-word translation fails, and how linguists document a language. Next class: building shared meaning from scratch."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Six parts. Word order and idioms. Fieldwork and elicitation. Real animals, real limits."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is STORY only, with no real-world counterpart?",
+    "right": "The Tern's light signals.",
+    "wrong": [
+     "The honeybee waggle dance.",
+     "Sperm whale codas.",
+     "The Swadesh word list."
+    ],
+    "why": "The Tern and its glows were invented for this course. The others are real."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Six parts of language",
+   "links": [
+    "[[First Contact, Part 2: Building Shared Meaning]]"
+   ]
+  },
+  {
+   "topic": "Word-for-word translation and idioms",
+   "links": [
+    "[[First Contact, Part 2: Building Shared Meaning]]"
+   ]
+  },
+  {
+   "topic": "Radical translation (gavagai)",
+   "links": [
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]",
+    "[[First Contact, Part 2: Building Shared Meaning]]"
+   ]
+  },
+  {
+   "topic": "Animal communication: what is known and unknown",
+   "links": [
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1940s, when Karl von Frisch's bee research flourished",
+   "elsewhere": "The Second World War was under way. Von Frisch's research continued at the University of Munich during it.",
+   "cite": [
+    "s17"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "An unknown language cannot be translated with certainty, as Quine's 'gavagai' thought experiment suggests.",
+   "other_view": "Philosophers still debate the thesis, and the source we read calls it controversial. In practice, field linguists are trained to analyze unfamiliar languages and have documented languages that were previously undocumented.",
+   "cite": [
+    "s10",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Animal communication is a different kind of thing from human language.",
+   "other_view": "One review argues that evidence for meaning and sentence-like structure in natural animal communication is sparse and weak, and that famous vervet claims were revised. The same review says there is still some continuity between animal and human communication. Project CETI's linguistics lead hopes applying linguistics to animal sounds will challenge long-held beliefs. The question remains open.",
+   "cite": [
+    "s16",
+    "s14"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1158 @@
+{
+ "about": {
+  "title": "Consciousness: the hardest word of all",
+  "course": "hard-to-define",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. There are seven topics, each taught in small steps of about a minute with a check question after most ideas. The tricky cases (animals, infants, brain injury, AI) are split into separate steps so you can pause on any of them. If you are short on time, skip the timeline step and the chart step."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Consciousness (Stanford Encyclopedia of Philosophy)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d. (live entry)",
+   "link": "https://plato.stanford.edu/entries/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Facing Up to the Problem of Consciousness (David J. Chalmers)",
+   "publisher": "Journal of Consciousness Studies, author's copy at consc.net",
+   "date": "1995",
+   "link": "https://consc.net/papers/facing.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Hard Problem of Consciousness",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/hard-problem-of-conciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "What Is It Like to Be A Bat? (Thomas Nagel)",
+   "publisher": "The Philosophical Review, copy hosted by the University of Colorado",
+   "date": "1974",
+   "link": "https://rintintin.colorado.edu/~vancecd/phil201/Nagel.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness",
+   "publisher": "Nature (open copy on PubMed Central)",
+   "date": "2025-04-30",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12137136/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "An adversarial collaboration protocol for testing contrasting predictions of global neuronal workspace and integrated information theory",
+   "publisher": "PLOS ONE (open copy on PubMed Central)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9916582/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "How Does Consciousness Work? Dueling Scientists Tested Two Big Theories but Found No Winner",
+   "publisher": "Singularity Hub",
+   "date": "2025-05-06",
+   "link": "https://singularityhub.com/2025/05/06/how-does-consciousness-work-dueling-scientists-tested-two-big-theories-but-found-no-winner/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Higher-Order Theories of Consciousness (Stanford Encyclopedia of Philosophy)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/consciousness-higher/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Disorders of Consciousness: Coma, Vegetative and Minimally Conscious States (Gosseries et al.)",
+   "publisher": "Springer, The Frontiers Collection",
+   "date": "2011",
+   "link": "https://link.springer.com/chapter/10.1007/978-3-642-18047-7_2",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Vegetative State and Minimally Conscious State",
+   "publisher": "Merck Manual Professional Edition",
+   "date": "n.d.",
+   "link": "https://www.merckmanuals.com/professional/neurologic-disorders/coma-and-impaired-consciousness/vegetative-state-and-minimally-conscious-state",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Covert consciousness: what's in a name?",
+   "publisher": "PubMed Central (NIH)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12677022/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The NY Declaration on Animal Consciousness: New or Very Old News?",
+   "publisher": "Impact Ethics",
+   "date": "2024-07-16",
+   "link": "https://impactethics.ca/2024/07/16/the-ny-declaration-on-animal-consciousness-new-or-very-old-news/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Can we detect consciousness in newborn infants? (Passos-Ferreira)",
+   "publisher": "Neuron (Cell Press)",
+   "date": "2024",
+   "link": "https://www.cell.com/neuron/fulltext/S0896-6273(24)00285-X",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Identifying indicators of consciousness in AI systems",
+   "publisher": "Trends in Cognitive Sciences (Cell Press)",
+   "date": "2025",
+   "link": "https://www.cell.com/trends/cognitive-sciences/fulltext/S1364-6613(25)00286-4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Neural Network Mechanisms Underlying General Anesthesia: Cortical and Subcortical Nuclei",
+   "publisher": "PubMed Central (NIH)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11625048/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "General Anesthesia and Human Brain Connectivity (Anthony G. Hudetz)",
+   "publisher": "SAGE Journals listing",
+   "date": "2012",
+   "link": "https://journals.sagepub.com/doi/abs/10.1089/brain.2012.0107",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Neuroimaging of Anesthetic Modulation of Human Consciousness (study protocol)",
+   "publisher": "ClinicalTrials.gov",
+   "date": "n.d.",
+   "link": "https://cdn.clinicaltrials.gov/large-docs/05/NCT03361605/Prot_SAP_000.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Consciousness is partly preserved during general anesthesia",
+   "publisher": "ScienceDaily (University of Turku research)",
+   "date": "2018-07-03",
+   "link": "https://www.sciencedaily.com/releases/2018/07/180703105631.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Disorders of Consciousness",
+   "publisher": "American Academy of Physical Medicine and Rehabilitation",
+   "date": "n.d.",
+   "link": "https://www.aapmr.org/about-physiatry/conditions-treatments/rehabilitation-of-central-nervous-system-disorders/disorders-of-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Disorders of consciousness",
+   "publisher": "MedLink Neurology",
+   "date": "n.d.",
+   "link": "https://www.medlink.com/articles/disorders-of-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Problem of Hard and Easy Problems",
+   "publisher": "Canadian Journal of Philosophy (Cambridge University Press)",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/journals/canadian-journal-of-philosophy/article/problem-of-hard-and-easy-problems/9BBAB3DF98640BB54C7B2E3ED9739B60",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Consciousness (Stanford Encyclopedia of Philosophy), Winter 2022 edition",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Winter 2022",
+   "link": "https://plato.stanford.edu/archives/win2022/entries/consciousness/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. So far we have met words that are precise but slippery. Today's word is the slipperiest of all."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Consciousness: the hardest word of all"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with the word itself. Consciousness is an umbrella word. It covers several different things, and people often mix them up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Umbrella word"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are three common meanings: being awake, being aware, and having experience. We will take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Awake | Aware | Having experience"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, being awake. Researchers call this arousal. In deep sleep or coma it is low or missing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Wakefulness (arousal)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second, being aware: noticing yourself or the world around you. Awake and aware usually go together, but doctors meet cases where they come apart."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Arousal: awake, eyes open | Awareness: noticing self and surroundings"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third, having experience. The philosopher Thomas Nagel put it this way: a creature is conscious if there is something it is like to be that creature."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Something it is like for the organism. (Thomas Nagel, 1974)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Think of the taste of coffee. A chemist can list the molecules. The taste as you feel it is a separate thing, and that felt quality is what this third meaning is about."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A steaming cup of coffee, with a list of molecules on one side and a face enjoying the taste on the other."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which meaning of 'conscious' is about what it is like to be you?",
+    "right": "Having subjective experience",
+    "wrong": [
+     "Being awake (arousal)",
+     "Reacting to a loud noise",
+     "Being able to speak"
+    ],
+    "why": "Nagel's 'what it is like' idea is about the felt, first-person side of experience. Being awake and reacting are different meanings."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nagel's own example was a bat. Bats sense the world by sonar, and he saw no reason to think it is like anything we can imagine."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bat in flight, with curved lines showing sound pulses bouncing off a moth."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His point is about us. Even if we study how sonar works, our own imagination and tools may not reach another creature's point of view."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Point of view"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now two kinds of puzzle. Chalmers called some of them 'easy': explaining abilities, such as how the brain produces a spoken report of what you noticed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Easy problems: abilities and functions"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "'Easy' is relative. Chalmers called these problems among the most interesting unsolved ones in cognitive science. They are easy only because normal scientific methods can reach them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Easy = reachable by standard methods"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The 'hard problem' is different. It asks why any of that activity comes with experience at all."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The hard problem: why is there experience?"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which of these is an 'easy' problem in Chalmers's sense?",
+    "right": "Explaining how the brain produces a spoken report of what you saw",
+    "wrong": [
+     "Explaining why seeing red feels like anything at all",
+     "Explaining what it is like to be a bat",
+     "Showing why any brain activity comes with experience"
+    ],
+    "why": "Easy problems are about abilities and functions, which standard science can explain. The other three are about experience itself, which is the hard problem."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why do some philosophers say the hard problem is separate? One argument: you can explain everything a system does and still ask, 'but why is it conscious?'"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Easy: how the brain does things | Hard: why doing them feels like something"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do some philosophers say the hard problem is separate from brain function?",
+    "right": "They argue we can still ask why a system is conscious after explaining everything it does",
+    "wrong": [
+     "Because brains do nothing that can be measured",
+     "Because scientists have proved consciousness is not physical",
+     "Because consciousness only happens in humans"
+    ],
+    "why": "This is an argument, not a proof. Its point is that explaining functions may leave the question of experience open."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone accepts that split. Some critics say the line between easy and hard rests on intuition, and that this alone does not show consciousness is out of science's reach."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Chalmers: experience is a further problem | Critics: the split may not hold up"
+   },
+   "cite": [
+    "s21",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, how do scientists study it? Experience can't be seen directly. The simplest tool is to ask: did you see it? Reports are useful, but not perfect."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tool 1: reports"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In a Finnish study, nearly all people recalled dreaming while they were unresponsive under anaesthesia. Words played to them were processed, even though they could not recall them later."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person lying under a soft light, with a thought bubble holding a dream cloud."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In that anaesthesia study, what did people's later reports show?",
+    "right": "Nearly all recalled dreaming while they were unresponsive",
+    "wrong": [
+     "No one had any experience at all",
+     "They remembered every word that was played",
+     "Reports were always wrong"
+    ],
+    "why": "Being unresponsive did not always mean having no experience. That is why researchers do not rely on behaviour alone."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second tool is brain activity. In a big 2025 test of visual awareness, researchers used three recording methods: iEEG, fMRI and MEG."
+   },
+   "show": {
+    "kind": "list",
+    "text": "iEEG | fMRI | MEG (three ways of recording brain activity)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The third tool is anaesthesia. People lose consciousness and then recover, so researchers can compare brain networks before, during and after."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tool 3: anaesthesia"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Studies find changes in how brain regions talk to each other, especially between the thalamus and the cortex. But scientists are not sure which changes cause the loss of consciousness."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Known: networks change under anaesthesia | Unknown: which change causes the loss"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One research team even writes that there is no 'consciousness meter' or gold standard for judging consciousness under anaesthesia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No consciousness meter yet"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is still unknown about anaesthesia and consciousness?",
+    "right": "Which brain changes actually cause the loss of consciousness",
+    "wrong": [
+     "Whether anaesthesia affects brain networks at all",
+     "Whether a perfect consciousness meter already exists",
+     "Whether people ever recover from it"
+    ],
+    "why": "Network changes are well documented, and people do recover. The cause of the loss is uncertain, and no gold-standard meter exists."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With measurements in hand, we can ask for explanations. A theory tries to say why some brain activity comes with experience. There are a lot of them."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Two counts of theories of consciousness",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The counts differ because the rules differ. One review listed 22 theories based on brain biology. A looser count in 2024 passed 200. So we will look at only three."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Three theories, no winner"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, global workspace. Information becomes conscious when it is broadcast widely across the brain, like a message sent to everyone at once."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Global workspace: wide broadcast"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In this theory most processing stays local and unconscious. If it 'ignites' the workspace, at about 250 milliseconds after a stimulus, it becomes conscious."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Many small rooms with their lights on, and one bright signal spreading from one room to all the others."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second, integrated information theory. It says consciousness is about how much information a system integrates. It comes in degrees, measured by a number called phi."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Integrated information (phi)"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its best-known version says the material does not matter. The system need not be neural or biological. That is a bold claim, and a debated one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Substrate does not matter"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third, higher-order theories. A mental state is conscious when you have a thought or perception about that state, a mind noticing its own states."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Higher-order: a mind about a mind"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Each theory puts the key in a different place. Here they are side by side."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Global workspace: broadcast | Integrated information: integration | Higher-order: awareness of one's own states"
+   },
+   "cite": [
+    "s6",
+    "s22",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which theory says a state is conscious when you have a thought about that state?",
+    "right": "Higher-order theories",
+    "wrong": [
+     "Global workspace theory",
+     "Integrated information theory",
+     "None of them"
+    ],
+    "why": "Higher-order theories tie consciousness to a representation of one's own mental state. The other two focus on broadcast and on integration."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Can experiments pick a winner? In 2025, supporters of two of these theories agreed in advance on what each predicts, then ran the test together."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Adversarial collaboration"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The results fit some predictions of each theory and challenged key claims of both. For example, one predicted sustained activity at the back of the cortex, and it was not found."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Fit some predictions of both | Challenged key claims of both"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the 2025 adversarial collaboration find?",
+    "right": "Results fit some predictions of both theories and challenged key claims of both",
+    "wrong": [
+     "Global workspace theory won clearly",
+     "Integrated information theory won clearly",
+     "The theories could not be tested at all"
+    ],
+    "why": "The theories were tested, and neither won. That is progress, because the disagreement is now precise."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the tricky cases. They matter to real people and real animals, so we go slowly and with care. In each one we must guess from outside signs whether there is experience inside."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Animals | Infants | Brain injury | AI"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Animals first. A 2024 declaration, first signed by 40 scientists and philosophers, found strong support for conscious experience in mammals and birds."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mammals and birds: strong support | All vertebrates and many invertebrates: a realistic possibility"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It said a realistic possibility exists for all vertebrates and many invertebrates. It also asked people to weigh welfare risks. This is a scale of likelihood, not a proof."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A scale of likelihood"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did the 2024 New York declaration describe consciousness across animals?",
+    "right": "Strong support in mammals and birds, and a realistic possibility in all vertebrates and many invertebrates",
+    "wrong": [
+     "Only humans are conscious",
+     "Every animal is certainly conscious, and this is proven",
+     "Only mammals are conscious, and birds are excluded"
+    ],
+    "why": "The declaration describes a range of confidence, not a proof, and it includes birds."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Infants cannot tell us either, so researchers look for the brain signs seen in aware adults. A 2024 review argued that the weight of evidence says newborns are conscious."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A newborn baby with a soft cap, held gently, with eyes open."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It also said the question is still open. Three markers pointed towards consciousness, and one pointed against it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Three markers: for | One marker: against"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, brain injury, where arousal and awareness can come apart. In coma, both are absent. In a vegetative state the person wakes and sleeps but shows no sign of awareness."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Coma: no arousal, no awareness | Vegetative state: arousal, no sign of awareness"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many doctors now prefer the term unresponsive wakefulness syndrome for the vegetative state. It describes what is seen, and it makes no claim about what is felt."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unresponsive wakefulness syndrome"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the minimally conscious state, signs of awareness are minimal but definite, and they can fluctuate. Diagnosis needs repeated, sometimes prolonged, observation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Minimally conscious state"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many people in this state improve over time. And that brings us to a hard truth about the people who show no response."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many patients improve"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Researchers estimate that up to one quarter of people in coma or a vegetative state may be conscious with no outward sign. Some call this covert consciousness."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Up to 1 in 4"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does 'covert consciousness' mean?",
+    "right": "A person shows no outward sign of response but may still be aware",
+    "wrong": [
+     "A person who is fully awake and chatting",
+     "A machine that pretends to be aware",
+     "Being asleep and dreaming"
+    ],
+    "why": "Covert consciousness describes hidden awareness in someone who cannot show it. It is one reason for patience and respect around people with severe brain injury."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Locked-in syndrome is a related case. It is not a disorder of consciousness. Paralysis leaves the person unable to speak, and they may seem unable to react."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Locked-in: paralysed, not unconscious"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The last tricky case is AI. A system can write fluent text, but behaviour alone does not show experience. Nagel noted that robots could act like people while experiencing nothing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Behaviour is not proof"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One careful approach is the indicator method. Take features that the theories link with consciousness, then check whether a system has them. It reduces uncertainty but does not settle it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Indicator method: take features from theories, then check the system | Still open: is AI consciousness possible at all?"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the indicator method do?",
+    "right": "It takes features that theories link with consciousness and checks whether a system has them",
+    "wrong": [
+     "It asks the AI whether it is conscious and trusts the answer",
+     "It counts how many words the AI writes",
+     "It proves the AI is conscious"
+    ],
+    "why": "The method reduces uncertainty by testing for theory-based features. It does not prove anything, and the basic question of whether AI could be conscious remains debated."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice how much of this is recent. Here are a few milestones in the story."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1974: Nagel's bat paper | 1995: Chalmers names the hard problem | 2002: minimally conscious state described | 2012: Cambridge Declaration on Consciousness | 2024: New York Declaration | 2025: Nature adversarial test"
+   },
+   "cite": [
+    "s4",
+    "s3",
+    "s20",
+    "s12",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's look back over the whole course. Every word we studied, from energy to information, time and life, raised two kinds of question."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Words and world"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Word questions ask which meaning we intend. World questions ask what is actually going on. With consciousness, the word questions are about awake, aware and experience."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Word: which meaning of 'conscious'? | World: which brain events go with experience? Which animals, infants and patients are conscious?"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The hard problem sits on the border. Some say it needs new ideas about the world. Others expect it to fade once mechanisms are understood."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "On the border"
+   },
+   "cite": [
+    "s3",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is mainly a question about words?",
+    "right": "Which of the three meanings of 'conscious' someone intends",
+    "wrong": [
+     "Whether a newborn's brain shows markers of awareness",
+     "Which brain networks change under anaesthesia",
+     "Whether a patient who cannot respond is aware"
+    ],
+    "why": "The first is about meaning. The other three ask what is true of the world, which tests and measurements may eventually answer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what is still unknown? Here are the big open questions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Why experience exists at all | Which theory, if any, is right | Which animals, infants, patients and machines have it | How to measure it directly"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s12",
+    "s13",
+    "s14",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The stakes are real. The researchers who ran the 2025 test said that agreeing on a theory would have profound medical, societal and ethical effects."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Why it matters"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three habits help us talk about this honestly. Say which meaning you intend. Separate what is measured from what is guessed. And say 'we don't know yet' when it is true."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Say which meaning | Separate measured from guessed | Say 'we don't know yet'"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where real people are involved, uncertainty is a reason for care, not a reason to dismiss. One last check before we finish."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Uncertainty calls for care"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement is the most honest summary of where the science stands?",
+    "right": "Some theories fit parts of the evidence, and none is settled",
+    "wrong": [
+     "Science has proved consciousness is just brain activity",
+     "Science has proved consciousness can never be explained",
+     "Whoever argues most loudly is right"
+    ],
+    "why": "The 2025 test found no clear winner, and the hard problem is still debated. 'We don't yet know' is accurate here."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is the end of the course. Thank you for staying with hard questions, and well done for asking them."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thank you for learning with Nimrod"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Counts of theories of consciousness (the two counts use different rules)",
+   "rows": [
+    {
+     "label": "Review of brain-based theories",
+     "value": 22,
+     "source": "s7"
+    },
+    {
+     "label": "Broader 2024 count (more than 200)",
+     "value": 200,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Three meanings of consciousness",
+   "links": [
+    "[[arousal and awareness]]",
+    "[[subjective experience]]",
+    "[[Nagel's bat]]"
+   ]
+  },
+  {
+   "topic": "Easy problems and the hard problem",
+   "links": [
+    "[[Chalmers 1995]]",
+    "[[reportability]]",
+    "[[subjective experience]]"
+   ]
+  },
+  {
+   "topic": "How scientists study consciousness",
+   "links": [
+    "[[reports]]",
+    "[[brain activity]]",
+    "[[anaesthesia]]"
+   ]
+  },
+  {
+   "topic": "Major theories",
+   "links": [
+    "[[global workspace theory]]",
+    "[[integrated information theory]]",
+    "[[higher-order theories]]",
+    "[[adversarial collaboration]]"
+   ]
+  },
+  {
+   "topic": "Tricky cases",
+   "links": [
+    "[[animal consciousness]]",
+    "[[infant consciousness]]",
+    "[[disorders of consciousness]]",
+    "[[covert consciousness]]",
+    "[[AI consciousness]]"
+   ]
+  },
+  {
+   "topic": "Words and world",
+   "links": [
+    "[[what does it mean to define something]]",
+    "[[energy]]",
+    "[[information]]",
+    "[[time]]",
+    "[[life]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The hard problem of experience is separate from explaining brain function.",
+   "other_view": "Some critics say the line between easy and hard problems comes from conceptual intuition. They argue it does not show that consciousness is beyond mechanistic science, though it does not disprove that either. Many philosophers still hold that explaining function leaves 'why is it conscious?' open.",
+   "cite": [
+    "s21",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The 2025 test showed that neither global workspace nor integrated information theory is the winner.",
+   "other_view": "The open letter on integrated information theory shows how divided the field is. Many experts signed it, arguing that the theory is false and not even properly scientific. Theory proponents took part in the preregistered test, and the results challenged key claims of both theories.",
+   "cite": [
+    "s7",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Newborn infants are probably conscious.",
+   "other_view": "The author of the 2024 review says the question is still open. Three markers point towards infant consciousness and one points against it.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "claim": "Indicator-based checks can help us judge whether AI systems might be conscious.",
+   "other_view": "The authors say the method reduces uncertainty but does not settle it. Whether AI consciousness is possible at all is an open argument. Nagel's older point is that robots could behave like people while experiencing nothing, so behaviour alone cannot settle it.",
+   "cite": [
+    "s14",
+    "s4"
+   ]
+  }
+ ]
+}

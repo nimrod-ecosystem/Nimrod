@@ -1,0 +1,927 @@
+{
+ "about": {
+  "title": "The Ice Age world",
+  "course": "prehistory",
+  "class_n": 9,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes, which is the usual length. The class is a little full. Two sites, Yana and Mezhyrich, are each taught twice, once for when people used them and once for when archaeologists found them. The extinction debate also needs three views. Each beat is short, and each check question comes straight after the idea it tests."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "How Long Was the Ice Age?",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/How-Long-Was-the-Ice-Age",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Last Glacial Maximum (LGM)",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/earth-and-atmospheric-sciences/last-glacial-maximum-lgm/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Bering Land Bridge formed surprisingly late during last ice age, study finds",
+   "publisher": "University of California",
+   "date": "2022-12",
+   "link": "https://www.universityofcalifornia.edu/news/bering-land-bridge-formed-surprisingly-late-during-last-ice-age-study-finds",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "A revised radiocarbon chronology for the mammoth bone structures and associated features at Mezhyrich, Ukraine",
+   "publisher": "Open Research Europe (via PubMed Central)",
+   "date": "2025",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12639289/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Mezhyrich / Межиріч - Mammoth Camp",
+   "publisher": "Don's Maps",
+   "date": "n.d.",
+   "link": "https://donsmaps.com/mammothcamp.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Ice age architecture: How mammoth bones reveal human ingenuity",
+   "publisher": "Phys.org",
+   "date": "2025-11",
+   "link": "https://phys.org/news/2025-11-ice-age-architecture-mammoth-bones.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "DNA from 31,000-year-old milk teeth leads to discovery of new group of ancient Siberians",
+   "publisher": "St John's College, University of Cambridge, via EurekAlert",
+   "date": "2019-06-05",
+   "link": "https://www.eurekalert.org/news-releases/625712",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "These Ice Age Humans Somehow Survived North of the Arctic Circle",
+   "publisher": "Discover Magazine",
+   "date": "n.d.",
+   "link": "https://www.discovermagazine.com/these-ice-age-humans-somehow-survived-north-of-the-arctic-circle-40962",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "What Tools Did Paleolithic Humans Actually Use?",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/what-tools-did-paleolithic-humans-actually-use/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Archaeologists discover key tool that helped early Americans survive the ice age",
+   "publisher": "Yahoo News",
+   "date": "2024",
+   "link": "https://www.yahoo.com/news/archaeologists-discover-key-tool-helped-191636123.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Archaeologists discover key tool that helped early Americans survive the ice age",
+   "publisher": "AccuWeather",
+   "date": "2024",
+   "link": "https://www.accuweather.com/en/weather-news/archaeologists-discover-key-tool-that-helped-early-americans-survive-the-ice-age/1720714",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "15 extinct giants that once roamed North America",
+   "publisher": "Live Science",
+   "date": "n.d.",
+   "link": "https://www.livescience.com/51793-extinct-ice-age-megafauna.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Giants of the Ice Age",
+   "publisher": "La Brea Tar Pits and Museum",
+   "date": "n.d.",
+   "link": "https://tarpits.org/experience-tar-pits/giants-ice-age",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Population reconstructions for humans and megafauna suggest mixed causes for North American Pleistocene extinctions",
+   "publisher": "Nature Communications",
+   "date": "n.d.",
+   "link": "https://www.nature.com/articles/s41467-018-07897-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Climate change, not human population growth, correlates with Late Quaternary megafauna declines in North America",
+   "publisher": "Nature Communications",
+   "date": "2021",
+   "link": "https://www.nature.com/articles/s41467-021-21201-8",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Worldwide Late Pleistocene and Early Holocene population declines in extant megafauna are associated with Homo sapiens expansion rather than climate change",
+   "publisher": "Nature Communications",
+   "date": "2023",
+   "link": "https://www.nature.com/articles/s41467-023-43426-5",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Humans rather than climate the primary cause of Pleistocene megafaunal extinction in Australia",
+   "publisher": "Nature Communications",
+   "date": "2017",
+   "link": "https://www.nature.com/articles/ncomms14142",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The well-behaved killer: Late Pleistocene humans in Eurasia were significantly associated with living megafauna only",
+   "publisher": "Palaeogeography, Palaeoclimatology, Palaeoecology (ScienceDirect)",
+   "date": "2018",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0031018218300725",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Milankovitch Cycles",
+   "publisher": "AntarcticGlaciers.org",
+   "date": "n.d.",
+   "link": "https://www.antarcticglaciers.org/glaciers-and-climate/climate/milankovitch-cycles/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Megafauna extinction: A paleoeconomic theory of human overkill in the Pleistocene",
+   "publisher": "Journal of Economic Behavior & Organization (ScienceDirect)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0167268105000946",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Obliquity and precession as pacemakers of Pleistocene deglaciations",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1505.02183",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Prehistoric Hut: A 15,000-Year-Old Structure Made of Mammoth Bones in Mezherich, Ukraine",
+   "publisher": "The Archaeologist",
+   "date": "n.d.",
+   "link": "https://www.thearchaeologist.org/blog/the-prehistoric-hut-a-15000-year-old-structure-made-of-mammoth-bones-in-mezherich-ukraine",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Human adaptation to Ice Age environments",
+   "publisher": "Fiveable",
+   "date": "n.d.",
+   "link": "https://fiveable.me/world-prehistory/unit-5/human-adaptation-ice-age-environments/study-guide/yxwNXZUfa0yFSUX8",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "10 extraordinary Ice Age, prehistoric, beasts that thrived in a frozen world",
+   "publisher": "Discover Wildlife",
+   "date": "n.d.",
+   "link": "https://www.discoverwildlife.com/animal-facts/ice-age-animals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Last glacial maximum",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/Last-Glacial-Maximum",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Pleistocene Overkill and North American Mammalian Extinctions",
+   "publisher": "ResearchGate (abstract page)",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/283696932_Pleistocene_Overkill_and_North_American_Mammalian_Extinctions",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class nine. Today we look at how the cold of the Ice Age shaped where and how people lived, and why so many giant animals vanished."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Ice Age world"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the name. The Ice Age, or Pleistocene, ran from about 2.6 million years ago to 11,700 years ago. During it, ice sheets grew and shrank many times."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ice Age (Pleistocene)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A colder stretch, when ice sheets grow, is called a glacial. A warmer stretch between two of them is an interglacial. Climate swung back and forth."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Glacial: colder, ice sheets grow | Interglacial: warmer, ice sheets shrink"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do we call a warmer stretch between two cold, icy stretches?",
+    "right": "An interglacial",
+    "wrong": [
+     "A glacial",
+     "An ice sheet",
+     "A snowfall"
+    ],
+    "why": "A glacial is the cold stretch. An interglacial is the warmer stretch between two glacials."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What set that rhythm? Slow changes in Earth's orbit and tilt. They change how much summer sunshine reaches the far north. These are called Milankovitch cycles."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Milankovitch cycles"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the coldest stretch of the last Ice Age, the Last Glacial Maximum. Ice sheets were at their biggest, roughly 26,500 to 19,000 years ago. Sources vary a little on those dates."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Last Glacial Maximum: about 26,500 to 19,000 years ago"
+   },
+   "cite": [
+    "s2",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At that peak, ice covered about 8 percent of Earth's surface. So much water was locked up as ice that sea level sat about 125 metres, or 410 feet, lower."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "125 m lower sea level"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why was sea level so much lower at the coldest time?",
+    "right": "Huge amounts of water were locked up as ice on land.",
+    "wrong": [
+     "The oceans had dried up in the heat.",
+     "The Moon was pulling the water away.",
+     "Rain had stopped everywhere for good."
+    ],
+    "why": "Ice sheets on land held a vast amount of water, so less water was left in the oceans."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lower seas uncovered land that is underwater today. A famous example is the Bering Land Bridge, which joined Asia and North America."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of far-northeast Asia and northwest North America. A broad strip of dry land runs where the Bering Strait is today, joining the two continents. Ice sheets cover much of northern North America."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put these events in order on a line."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 35,700 years ago: Bering Land Bridge appears | About 26,500: coldest stretch begins | About 19,000: it ends and warming starts | 13,000 to 11,000: Bering Strait floods again | 11,700: the warm Holocene begins"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "On this timeline, which came first?",
+    "right": "The Bering Land Bridge appeared.",
+    "wrong": [
+     "The coldest stretch ended.",
+     "The Holocene began.",
+     "The Bering Strait flooded again."
+    ],
+    "why": "The bridge appeared about 35,700 years ago. That is before the coldest stretch began about 26,500 years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the world was colder, drier and icier, with lower seas. How did people live in it? Start with food. These were hunter-gatherers: they found wild food and did not farm."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bison | Horse | Reindeer | Woolly mammoth | Woolly rhinoceros"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our first site is the Yana Rhinoceros Horn Site in Arctic Siberia. People lived there about 31,000 years ago, north of the Arctic Circle."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A river bank in Arctic Siberia. Bones, ivory and stone tools lie frozen in the ground."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Yana's second date, when it was found. Archaeologists found it in 2001. Dating published in 2004 showed it was about 30,000 years old, far older than any Arctic site known before."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Found in 2001"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In what year did archaeologists find the Yana site?",
+    "right": "2001",
+    "wrong": [
+     "2019",
+     "2004",
+     "About 31,000 years ago"
+    ],
+    "why": "2001 is when it was found. About 31,000 years ago is when people lived there. 2004 is when the dating results appeared. 2019 is when a study of two children's milk teeth was published."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People could only live there with warm clothes. Clothing rots, so we almost never find it. What survives are the needles."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"humans could never push into regions like northern Siberia without sophisticated clothes\" - a researcher named Gilligan, in a news report"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At Yana, archaeologists found eight kinds of eyed needle. Fine ones were probably for underwear and mittens, medium ones for boots, and big ones for stitching hides into tents."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fine needles: underwear, mittens, outer layers | Medium needles: footwear | Large needles: tent hides"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do archaeologists use needles to learn about Ice Age clothing?",
+    "right": "Clothing rots away, but bone needles survive.",
+    "wrong": [
+     "Needles were the only tool people had.",
+     "People in the Ice Age wore no clothes.",
+     "Needles were only worn as jewellery."
+    ],
+    "why": "Clothing is perishable and almost never survives, so the needles that sewed it are our best clue."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now shelter. At Mezhyrich in Ukraine, people built round huts from mammoth bones. The best-dated one was built about 18,000 years ago, in the harshest phase of the Ice Age."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "house",
+    "count": 4,
+    "layout": "group",
+    "text": "Four mammoth-bone structures at Mezhyrich"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Skulls, ribs and tusks were set in circles to make a strong frame. The result was a sturdy shelter against the cold."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A round hut. Mammoth skulls and long tusks are stacked in a ring to form the frame."
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now Mezhyrich's second date, when it was found. In 1965 a farmer was expanding his cellar and dug up a mammoth's lower jaw."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Found in 1965"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does the date 1965 tell us about Mezhyrich?",
+    "right": "When it was found, not when it was built.",
+    "wrong": [
+     "When the huts were built.",
+     "When the last mammoth died.",
+     "When the Ice Age ended."
+    ],
+    "why": "The huts were built about 18,000 years ago. 1965 is when a farmer's spade struck the jaw and the site was found."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's set both sites against the end of the Ice Age. Yana's people lived about 31,000 years ago, and Mezhyrich was built about 18,000 years ago. The Ice Age ended 11,700 years ago."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years ago: two sites and the end of the Ice Age",
+    "chart": "c2"
+   },
+   "cite": [
+    "s7",
+    "s4",
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists still debate what the Mezhyrich structures were for. New dating fits homes, but others suggest food stores, burials or monuments."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Homes: new dating fits a single stay of a few centuries | Other ideas: bone beds, food caches, burials, ritual middens"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did people get about? On foot, moving with the seasons between habitats to find food and shelter. Low seas opened routes like the Bering Land Bridge."
+   },
+   "show": {
+    "kind": "list",
+    "text": "On foot | Moving with the seasons | Land bridges opened by low seas"
+   },
+   "cite": [
+    "s23",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which two things made walking from Siberia to North America possible?",
+    "right": "Low sea level that exposed land, and warm sewn clothing.",
+    "wrong": [
+     "Boats and farms.",
+     "Roads and horses.",
+     "Warm weather and melted ice."
+    ],
+    "why": "Low seas exposed the land bridge. Needle-sewn clothing let people survive the cold."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tools next. Ice Age toolkits included stone flakes and blades, bone needles and spear throwers. Bone needles and spear throwers appear within the last 40,000 years."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stone flakes and blades | Bone needles | Spear throwers (atlatls)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A spear thrower, or atlatl, is a stick that launches a dart. In open, cold lands where big game was the main food, it gave hunters an advantage."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Atlatl: the spear thrower"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was an atlatl used for?",
+    "right": "To launch hunting darts",
+    "wrong": [
+     "To sew hides together",
+     "To carry fire",
+     "To cut stone blades"
+    ],
+    "why": "An atlatl is a spear thrower. Needles sew, and stone blades cut."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the animals. Scientists call very large animals megafauna. That means animals heavier than about 45 kilograms, or 100 pounds."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Megafauna: animals over about 45 kg (100 lb)"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ice Age megafauna included mammoths, saber-toothed cats, dire wolves and giant ground sloths. Their fossils have been dug up at La Brea in Los Angeles."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Woolly mammoth | Saber-toothed cat | Dire wolf | Giant ground sloth"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these counts as megafauna?",
+    "right": "A mammoth",
+    "wrong": [
+     "A hare of about 2 kg",
+     "A fox of about 10 kg",
+     "A pet cat of about 4 kg"
+    ],
+    "why": "Megafauna weigh more than about 45 kg. A mammoth weighs many tonnes, and the others are far lighter."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then most of them vanished. Many were gone by about 10,000 years ago, and megafauna have been in decline worldwide for around 50,000 years. Why? Scientists have argued about it for a long time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Why did the big animals vanish?"
+   },
+   "cite": [
+    "s12",
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea one is climate change. As the Ice Age ended, the world warmed and habitats changed. Plants adapted quickly, the idea goes, but large mammals did not."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Explanation 1: climate change"
+   },
+   "cite": [
+    "s20",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea two is human hunting, often called overkill. It says hunters, even with simple tools, caused the extinctions. One study of Australia argued humans, not climate, were the main cause."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Explanation 2: human hunting (overkill)"
+   },
+   "cite": [
+    "s26",
+    "s20",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What are the two main explanations for the loss of the big animals?",
+    "right": "Climate change and human hunting",
+    "wrong": [
+     "Volcanoes and earthquakes",
+     "Farming and pollution",
+     "Ocean tides and wind"
+    ],
+    "why": "The long debate is between climate change and human hunting, and some scientists say both."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A third view says both mattered, depending on the animal. One North American study looked at nine cases. Three linked to hunting, five to climate, and one to both."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Nine North American extinctions: what fits best",
+    "chart": "c1"
+   },
+   "cite": [
+    "s14",
+    "s24"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In that study, which cause matched the most cases?",
+    "right": "Climate change (five cases)",
+    "wrong": [
+     "Hunting alone",
+     "Both together",
+     "Disease"
+    ],
+    "why": "Five cases fit climate change, three fit hunting, and one fits both."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why no settled answer? The evidence points different ways in different places. Studies of Eurasia lean towards climate. Australia and a worldwide genetic study lean towards humans."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Points to climate: Eurasia (hunting an extra, non-decisive factor); North American population trends | Points to humans: Australia study; worldwide genetic study of 139 species"
+   },
+   "cite": [
+    "s18",
+    "s15",
+    "s17",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another reason is that kill sites are scarce. Some animals also died out well before or well after people arrived. That makes it hard to blame hunting everywhere."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence differs by place and species"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's recap. Ice Age climate swung between glacials and interglacials. The coldest stretch lowered seas and opened land bridges. People survived with needles, shelters and spear throwers. And the big animals' loss is explained by climate, hunting, or both."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Glacials and interglacials | Coldest stretch: 125 m lower seas | Clothing, huts, spear throwers | Climate, hunting, or both"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s9",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time, in the last class, the ice retreats and people begin to plant crops. We'll look at the first farms and villages."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: the first farms and villages"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Nine North American megafauna extinctions: best fit in one study",
+   "rows": [
+    {
+     "label": "Linked to hunting",
+     "value": 3,
+     "source": "s14"
+    },
+    {
+     "label": "Consistent with climate change",
+     "value": 5,
+     "source": "s14"
+    },
+    {
+     "label": "Both hunting and climate",
+     "value": 1,
+     "source": "s14"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Years ago (about): two sites and the end of the Ice Age",
+   "rows": [
+    {
+     "label": "Yana people lived there",
+     "value": 31000,
+     "source": "s7"
+    },
+    {
+     "label": "Mezhyrich hut built (about 18,000)",
+     "value": 18000,
+     "source": "s4"
+    },
+    {
+     "label": "Ice Age (Pleistocene) ended",
+     "value": 11700,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Ice Age climate",
+   "links": [
+    "[[How we know: reading the deep past without writing]]",
+    "[[Spreading across the world]]"
+   ]
+  },
+  {
+   "topic": "Needles and clothing",
+   "links": [
+    "[[Spreading across the world]]",
+    "[[Art, symbols and the mind: cave paintings and beyond]]"
+   ]
+  },
+  {
+   "topic": "Mammoth-bone huts at Mezhyrich",
+   "links": [
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  },
+  {
+   "topic": "Megafauna extinction",
+   "links": [
+    "[[Spreading across the world]]",
+    "[[The first farms and villages]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 31,000 years ago (people at Yana)",
+   "elsewhere": "The Bering Land Bridge between Asia and North America had already appeared, about 35,700 years ago.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "when": "About 18,000 years ago (Mezhyrich built)",
+   "elsewhere": "Ice sheets still covered large areas of North America, and average global sea level was about 130 metres lower than today.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "when": "About 13,000 to 11,000 years ago",
+   "elsewhere": "The Bering Strait flooded again as the ice melted, and the warm Holocene began about 11,700 years ago.",
+   "cite": [
+    "s3",
+    "s2"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Climate change was the main reason the big animals disappeared.",
+   "other_view": "Some researchers say human hunting was the main cause. A 2017 study argued this for Australia, and a 2023 genetic study linked worldwide declines to the spread of Homo sapiens. A third group says the cause varied by animal and place. One North American study found three cases linked to hunting, five to climate and one to both. Critics of overkill point to scarce kill sites, and some animals died out well before or after people arrived. For Eurasia, one study suggests hunting was at most an extra, non-decisive factor.",
+   "cite": [
+    "s15",
+    "s16",
+    "s17",
+    "s14",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The Last Glacial Maximum, the coldest stretch, ran from about 26,500 to 19,000 years ago.",
+   "other_view": "Britannica gives about 29,000 to 19,000 years ago. Different sources date the start differently, depending on which ice sheets and records they use.",
+   "cite": [
+    "s2",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Mezhyrich's mammoth-bone structures were homes.",
+   "other_view": "New dating fits a single occupation of a few centuries, which supports homes. The authors say other functions are still debated. These include food caches, burials, ritual middens and early monuments. The older radiocarbon dates also ranged widely, from about 24,000 to 14,600 years ago.",
+   "cite": [
+    "s4"
+   ]
+  },
+  {
+   "claim": "Changes in Earth's orbit (Milankovitch cycles) paced the ice ages.",
+   "other_view": "Most scientists accept this, but the exact mechanism is still debated. Researchers disagree about how orbital changes produce the roughly 100,000-year cycle. Some argue that the climate system's own internal variability plays a main role.",
+   "cite": [
+    "s19",
+    "s21"
+   ]
+  }
+ ]
+}

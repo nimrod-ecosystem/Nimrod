@@ -1,0 +1,153 @@
+{
+ "course_id": "fantasy-thought-experiments",
+ "title": "Fantasy Thought Experiments: Wizards, Castles and Dragons",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "Ten classes. The five subjects Mike asked for need different amounts of room. Medieval life and castles get two classes, because village life has to come before castle design. Myths get two, one for dragons and one for wizards. Worldbuilding and map-making get one. The magic market gets one. The science a wizard would need gets two, one on bodies and flight and one on energy and chemistry, because each is a full idea on its own. One opening class teaches the 'what if' method and how we label real versus invented. One closing class lets learners build their own experiment, including a science-fiction version. Classes run 20 to 35 minutes. Each has one main idea and a short recap, so it suits teenagers, adults, and people relearning after a brain injury. Each class can be paused and resumed. Classes 2 to 9 are marked as needing research, so the real history, myth and science are checked against sources before lessons are written. The setting is Nimrod's own medieval village, with no franchise worlds. Every lesson marks each part as REAL (history or science), LEGEND (old stories) or INVENTED (Nimrod).",
+ "classes": [
+  {
+   "n": 1,
+   "title": "What If? How a Thought Experiment Works",
+   "goal": "Learner can state a 'what if' question, list the rules they are assuming, and say which parts are real and which are invented.",
+   "minutes": 20,
+   "topics": [
+    "A thought experiment means asking 'what if' and following the logic step by step",
+    "Meet Nimrod's village and its characters: King Kenny, Queen Rose, Jack, Robin the Joker, Princess Jess, Prince Vince, Nimrod the cat, Merlin, Sir Michael, Dame Gladys",
+    "The labels used in every class: REAL, LEGEND, INVENTED",
+    "Fantasy and science fiction use the same method, and a short example of each",
+    "A simple routine: question, assumptions, consequences, what we learned"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 2,
+   "title": "Life in a Medieval Village",
+   "goal": "Learner can describe how ordinary people in medieval Europe lived and worked, and place Jack, Robin and Dame Gladys in that picture.",
+   "minutes": 30,
+   "topics": [
+    "REAL: farming year, food, housing, and common jobs in medieval Europe",
+    "REAL: who held power and who owed what to whom (the lord and the people who worked the land)",
+    "REAL: where our picture of 'the Middle Ages' is too simple, and what historians still debate",
+    "INVENTED: what Jack, Robin the Joker and Dame Gladys would do each day in Nimrod village",
+    "Thought experiment: what happens to the village if one harvest fails?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Inside the Castle",
+   "goal": "Learner can explain why castles were built the way they were and design a simple castle for King Kenny and Queen Rose.",
+   "minutes": 30,
+   "topics": [
+    "REAL: why castles were built, and how their main parts worked (walls, gate, keep, moat)",
+    "REAL: how castles changed over time, and that they were homes and offices as well as forts",
+    "REAL: what knights did, and the difference between a knight and a lord",
+    "INVENTED: Nimrod's castle, with Sir Michael as its defender and Princess Jess and Prince Vince growing up there",
+    "Thought experiment: where would you put the weak point, and why?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Where Dragons Come From: The Myths",
+   "goal": "Learner can name several real dragon legends from different cultures and say what we do and do not know about why people told them.",
+   "minutes": 25,
+   "topics": [
+    "LEGEND: dragon and serpent stories from different parts of the world, and how they differ",
+    "REAL: how the meaning of dragons changed over time in European stories",
+    "REAL but debated: theories that fossils or real animals inspired some dragon stories, and how strong the evidence is",
+    "INVENTED: the dragon of Nimrod, with a history built from the real patterns above",
+    "Thought experiment: what would a village do if a dragon were a neighbour?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Where Wizards Come From: Merlin and the Real Past",
+   "goal": "Learner can separate the legend of Merlin from real history, and describe the real people behind the idea of a wizard.",
+   "minutes": 25,
+   "topics": [
+    "LEGEND: where the Merlin stories come from and how they grew over time",
+    "REAL: medieval healers, astrologers, alchemists and scholars, and what they actually did",
+    "REAL: how people in the past thought about magic, religion and science, and how those ideas overlapped",
+    "INVENTED: Nimrod's Merlin and how he fits the village",
+    "Thought experiment: how would villagers tell a wizard from a clever scholar?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Building a World: Maps and Worldbuilding",
+   "goal": "Learner can draw a simple map of Nimrod's village and region, and explain how geography shapes who lives where and what they do.",
+   "minutes": 35,
+   "topics": [
+    "REAL: how medieval people made and used maps, and how they differ from modern maps",
+    "REAL: why towns grow where they do (rivers, roads, hills, fields)",
+    "Map basics: scale, key, compass, and what to leave out",
+    "Worldbuilding rules: keep it consistent, and let one change cause the next",
+    "INVENTED: draw Nimrod's map, placing the castle, village, market, and the dragon's home",
+    "Thought experiment: move the river, and see what else changes"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "The Magic Market: Economics with Spells",
+   "goal": "Learner can use ideas such as scarcity, supply and demand, and inflation to predict what happens to prices if magic is added to a market.",
+   "minutes": 30,
+   "topics": [
+    "REAL: how medieval markets, money and trade worked, at a plain-language level",
+    "REAL: basic economic ideas (scarcity, supply and demand, inflation, trade-offs) explained with everyday examples",
+    "INVENTED: Robin the Joker sells spells and potions, and Dame Gladys sells bread",
+    "Thought experiment 1: what if a wizard could make gold? Why might that make gold less valuable?",
+    "Thought experiment 2: what if a spell makes bread plentiful? Who gains and who loses?",
+    "Rules for a fair magic economy"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "Science of a Dragon: Size, Flight and Fire",
+   "goal": "Learner can use real science to say what would make a giant flying, fire-breathing animal hard or easy, and propose a believable fix.",
+   "minutes": 30,
+   "topics": [
+    "REAL: how animals and birds fly, and how body size limits flight",
+    "REAL: why bigger animals need stronger bones and more food",
+    "REAL: what 'breathing fire' would need (a fuel, an ignition, and a safe place to store it), with examples of real animals that make chemical defences",
+    "INVENTED: the Nimrod dragon's body, redesigned to follow these rules",
+    "Thought experiment: how much food would the dragon need, and what would that do to the village?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Science of a Wizard: Energy, Chemistry and Evidence",
+   "goal": "Learner can explain, using real science, what a spell would cost in energy, and how Merlin could test a claim like a scientist.",
+   "minutes": 30,
+   "topics": [
+    "REAL: energy is never made from nothing, only changed from one form to another",
+    "REAL: basic chemistry and what early alchemists got wrong and right",
+    "REAL: how a good test works (a fair comparison, repeating results, and checking for tricks)",
+    "INVENTED: Merlin's rules for spells, with an energy 'cost' that fits the science",
+    "Thought experiment: Merlin lights a lamp with a spell. Where did the energy come from?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Your Own Thought Experiment: Fantasy and Science Fiction",
+   "goal": "Learner can build, test and explain an original 'what if' set in Nimrod, and re-tell it as science fiction.",
+   "minutes": 35,
+   "topics": [
+    "Pick a question from any earlier class, such as 'what if Prince Vince could talk to the dragon?'",
+    "List the assumptions and the likely consequences, and mark each part REAL, LEGEND or INVENTED",
+    "Re-skin the idea as science fiction: the wizard becomes an engineer, the dragon becomes an alien animal, the castle becomes a station",
+    "Share and give kind, useful feedback",
+    "Course recap, and where to go next"
+   ],
+   "needs_research": false
+  }
+ ]
+}

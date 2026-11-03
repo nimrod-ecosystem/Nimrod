@@ -1,0 +1,836 @@
+{
+ "about": {
+  "title": "Terraforming, Part 1: What Makes a World Livable",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 9,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes, which is the usual length. The class covers five features one at a time, then a three-world comparison and a scoring activity. Pause as long as you need on the activity. It is fine to run longer, or to split the class after beat 15 and do the activity next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Venus Fact Sheet",
+   "publisher": "NASA Goddard Space Flight Center (NSSDC)",
+   "date": "undated",
+   "link": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Mars Fact Sheet",
+   "publisher": "NASA Goddard Space Flight Center (NSSDC)",
+   "date": "undated",
+   "link": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Earth Fact Sheet",
+   "publisher": "NASA Goddard Space Flight Center (NSSDC)",
+   "date": "undated",
+   "link": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Solar System Temperatures",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/resource/solar-system-temperatures/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "What is the greenhouse effect?",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/climate-change/faq/what-is-the-greenhouse-effect/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "What Is the Atmosphere?",
+   "publisher": "UCAR Center for Science Education",
+   "date": "undated",
+   "link": "https://scied.ucar.edu/learning-zone/atmosphere/what-is-atmosphere",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Heliophysics Big Idea 2.1 (habitable zone)",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/learn/heat/big-ideas/big-idea-2-1/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Earth's Magnetosphere: Protecting Our Planet from Harmful Space Energy",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/science-research/earth-science/earths-magnetosphere-protecting-our-planet-from-harmful-space-energy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "MAVEN Maps Electric Currents around Mars that are Fundamental to Atmospheric Loss",
+   "publisher": "NASA",
+   "date": "undated",
+   "link": "https://www.nasa.gov/news-release/maven-maps-electric-currents-around-mars-that-are-fundamental-to-atmospheric-loss/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Earth's magnetic field provides vital protection",
+   "publisher": "European Space Agency (ESA)",
+   "date": "undated",
+   "link": "https://www.esa.int/Science_Exploration/Space_Science/Cluster/Earth_s_magnetic_field_provides_vital_protection",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Curiosity Finds Fairly Benign Radiation Environment on Mars",
+   "publisher": "SpaceNews",
+   "date": "undated",
+   "link": "https://spacenews.com/curiosity-finds-fairly-benign-radiation-environment-on-mars/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Magnetic Fields of Extrasolar Planets: Planetary Interiors and Habitability",
+   "publisher": "arXiv (academic preprint)",
+   "date": "2018-03 (from arXiv number)",
+   "link": "https://arxiv.org/pdf/1803.06487",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The Habitable Zone (chapter in an astrobiology textbook)",
+   "publisher": "University of Wisconsin Pressbooks",
+   "date": "undated",
+   "link": "https://wisconsin.pressbooks.pub/astrobiology/chapter/the-habitable-zone/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Extrasolar Planets and Their Host Stars",
+   "publisher": "arXiv (academic review)",
+   "date": "2017-07 (from arXiv number)",
+   "link": "https://arxiv.org/pdf/1707.07405",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Mars: Facts",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/mars/facts/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Mars' atmosphere: Facts about the composition and climate",
+   "publisher": "Space.com",
+   "date": "undated",
+   "link": "https://www.space.com/16903-mars-atmosphere-climate-weather.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Astrobiology Habitability Cards",
+   "publisher": "NASA Astrobiology Institute",
+   "date": "undated",
+   "link": "https://astrobiology.nasa.gov/nai/media/medialibrary/2016/01/Astrobiology-Habitability-Cards.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The atmospheric greenhouse effect",
+   "publisher": "American Physical Society (APS)",
+   "date": "undated",
+   "link": "https://www.aps.org/learning-resources/the-atmospheric-greenhouse-effect",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The MAVEN Magnetic Field Investigation",
+   "publisher": "Space Science Reviews (Springer)",
+   "date": "2015",
+   "link": "https://link.springer.com/10.1007/s11214-015-0169-4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "MAVEN Solar Wind Ion Analyzer Will Look at Key Player in Mars Atmosphere Loss",
+   "publisher": "NASA",
+   "date": "undated",
+   "link": "https://www.nasa.gov/missions/maven-solar-wind-ion-analyzer-will-look-at-key-player-in-mars-atmosphere-loss",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 9. Today's question is simple: what does a planet need before people could live on it?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Terraforming, Part 1: What Makes a World Livable"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Remember class 1: we sort fact from story. The measurements of Earth, Mars and Venus are REAL. A world called Lowmere, which we meet later, is INVENTED."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: measured data on Earth, Mars, Venus | INVENTED: the world called Lowmere"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We will learn five features, one at a time: water, air, temperature, heat-holding, and a shield. Then you will score a world on them."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "Five features"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Feature one is liquid water. REAL: all life we know of needs it, so scientists look for worlds where water could stay liquid on the surface."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1. Liquid water"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That idea has a name. The habitable zone is the range of distances from a star where liquid water could exist on a planet's surface."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Habitable zone"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the habitable zone?",
+    "right": "The distance from a star at which liquid water could exist on a planet's surface.",
+    "wrong": [
+     "The part of a planet where people choose to live.",
+     "The distance from a star where the star looks brightest.",
+     "The region of a planet where there is oxygen."
+    ],
+    "why": "The zone is defined by distance from the star and the chance of liquid surface water, not by people or oxygen."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Being in the zone is a chance, not a promise. The planet still needs the right air and heat. That is features two to five."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Habitable zone is not the same as habitable."
+   },
+   "cite": [
+    "s7",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A planet orbits inside its star's habitable zone. What does that tell us?",
+    "right": "It might have liquid water, but we still have to check its air, temperature and more.",
+    "wrong": [
+     "It definitely has oceans.",
+     "It definitely has life.",
+     "It must have a strong magnetic field."
+    ],
+    "why": "The zone only says water could stay liquid at that distance. Whether a planet is habitable depends on many other things."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Feature two is the atmosphere, the blanket of gases around a planet. REAL: Earth's air is about 78% nitrogen and 21% oxygen."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c3",
+    "text": "Earth's air, by volume"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which gas makes up most of Earth's air?",
+    "right": "Nitrogen",
+    "wrong": [
+     "Oxygen",
+     "Carbon dioxide",
+     "Water vapour"
+    ],
+    "why": "Nitrogen is about 78% of dry air. Oxygen is about 21%."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our air does more than let us breathe. It shields us from harmful UV, traps heat, and softens the swings between day and night."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Air to breathe | Shield from UV | Heat trapped | Smaller day-night swings"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Air pressure is the weight of the air pressing on the ground. We measure it in bars. Earth is about 1 bar."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Surface air pressure in bars"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "REAL: Venus is about 92 bars. Mars is about 0.006 bar, over 100 times thinner than Earth's air."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Venus 92 bars | Earth 1 bar | Mars 0.006 bar"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s16"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which of these three worlds has the thickest air?",
+    "right": "Venus",
+    "wrong": [
+     "Earth",
+     "Mars",
+     "They are all the same."
+    ],
+    "why": "Venus is about 92 bars, Earth about 1 bar and Mars about 0.006 bar."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thin air connects back to feature one. On Mars, water exists, but the air is too thin for it to stay liquid on the surface for long."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Thin air, no lasting liquid water"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why can't liquid water last long on Mars's surface?",
+    "right": "The air pressure is too low.",
+    "wrong": [
+     "There is no water on Mars at all.",
+     "Mars has too much oxygen.",
+     "Mars is closer to the Sun than Earth."
+    ],
+    "why": "Water does exist on Mars, but the thin atmosphere means it does not stay liquid for long."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Feature three is temperature. REAL averages: Venus 464 °C, Earth 15 °C, Mars about minus 65 °C."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Mean surface temperature in °C"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which world has an average surface temperature of about 15 °C?",
+    "right": "Earth",
+    "wrong": [
+     "Venus",
+     "Mars",
+     "None of the three"
+    ],
+    "why": "NASA lists Earth at 15 °C, Venus at 464 °C and Mars at about minus 65 °C."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a puzzle. Mercury is closer to the Sun, yet Venus is hotter: 464 °C against 167 °C. The next idea solves it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mercury: 167 °C | Venus: 464 °C"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Feature four is how a planet holds heat: the greenhouse effect. Some gases let sunlight in but absorb the heat trying to leave."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Sunlight arrows pass through a layer of gas. Heat arrows going back up are caught by the gas and sent partly back down."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do greenhouse gases do?",
+    "right": "They let sunlight in but absorb heat on its way out.",
+    "wrong": [
+     "They block all sunlight.",
+     "They turn heat into oxygen.",
+     "They push air out into space."
+    ],
+    "why": "Greenhouse gases like carbon dioxide and water vapour pass sunlight but absorb outgoing infrared heat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On Earth this is helpful. NASA gives about 33 °C of cooling if our greenhouse effect collapsed. Without air, we would be well below freezing."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 33 °C"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the puzzle is solved. Venus has a thick, 97% carbon dioxide blanket that traps heat. Mars has a thin one, so heat escapes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Venus: too much blanket (464 °C) | Mars: too little blanket (heat escapes)"
+   },
+   "cite": [
+    "s17",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is Venus hotter than Mercury?",
+    "right": "Its thick carbon dioxide air traps heat.",
+    "wrong": [
+     "It is closer to the Sun than Mercury is.",
+     "It has no atmosphere.",
+     "It spins faster than Mercury."
+    ],
+    "why": "Venus is the exception to the rule that planets get colder farther from the Sun. NASA says its dense atmosphere acts as a greenhouse."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Feature five is the shield. The Sun constantly sends out a stream of charged particles, called the solar wind. Earth's magnetic field deflects most of it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Sun on the left, solar wind arrows bending around a bubble of magnetic field that surrounds Earth."
+   },
+   "cite": [
+    "s20",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What protects Earth from most of the solar wind?",
+    "right": "Earth's magnetic field",
+    "wrong": [
+     "The oceans",
+     "The Moon",
+     "Earth's clouds"
+    ],
+    "why": "NASA says Earth's magnetic field protects the planet from cosmic radiation and the charged particles the Sun emits."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mars has no global magnetic field today, though early Mars did. Its upper air is exposed to the solar wind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No global field = exposed air"
+   },
+   "cite": [
+    "s19",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "NASA says solar-wind loss has gone on for billions of years. It helped turn a warm, wet Mars into a cold desert."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Mars: from warm and wet to cold desert."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "ESA measured this directly. When the same gust of solar wind hit both planets, Mars lost oxygen at ten times Earth's increase."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10 times"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did the NASA and ESA findings help show?",
+    "right": "Without a magnetic field, Mars's air is stripped away much more easily by the solar wind.",
+    "wrong": [
+     "Mars's air is made mostly of oxygen.",
+     "Earth loses its air faster than Mars.",
+     "The solar wind does not touch Mars."
+    ],
+    "why": "NASA's MAVEN orbiter tracked solar-wind loss at Mars. ESA found Mars's oxygen loss rose ten times as much as Earth's in the same gust."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Radiation is the last piece. Curiosity measured about 0.7 millisieverts a day on Mars's surface, about what astronauts get in low Earth orbit."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 0.7 mSv per day"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How did Curiosity's measured radiation on the Martian surface compare with astronauts' doses in low Earth orbit?",
+    "right": "It was comparable.",
+    "wrong": [
+     "It was zero.",
+     "It was a thousand times higher.",
+     "It was far lower than anything on Earth."
+    ],
+    "why": "The rover's detector found surface radiation comparable to low Earth orbit. The deep-space trip to Mars is the harder part."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we compare. This table puts our five features beside REAL measurements for Earth, Mars and Venus."
+   },
+   "show": {
+    "kind": "list",
+    "text": "WATER: Earth has oceans and all three states of water | Mars has water, but thin air stops it staying liquid | Venus has no surface water. AIR: Earth 1 bar, 78% nitrogen | Mars 0.006 bar, mostly CO2 | Venus 92 bars, 97% CO2. TEMPERATURE: Earth 15 °C | Mars about minus 65 °C | Venus 464 °C. HEAT-HOLDING: Earth balanced | Mars too thin | Venus too thick. SHIELD: Earth has a global magnetic field | Mars has none today | Venus has none."
+   },
+   "cite": [
+    "s17",
+    "s16",
+    "s3",
+    "s2",
+    "s1",
+    "s4",
+    "s15",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these three worlds has a strong global magnetic field?",
+    "right": "Earth only",
+    "wrong": [
+     "Mars only",
+     "Venus and Mars",
+     "All three"
+    ],
+    "why": "Of these three, only Earth has a strong global magnetic field. Venus has none, and Mars only patches in its crust."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the story. Lowmere is INVENTED: an original world, not based on any planet from any book or film. Here are its made-up facts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED. WATER: ice most of the year; meltwater seas near the equator in summer. AIR: 0.4 bar, nitrogen and CO2, only 2% oxygen. TEMPERATURE: average minus 10 °C; summer equator up to 12 °C. HEAT-HOLDING: a modest CO2 and methane blanket. SHIELD: strong global magnetic field."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the score rule, our own teaching tool and not an official scale. Each feature gets 0, 1 or 2. Two means Earth-like, one means partly, zero means a problem like Mars or Venus today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2 = Earth-like | 1 = partly | 0 = a problem. Five features, so the top score is 10. Earth scores 10. Example: Mars air pressure is 0.006 bar, so it scores 0."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "On our scale, what is the highest possible score for a world?",
+    "right": "10",
+    "wrong": [
+     "5",
+     "12",
+     "100"
+    ],
+    "why": "There are five features and each can score up to 2, so the top total is 10."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Look at the Lowmere facts and give each of the five features a 0, 1 or 2. Take your time and write your five numbers down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Score Lowmere: 1. Water __ 2. Air __ 3. Temperature __ 4. Heat-holding __ 5. Shield __"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Lowmere has a strong global magnetic field, like Earth. What is a good score for feature five, the shield?",
+    "right": "2",
+    "wrong": [
+     "0",
+     "1",
+     "10"
+    ],
+    "why": "A strong global magnetic field is Earth-like, so it scores 2 on our scale."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is one reasonable answer. Water 1, air 1, temperature 1, heat-holding 1, shield 2. That is 6 out of 10. If yours differ, check your reasoning against the rule."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lowmere 6/10 (INVENTED world, our score). Earth 10/10. Mars about 1/10 and Venus 0/10 (our teaching scores, not a science standard)."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: liquid water, air, temperature, heat-holding and a shield. Next class we ask how to improve a world like Lowmere, how long it would take, and whether we should."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Liquid water | 2. Air | 3. Temperature | 4. Heat-holding (greenhouse) | 5. Shield (magnetic field and radiation)"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Mean surface temperature (°C)",
+   "rows": [
+    {
+     "label": "Venus",
+     "value": 464,
+     "source": "s4"
+    },
+    {
+     "label": "Earth",
+     "value": 15,
+     "source": "s4"
+    },
+    {
+     "label": "Mars",
+     "value": -65,
+     "source": "s4"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Surface air pressure (bars)",
+   "rows": [
+    {
+     "label": "Venus",
+     "value": 92,
+     "source": "s1"
+    },
+    {
+     "label": "Earth",
+     "value": 1.014,
+     "source": "s3"
+    },
+    {
+     "label": "Mars",
+     "value": 0.00636,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "pie",
+   "title": "Earth's air by volume (%)",
+   "rows": [
+    {
+     "label": "Nitrogen",
+     "value": 78,
+     "source": "s6"
+    },
+    {
+     "label": "Oxygen",
+     "value": 21,
+     "source": "s6"
+    },
+    {
+     "label": "Other gases (argon, carbon dioxide and more)",
+     "value": 1,
+     "source": "s6"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Habitable zone",
+   "links": [
+    "[[Liquid water]]",
+    "[[Terraforming, Part 2: Methods, Timescales and Ethics]]"
+   ]
+  },
+  {
+   "topic": "Greenhouse effect",
+   "links": [
+    "[[Atmosphere]]",
+    "[[Venus]]",
+    "[[Mars]]"
+   ]
+  },
+  {
+   "topic": "Magnetic field and solar wind",
+   "links": [
+    "[[Atmosphere]]",
+    "[[Radiation]]"
+   ]
+  },
+  {
+   "topic": "Habitability checklist (Lowmere)",
+   "links": [
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]",
+    "[[Terraforming, Part 2: Methods, Timescales and Ethics]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Mars lost much of its air because it lost its global magnetic field.",
+   "other_view": "MAVEN and ESA results support this idea. But a research review notes that Venus, Earth and Mars have surprisingly similar present-day atmospheric loss rates, so how much a magnetic field matters is still being worked out.",
+   "cite": [
+    "s9",
+    "s10",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Liquid water defines a habitable world and a habitable zone.",
+   "other_view": "Textbooks use liquid water because all known life needs it, but they note that other liquids might work for life elsewhere. Researchers also warn that a planet in the zone is not necessarily habitable.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Venus lies inside the Sun's habitable zone.",
+   "other_view": "NASA says Venus, Earth and Mars all sit within the zone. A university textbook says Venus is too close to the Sun for oceans. A review explains that the answer depends on how long you assume Venus and Mars kept liquid water, which sets a conservative or an optimistic zone.",
+   "cite": [
+    "s7",
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Mars's average temperature is about minus 65 °C.",
+   "other_view": "NASA's planet temperature table gives minus 65 °C, but NASA's Mars fact sheet gives about minus 59 °C. The figure depends on how the average is taken.",
+   "cite": [
+    "s4",
+    "s2"
+   ]
+  }
+ ]
+}

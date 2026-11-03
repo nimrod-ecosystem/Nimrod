@@ -1,0 +1,1026 @@
+{
+ "about": {
+  "title": "Animal minds",
+  "course": "consciousness",
+  "class_n": 10,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 37 short beats and 10 check questions, one idea at a time. Each theory and each group of animals needed its own beat, so the class runs to the full half hour and no shorter."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The New York Declaration on Animal Consciousness",
+   "publisher": "New York University (declaration site)",
+   "date": "2024-04-19",
+   "link": "https://sites.google.com/nyu.edu/nydeclaration/declaration",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The New York Declaration on Animal Consciousness: Background",
+   "publisher": "New York University (declaration site)",
+   "date": "2024-04-19",
+   "link": "https://sites.google.com/nyu.edu/nydeclaration/background",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The Cambridge Declaration on Consciousness (PDF)",
+   "publisher": "Francis Crick Memorial Conference, University of Cambridge (copy hosted by worldanimal.net)",
+   "date": "2012-07-07",
+   "link": "http://worldanimal.net/images/stories/documents/Cambridge-Declaration-on-Consciousness.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Cambridge Declaration (text of the 2012 declaration)",
+   "publisher": "The Human Animal Connection",
+   "date": "2012-07-07 (declaration text)",
+   "link": "https://www.thehumananimalconnection.org/cambridge-declaration",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Animals conscious say leading neuroscientists",
+   "publisher": "Mind Hacks",
+   "date": "2012-08-20",
+   "link": "https://mindhacks.com/2012/08/20/animals-conscious-say-leading-neuroscientists/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Animal Consciousness (Spring 2024 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2024 (Spring edition)",
+   "link": "https://plato.stanford.edu/archives/spr2024/entries/consciousness-animal/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Animal Consciousness (Summer 2013 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2013 (Summer edition)",
+   "link": "https://plato.stanford.edu/archives/sum2013/entries/consciousness-animal/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Animal Consciousness (Summer 2011 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2011 (Summer edition)",
+   "link": "https://plato.stanford.edu/archives/sum2011/entries/consciousness-animal/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Review of the Evidence of Sentience in Cephalopod Molluscs and Decapod Crustaceans",
+   "publisher": "London School of Economics (report for Defra)",
+   "date": "2021-11",
+   "link": "https://www.lse.ac.uk/business/consulting/reports/review-of-the-evidence-of-sentiences-in-cephalopod-molluscs-and-decapod-crustaceans",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Review of the Evidence of Sentience in Cephalopod Molluscs and Decapod Crustaceans (abstract)",
+   "publisher": "Wellbeing International Studies Repository",
+   "date": "2021",
+   "link": "https://www.wellbeingintlstudiesrepository.org/af_gen/2/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Octopus, crabs and lobsters feel pain: this is how we found out",
+   "publisher": "The Conversation",
+   "date": "2021-12 (as republished by Phys.org)",
+   "link": "https://theconversation.com/octopus-crabs-and-lobsters-feel-pain-this-is-how-we-found-out-173822",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Octopus, crabs and lobsters feel pain: How we found out",
+   "publisher": "Phys.org",
+   "date": "2021-12",
+   "link": "https://phys.org/news/2021-12-octopus-crabs-lobsters-pain.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Behavioral and neurophysiological evidence suggests affective pain experience in octopus",
+   "publisher": "iScience (Cell Press)",
+   "date": "2021 (vol. 24, issue 3)",
+   "link": "https://www.cell.com/iscience/fulltext/S2589-0042(21)00197-8",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Do bumble bees play?",
+   "publisher": "Animal Behaviour (ScienceDirect)",
+   "date": "2022",
+   "link": "https://www.sciencedirect.com/science/article/pii/S0003347222002366",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Are these bumble bees playing with toys?",
+   "publisher": "Science (AAAS)",
+   "date": "2022 (exact date not shown in the copy read)",
+   "link": "https://www.science.org/content/article/are-these-bumble-bees-playing-toys",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The exploration of consciousness in insects",
+   "publisher": "Philosophical Transactions of the Royal Society B",
+   "date": "2025 (vol. 380, issue 1939)",
+   "link": "https://royalsocietypublishing.org/rstb/article/380/1939/rstb.2024.0302/235190/The-exploration-of-consciousness-in-insectsThe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Conscious birds",
+   "publisher": "Philosophical Transactions of the Royal Society B",
+   "date": "2025 (vol. 380, issue 1939)",
+   "link": "https://royalsocietypublishing.org/rstb/article/380/1939/20240308/235178/Conscious-birdsConscious-birds",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Lack of neocortex does not imply fish cannot feel pain (commentary on Key)",
+   "publisher": "Animal Sentience (Wellbeing International repository)",
+   "date": "2016",
+   "link": "https://www.wellbeingintlstudiesrepository.org/cgi/viewcontent.cgi?article=1037&context=animsent",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Great Fish Pain Debate",
+   "publisher": "Issues in Science and Technology",
+   "date": "n.d.",
+   "link": "https://issues.org/the-great-fish-pain-debate/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Pain, Sentience, and Animal Welfare (Fish and Conservation, chapter 5)",
+   "publisher": "Virginia Tech Pressbooks",
+   "date": "n.d.",
+   "link": "https://pressbooks.lib.vt.edu/fishandconservation/chapter/pain-sentience-and-animal-welfare/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Are Humans the Only Conscious Animal?",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/are-humans-the-only-conscious-animal/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Integrated Information Theory of Consciousness",
+   "publisher": "Philosophy Now (issue 121)",
+   "date": "n.d.",
+   "link": "https://philosophynow.org/issues/121/The_Integrated_Information_Theory_of_Consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Are fish aware of themselves?",
+   "publisher": "Max Planck Society",
+   "date": "2019",
+   "link": "https://www.mpg.de/12704402/cleaner-wrasse-self-awareness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Fish, mirrors, and a gradualist perspective on self-awareness",
+   "publisher": "PLOS Biology (PubMed Central)",
+   "date": "2019",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6366752/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Professor advances understanding of animal consciousness",
+   "publisher": "York University (YFile)",
+   "date": "2024-07-05",
+   "link": "https://www.yorku.ca/yfile/2024/07/05/professor-advances-understanding-of-animal-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "It's 'irresponsible' to ignore widespread consciousness across animal world, dozens of scientists argue",
+   "publisher": "The Hill",
+   "date": "2024",
+   "link": "https://thehill.com/policy/energy-environment/4605739-widespread-animal-consciousness-irresponsible-to-ignore-new-york-declaration-scientists/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The NY Declaration on Animal Consciousness: New or Very Old News?",
+   "publisher": "Impact Ethics",
+   "date": "2024-07-16",
+   "link": "https://impactethics.ca/2024/07/16/the-ny-declaration-on-animal-consciousness-new-or-very-old-news/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "New York Declaration on Animal Consciousness",
+   "publisher": "Kristin Andrews (co-author of the declaration)",
+   "date": "2024",
+   "link": "https://www.kristinandrews.org/blog/nydecconsciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "New York declaration on animal consciousness",
+   "publisher": "Nicolas Delon (philosopher and signatory), Substack",
+   "date": "n.d. (2024)",
+   "link": "https://nicolasdelon.substack.com/p/new-york-declaration-on-animal-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Teaching & Learning Guide for: Animal Sentience",
+   "publisher": "PubMed Central",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9786658/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "A New Declaration on Animal Consciousness",
+   "publisher": "Kimmela Center",
+   "date": "2024-05-05",
+   "link": "https://www.kimmela.org/2024/05/05/a-new-declaration-on-animal-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Lack of neocortex does not imply fish cannot feel pain (abstract page)",
+   "publisher": "ResearchGate",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/348042258_Lack_of_neocortex_does_not_imply_fish_cannot_feel_pain",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 10: animal minds. Last time we looked at big ideas like idealism and panpsychism. Today's question is down to earth: which animals have experiences, and how could we ever tell?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Animal minds"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, one word we need. Here, 'conscious' means there is something it is like to be that creature. Philosophers call this phenomenal consciousness, and we will also call it sentience."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Something it is like"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The classic example is Thomas Nagel's bat. A bat senses the world by echoes. We can't picture that, but the question is whether there is something it is like to be the bat at all."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bat in flight, with curved lines showing sound echoes bouncing off a moth"
+   },
+   "cite": [
+    "s9",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In this class, what do we mean when we ask 'Is a crab conscious?'",
+    "right": "Whether there is something it is like to be a crab.",
+    "wrong": [
+     "Whether a crab can solve puzzles as well as a human.",
+     "Whether a crab is awake rather than asleep.",
+     "Whether a crab can talk about itself."
+    ],
+    "why": "We mean experience: is there something it is like to be that animal? Being clever or awake is a different question."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the big difficulty: we can't ask an animal. Experience is private, so nobody can look straight into another creature's mind. The Cambridge scientists added that even humans often can't readily say what is going on inside."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The reporting problem"
+   },
+   "cite": [
+    "s6",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For a long time this problem was settled the harsh way. Descartes' machine-like view of the body explained animal behaviour as reflex, as if animals were clockwork."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Animals as machines"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is a second difficulty: imagination. At the 2024 meeting in New York, philosopher Jonathan Birch said that thinking about animal consciousness runs into serious limits on what we can imagine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Limits of imagination"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why can't scientists settle this just by asking animals?",
+    "right": "Animals can't report their experience, and experience is private, so we have to infer it from clues.",
+    "wrong": [
+     "Animals have no nervous systems.",
+     "It has been proven that animals have no experiences.",
+     "Scientists have never tried to study animals."
+    ],
+    "why": "Experience is private and animals can't tell us about theirs. So the work is to gather clues and weigh them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So scientists act like careful detectives. They look for three kinds of clue: behaviour, brain structure, and pain responses."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Behaviour | Brain structure | Pain responses"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is one worked-out set of clues. A London School of Economics team used eight tests to judge octopuses, crabs and lobsters. Four ask whether the nervous system could support feeling. Four look at behaviour."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 8,
+    "layout": "group",
+    "text": "Eight tests"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The nervous-system tests ask: can the animal detect harmful things and send the signal to the brain? Is the signal handled in brain regions that combine information? Do painkillers change the response?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Detects harm and signals the brain | Processed where information is combined | Painkillers change the response"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The behaviour tests ask: does the animal weigh risk against reward? Does it tend its own wound? Does it learn to avoid what hurt it? Does it value painkillers when injured?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Trades risk for reward | Tends the wound | Learns to avoid | Values painkillers"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why those? A reflex, like jerking your hand off a hot pan, is rigid. Flexible, learned behaviour is what scientists take as evidence of pain."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Reflex: quick and rigid | Flexible: tends the wound, learns, trades off"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is stronger evidence that an animal feels pain?",
+    "right": "It tends its injured spot, then avoids the place where it was hurt.",
+    "wrong": [
+     "It pulls away from a hot surface at once.",
+     "It makes a sudden movement when touched.",
+     "It stays perfectly still."
+    ],
+    "why": "A quick pull-away could be a reflex. Tending the wound and learning to avoid the place are flexible, which is what researchers treat as evidence of pain."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next clue: brain structure. Mammals have a layered outer sheet called the neocortex. Does an animal need one to have feelings? The 2012 Cambridge Declaration said that lacking a neocortex does not appear to rule out feelings."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No neocortex needed?"
+   },
+   "cite": [
+    "s19",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the 2012 Cambridge Declaration say about animals without a neocortex?",
+    "right": "Lacking a neocortex does not appear to stop an animal having feelings.",
+    "wrong": [
+     "It proved that they have no feelings.",
+     "It said only primates can have feelings.",
+     "It said the neocortex is the only place feelings can arise."
+    ],
+    "why": "The declaration said the absence of a neocortex does not appear to rule out affective states. It pointed to convergent evidence from other brain systems."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So where is the evidence strongest? Mammals and birds. The 2024 New York Declaration says there is strong scientific support for attributing conscious experience to both."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mammals and birds"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Birds are interesting because their brains are built differently. The Cambridge Declaration called them a striking case of parallel evolution of consciousness. It singled out African grey parrots, and noted sleep patterns like those of mammals."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An African grey parrot looking calmly at the viewer"
+   },
+   "cite": [
+    "s4",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fish are where the argument gets hot. The sceptics' case is nicknamed 'no cortex, no cry'. It runs: feeling pain needs a neocortex, fish lack one, so fish don't feel pain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No cortex, no cry"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics answer that this assumes only a mammal-style neocortex can produce experience, which is the very thing in question. Fish may do it with different brain machinery. The neuroscientists Anthony and Hanna Damasio said they were not convinced that even human pain depends only on the cortex."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sceptic: no mammal-style cortex, no pain | Critic: other brain machinery could do the job"
+   },
+   "cite": [
+    "s19",
+    "s33",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the main complaint about the 'no cortex, no cry' argument?",
+    "right": "It assumes only a mammal-style neocortex can make experience, which is the thing in question.",
+    "wrong": [
+     "It is wrong because fish have a mammal-style neocortex.",
+     "Nobody has ever studied fish brains.",
+     "Fish can speak, so we can simply ask them."
+    ],
+    "why": "Fish lack a mammal-style neocortex. The complaint is that the argument assumes only that structure can produce experience, so it argues in a circle."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another fish clue is the mirror test. A mark is placed where an animal can only see it in a mirror. Cleaner wrasse, small reef fish, reacted to their reflection and tried to remove marks. Scientists still disagree about what that shows."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small cleaner wrasse fish facing its own reflection in a mirror inside a tank"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now octopuses. They are molluscs, not vertebrates, yet the pain evidence is strong. In one study they were given three chambers. After an injection in their favourite chamber, they avoided it from then on."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An octopus beside a three-chamber tank, with one chamber marked as the injection chamber"
+   },
+   "cite": [
+    "s10",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then injured octopuses learned to prefer a chamber with local anaesthetic. The anaesthetic quieted nerve signals from the injury to the brain. Similar results in mammals are taken as signs of felt pain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Seeking relief"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The study's team also saw octopuses keep attending to and hiding the wound for at least 24 hours. They call it the first example of probable ongoing pain in a non-mammal."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "24 hours"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In the three-chamber test, which result points toward felt pain?",
+    "right": "The octopuses learned to avoid the injury chamber and to prefer the chamber with painkiller.",
+    "wrong": [
+     "They changed colour once.",
+     "They stopped moving for a minute.",
+     "They ate more food."
+    ],
+    "why": "Learning to avoid the place of injury and to seek relief is flexible behaviour. In mammals, it is taken as a sign of experienced pain."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The London team's conclusion: all cephalopods, such as octopuses and squid, and all decapod crustaceans, such as crabs and lobsters, should be regarded as sentient for UK animal welfare law. They drew on over 300 studies."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "300+ studies"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Insects are the real surprise. In a 2022 study, bumble bees rolled small wooden balls again and again, with no food reward. They even went out of their way to reach the balls."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bumble bee clinging to a small wooden ball bigger than its body"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Younger bees rolled more balls than older ones, a pattern seen in play among young mammals. The researchers say it supports positive feelings in insects. Not everyone is convinced it is play."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Play, or something else?"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why might rolling balls with no reward count as a clue to feeling?",
+    "right": "It suggests the activity itself was rewarding, like play in young mammals.",
+    "wrong": [
+     "Because bees cannot roll balls unless they are conscious.",
+     "Because it proves bees are conscious.",
+     "Because bees need balls to eat."
+    ],
+    "why": "It is a clue, not a proof. The behaviour looks rewarding in itself, as play does, and some scientists still doubt it is play."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A recent review of insect consciousness is careful. It says there can be no formal certainty, since even for humans nobody agrees what produces consciousness. But the evidence adds up to a growing probability that insects may have some subjective experience."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Probability, not proof"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists have also put their opinions in writing. The Cambridge Declaration of July 2012 said humans are not unique in having the brain machinery behind consciousness. It named all mammals and birds, and many others, including octopuses."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "2012: Cambridge Declaration | 2024: New York Declaration"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The New York Declaration came in April 2024, and it reads as more tentative than the 2012 one. It makes three points."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Strong support: mammals and birds | Realistic possibility: all vertebrates, and many invertebrates including insects, crabs and octopuses | When there is a realistic possibility, ignoring it in decisions affecting that animal is irresponsible"
+   },
+   "cite": [
+    "s1",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look closely at the wording. 'Realistic possibility' is not proof. The background text says talk of proof or certainty would be inappropriate, because the nature of consciousness is still hotly contested."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "at least a realistic possibility of conscious experience"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the 2024 declaration, how strong is the claim about fish and insects?",
+    "right": "A realistic possibility of conscious experience, not proof.",
+    "wrong": [
+     "It is proven that they are conscious.",
+     "It is proven that they are not conscious.",
+     "They are agreed to be exactly as conscious as humans."
+    ],
+    "why": "The declaration says realistic possibility, and its background says proof and certainty would be inappropriate. It also does not attribute self-aware, higher-order consciousness to these animals."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One of its authors adds a useful point. The conclusion is not that insects obviously are conscious. It is that research is warranted, and that we should take precautions given the chance of causing harm."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Research and precaution"
+   },
+   "cite": [
+    "s29",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now back to the theories from earlier classes. They give different answers about animals. Scientists even test a theory by asking what it says about animal minds."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Theories meet animals"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Global workspace theory says consciousness is information broadcast across the brain. Philosopher Ned Block cites monkey evidence for it and thinks many animals have access consciousness. One account says a strict version would rule out animals with no brain, and perhaps fish and octopuses."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Workspace: depends on the architecture"
+   },
+   "cite": [
+    "s7",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Higher-order theories say a state is conscious when the creature can think about it. Peter Carruthers argued there is little evidence of theory of mind in animals, so little support for their phenomenal consciousness. Gennaro replied that the concepts needed were overstated."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Carruthers: little support for animal consciousness | Gennaro: the demands are overstated"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Integrated information theory ties consciousness to information that is both differentiated and unified. It implies simple forms of consciousness might exist even in the lowliest creatures. One author says most animal brains look highly integrated, so most animals are probably conscious."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "IIT: widespread"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the comparison side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Higher-order (Carruthers): few animals, if any | Global workspace: many mammals; strict readings exclude fish and octopuses | IIT: most animals, perhaps simple ones too"
+   },
+   "cite": [
+    "s7",
+    "s22",
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which theory, as described here, leans toward consciousness being most widespread?",
+    "right": "Integrated information theory.",
+    "wrong": [
+     "Higher-order theory, as Carruthers uses it.",
+     "Global workspace theory, read strictly.",
+     "Descartes' view of animals as machines."
+    ],
+    "why": "IIT implies even simple creatures might have some consciousness. Carruthers' higher-order view finds little support for animal experience, and a strict workspace reading excludes fish and octopuses."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does any of this matter? Because humans make decisions that affect animals. The declaration says that when consciousness is a realistic possibility, ignoring it is irresponsible. Its example is deciding whether to support octopus farming."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ethics under uncertainty"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This is reasoning under uncertainty. Precautionary reasoning says some protection can be given where there is reasonable evidence of sentience, even if the evidence is not definitive."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Precaution"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does precautionary reasoning say about animals?",
+    "right": "Give some protection where there is reasonable evidence of sentience, even if it is not definitive.",
+    "wrong": [
+     "Wait for complete proof before doing anything.",
+     "Protect only animals that can speak.",
+     "Assume no animal is conscious unless it passes the mirror test."
+    ],
+    "why": "Precaution means acting sensibly on reasonable evidence rather than waiting for proof that may never come."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One caution. The declaration makes no specific policy recommendations, and its signatories hold a wide range of views on moral, legal and political questions. It is a nudge to take the question seriously, not a rulebook."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A nudge, not a rulebook"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. We can't ask animals, so we read clues: behaviour, brain structure and pain responses."
+   },
+   "show": {
+    "kind": "list",
+    "text": "We can't ask, so we read clues | Evidence is strongest for mammals and birds | A realistic possibility for fish, octopuses, crabs and insects | Theories disagree, so we act with care"
+   },
+   "cite": [
+    "s1",
+    "s12",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time, class 11: machine minds. Thanks for the careful thinking today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Machine minds"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Sentience and phenomenal consciousness",
+   "links": [
+    "[[The hard problem]]",
+    "[[What do we mean by consciousness]]"
+   ]
+  },
+  {
+   "topic": "What is it like to be a bat",
+   "links": [
+    "[[The hard problem]]"
+   ]
+  },
+  {
+   "topic": "Signs of experience in animals",
+   "links": [
+    "[[Octopus pain]]",
+    "[[Fish pain debate]]"
+   ]
+  },
+  {
+   "topic": "Declarations on animal consciousness",
+   "links": [
+    "[[Cambridge Declaration 2012]]",
+    "[[New York Declaration 2024]]"
+   ]
+  },
+  {
+   "topic": "Each theory's view of animals",
+   "links": [
+    "[[Global workspace theory]]",
+    "[[Higher-order theories]]",
+    "[[Integrated information theory]]",
+    "[[Predictive processing and the controlled hallucination]]"
+   ]
+  },
+  {
+   "topic": "Ethics and uncertainty",
+   "links": [
+    "[[Precautionary reasoning]]",
+    "[[Machine minds]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Fish probably feel pain, even without a mammal-style neocortex.",
+   "other_view": "Neuroscientist Brian Key argues fish lack the brain structures that allow pain in humans, so they cannot feel pain. Critics reply that this argument assumes only a mammal-style neocortex can produce experience. Others say fish might use different neural machinery.",
+   "cite": [
+    "s19",
+    "s21",
+    "s33",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Cleaner wrasse passing the mirror test suggests fish self-recognition.",
+   "other_view": "The researchers themselves noted that passing the test does not necessarily mean the fish is self-aware. Other scientists argued that the fish's behaviour was ambiguous and that the marks may have been irritating, so the results fall short of self-recognition.",
+   "cite": [
+    "s24",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Bumble bees roll balls for fun, which suggests positive feelings.",
+   "other_view": "Not everyone is convinced the behaviour is truly play.",
+   "cite": [
+    "s16",
+    "s15"
+   ]
+  },
+  {
+   "claim": "There is strong support for conscious experience in mammals and birds, and a realistic possibility in many other animals.",
+   "other_view": "On Peter Carruthers' higher-order view, there is little support for phenomenal consciousness in most animals. Gennaro disputes this. Some experts who signed the 2024 declaration still say they have doubts, and the release of the statement was debated heatedly at its launch.",
+   "cite": [
+    "s7",
+    "s30",
+    "s27"
+   ]
+  },
+  {
+   "claim": "Where there is a realistic possibility of animal consciousness, it is irresponsible to ignore it in decisions that affect animals.",
+   "other_view": "One philosopher notes that overhauling animal-related practices on a false assumption could bring large economic costs and a net loss to human or animal welfare. From the other side, critics say the declaration is too weak, and that some signatories still run research that confines and harms animals.",
+   "cite": [
+    "s30",
+    "s32"
+   ]
+  }
+ ]
+}

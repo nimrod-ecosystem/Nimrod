@@ -1,0 +1,896 @@
+{
+ "about": {
+  "title": "The Magic Market: Economics with Spells",
+  "course": "fantasy-thought-experiments",
+  "class_n": 7,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class teaches six small ideas one at a time (market and money, scarcity, trade-offs, supply and demand, shifts in supply, inflation) and then uses them in two thought experiments. There are 28 short beats with 14 quick checks, which is enough for about 30 minutes at a calm pace. You can pause after any check and carry on later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "1.1 What Is Economics, and Why Is It Important? (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/1-1-what-is-economics-and-why-is-it-important",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Ch. 3 Key Concepts and Summary (Principles of Economics 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-2e/pages/3-key-concepts-and-summary",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "3.2 Shifts in Demand and Supply for Goods and Services (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/3-2-shifts-in-demand-and-supply-for-goods-and-services",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Answer Key Chapter 3 (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/chapter-3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Introduction to Inflation (Principles of Economics 3e, Ch. 22)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/22-introduction-to-inflation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "2.1 How Individuals Make Choices Based on Their Budget Constraint (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/2-1-how-individuals-make-choices-based-on-their-budget-constraint",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "3.4 Price Ceilings and Price Floors (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/3-4-price-ceilings-and-price-floors",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Trade in Medieval Europe",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/1301/trade-in-medieval-europe/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Extracts Relating to Mediaeval Markets and Fairs in England (Helen Douglas-Irvine)",
+   "publisher": "Project Gutenberg",
+   "date": "n.d.",
+   "link": "https://www.gutenberg.org/files/43667/43667-h/43667-h.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Coinage in Anglo-Saxon England",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Coinage_in_Anglo-Saxon_England",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "An early medieval money mystery is solved",
+   "publisher": "University of Cambridge",
+   "date": "2024",
+   "link": "https://www.cam.ac.uk/stories/medieval-money-mystery-solved",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Kingdom of Mali: Primary Source Documents (al-Umari on Mansa Musa in Cairo, 1324)",
+   "publisher": "Boston University African Studies Center",
+   "date": "n.d.",
+   "link": "https://www.bu.edu/africa/outreach/teachingresources/history/k_o_mali/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "$400 Billion Mansa Musa Fortune Traces to a 2012 Website List (fact check)",
+   "publisher": "Ancient Origins",
+   "date": "2026",
+   "link": "https://www.ancient-origins.net/news-history-archaeology/mansa-musa-400-billion-richest-man-fact-check-00103294",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "When the Mali emperor Mansa Musa crossed Egypt toward Mecca around 1324 (summary of Warren Schultz's reappraisal)",
+   "publisher": "SpaceDaily",
+   "date": "2026",
+   "link": "https://spacedaily.com/m-when-the-mali-emperor-mansa-musa-crossed-egypt-toward-mecca-around-1324-he-gave-away-so-much-gold-that-its-value-collapsed-across-the-region-for-roughly-a-decade-and-he-is-still-often-called-the-ric/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Great Debasement and Tudor Coins",
+   "publisher": "The Royal Mint",
+   "date": "n.d.",
+   "link": "https://www.royalmint.com/collect/coin-history-and-tradition/debasement-and-tudor-coinage/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The inexorable lessons of currency debasement",
+   "publisher": "Institute of Economic Affairs",
+   "date": "n.d.",
+   "link": "https://iea.org.uk/blog/the-inexorable-lessons-of-currency-debasement/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Assize of Bread and Ale",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Assize_of_Bread_and_Ale",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Commons, Intellectual Property, and Hacking Bread Laws in Medieval England",
+   "publisher": "Brewminate",
+   "date": "n.d.",
+   "link": "https://brewminate.com/the-commons-intellectual-property-and-hacking-bread-laws-in-medieval-england/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Assize of Bread and Ale",
+   "publisher": "HandWiki",
+   "date": "n.d.",
+   "link": "https://handwiki.org/wiki/Assize_of_Bread_and_Ale",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the Magic Market. Today's question: if you add magic to a market, what happens to prices?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Magic Market: Economics with Spells"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We'll label things as we go. REAL means real history or economics. INVENTED means our village, where Dame Gladys sells bread and Robin the Joker sells spells."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: history and economics | INVENTED: Nimrod's village, Dame Gladys's bread, Robin's spells, Merlin's gold"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "REAL: first, a market. It is a place where buyers and sellers meet. In medieval England there were markets, and bigger ones called fairs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Market"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "REAL: a fair was a market held once or a few times a year. People found more goods there, and prices were often lower because more sellers competed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A busy medieval fair: stalls of cloth, wool, spices and wine, with buyers and sellers arguing happily over prices"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "REAL: money. In England the silver penny took over from a gold coin around the year 675. It stayed the main coin until the mid-1300s."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "coin",
+    "count": 1,
+    "layout": "row",
+    "text": "One silver penny: the everyday coin of medieval England"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What was the main everyday coin in medieval England for centuries?",
+    "right": "The silver penny",
+    "wrong": [
+     "A paper banknote",
+     "A gold shilling",
+     "A plastic token"
+    ],
+    "why": "The silver penny replaced an earlier gold coin around 675 and remained the principal English coin until the mid-14th century."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our first economic idea. Scarcity means people want more goods than there are. Resources like labour, tools and land are limited."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scarcity: wants are bigger than supply"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "INVENTED example: Dame Gladys bakes ten loaves. Twenty-five villagers are hungry. There is not enough bread for everyone."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "bread",
+    "count": 10,
+    "layout": "group",
+    "text": "10 loaves, 25 hungry villagers (INVENTED)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Ten loaves, twenty-five hungry villagers. What is this situation called?",
+    "right": "Scarcity",
+    "wrong": [
+     "A feast",
+     "A broken oven",
+     "A tax"
+    ],
+    "why": "Scarcity means that what people want is more than what is available. Here, 25 villagers want bread but there are only 10 loaves."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scarcity forces choices. Giving up one thing to get another is a trade-off. What you give up is the opportunity cost."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trade-off and opportunity cost"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Jack has one penny. He buys bread instead of one of Robin's potions. What is his opportunity cost?",
+    "right": "The potion he could have bought instead",
+    "wrong": [
+     "Nothing, because bread was free",
+     "The bread itself",
+     "Robin's joke"
+    ],
+    "why": "Opportunity cost is the value of the next best alternative you give up. Jack gave up the potion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, demand. The law of demand says a higher price usually means people buy less. If Gladys charges much more for a loaf, fewer villagers buy it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Demand: higher price, fewer bought"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Supply works the other way. The law of supply says a higher price usually means sellers offer more. If loaves sell for more, Gladys is happy to bake extra."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Supply: higher price, more offered"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The price of bread goes up. What usually happens?",
+    "right": "Buyers buy fewer loaves, and bakers offer more",
+    "wrong": [
+     "Buyers buy more, and bakers offer fewer",
+     "Nobody changes what they do",
+     "Both buyers and bakers stop completely"
+    ],
+    "why": "A higher price usually lowers the quantity demanded (law of demand) and raises the quantity supplied (law of supply)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where the two meet is the equilibrium price: buyers want exactly what sellers offer. Below it there is a shortage. Above it there is a surplus."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Price too low: shortage (people want more than is offered) | Price too high: surplus (sellers offer more than people want)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Gladys sells bread far below the equilibrium price. A long line forms and the loaves run out. What is this?",
+    "right": "A shortage",
+    "wrong": [
+     "A surplus",
+     "Inflation",
+     "Equilibrium"
+    ],
+    "why": "Below the equilibrium price, the quantity demanded is more than the quantity supplied. That is a shortage, also called excess demand."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A shift in supply means sellers offer a different amount at every price. A cheaper way to make things shifts supply up. Price falls and quantity rises, all else equal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shift in supply: new method, more goods at every price"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "INVENTED: Gladys gets a bigger oven and can bake twice as many loaves at any price. All else equal, what do we expect for the bread price?",
+    "right": "It tends to fall",
+    "wrong": [
+     "It tends to rise",
+     "It stays the same no matter what",
+     "We can't tell, because supply has nothing to do with price"
+    ],
+    "why": "Cheaper production shifts supply to the right. That moves the market down the demand curve, so the price falls and the quantity rises."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last idea: inflation. It is a general, ongoing rise in prices across a whole economy. One price rising once, like bread after a bad harvest, is not inflation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inflation: most prices, rising over time"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "After a bad harvest, only the price of bread rises, once. Is that inflation?",
+    "right": "No. Inflation is a general, ongoing rise in most prices",
+    "wrong": [
+     "Yes, any price rise is inflation",
+     "Yes, because bread is important",
+     "No, because bread prices can never rise"
+    ],
+    "why": "Inflation means most prices across the economy keep rising. A one-time change in a single price is a change in relative prices, not inflation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "REAL story. In 1324 Mansa Musa, king of Mali, passed through Cairo on his pilgrimage. He gave away and spent huge amounts of gold there."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "They exchanged gold until they depressed its value in Egypt and caused its price to fall. (al-Umari, 14th century, translated)"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Al-Umari wrote that a gold mithqal had been worth at least 25 silver dirhams in Cairo. Afterwards it was no more than 22. Gold had become more plentiful, so each piece bought less."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Cairo, 1324: silver dirhams per gold mithqal, in al-Umari's account",
+    "chart": "c1"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In al-Umari's account, what happened to gold's value in silver after Musa's visit?",
+    "right": "It fell, from about 25 dirhams to 22 or less",
+    "wrong": [
+     "It rose to about 30 dirhams",
+     "It did not change at all",
+     "Gold became free"
+    ],
+    "why": "Al-Umari says the mithqal had not gone below 25 dirhams, but afterwards it did not exceed 22 or so."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Careful historians add a note. The fall in gold's value in Cairo is well supported. The claim that it lasted twelve years is disputed."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Well supported: Musa gave away gold in Cairo, and gold fell against silver | Disputed: that the low price lasted twelve years, or that Egypt's whole economy crashed"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "REAL: another case of money losing value. Between 1544 and 1551 King Henry VIII's mints put less silver in English coins and used cheaper copper. It raised money for his wars."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Debasement: less silver, same face value"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Royal Mint says this broke the old promise that a coin is worth its metal. Trust in the coins fell. The silver wore off Henry's nose, so he was nicknamed Old Coppernose."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "English coins: value of silver content as a percentage of face value",
+    "chart": "c2"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Between 1544 and 1551, what happened to the silver in English coins?",
+    "right": "There was less and less, down to about a quarter of face value",
+    "wrong": [
+     "There was more and more",
+     "It stayed exactly the same",
+     "It was replaced by gold"
+    ],
+    "why": "By 1551 the silver in a coin was worth only about a quarter of its face value."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the first thought experiment. We change one thing in our village and predict the result. What if Merlin could make gold?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Thought experiment 1 (INVENTED): Merlin makes gold. Step 1: the supply of gold rises. Step 2: each gold coin is worth less. Step 3: sellers ask for more coins per loaf. Step 4: if it keeps going, prices keep rising, which is inflation."
+   },
+   "cite": [
+    "s4",
+    "s12",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why would gold lose value? It was valuable partly because it was scarce. The Cairo story is the real-world hint that plenty of gold means each piece buys less."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Plentiful gold means less valuable gold"
+   },
+   "cite": [
+    "s12",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "INVENTED: a loaf costs 1 gold coin today. Merlin makes a sack of gold every day for a year. What do we predict?",
+    "right": "More gold coins will be asked for each loaf",
+    "wrong": [
+     "Fewer gold coins will be asked for each loaf",
+     "The price will stay exactly the same",
+     "Bread will disappear from the village"
+    ],
+    "why": "As gold becomes plentiful, each coin buys less, so sellers ask for more coins. If this continues, it is inflation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who gains? People who sell to the first gold spenders. Al-Umari says Cairo's traders profited from Musa's party. Who loses? Anyone saving old gold, because it buys less."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Likely gain: sellers who get the new gold early | Likely lose: people saving old gold coins, and anyone who stops trusting the coin"
+   },
+   "cite": [
+    "s12",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair warning: this is a prediction, not a certainty. It depends on how much gold, how fast, and who gets it. Economists treat a one-time change differently from an ongoing one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One-time change vs ongoing inflation"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thought experiment 2. Robin the Joker sells a spell that makes bread plentiful. This is the same kind of shift in supply as Gladys's big oven, only bigger."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thought experiment 2 (INVENTED): a spell makes bread plentiful"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The prediction: the supply of bread shifts right. The price of bread falls and more bread is sold. Hungry villagers gain. Bakers whose costs are too high may lose."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Likely gain: villagers who buy bread (more bread, lower price) | Likely lose: bakers who cannot match the new low price, such as Dame Gladys with her costly oven"
+   },
+   "cite": [
+    "s4",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "INVENTED: Robin's spell doubles the bread in the village. Who is most likely to gain?",
+    "right": "Villagers who buy bread",
+    "wrong": [
+     "Only bakers who keep the old high price",
+     "Nobody, because prices never change",
+     "Only Robin, whatever happens"
+    ],
+    "why": "More supply tends to push the price down and the quantity up, which helps buyers. Sellers with higher costs may lose out."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "REAL: medieval England watched bread closely. Under the Assize of Bread and Ale, a law of the 13th century, town and village bread was regulated for price, weight and quality."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Assize of Bread and Ale (REAL, 13th century)"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is how it worked. The price of a loaf stayed the same. When grain got dearer, the loaf got lighter. Officials checked the loaves."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same price, changing weight"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Under the Assize of Bread, grain became more expensive. What changed?",
+    "right": "The loaf was made lighter, and the price stayed the same",
+    "wrong": [
+     "The loaf got heavier",
+     "The bread was given away",
+     "The bread was banned"
+    ],
+    "why": "The assize kept the price of a standard loaf steady and adjusted its weight to follow the price of grain."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What if King Kenny simply orders a maximum price for bread, below the market price? A price ceiling like that tends to cause a shortage."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Price ceiling: a legal maximum price"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "INVENTED: King Kenny sets the bread price below the market price. What usually happens?",
+    "right": "People want more bread than sellers offer, so there is a shortage",
+    "wrong": [
+     "Sellers offer much more bread",
+     "Bread becomes free",
+     "Nothing changes at all"
+    ],
+    "why": "A price ceiling set below the equilibrium price makes the quantity demanded greater than the quantity supplied."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we can write some rules for a fair magic economy. These are our own suggestions, built from what we've learned. Real history and economics are the reasons behind them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED rules, built on REAL lessons: 1. Say what each spell does, and check the goods. 2. Check weight and quality, as the assize did. 3. Never make coin without limit: keep it honest. 4. Count the trade-offs, including who loses. 5. Don't fix prices below what the market can supply."
+   },
+   "cite": [
+    "s18",
+    "s17",
+    "s15",
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's test a rule. Merlin could make unlimited gold. That would risk what the Royal Mint describes: coins that are no longer worth what they claim, and trust that falls."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Keep coin honest"
+   },
+   "cite": [
+    "s15",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which rule would Merlin break by making endless gold?",
+    "right": "Never make coin without limit: keep it honest",
+    "wrong": [
+     "Check the weight of the loaves",
+     "Say what each spell does",
+     "Don't fix prices below what the market can supply"
+    ],
+    "why": "Endless new gold would lower the value of each coin, much as Henry VIII's debasement damaged trust in the coins."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it all together. Scarcity, trade-offs, supply and demand, a shift in supply, and inflation. Magic changes the supply side, and prices follow."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Scarcity: wants beat supply. Trade-off: choosing means giving something up. Demand and supply: price balances them. Shift in supply: more goods at each price, so lower price. Inflation: most prices rising over time."
+   },
+   "cite": [
+    "s1",
+    "s6",
+    "s2",
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "INVENTED: Robin's new spell doubles the number of potions made. All else equal, what do we predict for potion prices?",
+    "right": "They tend to fall",
+    "wrong": [
+     "They tend to rise",
+     "They stay exactly the same forever",
+     "They turn into gold"
+    ],
+    "why": "More supply at every price shifts the supply curve right, which lowers the equilibrium price and raises the quantity."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Cairo, 1324: silver dirhams per gold mithqal (al-Umari's account)",
+   "rows": [
+    {
+     "label": "Before Musa (at least)",
+     "value": 25,
+     "source": "s12"
+    },
+    {
+     "label": "After Musa (no more than about)",
+     "value": 22,
+     "source": "s12"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "line",
+   "title": "English coins: value of silver content as % of face value",
+   "rows": [
+    {
+     "label": "March 1542",
+     "value": 75,
+     "source": "s16"
+    },
+    {
+     "label": "March 1545",
+     "value": 50,
+     "source": "s16"
+    },
+    {
+     "label": "March 1546",
+     "value": 33.33,
+     "source": "s16"
+    },
+    {
+     "label": "1551",
+     "value": 25,
+     "source": "s16"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Scarcity and trade-offs",
+   "links": [
+    "[[Life in a Medieval Village]]",
+    "[[Your Own Thought Experiment: Fantasy and Science Fiction]]"
+   ]
+  },
+  {
+   "topic": "Supply, demand and shifts in supply",
+   "links": [
+    "[[What If? How a Thought Experiment Works]]",
+    "[[Science of a Dragon: Size, Flight and Fire]]"
+   ]
+  },
+  {
+   "topic": "Inflation and money",
+   "links": [
+    "[[Inside the Castle]]",
+    "[[Science of a Wizard: Energy, Chemistry and Evidence]]"
+   ]
+  },
+  {
+   "topic": "Price controls and fair rules",
+   "links": [
+    "[[Building a World: Maps and Worldbuilding]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 660 to 750",
+   "elsewhere": "Anglo-Saxon England saw a surge in silver coins. Tests show Byzantine silver, which had entered Western Europe decades earlier, was the main source behind it.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "when": "12th and 13th centuries",
+   "elsewhere": "Trade fairs boomed in France, England, Flanders and Germany. The famous Champagne fairs drew traders from Flanders, Spain, England and Italy.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "when": "1324",
+   "elsewhere": "While Mansa Musa spent gold in Cairo, English money was still mainly the silver penny, which stayed the main coin until the mid-14th century.",
+   "cite": [
+    "s12",
+    "s10"
+   ]
+  },
+  {
+   "when": "1544 to 1551",
+   "elsewhere": "Henry VIII's government cut the silver in English coins to raise money for military operations and other royal costs.",
+   "cite": [
+    "s15"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Mansa Musa's gold crashed the price of gold in Cairo for twelve years.",
+   "other_view": "Historians agree that gold fell against silver in Cairo after his visit. The twelve-year length is disputed, and al-Umari appears to be the only surviving source that blames Musa for a decline that long. Claims that his spending wrecked Egypt's whole economy are unverified.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Price rules like the Assize of Bread protect ordinary buyers.",
+   "other_view": "Textbook economics warns that a legal maximum price below the market price tends to cause shortages. Those who get the cheap product gain, but sellers and buyers who miss out lose. The Assize itself was long-lasting, and bread law stayed in force into the 19th century. Over time, though, its fixed price scales were seen as inconvenient and oppressive, and the ale rules were changed in the 16th century.",
+   "cite": [
+    "s7",
+    "s17",
+    "s19"
+   ]
+  },
+  {
+   "claim": "If Merlin made gold, prices would keep rising (inflation).",
+   "other_view": "Economists separate a one-time price change from inflation. If Merlin made gold only once, prices might adjust once and then settle. Inflation needs ongoing rises across most prices.",
+   "cite": [
+    "s5"
+   ]
+  }
+ ]
+}

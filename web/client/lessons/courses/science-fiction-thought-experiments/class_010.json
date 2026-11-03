@@ -1,0 +1,931 @@
+{
+ "about": {
+  "title": "Terraforming, Part 2: Methods, Timescales and Ethics",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 10,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes: 31 short steps and 13 quick questions. That is enough to explain each idea in turn without rushing. To split it, stop after step 18 (methods, timescales, energy) and do the rules and ethics next time. Each half stands alone."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Inventory of CO2 available for terraforming Mars (Jakosky and Edwards)",
+   "publisher": "Nature Astronomy",
+   "date": "2018-07-30",
+   "link": "https://www.nature.com/articles/s41550-018-0529-6",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Mars terraforming not possible using present-day technology",
+   "publisher": "ScienceDaily (University of Colorado Boulder release)",
+   "date": "2018-07-30",
+   "link": "https://www.sciencedaily.com/releases/2018/07/180730120307.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Inventory of CO2 available for terraforming Mars (abstract record)",
+   "publisher": "Semantic Scholar",
+   "date": "2018",
+   "link": "https://www.semanticscholar.org/paper/Inventory-of-CO2-available-for-terraforming-Mars-Jakosky-Edwards/42d550295a3c20d2d59aa5b68e98dc0fdf65a8fe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Enabling Martian habitability with silica aerogel via the solid-state greenhouse effect",
+   "publisher": "Nature Astronomy",
+   "date": "2019",
+   "link": "https://www.nature.com/articles/s41550-019-0813-0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Terraforming Mars could be easier than scientists thought",
+   "publisher": "Science (news)",
+   "date": "not shown on the page excerpt read",
+   "link": "https://www.science.org/content/article/terraforming-mars-could-be-easier-scientists-thought",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "An Introduction to Mars Terraforming, 2025 Workshop Summary (Stork and DeBenedictis)",
+   "publisher": "arXiv (Pioneer Labs, for the Green Mars Workshop)",
+   "date": "2025-10-07",
+   "link": "https://arxiv.org/abs/2510.07344",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "An Introduction to Mars Terraforming (workshop blog post)",
+   "publisher": "Pioneer Labs",
+   "date": "not shown on the page excerpt read",
+   "link": "https://blog.pioneer-labs.org/p/an-introduction-to-mars-terraforming",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Terraforming Mars: Mass, Forcing, and Industrial Throughput Constraints (preprint)",
+   "publisher": "arXiv",
+   "date": "2026-03",
+   "link": "https://arxiv.org/pdf/2603.00402",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Terraforming Mars isn't a climate problem - it's an industrial nightmare",
+   "publisher": "Phys.org",
+   "date": "2026-03",
+   "link": "https://phys.org/news/2026-03-terraforming-mars-isnt-climate-problem.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Fundamental Physical and Resource Requirements for a Martian Magnetic Shield",
+   "publisher": "arXiv",
+   "date": "2020-06",
+   "link": "https://arxiv.org/pdf/2006.05546",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Cloud Continents: Terraforming Venus Efficiently by Means of a Floating Artificial Surface",
+   "publisher": "arXiv",
+   "date": "2022-03",
+   "link": "https://arxiv.org/pdf/2203.06722",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "We may be able to turn Mars green. Here's how science says we'll make the Red Planet habitable",
+   "publisher": "BBC Sky at Night Magazine",
+   "date": "not shown on the page excerpt read",
+   "link": "https://www.skyatnightmagazine.com/news/how-make-mars-fit-for-humans",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The Outer Space Treaty (Article IX)",
+   "publisher": "United Nations Office for Outer Space Affairs",
+   "date": "1967",
+   "link": "https://www.unoosa.org/unoosa/en/ourwork/spacelaw/treaties/outerspacetreaty.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "COSPAR Policy on Planetary Protection (December 2017 version)",
+   "publisher": "COSPAR",
+   "date": "2017-12",
+   "link": "https://cosparhq.cnes.fr/assets/uploads/2019/12/PPPolicyDecember-2017.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Planetary Protection in the New Space Era: Science and Governance",
+   "publisher": "Frontiers in Astronomy and Space Sciences",
+   "date": "2020",
+   "link": "https://www.frontiersin.org/journals/astronomy-and-space-sciences/articles/10.3389/fspas.2020.589817/full",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The COSPAR Planetary Protection Policy for robotic missions to Mars: A review of current scientific knowledge and future perspectives",
+   "publisher": "Life Sciences in Space Research (ScienceDirect)",
+   "date": "2022",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S2214552422001018",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Constraints on Interstellar Sovereignty",
+   "publisher": "arXiv",
+   "date": "2023-08",
+   "link": "https://arxiv.org/pdf/2308.11076",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Is Searching for Martian Life a Priority for the Mars Community?",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "not shown on the page excerpt read",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5820680/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Ethics of Terraforming: A Critical Survey of Six Arguments",
+   "publisher": "PhilArchive",
+   "date": "not shown on the page excerpt read",
+   "link": "https://philarchive.org/archive/STOTEO-46",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Ethical Considerations for Terraforming Mars",
+   "publisher": "Environmental Law Reporter (Environmental Law Institute)",
+   "date": "2011-10",
+   "link": "https://www.elr.info/sites/default/files/article/2011/10/32.11333.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Ethics of Terraforming",
+   "publisher": "Philosophy Now (issue 38)",
+   "date": "not shown on the page excerpt read",
+   "link": "https://philosophynow.org/issues/38/The_Ethics_of_Terraforming",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Argument Against Terraforming Mars",
+   "publisher": "Nautilus",
+   "date": "not shown on the page excerpt read",
+   "link": "https://nautil.us/the-argument-against-terraforming-mars-236758",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The Future of Space Activities and Preservation on Mars: A Preliminary Policy Delphi Study",
+   "publisher": "arXiv",
+   "date": "2023-03",
+   "link": "https://arxiv.org/pdf/2303.16594",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Rethinking the Mars terraforming debate",
+   "publisher": "The Space Review",
+   "date": "2018-08-20",
+   "link": "https://www.thespacereview.com/article/3551/1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "A research roadmap for assessing the feasibility of warming Mars",
+   "publisher": "arXiv",
+   "date": "2026-04",
+   "link": "https://arxiv.org/pdf/2604.02242",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Review of the MEPAG Report on Mars Special Regions, Chapter 1: Planetary Protection and Mars Special Regions",
+   "publisher": "National Academies Press",
+   "date": "2015",
+   "link": "https://www.nationalacademies.org/read/21816/chapter/3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Could we really turn Mars green?",
+   "publisher": "Phys.org",
+   "date": "2025-10",
+   "link": "https://phys.org/news/2025-10-mars-green.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class ten. Today we look at how people propose to change a whole world, how long it might take, and whether we should."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Terraforming, Part 2: Methods, Timescales and Ethics"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before we start, here is how we will label things. REAL means published science. SPECULATIVE means proposed, but never done at full size. UNKNOWN means nobody knows yet. STORY means we made it up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL = published science\nSPECULATIVE = proposed, never done at full size\nUNKNOWN = nobody knows yet\nSTORY = invented for this course"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our story: a cold, dry world called Tern. A small human settlement lives there, and a council called the Lantern Assembly must decide whether to reshape it. Tern is invented. The science we use is real, from Mars and Venus."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "STORY: A rust-coloured world called Tern, seen from orbit. A single cluster of lit domes sits on a pale plain, and a thin haze hangs over the horizon."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our first word is terraforming. It means changing a world's environment to be more Earth-like, so that Earth life can survive there without life-support systems."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Terraforming = making a world's environment more Earth-like (REAL definition)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In this course, what does terraforming mean?",
+    "right": "Changing a world's environment to be more Earth-like, so Earth life can survive without life-support systems",
+    "wrong": [
+     "Building sealed domes where people live with life support",
+     "Landing a rover to search for signs of life",
+     "Moving a planet closer to its star"
+    ],
+    "why": "Terraforming changes the whole environment, so life could live outside. A dome keeps the outside unchanged."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For Mars, that gives two big jobs. Job one: warm the planet by about sixty degrees Celsius. Job two: build breathable air. Many microbes and some plants can grow in thin air, so warmth comes first."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Job 1: Warm it. Mars needs roughly +60°C to keep liquid water.\nJob 2: Air. Make a thicker atmosphere with breathable oxygen."
+   },
+   "cite": [
+    "s9",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Method one: release carbon dioxide that is already on Mars. CO2 is a greenhouse gas, so it holds heat in like a blanket. The easiest source is the polar ice caps."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Method 1: release CO2 (SPECULATIVE idea; tested only in calculations)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The ice could be vaporised by spreading dust on it, so it absorbs more sunlight, or by using explosives. Researchers estimate you would need CO2 pressure about like Earth's whole atmosphere to keep liquid water stable. Did anyone check if Mars has that much CO2?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "The target: CO2 pressure about equal to Earth's whole atmosphere"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Yes. A 2018 NASA-sponsored study used spacecraft data. It found there is not enough CO2 left, and most of it is locked away where it cannot be reached. Their conclusion: not possible with present-day technology."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "REAL finding: terraforming Mars is not possible using present-day technology."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the 2018 study conclude about carbon dioxide on Mars?",
+    "right": "There is not enough that could be released, so this method will not work with present-day technology",
+    "wrong": [
+     "There is plenty, and releasing it would be easy",
+     "There is enough, but only near the equator",
+     "Releasing it would make Mars colder"
+    ],
+    "why": "The study found too little reachable CO2. Note the wording: it says 'present-day technology', not 'forever'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Method two is a solid greenhouse. Silica aerogel is a very light solid that lets sunlight through but slows heat escaping. Heat slowly builds up underneath it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cross-section: a thin clear layer of aerogel lies on the ground. Sunlight arrows go in, and the ground beneath is shown warming while the air above stays cold."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In lab tests and computer models, a layer only two to three centimetres thick could keep the ground under it warm enough for liquid water. The authors say this regional approach is much more achievable than changing a whole planet's air."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "REAL in a lab and in models. SPECULATIVE at scale. Warms patches, not the planet."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is the aerogel idea called 'regional'?",
+    "right": "It warms only the ground under the layer, not the whole planet",
+    "wrong": [
+     "It changes the whole planet's air at once",
+     "It only works on Venus",
+     "It needs the air to be thick first"
+    ],
+    "why": "The aerogel sits on the ground and warms only the area it covers. The authors say that makes it more achievable than global change."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Method three: release tiny engineered particles into the sky that bounce heat back down. One modelling study found Mars could warm about ten degrees within months, with about five thousand times less material than other gas schemes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Method 3: tiny particles in the air. 'Modelled' = a computer simulation. SPECULATIVE."
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A study 'modelled' this particle warming. What does that mean?",
+    "right": "It was a computer simulation, and it has not been tried on Mars",
+    "wrong": [
+     "It was proven by a real test on Mars",
+     "It was copied from a science-fiction film",
+     "A model rocket released the particles"
+    ],
+    "why": "A model is a simulation. It tells us what might happen, not what has happened."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Other ideas use mirrors in space, or steering ice-rich asteroids to Mars. A 2026 roadmap calculated that adding even ten percent to Mars's air this way needs about ten trillion watts for 35 years. It called that too high, and suggested using atoms already on Mars."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Space mirrors: SPECULATIVE\nSteering ice-rich asteroids: SPECULATIVE, and power needed is 'too high' in one 2026 analysis\nUsing materials already on Mars: the roadmap's preferred direction"
+   },
+   "cite": [
+    "s8",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Venus, the opposite problem. It is far too hot, with about 90 bars of carbon dioxide. A bar is roughly Earth's sea-level air pressure. One 1991 plan used a giant sunshade to block sunlight, so the planet cools until the gas freezes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge thin shade floats between a small bright Sun and the cloudy disc of Venus, casting Venus into shadow."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That plan claimed it could take about 200 years, mostly waiting for the air to freeze. Another idea is to skip the ground and live in floating habitats about 50 kilometres up, where temperature and pressure are Earth-like. Both are SPECULATIVE and neither has been built."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sunshade plan: claimed ~200 years (SPECULATIVE)\nCloud-level habitats: about 50 km up (SPECULATIVE)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So where do we stand? These ideas come from real science, but none has been shown to work at planet scale. The 2025 workshop authors put it plainly."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Today, Mars terraforming is a vision, not a detailed plan."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement is best supported by what we have covered?",
+    "right": "The ideas come from real science, but none has been shown to work at full scale",
+    "wrong": [
+     "All four methods have been proven on Mars",
+     "All four methods are physically impossible",
+     "They are only fiction with no science behind them"
+    ],
+    "why": "Some parts were tested in labs or models. No method has been shown to work at planet scale. 'A vision, not a detailed plan.'"
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next: how long? Warming and fixing the air run at very different speeds. Look at the chart. These are rough estimates, not promises."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Rough timescales in years (SPECULATIVE estimates)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6",
+    "s7",
+    "s11"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which job is expected to be slower?",
+    "right": "Making oxygen with living things, which is estimated at millennia",
+    "wrong": [
+     "Warming the surface, which is estimated at decades",
+     "Both take exactly one century",
+     "Neither has any estimate"
+    ],
+    "why": "Authors of the Mars workshop say heating can be fairly fast, but building up oxygen biologically is slow."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why is oxygen so slow? Living things make it a little at a time. Mars's air today has only about 0.06 percent oxygen. One 2026 preprint says that if most of the oxygen gets buried or lost, the estimate stretches to millions of years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Mars's air today: about 0.06% oxygen"
+   },
+   "cite": [
+    "s10",
+    "s8",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nature can also do big jobs, but very slowly. On Venus, the CO2 could be locked into rock by natural chemistry. That process is estimated to take 10 million to 100 million years. So any plan has to speed nature up enormously."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Decades: warming Mars (workshop view)\n~200 years: Venus sunshade claim\nMillennia: oxygen from biology\n10-100 million years: Venus CO2 into rock, naturally"
+   },
+   "cite": [
+    "s6",
+    "s11",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Energy is another limit. One 2026 analysis says making enough oxygen needs at least 1.2 times ten to the power 25 joules. Spread over 1,000 years, that is about 380 terawatts, almost twenty times what humanity uses now. It comes from a preprint, so treat it as an estimate."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 20 times today's human energy use, even if spread over 1,000 years"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does this energy estimate tell us?",
+    "right": "Even over 1,000 years, the power needed would be far more than humans produce today",
+    "wrong": [
+     "One power station could supply it",
+     "Energy is not a problem for terraforming",
+     "It would take only a week"
+    ],
+    "why": "The estimate says the power is almost twenty times today's global energy use, even stretched over a thousand years."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a different kind of limit: rules. Planetary protection means keeping Earth microbes off other worlds, and alien material off Earth. The aim is to let us study possible life honestly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Planetary protection (REAL rules)"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The legal root is Article IX of the 1967 Outer Space Treaty. It says exploration must avoid harmful contamination of the Moon and other bodies. The detailed guidelines come from COSPAR, a science committee. Most space agencies follow them, though they are not binding."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Outer Space Treaty, Article IX: a treaty duty to avoid harmful contamination\nCOSPAR guidelines: detailed, widely followed, not legally binding"
+   },
+   "cite": [
+    "s13",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How would you describe COSPAR's planetary protection guidelines?",
+    "right": "Widely followed by space agencies, but not legally binding",
+    "wrong": [
+     "A law enforced by a space police force",
+     "Rules that apply only to private companies",
+     "Rules invented for this course's story"
+    ],
+    "why": "Article IX is the treaty duty. COSPAR's detailed guidelines are widely followed by agencies but are non-binding."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On Mars, the rules single out Special Regions. A Special Region is a place where Earth microbes are likely to multiply, or where native Martian life might exist. Neither robots nor humans should contaminate them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Special Region = Earth microbes could multiply there, or native life might exist"
+   },
+   "cite": [
+    "s17",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a Mars Special Region?",
+    "right": "A place where Earth microbes could multiply or native life might exist",
+    "wrong": [
+     "A region reserved for human settlement",
+     "A crater where spacecraft can land safely",
+     "Any place where a rover has been"
+    ],
+    "why": "Special Regions are where contamination would matter most: Earth microbes could grow, or native life might live."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does this matter for terraforming? Warming a planet melts ice and makes liquid water. That could create the very places the rules protect. That link is our own reasoning. A National Academies review did say precautions should avoid turning non-special regions into special ones."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Warming melts ice\nMelted ice can make places where microbes multiply\nRule-makers: avoid turning non-special regions into special ones\n(The link to terraforming is our reasoning, not a quoted rule)"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a big UNKNOWN: does Mars have native life? Even the rule-makers wrote that no confirmed Special Regions have yet been shown to exist. A critic asks what, exactly, is being protected."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "UNKNOWN: native life on Mars. UNKNOWN: whether any method works at full scale."
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is an UNKNOWN, not a settled fact?",
+    "right": "Whether native life exists on Mars",
+    "wrong": [
+     "That the 2018 study found too little reachable CO2",
+     "That Article IX is part of the Outer Space Treaty",
+     "That aerogel warmed ground in lab tests"
+    ],
+    "why": "The other three are findings or text we can check. Whether Mars has native life is still open."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to Tern. The Assembly has the science, and now two questions. Who decides? And what do we owe the world itself, and the people who might live there one day?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "STORY: Around a round table in the largest dome sit settlers, scientists, and a hologram of delegates from far-off home worlds. Everyone looks at a slowly turning model of Tern."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who decides is still open. Article IX asks countries to hold international consultations before activities that could harmfully interfere with others. The sources I read say the treaty does not spell out what counts as harm."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who decides? Consult first. 'Harm' is not defined."
+   },
+   "cite": [
+    "s13",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does Article IX ask a country to do before a risky planned activity?",
+    "right": "Hold appropriate international consultations",
+    "wrong": [
+     "Win approval from a world court",
+     "Wait 100 years",
+     "Hold a public vote"
+    ],
+    "why": "Article IX says a state with reason to believe an activity could cause harmful interference must undertake international consultations first."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now what is owed to a world. Philosophers use the term intrinsic value: value a thing has in itself, not only because it is useful. If native life exists, many argue it must come first. Carl Sagan put it simply."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Mars then belongs to the Martians, even if the Martians are only microbes. (Carl Sagan, as quoted in a survey of terraforming ethics)"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'intrinsic value' mean?",
+    "right": "Value a thing has in itself, apart from how useful it is to humans",
+    "wrong": [
+     "The price something would sell for",
+     "How beautiful people find it",
+     "The value set by a country's law"
+    ],
+    "why": "Intrinsic value is value in itself. That is why some argue even microbes could matter."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if the world is lifeless? One writer argues Mars has intrinsic value even with no life. The article says most philosophers disagree, and see value only as people give it. Another writer says this is the more interesting question."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A lifeless world still has value in itself (one view)\nValue comes only from people (the view the writer says most philosophers hold)"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some argue we should go ahead. One advocate says failing to terraform Mars would fail our human nature. Others say we have duties to protect scientific value, wild places, and not to repeat colonial wrongs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Go ahead: a duty to expand life and use our pioneering nature\nHold back: duties to conserve science, preserve wild places, avoid colonial vices"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A middle path is planetary parks. Researchers suggested protecting some land on Mars for its intrinsic worth, for the enjoyment of future generations, for beauty, and for study, and using other areas. This is a proposal, not an agreed policy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Protect land for its own worth\nSave it for future generations\nKeep sites of beauty\nKeep regions for future study"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what might Tern's Assembly do? The Mars workshop did not say 'start now'. It called for lab studies, better climate models, and maybe small local experiments. It also reported that ethics and policy kept coming up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lab studies\nBetter climate models\nSmall local tests\nOngoing ethics and policy talks (Tern's Assembly can do the same)"
+   },
+   "cite": [
+    "s31",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us recap. Methods exist on paper. Some have lab or model support. No method has been done at planet scale. Timescales run from decades to millennia, and energy needs are huge. The rules and ethics are still open."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL: methods studied in labs and models\nSPECULATIVE: full-scale versions\nTimescales: decades to millennia (and longer)\nUNKNOWN: native life, and whether methods work\nEthics: who decides, and what is owed"
+   },
+   "cite": [
+    "s4",
+    "s6",
+    "s7",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Aerogel warming the ground in lab tests: how do we label it?",
+    "right": "Real in a lab, still speculative at planet scale",
+    "wrong": [
+     "Proven at planet scale",
+     "Pure fiction",
+     "Unknown whether any lab test happened"
+    ],
+    "why": "Lab experiments and models showed warming under a thin layer. No one has done it at full scale."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Rough timescales in years (SPECULATIVE estimates, not promises)",
+   "rows": [
+    {
+     "label": "Warm Mars: workshop view, under a century (upper bound)",
+     "value": 100,
+     "source": "s6"
+    },
+    {
+     "label": "Venus sunshade plan: its 1991 author's claim",
+     "value": 200,
+     "source": "s11"
+    },
+    {
+     "label": "Oxygen on Mars by biology: 'millennia' (lower bound)",
+     "value": 1000,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Terraforming methods",
+   "links": [
+    "[[Greenhouse effect]]",
+    "[[Aerogel]]",
+    "[[Sunshade]]"
+   ]
+  },
+  {
+   "topic": "Timescales and energy",
+   "links": [
+    "[[Oxygen production]]",
+    "[[Power and energy units]]"
+   ]
+  },
+  {
+   "topic": "Planetary protection",
+   "links": [
+    "[[Outer Space Treaty]]",
+    "[[Special Regions]]",
+    "[[COSPAR]]"
+   ]
+  },
+  {
+   "topic": "Ethics of terraforming",
+   "links": [
+    "[[Intrinsic value]]",
+    "[[Planetary parks]]",
+    "[[Who decides]]"
+   ]
+  },
+  {
+   "topic": "Venus terraforming",
+   "links": [
+    "[[Sunshade]]",
+    "[[Cloud-level habitats]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Terraforming Mars is not possible with present-day technology.",
+   "other_view": "The 2018 study found too little reachable CO2 to warm Mars that way (s1). A 2025 workshop's attendees generally agreed that warming and greening Mars are feasible, perhaps in under a century (s6). A commentator wrote that the 2018 paper is technically accurate, but argues that adding other gases such as perfluorocarbons would still make a good strategy (s25). The workshop was run by Pioneer Labs, a non-profit focused on engineering microbes for Mars, so readers may want to weigh that (s12). The two sides are not arguing about quite the same methods.",
+   "cite": [
+    "s1",
+    "s6",
+    "s25",
+    "s12"
+   ]
+  },
+  {
+   "claim": "A new atmosphere on Mars would be lost to space without a magnetic shield.",
+   "other_view": "One paper says a global magnetic shield is an important step for long-term terraforming (s10). The workshop authors say the loss could be ignored for at least about a hundred million years (s12).",
+   "cite": [
+    "s10",
+    "s12"
+   ]
+  },
+  {
+   "claim": "If Mars has native life, we should leave it alone.",
+   "other_view": "Many people share Sagan's view that preserving native life must come before other uses of Mars (s20). Another survey notes that if life on Mars were related to Earth life, or absent, a Mars rich in life could be seen as more valuable than a barren one. It also says intrinsic worth would oppose terraforming if native life exists (s21).",
+   "cite": [
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "claim": "A lifeless Mars still has value in itself.",
+   "other_view": "One writer says Mars has intrinsic value even without life. The same article says most philosophers disagree, holding that value comes from people (s22). Another source argues that anthropocentrism, which gives humans the highest value, is the most applicable view (s21).",
+   "cite": [
+    "s22",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Planetary protection rules, such as Special Regions, are well founded.",
+   "other_view": "A critique of the rule-makers points out that they wrote that no confirmed Special Regions have yet been shown to exist. It asks what exactly is being protected, and argues the position is contradictory. The rule-makers' view is that the Special Regions concept plays a key role in protecting astrobiology (s19).",
+   "cite": [
+    "s19"
+   ]
+  }
+ ]
+}

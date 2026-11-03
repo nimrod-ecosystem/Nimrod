@@ -1,0 +1,1739 @@
+{
+ "about": {
+  "title": "Putting It All Together: Compare, Connect and Place on One Timeline",
+  "course": "early-civilizations",
+  "class_n": 13,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 45,
+  "length_note": "About 45 minutes, a little over the 40-minute aim. The topic list is long, and the six-theme comparison needs one short step per theme. You can pause after any question. Two gaps: I did not re-research law codes or Maya writing for this class, so law is handled as a lesson in evidence, and the Maya are left to class 12."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Sacred City of Caral-Supe",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "n.d.",
+   "link": "https://whc.unesco.org/en/list/1269/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Cuneiform",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/cuneiform",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Cuneiform tablet: administrative account with entries concerning malt and barley groats",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/art/collection/search/327385",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Anyang",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Anyang-China",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Göbekli Tepe",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Professor Klaus Schmidt's views on Gobekli Tepe",
+   "publisher": "Stone Pages Archaeo News",
+   "date": "2011-01-31",
+   "link": "https://www.stonepages.com/news/archives/004220.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Göbekli Tepe archaeological excavations",
+   "publisher": "Atlas Anatolia",
+   "date": "n.d.",
+   "link": "https://atlasanatolia.com/archaeological-sites/gobekli-tepe-excavations",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Çatalhüyük",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Catalhuyuk",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Çatalhöyük",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/%C3%87atalh%C3%B6y%C3%BCk",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Neolithic Site of Çatalhöyük (quotes the UNESCO description)",
+   "publisher": "World Heritage Explorer",
+   "date": "n.d.",
+   "link": "https://worldheritageexplorer.org/sites/neolithic_site_of_%C3%A7atalh%C3%B6y%C3%BCk.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Is there archaeological evidence for the Biblical fall of Jericho?",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/fall-of-jericho-oldest-city-bible-archeology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Tower of Jericho",
+   "publisher": "Madain Project",
+   "date": "n.d.",
+   "link": "https://madainproject.com/tower_of_jericho",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Narmer",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Narmer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Early Dynastic Period of Egypt",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Early_Dynastic_Period_of_Egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Narmer: 10 Facts on the First Egyptian Pharaoh",
+   "publisher": "TheCollector",
+   "date": "n.d.",
+   "link": "https://www.thecollector.com/narmer-first-egyptian-pharaoh/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Menes",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Menes",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "List of oldest documents",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/List_of_oldest_documents",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Indus River Valley Civilization",
+   "publisher": "Lumen Learning (SUNY World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/the-indus-river-valley-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Indus Valley Civilization",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Indus_Valley_Civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Indus Valley Civilization (c. 2600–1900 BCE)",
+   "publisher": "The Itihasa",
+   "date": "n.d.",
+   "link": "https://theitihasa.com/articles/indus-valley-civilization",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Yin Xu",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Yin_Xu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Yin Xu — Ancient China",
+   "publisher": "Atlas Anatolia",
+   "date": "n.d.",
+   "link": "https://atlasanatolia.com/site/yin-xu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Shang archaeology",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Shang_archaeology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The Sacred City of Caral-Supe (Peru) No 1269, advisory body evaluation",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "n.d.",
+   "link": "https://whc.unesco.org/document/152221",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Pre-Incas kept detailed records too",
+   "publisher": "ABC Science",
+   "date": "2005-07-20",
+   "link": "https://www.abc.net.au/science/articles/2005/07/20/1418372.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Olmec colossal heads",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Olmec_colossal_heads",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "San Lorenzo Tenochtitlán",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/San_Lorenzo_Tenochtitl%C3%A1n",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Late Bronze Age collapse",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/anthropology/late-bronze-age-collapse/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Bronze Age Collapse: The Decline and Fall of Mediterranean Civilization",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Bronze_Age_Collapse/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Late Bronze Age collapse",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Late_Bronze_Age_collapse",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Inventing Writing in South-west Asia",
+   "publisher": "ANE Today (American Society of Overseas Research)",
+   "date": "2025-01",
+   "link": "https://anetoday.org/writing-southwest-asia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Cuneiform: The Writing System That Made History",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/cuneiform/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Caral",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Caral",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Caral: Ancient Peru city reveals 5,000-year-old 'writing'. The Oldest Quipu",
+   "publisher": "GoGeometry (reposting a news report)",
+   "date": "n.d.",
+   "link": "https://gogeometry.com/incas1/quipu/caral_oldest_quipu.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "A Guide To Caral",
+   "publisher": "Peru North",
+   "date": "n.d.",
+   "link": "https://www.perunorth.com/caral",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Cuneiform",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Cuneiform",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "Dynasty 0",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Dynasty_0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "What Caused The Mysterious Bronze Age Collapse? (interview)",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://etc.worldhistory.org/interviews/what-caused-the-bronze-age-collapse/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "Indus Valley Civilization",
+   "publisher": "Wikipedia Selection for Schools (EPFL mirror)",
+   "date": "n.d.",
+   "link": "https://dlab.epfl.ch/wikispeedia/wpcd/wp/i/Indus_Valley_Civilization.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "Çatalhöyük",
+   "publisher": "Turkish Archaeo News",
+   "date": "n.d.",
+   "link": "https://turkisharchaeonews.net/site/%C3%A7atalh%C3%B6y%C3%BCk",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s41",
+   "title": "Yinxu",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yinxu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s42",
+   "title": "Gobekli Tepe - the World's First Temple?",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/234/gobekli-tepe---the-worlds-first-temple/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s43",
+   "title": "Jericho",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Jericho",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. Over twelve classes we met five regions. Today we put them side by side and see the whole picture."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Putting It All Together"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our five regions are Mesopotamia, Egypt, the Indus, China and the Americas. We also started earlier, with a few very old sites."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 5,
+    "layout": "row",
+    "text": "Five regions"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "How many main regions did this course cover?",
+    "right": "Five",
+    "wrong": [
+     "Three",
+     "Seven",
+     "Twelve"
+    ],
+    "why": "The course covered Mesopotamia, Egypt, the Indus, China and the Americas. Twelve is the number of earlier classes."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today has six jobs: one timeline, a table of six themes, what the regions share, contact between them, decline and change, and the limits of our evidence."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. One timeline. 2. Six themes side by side. 3. Shared and different. 4. Contact or independent invention. 5. Decline and change. 6. What we don't know."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a tool for the timeline. BCE counts years backward toward year 1. A bigger BCE number means longer ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "BCE: bigger number = older"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which date is older?",
+    "right": "3100 BCE",
+    "wrong": [
+     "2600 BCE",
+     "1200 BCE",
+     "900 BCE"
+    ],
+    "why": "BCE counts backward, so the biggest number is the furthest back in time."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us place the oldest sites first. Here is where they are: Göbekli Tepe and Çatalhöyük in Turkey, Jericho in the West Bank."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map. Marked in the Middle East: Göbekli Tepe (south-east Turkey), Çatalhöyük (central Turkey), Jericho (West Bank). Later classes add the Nile, the Indus in Pakistan, Anyang in China, Caral in Peru and the Olmec coast of Mexico."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Göbekli Tepe has huge T-shaped stone pillars in circles. Its builders worked around 9500 BCE, in the 10th millennium BCE. The site shows no clear sign of farming."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Circles of tall, T-shaped limestone pillars on a hilltop in south-east Turkey, carved with animals"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When was Göbekli Tepe built?",
+    "right": "Around 9500 BCE (the 10th millennium BCE)",
+    "wrong": [
+     "Around 3300 BCE",
+     "Around 1200 BCE",
+     "In 1994 CE"
+    ],
+    "why": "Its builders worked about 11,500 years ago. 1994 is when a modern archaeologist recognised it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now its second date, when it was found. Archaeologist Klaus Schmidt recognised its importance in 1994. Digging began in 1994 or 1995, depending on the source."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 9500 BCE: built. 1994: Schmidt recognises the site. 2018: UNESCO World Heritage listing."
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What happened at Göbekli Tepe in 1994?",
+    "right": "An archaeologist recognised the buried pillars as very important",
+    "wrong": [
+     "The pillars were carved",
+     "The site was buried on purpose",
+     "UNESCO listed it"
+    ],
+    "why": "The building was ancient. 1994 is the modern rediscovery. UNESCO listing came in 2018."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, Jericho. A stone tower, about 8.5 metres tall with an inner staircase, was built around 8000 BCE. Jericho is called one of the oldest towns anywhere. Nobody knows for sure what it was for."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A round stone tower, partly sunk in an excavation trench, with a stair inside"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which fact about Jericho's tower is still a mystery?",
+    "right": "What the tower was for",
+    "wrong": [
+     "How tall it is",
+     "Where it is",
+     "When it was dug up"
+    ],
+    "why": "Its height and place are known, and Kenyon dug it up in the 1950s. Its purpose is still unclear."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Jericho's second date is 1952 to 1958. That is when archaeologist Kathleen Kenyon dug and found the tower."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 8000 BCE: tower built. 1952–1958: Kenyon's dig finds it."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Çatalhöyük, in central Turkey, was a big settlement of mud-brick houses packed together. People lived there from about 7500 to 5600 BCE, though sources vary. It shows no obvious public buildings."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A mound of closely packed mud-brick houses with roof-top entrances"
+   },
+   "cite": [
+    "s8",
+    "s9",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did people most likely enter a Çatalhöyük house?",
+    "right": "Through the roof, probably by ladder",
+    "wrong": [
+     "Through a street door",
+     "Through a tunnel",
+     "By boat"
+    ],
+    "why": "The houses were packed together and probably entered from roof level."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Çatalhöyük's second date: James Mellaart found it in 1958 and dug there from 1961 to 1965. A new project ran from 1993 to 2018."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 7500–5600 BCE: lived in. 1958: found. 1961–1965: Mellaart digs. 1993–2018: new project."
+   },
+   "cite": [
+    "s9",
+    "s8",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the two famous neighbours, side by side. Both start in the same stretch of centuries."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Mesopotamia and Egypt side by side"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Mesopotamia, the earliest tablets from Uruk are from about 3300 BCE. In Egypt, Narmer's reign began around 3100 BCE, and early hieroglyphs date to about the same time."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mesopotamia: earliest tablets about 3300 BCE (accounts of goods) | Egypt: Narmer's reign about 3100 BCE; early hieroglyphs about 3100 BCE"
+   },
+   "cite": [
+    "s3",
+    "s13",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which sentence fits the evidence best?",
+    "right": "Mesopotamia and Egypt arose at roughly the same time",
+    "wrong": [
+     "Egypt came thousands of years before Mesopotamia",
+     "Mesopotamia came a thousand years after Egypt",
+     "Egypt came after the Indus cities"
+    ],
+    "why": "Both sets of dates sit within a few centuries of each other, about 3300 to 3100 BCE. The Indus cities are later, from about 2600 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why do schools often start with Egypt? That is a teaching habit, not a date. I did not find a source for the reason. A likely one is that the pyramids and the Nile are easy to picture."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Starting with Egypt is a habit, not a date"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Does starting with Egypt in school mean Egypt came first?",
+    "right": "No. Mesopotamia and Egypt arose at about the same time.",
+    "wrong": [
+     "Yes, Egypt was far older",
+     "Yes, Mesopotamia did not exist yet",
+     "No, Mesopotamia came thousands of years later"
+    ],
+    "why": "The dates for the first writing and the first king overlap closely. Mesopotamia's earliest tablets are a little older than the earliest hieroglyphs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sites, twice. Uruk's early tablets were made about 3300 to 3000 BCE. Modern digs at cuneiform libraries began in the mid-1800s, in Assyria. My sources give no exact year for the Uruk tablets themselves."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 3300–3000 BCE: Uruk tablets made. Mid-1800s: first digs at cuneiform libraries (Assyria)."
+   },
+   "cite": [
+    "s3",
+    "s2",
+    "s36"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Egypt's royal tombs at Umm el-Qa'ab, near Abydos, include Narmer's burial chambers, from about 3100 BCE. Egyptologist Werner Kaiser identified Narmer's name there in 1964."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 3100 BCE: tombs built. 1964: Kaiser identifies Narmer's name. 1985 and 1991: seal impressions found."
+   },
+   "cite": [
+    "s13",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Where is Narmer's burial place?",
+    "right": "Umm el-Qa'ab, near Abydos",
+    "wrong": [
+     "Mohenjo-daro",
+     "Yinxu",
+     "Caral"
+    ],
+    "why": "Those other three are sites in the Indus, China and Peru. Narmer was buried in Egypt, at Umm el-Qa'ab."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Indus next. Harappa and Mohenjo-daro were at their height from about 2600 to 1900 BCE. They had grid streets, standard bricks and drains."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Brick streets laid in a grid, with brick-lined drains, at Mohenjo-daro in Pakistan"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When were the mature Indus cities at their height?",
+    "right": "About 2600 to 1900 BCE",
+    "wrong": [
+     "About 9500 to 8000 BCE",
+     "About 1350 to 1046 BCE",
+     "About 1938 CE"
+    ],
+    "why": "The first range is Göbekli Tepe and Jericho. The second is the Shang capital at Yinxu. 1938 is when Olmec heads were excavated."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Indus sites were found again in the 1920s. Marshall's campaign found Harappa in 1921 to 1922. Mohenjo-daro digs began in 1924 to 1925, and by 1931 much of it was excavated."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 2600–1900 BCE: cities flourish. 1921–1922: Harappa found. 1924–1925: Mohenjo-daro dug. 1931: much excavated."
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In China, Yinxu near Anyang was the last Shang capital, about 1350 to 1046 BCE. It gave us oracle bones, the earliest Chinese written records, plus bronzes and chariots."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An oracle bone fragment with rows of early Chinese characters scratched into it"
+   },
+   "cite": [
+    "s21",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What are the oracle bones from Yinxu?",
+    "right": "Bones inscribed with the earliest Chinese written records",
+    "wrong": [
+     "Clay tablets of grain accounts",
+     "Knotted strings from Peru",
+     "Stone pillars with animal carvings"
+    ],
+    "why": "They are inscribed bones from Shang China. Clay tablets are Mesopotamian, knotted strings are quipus, and carved pillars are Göbekli Tepe."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Yinxu's second date is 1899, when scholars noticed writing on bones sold for medicine. Scientific digging began in 1928. Before the bones, the Shang were seen as semi-legendary."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1350–1046 BCE: capital. 1899: oracle bones recognised. 1928: scientific dig begins. 2006: UNESCO listing."
+   },
+   "cite": [
+    "s4",
+    "s21",
+    "s22",
+    "s41"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did the 1899 oracle bones matter so much?",
+    "right": "They helped show the Shang dynasty was a real, documented state",
+    "wrong": [
+     "They proved Egypt and China traded",
+     "They were the first pyramids found",
+     "They were the first Olmec heads"
+    ],
+    "why": "The bones are the Shang's own writing, so they turned a half-legendary dynasty into a documented one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the Americas, Caral in Peru's Supe Valley covers 626 hectares and is about 5,000 years old. People lived there for roughly a thousand years. A quipu, a knotted-string record, was found there."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Stepped platform mounds and sunken circular courts on a dry desert terrace above a green river valley"
+   },
+   "cite": [
+    "s1",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a quipu?",
+    "right": "A knotted-string system for recording information",
+    "wrong": [
+     "A clay tablet",
+     "A carved stone head",
+     "A painted bark book"
+    ],
+    "why": "Quipus are knotted strings used in the Andes to record information."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Caral's second date: Ruth Shady began work there in October 1994. Radiocarbon dates were published in 2001. Her team reported the quipu in 2005."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 5,000 years ago: built. 1994: Shady begins. 2001: radiocarbon dates published. 2005: quipu reported."
+   },
+   "cite": [
+    "s35",
+    "s24",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Olmec on Mexico's Gulf Coast: San Lorenzo was the largest city in Mesoamerica from about 1200 to 900 BCE. Its colossal heads weigh from 6 to 50 tons."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A giant carved stone head with a close-fitting headdress"
+   },
+   "cite": [
+    "s27",
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When was San Lorenzo the largest city in Mesoamerica?",
+    "right": "About 1200 to 900 BCE",
+    "wrong": [
+     "About 3300 to 3100 BCE",
+     "About 2600 to 1900 BCE",
+     "About 1900 CE"
+    ],
+    "why": "San Lorenzo's heyday was about 1200 to 900 BCE, long after the Indus cities."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second date: Matthew Stirling's 1938 excavation of a head at Tres Zapotes began the first scientific study of Olmec culture. The heads cannot be dated precisely."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1200–900 BCE: San Lorenzo at its height. 1938: Stirling excavates a head and starts Olmec archaeology."
+   },
+   "cite": [
+    "s26",
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the whole timeline in one chart. Each bar shows a start, in years BCE. A longer bar means older."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Approximate start dates, year BCE",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6",
+    "s12",
+    "s10",
+    "s3",
+    "s13",
+    "s1",
+    "s18",
+    "s21",
+    "s27"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "On the chart, which start is the newest (the shortest bar)?",
+    "right": "San Lorenzo, about 1200 BCE",
+    "wrong": [
+     "Göbekli Tepe",
+     "Jericho's tower",
+     "Çatalhöyük"
+    ],
+    "why": "The shortest bar is the smallest BCE number, so the most recent. San Lorenzo is about 1200 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Same-time facts help. Caral's pyramid-shaped buildings rose around when Egypt's Saqqara pyramid was built. In 1200 to 900 BCE San Lorenzo peaked while the Shang ruled at Yinxu."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 3000 BCE: Caral and Saqqara rising, a world apart. c. 1350–1046 BCE: Shang at Yinxu. c. 1200–900 BCE: San Lorenzo at its height."
+   },
+   "cite": [
+    "s34",
+    "s21",
+    "s27"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who was in power in China while San Lorenzo was at its height?",
+    "right": "The Shang dynasty, at Yinxu",
+    "wrong": [
+     "Narmer, in Egypt",
+     "The builders of Göbekli Tepe",
+     "The first Uruk scribes"
+    ],
+    "why": "Yinxu was the Shang capital from about 1350 to 1046 BCE, which overlaps San Lorenzo's 1200 to 900 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the table. We compare six themes: writing, cities, law, religion, trade and daily life. One row each."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Writing. Cities. Law. Religion. Trade. Daily life."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Writing first. Mesopotamia: clay tablets for accounts. Egypt: hieroglyphs. The Indus: a script no one can read. China: oracle bones. Caral: quipu strings."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mesopotamia: tablets, accounts of goods (about 3300 BCE). Egypt: hieroglyphs (about 3100 BCE). Indus: script from about 2500 BCE, undeciphered. China: oracle bones (Shang). Caral: knotted-string quipu."
+   },
+   "cite": [
+    "s3",
+    "s17",
+    "s19",
+    "s20",
+    "s4",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What were the earliest Mesopotamian tablets mostly used for?",
+    "right": "Keeping accounts of goods such as grain",
+    "wrong": [
+     "Writing love poems",
+     "Recording laws",
+     "Sending letters to kings"
+    ],
+    "why": "The earliest tablets record economic information, such as grain handed out by a temple."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cities next. Uruk was a Sumerian city. Egypt began as villages and became one kingdom, the Two Lands. Indus cities used grids and drains. Yinxu had building foundations."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mesopotamia: Uruk. Egypt: villages joined into the Two Lands. Indus: grid streets, drains. China: Yinxu capital. Americas: Caral, San Lorenzo."
+   },
+   "cite": [
+    "s32",
+    "s14",
+    "s19",
+    "s4",
+    "s1",
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which region is known for grid-based streets and drains?",
+    "right": "The Indus Valley",
+    "wrong": [
+     "Early Egypt's villages",
+     "Göbekli Tepe",
+     "Caral's quipu makers"
+    ],
+    "why": "Harappa and Mohenjo-daro were laid out with grid streets, standard bricks and extensive drainage."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Law is the hardest row to compare. We can only compare law where it was written and can be read. Indus writing is undeciphered, so no Indus law texts can be read."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Readable: see classes 2 and 5 for Mesopotamia and Egypt | Not readable: the Indus script. China's oracle bones are divination records."
+   },
+   "cite": [
+    "s20",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is Indus law hard to compare with other regions?",
+    "right": "Its script is undeciphered, so we cannot read any laws",
+    "wrong": [
+     "Its cities were never excavated",
+     "It came after the Shang dynasty",
+     "It had no cities"
+    ],
+    "why": "Harappa and Mohenjo-daro were excavated, and they flourished well before the Shang. The writing is simply not yet read."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Religion. Göbekli Tepe's pillars suggest ritual long before farming cities. Abydos stayed Egypt's main religious centre. A Mesopotamian tablet records grain given out by a large temple."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Göbekli Tepe: monumental ritual site. Mesopotamia: temple stores. Egypt: Abydos. China: oracle bones, a religious system. Caral: temples."
+   },
+   "cite": [
+    "s5",
+    "s7",
+    "s3",
+    "s14",
+    "s22",
+    "s33"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which site shows big, probably ritual, building with no clear sign of farming?",
+    "right": "Göbekli Tepe",
+    "wrong": [
+     "Uruk",
+     "Harappa",
+     "Yinxu"
+    ],
+    "why": "The others are cities of later farming societies. Göbekli Tepe's builders worked around 9500 BCE with no clear evidence of agriculture."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Trade. Mesopotamian tablets show goods being counted. A king's name from Egypt's Dynasty 0 turns up as far as the southern Levant. Indus craftspeople worked carnelian and seals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mesopotamia: goods counted on tablets. Egypt: royal name found in the southern Levant. Indus: carnelian, seal carving; maybe Sumer's 'Meluhha'. Olmec: very heavy basalt heads."
+   },
+   "cite": [
+    "s3",
+    "s37",
+    "s18",
+    "s39",
+    "s26"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does a king's name found far from home suggest?",
+    "right": "Contact or links with faraway places",
+    "wrong": [
+     "That the king never existed",
+     "That the place was built in 1994",
+     "That writing was invented there"
+    ],
+    "why": "Finding Iry-Hor's name as far as the southern Levant points to links across distance."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Daily life. Çatalhöyük had packed mud-brick houses with roof entrances. Caral had ordinary houses beside its temples. The Indus had craft work in carnelian and metals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Çatalhöyük: roof-entry houses. Caral: temples and ordinary houses. Indus: crafts, metalwork."
+   },
+   "cite": [
+    "s8",
+    "s9",
+    "s33",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which site has many houses but no obvious public buildings?",
+    "right": "Çatalhöyük",
+    "wrong": [
+     "Caral",
+     "Yinxu",
+     "San Lorenzo"
+    ],
+    "why": "Çatalhöyük was composed of homes. Caral had temples, Yinxu a royal capital and San Lorenzo monuments."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What do they share? Each region had a way of keeping records and built big shared structures, from temples to tombs to capitals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shared: record-keeping (tablets, hieroglyphs, script, oracle bones, quipu). Shared: monumental building."
+   },
+   "cite": [
+    "s3",
+    "s17",
+    "s20",
+    "s4",
+    "s1",
+    "s5",
+    "s14",
+    "s33"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which feature appears in all five regions?",
+    "right": "Some way of keeping records",
+    "wrong": [
+     "Cuneiform writing on clay",
+     "Pyramids",
+     "Oracle bones"
+    ],
+    "why": "Each region has its own record system. Cuneiform is Mesopotamian, and oracle bones are Chinese."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And they differ. Mesopotamia pressed signs into clay, Caral used knotted strings. Çatalhöyük had no public buildings, but Caral had temples and plazas."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Clay tablets (Mesopotamia) | Knotted cords (Caral). Houses only (Çatalhöyük) | Temples and plazas (Caral)"
+   },
+   "cite": [
+    "s3",
+    "s1",
+    "s9",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Contact versus independent invention. An idea can spread between peoples who meet. Or the same idea can arise in places that never met."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Contact | Independent invention"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "An idea appears in two places that never met. What is that called?",
+    "right": "Independent invention",
+    "wrong": [
+     "Contact",
+     "Copying",
+     "Trade"
+    ],
+    "why": "Independent invention means the same idea arising separately, without copying."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Caral's excavator says her city was isolated in the Americas and advanced alone. In the Old World, Egypt's Dynasty 0 king's name reached the Levant, and Sumerian texts may name the Indus as Meluhha."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Independent: Caral, in Shady's view | Contact: Egypt and the Levant; Sumer and the Indus (proposed)"
+   },
+   "cite": [
+    "s25",
+    "s37",
+    "s39"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is evidence of contact between faraway places?",
+    "right": "An Egyptian king's name found in the southern Levant",
+    "wrong": [
+     "Quipus found at Caral",
+     "Pillars carved at Göbekli Tepe",
+     "Oracle bones found at Yinxu"
+    ],
+    "why": "The other finds were each made at one place and show one society's own work."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now decline. Decline means a society shrinks or changes. It does not always mean everyone vanishes. The Indus is a good example."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Decline = shrink and change, not always vanish"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Around 1900 BCE the great Indus cities began to shrink. By about 1300 BCE city life had largely gone, but rural Late Harappan communities carried on."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1900 BCE: cities shrink. c. 1300 BCE: urban phase largely ended. Rural communities continue."
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What happened to the Indus after about 1900 BCE?",
+    "right": "Cities shrank and rural communities carried on",
+    "wrong": [
+     "Everyone vanished overnight",
+     "The cities doubled in size",
+     "Writing was invented"
+    ],
+    "why": "Sources describe gradual decline and dispersal, not a sudden end."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Climate and river change are the most-cited reasons for the Indus decline. An older idea blamed newcomers arriving. Scholars still disagree."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Most cited: climate and river change. Older idea: invasion or migration. Not settled."
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Around 1250 to 1150 BCE a wider collapse hit Mediterranean and Near Eastern powers. Drought, earthquakes, invasions and broken trade are all blamed. No single cause is agreed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Late Bronze Age collapse, about 1250–1150 BCE. Suggested: drought, earthquakes, invasions, trade breaks."
+   },
+   "cite": [
+    "s28",
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Did the Late Bronze Age collapse hit all five of our regions?",
+    "right": "No. It hit the Mediterranean and Middle East.",
+    "wrong": [
+     "Yes, all five",
+     "Only the Americas",
+     "Only China"
+    ],
+    "why": "The collapse is described for Middle Eastern and Mediterranean civilizations. Caral, Shang China and the Olmec are not part of that story."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Change is not always disaster. Göbekli Tepe's enclosures were filled in. San Lorenzo was overtaken by La Venta. Çatalhöyük was abandoned after the Neolithic."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Göbekli Tepe: enclosures backfilled. San Lorenzo: overtaken by La Venta by 900 BCE. Çatalhöyük: abandoned."
+   },
+   "cite": [
+    "s7",
+    "s27",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What happened to San Lorenzo's power around 900 BCE?",
+    "right": "La Venta began to overtake it",
+    "wrong": [
+     "It built Göbekli Tepe",
+     "It ruled Egypt",
+     "Nothing changed"
+    ],
+    "why": "San Lorenzo was the biggest city until about 900 BCE, when La Venta overtook it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, what we don't know. The evidence has gaps of three kinds. Some sites are mostly undug, some writing is unread, and some dates are only estimates."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Not yet dug. Not yet read. Not exactly dated."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not yet dug. In 2011 Klaus Schmidt said only about five percent of Göbekli Tepe had been excavated. Çatalhöyük is also only about five percent dug."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 5% dug"
+   },
+   "cite": [
+    "s6",
+    "s40"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "According to Schmidt in 2011, about how much of Göbekli Tepe was excavated?",
+    "right": "About five percent",
+    "wrong": [
+     "About half",
+     "About ninety-five percent",
+     "All of it"
+    ],
+    "why": "Schmidt said only roughly five percent had been dug and that there was work for more than one generation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not yet read. Undeciphered means nobody can yet read what the signs say. The Indus script is undeciphered, and the meanings of over half the earliest Uruk signs are unknown."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Undeciphered = cannot yet be read"
+   },
+   "cite": [
+    "s20",
+    "s31"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'undeciphered' mean?",
+    "right": "The writing's meaning cannot yet be read",
+    "wrong": [
+     "The writing is on clay",
+     "The writing is mostly buried",
+     "The writing is a fake"
+    ],
+    "why": "Undeciphered refers to meaning. It says nothing about the material it was written on."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not exactly dated. Different sources give different dates for Çatalhöyük. Olmec heads cannot be dated precisely, and Göbekli Tepe's stones have not been directly dated."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Çatalhöyük: about 6700–5650 BCE (Britannica) | about 7500–5600 BCE (UNESCO text). Caral: 5,000 or 4,000–4,600 years old, depending on the page."
+   },
+   "cite": [
+    "s8",
+    "s10",
+    "s26",
+    "s42",
+    "s33"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Two sources give different start dates for a site. What does this most likely mean?",
+    "right": "The dates are estimates and sources can differ",
+    "wrong": [
+     "One source is lying",
+     "The site never existed",
+     "Dates do not matter"
+    ],
+    "why": "Ancient dates come from estimates and methods that can differ. Compare sources and expect ranges."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where archaeologists dig is also a choice. Shang digs were heavily influenced by old texts. After 1899 oracle bone sales led to many illegal digs."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Digs follow old texts. Looting removes context."
+   },
+   "cite": [
+    "s23",
+    "s41"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why might the picture of the Shang be incomplete?",
+    "right": "Digs and readings were shaped by old texts, and illegal digs took finds",
+    "wrong": [
+     "Nothing was ever dug",
+     "The Shang had no writing",
+     "All bones were found in one place in 1999"
+    ],
+    "why": "Choices about where to dig, and looting, leave gaps."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time to review. Five things to carry away."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Review and self-check"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One: oldest ritual and town sites came first. Two: Mesopotamia and Egypt began about 3300 to 3100 BCE. Three: Indus cities came next, then Shang China, then the Olmec. Four: decline means change. Five: gaps remain."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Old sites first. 2. Mesopotamia and Egypt together. 3. Indus, China, Olmec later. 4. Decline = change. 5. Gaps remain."
+   },
+   "cite": [
+    "s6",
+    "s3",
+    "s13",
+    "s18",
+    "s21",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Self-check one: put these in order, oldest first."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Göbekli Tepe, Uruk tablets, Harappa and Mohenjo-daro, San Lorenzo"
+   },
+   "cite": [
+    "s6",
+    "s3",
+    "s18",
+    "s27"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which order is oldest to newest?",
+    "right": "Göbekli Tepe, Uruk tablets, Harappa and Mohenjo-daro, San Lorenzo",
+    "wrong": [
+     "Uruk tablets, Göbekli Tepe, San Lorenzo, Harappa and Mohenjo-daro",
+     "San Lorenzo, Harappa and Mohenjo-daro, Uruk tablets, Göbekli Tepe",
+     "Harappa and Mohenjo-daro, Göbekli Tepe, San Lorenzo, Uruk tablets"
+    ],
+    "why": "The sites start at about 9500 BCE, 3300 BCE, 2600 BCE and 1200 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Self-check two: which pair of sites had their modern discovery in the 1990s?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Found again: Göbekli Tepe 1994. Caral 1994."
+   },
+   "cite": [
+    "s5",
+    "s35"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pair were recognised or found in 1994?",
+    "right": "Göbekli Tepe and Caral",
+    "wrong": [
+     "Harappa and Yinxu",
+     "Jericho and Çatalhöyük",
+     "San Lorenzo and Uruk"
+    ],
+    "why": "Schmidt recognised Göbekli Tepe in 1994, and Shady began at Caral in October 1994. The others were found or first dug long before, from the mid-1800s to the 1950s."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Self-check three: which theme is hardest to compare for the Indus, and why?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Law | script undeciphered"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which theme is hardest to compare for the Indus Valley?",
+    "right": "Law, because its script cannot yet be read",
+    "wrong": [
+     "Cities, because none were found",
+     "Trade, because there were no seals",
+     "Daily life, because there were no houses"
+    ],
+    "why": "Indus cities, seals and crafts are well known. The written texts are unread."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. You have travelled from 9500 BCE to 900 BCE and back. You do not need to remember every date. The big picture matters most."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Well done"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Approximate start of each place (year BCE; a bigger number is older)",
+   "rows": [
+    {
+     "label": "Göbekli Tepe built (10th millennium BCE, about 9500)",
+     "value": 9500,
+     "source": "s6"
+    },
+    {
+     "label": "Jericho tower (about 8000)",
+     "value": 8000,
+     "source": "s12"
+    },
+    {
+     "label": "Çatalhöyük settled (about 7500)",
+     "value": 7500,
+     "source": "s10"
+    },
+    {
+     "label": "Earliest Uruk tablets (about 3300)",
+     "value": 3300,
+     "source": "s3"
+    },
+    {
+     "label": "Narmer's reign begins (about 3100)",
+     "value": 3100,
+     "source": "s13"
+    },
+    {
+     "label": "Caral built (about 5,000 years ago, roughly 3000)",
+     "value": 3000,
+     "source": "s1"
+    },
+    {
+     "label": "Indus cities at height (2600)",
+     "value": 2600,
+     "source": "s18"
+    },
+    {
+     "label": "Yinxu as Shang capital (1350)",
+     "value": 1350,
+     "source": "s21"
+    },
+    {
+     "label": "San Lorenzo largest in Mesoamerica (1200)",
+     "value": 1200,
+     "source": "s27"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "One timeline for all regions",
+   "links": [
+    "[[BCE and CE dates]]",
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[Egypt I: The Nile, Unification and the Pharaoh]]"
+   ]
+  },
+  {
+   "topic": "Oldest monumental sites and towns: Göbekli Tepe, Çatalhöyük, Jericho",
+   "links": [
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[Archaeological sites: built date and discovery date]]"
+   ]
+  },
+  {
+   "topic": "Side-by-side comparison of the six themes",
+   "links": [
+    "[[Mesopotamia II: Writing, Law and Religion]]",
+    "[[Egypt II: Hieroglyphs, Religion and Law]]",
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]",
+    "[[Early China II: Zhou Rule, Ritual, Trade and Daily Life]]"
+   ]
+  },
+  {
+   "topic": "What they share and where they differ",
+   "links": [
+    "[[Mesopotamia III: Trade, Everyday Life and Empires]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Contact and independent invention",
+   "links": [
+    "[[The Americas I: Caral, the Olmec and Early Cities]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Why some civilizations declined or changed",
+   "links": [
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]",
+    "[[Late Bronze Age collapse]]"
+   ]
+  },
+  {
+   "topic": "Limits of the evidence",
+   "links": [
+    "[[Undeciphered scripts]]",
+    "[[Archaeological sites: built date and discovery date]]"
+   ]
+  },
+  {
+   "topic": "Review and self-check",
+   "links": [
+    "[[The Americas II: Maya Writing, Calendars and the Andes]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 8000 BCE",
+   "elsewhere": "Jericho's stone tower was built, while Göbekli Tepe's building was ending, around the end of the 9th millennium BCE.",
+   "cite": [
+    "s12",
+    "s6"
+   ]
+  },
+  {
+   "when": "c. 9500–9000 BCE",
+   "elsewhere": "While Göbekli Tepe's pillars were being raised, the first permanent settlement near Jericho's spring was developing.",
+   "cite": [
+    "s6",
+    "s43"
+   ]
+  },
+  {
+   "when": "c. 3300–3100 BCE",
+   "elsewhere": "Uruk's first tablets and the start of Narmer's reign in Egypt fall within the same two centuries.",
+   "cite": [
+    "s3",
+    "s13"
+   ]
+  },
+  {
+   "when": "c. 3000 BCE (about 5,000 years ago)",
+   "elsewhere": "Caral's pyramid-shaped buildings were being raised around the time Saqqara's pyramid was built in Egypt.",
+   "cite": [
+    "s1",
+    "s34"
+   ]
+  },
+  {
+   "when": "c. 2600–1900 BCE",
+   "elsewhere": "Indus cities flourished. In Mesopotamia the Early Dynastic period ran to about 2350 BCE, and the poet Enheduanna wrote around 2300 BCE.",
+   "cite": [
+    "s18",
+    "s32"
+   ]
+  },
+  {
+   "when": "c. 1350–900 BCE",
+   "elsewhere": "Yinxu was the Shang capital and San Lorenzo was Mesoamerica's largest city, while the Late Bronze Age collapse struck the Mediterranean and Middle East around 1250–1150 BCE.",
+   "cite": [
+    "s21",
+    "s27",
+    "s29"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Göbekli Tepe was a temple site built by people who did not live there.",
+   "other_view": "The original excavation did not find houses or hearths. Findings published in 2019 suggest a settlement with domestic buildings, and specialists debate whether 'temple' is the right word.",
+   "cite": [
+    "s42",
+    "s5",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Narmer unified Egypt and was the king called Menes.",
+   "other_view": "Scholars debate whether Narmer and Menes were the same person. Some think Menes was Narmer's successor, Hor-Aha.",
+   "cite": [
+    "s13",
+    "s16"
+   ]
+  },
+  {
+   "claim": "The Indus cities fell because invaders arrived.",
+   "other_view": "The invasion idea is an older one. Climate and river change are the most-cited causes today, and the decline looks gradual, with rural communities carrying on.",
+   "cite": [
+    "s19",
+    "s20",
+    "s39"
+   ]
+  },
+  {
+   "claim": "One big event caused the Late Bronze Age collapse.",
+   "other_view": "Most historians point to several linked causes, a 'perfect storm'. Some newer work says the collapse was smaller than once thought.",
+   "cite": [
+    "s28",
+    "s38",
+    "s30"
+   ]
+  },
+  {
+   "claim": "The Caral quipu shows early 'writing' in the Americas.",
+   "other_view": "Shady calls the quipu a system of writing. UNESCO calls it a record-keeping device, and another source calls it a counting system in the absence of a written language.",
+   "cite": [
+    "s25",
+    "s1",
+    "s35"
+   ]
+  },
+  {
+   "claim": "Caral is the oldest city in the Americas, about 5,000 years old.",
+   "other_view": "Other ancient sites nearby, such as Bandurria, challenge the 'oldest' claim, and one page gives Caral an age of only 4,000 to 4,600 years.",
+   "cite": [
+    "s33"
+   ]
+  }
+ ]
+}

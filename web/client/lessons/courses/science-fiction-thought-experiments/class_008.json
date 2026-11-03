@@ -1,0 +1,954 @@
+{
+ "about": {
+  "title": "First Contact, Part 2: Building Shared Meaning",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 8,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes: roughly 39 short steps at about a minute each, including a 10-minute decoding activity. Each idea gets its own step and a check question. The class splits cleanly after the Linear B steps (decipherment) if you need two shorter sittings."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Pidgin",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/pidgin",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "5.2 Pidgins and Creoles (Psychology of Language)",
+   "publisher": "BCcampus Open Education (opentextbc.ca)",
+   "date": "undated",
+   "link": "https://opentextbc.ca/psyclanguage/chapter/pidgins-and-creoles/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Pidgin (language)",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/language-and-linguistics/pidgin-language",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Pidgin",
+   "publisher": "Wikipedia (community-edited encyclopedia)",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Pidgin",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Rosetta Stone, Champollion and ancient languages",
+   "publisher": "The British Museum",
+   "date": "2022-11-10",
+   "link": "https://www.britishmuseum.org/events/rosetta-stone-champollion-and-ancient-languages",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Cracking the Code: Champollion and the Rosetta Stone",
+   "publisher": "MacTutor History of Mathematics, University of St Andrews",
+   "date": "undated",
+   "link": "https://mathshistory.st-andrews.ac.uk/SH/champollion_sh.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Decoding Linear B",
+   "publisher": "History Today",
+   "date": "undated",
+   "link": "https://www.historytoday.com/archive/months-past/decoding-linear-b",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Linear B",
+   "publisher": "Wikipedia (community-edited encyclopedia)",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Linear_B",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "The Indeterminacy of Translation and Radical Interpretation",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "undated",
+   "link": "https://iep.utm.edu/indeterm/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Indeterminacy of Translation, Lecture 1",
+   "publisher": "Faculty of Philosophy, University of Cambridge",
+   "date": "undated",
+   "link": "https://www.phil.cam.ac.uk/system/files/documents/radical-interpretation-1.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The way humans point isn't as universal as you might think",
+   "publisher": "The Conversation",
+   "date": "undated",
+   "link": "https://theconversation.com/the-way-humans-point-isnt-as-universal-as-you-might-think-91434",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Pointing gestures and bilingualism (Frontiers in Psychology)",
+   "publisher": "Frontiers in Psychology",
+   "date": "2026",
+   "link": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2026.1763681/full",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Bees May Tell Us if We Can Use Math to Talk to Aliens",
+   "publisher": "ScienceAlert",
+   "date": "undated",
+   "link": "https://www.sciencealert.com/bees-may-tell-us-if-we-can-use-math-to-talk-to-aliens",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Let's Stop Saying that Math is the Universal Language",
+   "publisher": "ARISE (AAAS)",
+   "date": "2022-12-13",
+   "link": "https://aaas-arise.org/2022/12/13/lets-stop-saying-that-math-is-the-universal-language/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Wittgenstein's Philosophy of Mathematics and the Search for Extraterrestrial Intelligence",
+   "publisher": "University of Bergen, Wittgenstein Archives",
+   "date": "undated",
+   "link": "https://wab.uib.no/agora/tools/alws/collection-1-issue-1-article-38.annotate",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The Arecibo Message, Earth's First Interstellar Transmission, Turns 50",
+   "publisher": "Scientific American",
+   "date": "undated (50th-anniversary piece)",
+   "link": "https://www.scientificamerican.com/article/the-arecibo-message-earths-first-interstellar-transmission-turns-50/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "40 Years Ago, Earth Beamed Its First Postcard to the Stars",
+   "publisher": "National Geographic",
+   "date": "undated (40th-anniversary piece)",
+   "link": "https://www.nationalgeographic.com/science/article/40-years-ago-earth-beamed-its-first-postcard-to-the-stars",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Arecibo Wow! I: An Astrophysical Explanation for the Wow! Signal",
+   "publisher": "arXiv preprint",
+   "date": "2024-08",
+   "link": "https://arxiv.org/pdf/2408.08513",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The Arecibo Message: Humanity's Call to an Interstellar Neighbor",
+   "publisher": "Supercluster",
+   "date": "undated (50th-anniversary piece)",
+   "link": "https://www.supercluster.com/editorial/the-arecibo-message-humanitys-call-to-an-interstellar-neighbor",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "SETI Institute FAQ",
+   "publisher": "SETI Institute",
+   "date": "undated",
+   "link": "https://www.seti.org/about/faq/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "SETI Institute In the News: March Roundup 2026",
+   "publisher": "SETI Institute",
+   "date": "2026-03",
+   "link": "https://www.seti.org/news/seti-institute-in-the-news-march-roundup-2026/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Are We Alone? (colloquium abstract, Jill Tarter)",
+   "publisher": "NASA Goddard Space Flight Center",
+   "date": "undated",
+   "link": "https://istcolloq.gsfc.nasa.gov/jill-tarter",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Search for extraterrestrial intelligence",
+   "publisher": "Wikipedia (community-edited encyclopedia)",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Search_for_extraterrestrial_intelligence",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we asked what language is. Today we ask how two groups with no shared language could start to understand each other."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "First Contact, Part 2: Building Shared Meaning"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our story is invented: a crew meets visitors. The methods we use are real. I'll say which is which as we go."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real methods, invented story"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One honest limit first. No search has yet received a confirmed signal from another intelligence. So any visitors here are a thought experiment."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unknown: is anyone out there?"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is true today about signals from other intelligences?",
+    "right": "No search has yet received a confirmed extraterrestrial signal.",
+    "wrong": [
+     "Several were confirmed and decoded in the 1970s.",
+     "Scientists have translated a message from another star.",
+     "SETI only listens for signals from Mars."
+    ],
+    "why": "The SETI Institute says no SETI search has yet received a confirmed extraterrestrial signal."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The search is large. Billions of candidate signals have been checked since the 1960s. About 100 are still under consideration, and none is confirmed."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 100 candidate signals still under consideration, none confirmed"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How would we know if someone were there? We cannot see a mind from far away. So SETI looks for signs of distant technology instead."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Look for technology, infer the minds"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How does SETI try to find intelligence?",
+    "right": "By looking for evidence of distant technology, such as signals.",
+    "wrong": [
+     "By seeing minds directly through big telescopes.",
+     "By waiting for visitors to land.",
+     "By counting stars and nothing else."
+    ],
+    "why": "Intelligence is hard to define and impossible to detect directly across interstellar distances, so SETI looks for evidence of technology and infers technologists."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So we imagine instead. Our crew meets visitors face to face. Step one is pointing and naming: show a thing, make a sound for it, and repeat."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "shell",
+    "count": 1,
+    "layout": "row",
+    "text": "One shell. The crew points at it and says the same sound each time."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What do you do in pointing and naming?",
+    "right": "Show a thing and make a sound for it, again and again.",
+    "wrong": [
+     "Write out a full sentence of grammar.",
+     "Wait for them to speak your language first.",
+     "Guess a meaning and never test it."
+    ],
+    "why": "Pointing and naming links one sound to one thing, and repeating it lets both sides check the link."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But pointing is less clear than it looks. The philosopher W. V. Quine imagined a rabbit running by as a speaker says 'gavagai'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rabbit dashes across a field. A visitor with a notebook listens as a local speaker says one word: gavagai."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Does 'gavagai' name the rabbit, or a passing stage of a rabbit? The pointing alone does not decide."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One point, several possible meanings"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is one point not enough to fix a word's meaning?",
+    "right": "The same point can fit several different meanings.",
+    "wrong": [
+     "Pointing never tells anyone anything.",
+     "Speakers always point at the wrong thing.",
+     "Words only mean something in writing."
+    ],
+    "why": "With only the pointing to go on, 'rabbit' and 'a stage of a rabbit' both fit, so there is no reason yet to prefer one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even the point itself differs between peoples. Many point with an index finger. Some groups, such as the Yupno, favor pointing with the nose or lips."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Index finger pointing | Non-hand pointing: lips, nose, head"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That matters. One study notes that a lip point can be misread as evasive, and a finger point as hostile."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A misread gesture can hurt trust"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does this matter for first contact?",
+    "right": "A friendly gesture could be missed, or read as rude.",
+    "wrong": [
+     "Pointing means the same thing to everyone.",
+     "Gestures are never needed.",
+     "Only the visitors would misread a gesture."
+    ],
+    "why": "Different groups point in different ways, and misreading a point can harm cooperation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: build a small shared language. Linguists call a simplified language between groups with none in common a pidgin."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "pidgin"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pidgins grow from need and regular contact, often trade. They can be built from words, sounds, or body language."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Need to talk | Regular contact | Words, sounds, gestures"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A pidgin stays narrow. A trade pidgin may have words for money and goods, and few for anything outside trade."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Many words: money, goods | Few words: everything else"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does a trade pidgin usually have plenty of words for?",
+    "right": "Money and the goods being traded.",
+    "wrong": [
+     "Poetry and long stories.",
+     "Family history.",
+     "Weather forecasts."
+    ],
+    "why": "A pidgin built for trade may include words for money and traded items, with few words for other topics."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a real example. The Inuvialuit and Athabaskan speakers used an Inuit trade jargon to make their transactions work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real example: an Inuit trade jargon"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A pidgin is nobody's first language. If children grow up with it, they build a full language called a creole."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Pidgin: simplified, second language | Creole: full language, children's first"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What happens when children grow up speaking a pidgin as their first language?",
+    "right": "It becomes a creole, a full language.",
+    "wrong": [
+     "It stays exactly the same forever.",
+     "It disappears at once.",
+     "It turns into a written alphabet."
+    ],
+    "why": "A creole is a pidgin that has become the native language of the children of pidgin speakers, and it is a rich, complete language."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three: a double text. The Rosetta Stone carries one message in three scripts. That suggested how hieroglyphs could be cracked through bilingual clues."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark stone slab with three bands of writing: hieroglyphs, demotic script, and Greek."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Before it, scholars guessed hieroglyphs recorded ideas, not sounds. With no bilingual text, no guess could be checked."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No double text, no way to check"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then Champollion worked on royal names and found the sound-signs for the letters of Cleopatra."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Names gave the first sounds"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did a message in several scripts help so much?",
+    "right": "Scholars could check their guesses against a matching message.",
+    "wrong": [
+     "It was written in a modern language.",
+     "It had no hieroglyphs.",
+     "It explained itself in pictures."
+    ],
+    "why": "Without a bilingual text any translation could be proposed with no way to verify it. The stone gave something to check against."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not every lost script has a double text. Linear B, a Bronze Age script from Minoan Crete, was read in 1952 by Michael Ventris."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Linear B, 1952"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He built on Alice Kober, who noticed patterns suggesting that word endings change. That feature is called inflection."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inflection: word endings that shift"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ventris tried that idea on place names. Out came Knossos and its harbour, Amnisos, and the language turned out to be Greek."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pattern found | Tried on place names | Knossos, Amnisos | Language: Greek"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What gave Ventris a foothold in Linear B?",
+    "right": "Place names such as Knossos.",
+    "wrong": [
+     "A living speaker reading the tablets aloud.",
+     "A message beamed from space.",
+     "An alphabet Ventris invented."
+    ],
+    "why": "Ventris applied Kober's inflection idea to place names, and recognisable forms of Knossos and Amnisos emerged."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A name is a foothold because we know it from outside the script. For first contact, shared names for things could be footholds too. Some scripts, like Linear A, are still unread."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Footholds, not magic: Linear A is still unread"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four is an open question, not a settled one: could mathematics be common ground? There are no known aliens to test it on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Open question: maths as common ground"
+   },
+   "cite": [
+    "s13",
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The real Arecibo message of 1974 bet on numbers. It was a string of 1s and 0s, laid out as a grid of 23 by 73. That is 1,679 bits."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,679 bits: a grid 23 wide, 73 tall"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In that grid, a 1 meant a shaded square and a 0 an open one. Together they drew a picture: numbers, chemical elements, DNA, a human figure and the telescope itself."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tall grid of black and white squares that forms small pictures: counting numbers, a double helix, a stick-like human, and a radio dish."
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the Arecibo message grid, what did a 1 or a 0 stand for?",
+    "right": "A shaded square or an open square in a picture.",
+    "wrong": [
+     "A spoken word.",
+     "A planet's name.",
+     "A musical note."
+    ],
+    "why": "The message was turned into binary where black squares were 1 and white squares were 0, so the receiver could rebuild the picture."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was aimed at a star cluster about 25,000 light years away. One paper calls success slim, and the event symbolic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A symbol more than a conversation"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Supporters of maths as common ground point to honeybees. They can learn to add and subtract one, so maths might arise in very different minds."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "For: even bees can do simple maths"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics reply that true statements may be universal, but our symbols and uses are human. One educator says to stop calling maths a universal language. A philosopher asks why aliens would share our mathematics."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "For: maths may follow from intelligence | Against: our notation and use are human"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where does the debate on maths as common ground stand?",
+    "right": "It is an open question: experts disagree and it cannot yet be tested.",
+    "wrong": [
+     "It is settled: maths is certainly universal.",
+     "It is settled: maths is certainly just human.",
+     "It was settled by the Arecibo message."
+    ],
+    "why": "Researchers say it is still to be answered whether maths is a human construction or a consequence of intelligence, and critics question the assumption."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another risk is assuming the same senses. Arecibo is a picture, so it needs eyes. A later 2017 signal was designed for life forms without eyes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Risk: assuming the same senses"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather the risks we have met. Each one comes from a step we just practised."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One point, many meanings | Gestures read differently | A pidgin covers few topics | Guesses with no double text cannot be checked | Assuming the same senses or maths"
+   },
+   "cite": [
+    "s10",
+    "s11",
+    "s3",
+    "s6",
+    "s19",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is a risk of building meaning from a few shared words?",
+    "right": "We may only be able to talk about the topics we have words for.",
+    "wrong": [
+     "Everyone will understand everything at once.",
+     "Gestures can never be misread.",
+     "A pidgin always becomes a full language within days."
+    ],
+    "why": "A pidgin may have words for trade goods and few for other topics, so talk can stay narrow."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Time to practise. Everything here is invented: the visitors, their words, their signals. The method is real: match signals to what you can see."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Activity: decode the signals"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are five observations. Read them slowly. Take your time, and use a pencil if that helps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. They hold up one shell and signal: ki sil | 2. They hold up two stones and signal: ro dem | 3. They hand you a shell and signal: va sil | 4. They hand you a stone and signal: va dem | 5. They hold up one stone and signal: ki dem"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our trick is the same as pointing and naming: a signal that comes back when a thing comes back may name that thing. Which signal comes back with shells?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same thing, same signal"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which signal most likely means shell?",
+    "right": "sil",
+    "wrong": [
+     "ki",
+     "ro",
+     "va"
+    ],
+    "why": "'sil' appears in observations 1 and 3, the two with a shell, and never when there is no shell."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Use the same trick for the rest. 'dem' fits stone, 'ro' fits two, 'ki' fits one, and 'va' fits handing something over."
+   },
+   "show": {
+    "kind": "list",
+    "text": "sil = shell | dem = stone | ki = one | ro = two | va = hand over"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a new signal arrives with no objects shown: 'va ro sil'. What is the best reading?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "va ro sil"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "What is the best reading of 'va ro sil' from our clues?",
+    "right": "Hand over two shells, with who gives to whom still to be tested.",
+    "wrong": [
+     "One stone has been handed to you.",
+     "Two shells are being held up and nothing more.",
+     "Please stop giving us shells."
+    ],
+    "why": "'va' fits handing over, 'ro' fits two and 'sil' fits shell. The clues do not show word order or who is giving."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That reading is a guess, and a good decoder tests it. Lay out two shells and watch what the visitors do."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "shell",
+    "count": 2,
+    "layout": "row",
+    "text": "Two shells: the test of our guess."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's sort what we learned. Pointing, pidgins and decipherment are real. The visitors are story. Whether anyone is out there is unknown."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Real: pointing and naming, pidgins, Rosetta Stone, Linear B, Arecibo | Story or unknown: our visitors, any alien mathematics, any reply"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check. Next class we leave language and head to a different problem: terraforming, and what makes a world livable."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Next: Terraforming, Part 1"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is established, real knowledge?",
+    "right": "Pidgin languages arise between groups with no common language.",
+    "wrong": [
+     "A message from another intelligence has been decoded.",
+     "Mathematics has been proved to be a shared language with aliens.",
+     "Linear A has been fully deciphered."
+    ],
+    "why": "Linguists describe pidgins arising when groups without a shared language need to communicate. No confirmed alien signal exists, the maths question is open, and Linear A remains unreadable."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Pointing and naming",
+   "links": [
+    "[[First Contact, Part 1: What Language Is]]",
+    "[[Inscrutability of reference]]"
+   ]
+  },
+  {
+   "topic": "Pidgins and creoles",
+   "links": [
+    "[[First Contact, Part 1: What Language Is]]",
+    "[[Economics: Scarcity, Trade and Fair Shares]]"
+   ]
+  },
+  {
+   "topic": "Bilingual clues and decipherment",
+   "links": [
+    "[[Pointing and naming]]",
+    "[[Testing a guess]]"
+   ]
+  },
+  {
+   "topic": "Mathematics as common ground",
+   "links": [
+    "[[Capstone: Design Your Own Thought Experiment]]",
+    "[[SETI and technosignatures]]"
+   ]
+  },
+  {
+   "topic": "SETI and technosignatures",
+   "links": [
+    "[[Terraforming, Part 1: What Makes a World Livable]]"
+   ]
+  },
+  {
+   "topic": "Testing a guess",
+   "links": [
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Mathematics could serve as a common ground with a non-human intelligence.",
+   "other_view": "Supporters say simple counting appears even in bees, so maths may follow from intelligence. Critics say true statements may be universal but notation and use are human, and one philosopher asks why other beings would have our mathematics. No one can yet test it, so it is an open question.",
+   "cite": [
+    "s13",
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Pointing and naming is a safe first step because pointing is universal.",
+   "other_view": "Pointing forms differ between peoples, including lip and nose pointing, and a misread point can cause offence. Quine argued a single point leaves the meaning of a word unsettled. Some philosophers have criticised his rabbit example, but Quine did not accept those criticisms.",
+   "cite": [
+    "s9",
+    "s10",
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Searching for signals from other intelligences is a reasonable scientific effort.",
+   "other_view": "Supporters see it as a way to address the Fermi paradox and to understand possible technosignatures. Critics argue it is speculative and unfalsifiable, and no confirmed evidence has been found despite decades of searching.",
+   "cite": [
+    "s23",
+    "s20"
+   ]
+  }
+ ]
+}

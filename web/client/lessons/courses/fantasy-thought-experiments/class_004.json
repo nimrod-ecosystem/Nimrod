@@ -1,0 +1,818 @@
+{
+ "about": {
+  "title": "Where Dragons Come From: The Myths",
+  "course": "fantasy-thought-experiments",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, five more than the aim. The class covers four cultures, a change in European meaning and a debated science question, and each needs its own check. You can pause after any question and carry on later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Dragon",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/dragon-mythological-creature",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Enter the dragons (Shanghai Museum Lunar New Year exhibition)",
+   "publisher": "Shanghai Municipal Education Commission, museums section",
+   "date": "2024-02-06",
+   "link": "https://edu.sh.gov.cn/study_en_museums/20240206/4c93fc98d2bf488f8becebd4615698f0.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Year of the Dragon",
+   "publisher": "Natural History Museum of Los Angeles County",
+   "date": "n.d.",
+   "link": "https://nhm.org/stories/year-dragon",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "St. George",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Saint-George",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Saint George and the Dragon (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/literature-and-writing/saint-george-and-dragon/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Why Do Dragons Hoard Treasure?",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Why-Do-Dragons-Hoard-Treasure",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Beowulf (British Library collection item, Chinese-language mirror site)",
+   "publisher": "British Library",
+   "date": "n.d.",
+   "link": "https://www.britishlibrary.cn/en/works/beowulf/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Quetzalcoatl",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Quetzalcoatl",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Stories: The Rainbow Serpent",
+   "publisher": "Kakadu National Park (Australian Government)",
+   "date": "n.d.",
+   "link": "https://kakadu.gov.au/discover/culture/stories/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Dragon (Student Encyclopedia)",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/dragon/274056",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Why Dragons Appear in So Many Cultures",
+   "publisher": "History.com (A&E Television Networks)",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/dragon-myths",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Lindwurmbrunnen",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Lindwurmbrunnen",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Woolly rhinoceros skull",
+   "publisher": "Google Arts & Culture (museum collection entry; the contributing museum is not named in the text I read)",
+   "date": "n.d.",
+   "link": "https://artsandculture.google.com/asset/woolly-rhinoceros-skull/dgEB_xojdoy1kA?hl=en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Klagenfurt Lindwurm",
+   "publisher": "University of Klagenfurt (ICTMT 5 conference news page)",
+   "date": "n.d.",
+   "link": "https://wwwg.uni-klu.ac.at/ictmt5/a_info/5latest_news/lindwurm_story.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "New study finds dinosaur fossils did not inspire the mythological griffin",
+   "publisher": "University of Portsmouth",
+   "date": "2024-06-21",
+   "link": "https://www.port.ac.uk/news-events-and-blogs/news/new-study-finds-dinosaur-fossils-did-not-inspire-the-mythological-griffin",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Dinosaurs and Dragons, Oh My!",
+   "publisher": "Stanford Humanities Center",
+   "date": "n.d.",
+   "link": "https://shc.stanford.edu/stanford-humanities-center/news/dinosaurs-and-dragons-oh-my",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Dragons from Around the World",
+   "publisher": "Cricket Media",
+   "date": "n.d.",
+   "link": "https://cricketmedia.com/blog/dragons-from-around-the-world/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "New Study Challenges Dinosaur Fossil Origins of the Griffin Myth",
+   "publisher": "Medievalists.net",
+   "date": "2024-06",
+   "link": "https://www.medievalists.net/2024/06/dinosaur-fossil-griffin-myth/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Saint George and the Dragon",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Saint_George_and_the_Dragon",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Feathered serpent pendant, Mexica (Aztec), 1325-1521 CE",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/art/collection/search/812477",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we walked through the castle. Today we meet its most famous unwelcome guest: the dragon."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where Dragons Come From: The Myths"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you will be able to name several real dragon legends from different cultures. You will also be able to say what we know, and don't know, about why people told them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Name dragon legends from different cultures | What we know | What we do not know"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We will use four labels. LEGEND is a story people told. REAL is something we can check. REAL but debated means experts disagree. INVENTED is something we make up for Nimrod."
+   },
+   "show": {
+    "kind": "list",
+    "text": "LEGEND: a story people told | REAL: we can check it | REAL but debated: experts disagree | INVENTED: made up by us"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "LEGEND first. What is a dragon? In the stories of many cultures, it is a large lizard-like or serpent-like creature. Some traditions make it evil. Others make it kind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dragon: a big serpent-like creature in legend. Evil in some stories, kind in others."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Is the dragon evil in every culture's stories?",
+    "right": "No. Some traditions make it evil and others make it kind.",
+    "wrong": [
+     "Yes, it is evil in every culture.",
+     "No, it is kind in every culture.",
+     "Yes, but only because it breathes fire."
+    ],
+    "why": "Britannica says the dragon is evil in some traditions and beneficial in others."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "LEGEND, China. The Chinese dragon is called long. The Shanghai Museum says it is the only mythical creature among the twelve zodiac signs."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A red dragon curling through clouds on a blue-and-white vase from the reign of Emperor Qianlong, 1736 to 1795."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why did it matter so much? Its power over rain was central to farming life. It also became a symbol of imperial power."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Long: rain-bringer and symbol of the emperor"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why would farming people care so much about a dragon that controls rain?",
+    "right": "Rain makes crops grow, so a rain-bringer protects the harvest.",
+    "wrong": [
+     "Rain keeps dragons from catching colds.",
+     "Rain makes castles taller.",
+     "Farmers wanted the dragon to guard their gold."
+    ],
+    "why": "The Shanghai Museum says the dragon's control over rain was central to an agricultural society."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "LEGEND, the Middle East and Egypt. Britannica says that where snakes are large and deadly, the serpent or dragon often stood for evil. Egypt's Apepi was the great serpent of the world of darkness."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Apepi: the serpent of darkness"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "LEGEND, Mexico. Quetzalcoatl means Feathered Serpent. Feathered snake images go back to Teotihuacan, about the 3rd to 8th century CE. He was linked with rain, plants and farming."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A stone Quetzalcoatl: a coiled serpent whose body is covered in feathers."
+   },
+   "cite": [
+    "s8",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "LEGEND, Australia. The Rainbow Serpent is a major creation ancestor in Aboriginal stories. In Kakadu she made waterholes and rock passages. These stories are a living part of culture today, so we treat them with respect."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Rock art of the Rainbow Serpent at Ubirr, Kakadu National Park."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put our four stories on a map. Look for something they share."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with four marks: China (long, rain), the Middle East and Egypt (serpent of darkness), Mexico (Feathered Serpent, rain and plants), northern Australia (Rainbow Serpent, waterholes)."
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s8",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pattern shows up in the China, Mexico and Kakadu stories?",
+    "right": "The serpent is linked with water or rain.",
+    "wrong": [
+     "The serpent guards a hoard of gold.",
+     "The serpent is killed by a knight.",
+     "The serpent breathes fire."
+    ],
+    "why": "The long controls rain, Quetzalcoatl is linked with rain and plants, and the Rainbow Serpent made waterholes."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now REAL history: how the dragon's meaning changed in Europe. Early on it was a fighting emblem. Norse warriors painted dragons on shields and carved dragon heads on ship bows. Before AD 1000, England used a dragon flag in war."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A longship with a carved dragon head on its bow."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, Beowulf, an Old English poem. Its hero faces a dragon that guards a hoard of treasure. Beowulf kills it, but he is fatally wounded."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dragon coiled on a heap of gold inside a burial mound."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the part to remember. In the poem, the dragon attacks after a thief steals a single cup from its treasure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One stolen cup wakes the dragon"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Beowulf, what makes the dragon attack?",
+    "right": "A thief steals a cup from its hoard.",
+    "wrong": [
+     "A knight sings too loudly.",
+     "The king forgets to feed it sheep.",
+     "A rainstorm floods its cave."
+    ],
+    "why": "Britannica says the dragon attacks only after a thief steals a single cup from its collection."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Britannica reads the hoard as a warning about greed: wealth made useless by selfishness. Norse legend says Fafnir was a dwarf turned into a dragon by greed for cursed gold."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hoard = warning about greed"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then another meaning. Britannica's student encyclopedia says that in Christianity the dragon came to stand for sin and paganism. The Bible's Revelation has a many-headed dragon called the old serpent."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Christian dragon = sin and paganism"
+   },
+   "cite": [
+    "s10",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the dragon come to stand for in Christian stories?",
+    "right": "Sin and paganism.",
+    "wrong": [
+     "Good luck and rain.",
+     "The power of the emperor.",
+     "The Rainbow Serpent's waterholes."
+    ],
+    "why": "Britannica's student encyclopedia says that in Christianity the dragon became a symbol of sin and paganism."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Saint George was a real 3rd-century Christian martyr. The dragon story is LEGEND. In the Golden Legend of 1265 to 1266, a dragon troubles the city of Silene. The people feed it two sheep a day, and George slays it."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "sheep",
+    "count": 2,
+    "layout": "row",
+    "text": "Two sheep a day for the dragon of Silene"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where did that story come from? Britannica says it may be a Christian version of the Greek legend of Perseus and Andromeda. Notice the words 'may be'. It is not proven."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "George and the dragon: perhaps a retelling of Perseus"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Britannica says St George's dragon story may be a Christian version of which Greek legend?",
+    "right": "Perseus rescuing Andromeda from a sea monster.",
+    "wrong": [
+     "Beowulf and the cup thief.",
+     "Quetzalcoatl and the rain.",
+     "The Rainbow Serpent and the waterholes."
+    ],
+    "why": "Britannica says George's story may be a Christian version of the Perseus and Andromeda legend, and it is only a possibility."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the order. Dragon flags and ship prows came before AD 1000. Then Beowulf in an 11th-century manuscript. The oldest known George-and-dragon text is also from the 11th century. The Golden Legend came in 1265 to 1266."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Before AD 1000: dragon flags and ship prows | 11th century: Beowulf manuscript, and the oldest known George-and-dragon text | 1265-66: the Golden Legend"
+   },
+   "cite": [
+    "s10",
+    "s7",
+    "s19",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So in Europe the dragon moved from fighting emblem, to guardian of greedy gold, to symbol of sin, to enemy of saints. The meaning changed over time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fighting emblem | Guardian of greedy gold | Symbol of sin | Enemy of saints"
+   },
+   "cite": [
+    "s10",
+    "s6",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now REAL but debated. Did fossils inspire dragon stories? Fossils are the remains of ancient life preserved in rock. Fossil-inspired folklore is called a geomyth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Geomyth: folklore inspired by fossils or natural features"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our best case is Klagenfurt, in Austria. Legend says the city was founded after knights killed a dragon. In 1335 a huge skull was found nearby and taken for the dragon's."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large, long skull on display beside a stone dragon fountain."
+   },
+   "cite": [
+    "s11",
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was later shown to belong to a woolly rhinoceros, an extinct animal. A museum's example of such a skull is about 50,000 years old. The palaeontologist Franz Unger identified the Klagenfurt skull in 1840."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dragon skull = woolly rhinoceros"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What animal did the Klagenfurt 'dragon skull' really come from?",
+    "right": "A woolly rhinoceros.",
+    "wrong": [
+     "A crocodile.",
+     "A dinosaur.",
+     "A giant snake."
+    ],
+    "why": "Scientists identified the skull as a long-extinct woolly rhinoceros. Franz Unger named it in 1840."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How strong is the evidence? Strong that people took the skull for dragon bones: it was displayed that way. Weaker that it started the legend. The story is set before the 1335 find, so the skull probably backed up a story. We cannot be sure."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Well supported: the skull was displayed as a dragon's | Debated: the skull started the legend, or the stone dragon was copied from it"
+   },
+   "cite": [
+    "s12",
+    "s14",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a bigger claim: that fossils inspired dragon stories around the world. The historian Adrienne Mayor has argued that some fantastic monsters were based on fossils."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Claim: fossils inspired some monsters (Adrienne Mayor)"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2024 two palaeontologists at the University of Portsmouth tested her griffin idea and found it unconvincing. Their view of dragons and dinosaurs is that there is no evidence, only speculation."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Not all mythological creatures demand explanations through fossils. (Dr Mark Witton)"
+   },
+   "cite": [
+    "s15",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which claim has real evidence behind it?",
+    "right": "A woolly rhinoceros skull was once displayed in Klagenfurt as a dragon's.",
+    "wrong": [
+     "Dinosaur fossils inspired every dragon legend.",
+     "It is proven that Protoceratops inspired the griffin.",
+     "Scholars know exactly when dragons first entered stories."
+    ],
+    "why": "The Klagenfurt skull display is documented. The wider dragon-and-dinosaur link has no evidential basis according to Witton, and Britannica's student encyclopedia says scholars do not know exactly when dragons entered stories."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's sum up what we know and don't know."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "We know: many cultures told serpent and dragon tales, their meanings varied, and one rhino skull was called dragon bones. | We don't know: when dragons first entered stories, or whether fossils started any dragon legend."
+   },
+   "cite": [
+    "s10",
+    "s1",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now INVENTED. Everything from here is made up for Nimrod. We will build our dragon's history from the real patterns we just met."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rain-bringer (China) | Hoard-guardian (Beowulf) | Skull in the hall (Klagenfurt) | Saint-style legend (George)"
+   },
+   "cite": [
+    "s2",
+    "s7",
+    "s13",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "INVENTED. Nimrod's elders say a serpent once lived in the village mere, and they prayed to it for rain. Later a dragon, Old Cinder, moved into the old king's burial mound and settled on the buried gold."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A misty mere below a green hill with an old burial mound on top."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "INVENTED. Jack once dug a huge skull out of the gravel pit, and it hangs in the village hall. Sir Michael says it is Old Cinder's. Merlin says it is an Ice Age beast. Nimrod the cat naps on it and has no opinion."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge skull hanging in the village hall, with a cat asleep on top."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Thought experiment: what would the village do with a dragon next door? The real stories give three plans. Fight it, like George. Feed it, like Silene. Or leave it alone, like the world of Beowulf."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fight it (George) | Feed it (Silene's sheep) | Leave its hoard alone (Beowulf)"
+   },
+   "cite": [
+    "s4",
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Think it through. Sir Michael wants to fight, but Beowulf won and still died. Feeding means more sheep, forever. Dame Gladys suggests a rule. Which rule would protect the village?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Which rule keeps Nimrod safe?"
+   },
+   "cite": [
+    "s7",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Using the Beowulf story, which village rule is most sensible?",
+    "right": "Nobody takes anything from the dragon's hoard.",
+    "wrong": [
+     "Anyone may borrow treasure if they ask politely.",
+     "Send a thief at night to take just one cup.",
+     "Move all the sheep into the burial mound."
+    ],
+    "why": "In the poem the dragon attacks after one cup is stolen, so keeping everyone away from the hoard is the sensible rule inside the story. This is a thought experiment, so reasoning matters more than a fixed answer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today we met four dragon legends, saw how Europe's dragon changed its meaning, and found one solid fossil case with a lot of debate around it. Next class we meet the wizards, starting with the real past behind Merlin."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Where Wizards Come From"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Dragon legends around the world",
+   "links": [
+    "[[Where Wizards Come From: Merlin and the Real Past]]",
+    "[[Building a World: Maps and Worldbuilding]]"
+   ]
+  },
+  {
+   "topic": "How the dragon's meaning changed in Europe",
+   "links": [
+    "[[Inside the Castle]]",
+    "[[Life in a Medieval Village]]"
+   ]
+  },
+  {
+   "topic": "Geomyths: fossils and folklore",
+   "links": [
+    "[[Science of a Dragon: Size, Flight and Fire]]"
+   ]
+  },
+  {
+   "topic": "Hoard-guarding dragons and greed",
+   "links": [
+    "[[The Magic Market: Economics with Spells]]"
+   ]
+  },
+  {
+   "topic": "The Dragon of Nimrod (invented)",
+   "links": [
+    "[[Your Own Thought Experiment: Fantasy and Science Fiction]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About AD 1000, when the surviving Beowulf manuscript was made",
+   "elsewhere": "In Persia, the epic poem Shahnama was composed around AD 1000, and it has its own dragon fights.",
+   "cite": [
+    "s7",
+    "s11"
+   ]
+  },
+  {
+   "when": "1265-66, when the Golden Legend was written",
+   "elsewhere": "In China, dragon dances to call forth rain trace back to the Han dynasty (206 BCE to 220 CE), more than a thousand years earlier.",
+   "cite": [
+    "s4",
+    "s3"
+   ]
+  },
+  {
+   "when": "1335, when the Klagenfurt skull was found",
+   "elsewhere": "Mexica (Aztec) artists in Mexico were making feathered-serpent images in the period 1325 to 1521 CE.",
+   "cite": [
+    "s13",
+    "s20"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Fossils inspired some dragon and monster legends.",
+   "other_view": "Adrienne Mayor argues that some fantastic monsters were based on real fossils. Palaeontologists Mark Witton and Richard Hing tested her griffin example in 2024 and found it unconvincing. Witton says the dragons-and-dinosaurs link has no evidential basis and is speculation. The Portsmouth team agrees that fossils have inspired folklore in other cases, so the real question is which cases have evidence.",
+   "cite": [
+    "s16",
+    "s15",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The Klagenfurt dragon fountain was modelled on the woolly rhinoceros skull.",
+   "other_view": "This is often repeated, and it goes back to Franz Unger in 1840. Witton is more cautious. He notes the dragon's head and the skull are not very similar, and says the fossil may have inspired ideas more than exact anatomy.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "claim": "St George's dragon story is a Christian retelling of the Greek Perseus legend.",
+   "other_view": "Britannica says it may be, but this is not settled. Another source notes that the oldest known George-and-dragon text is a Georgian one from the 11th century. It also says early images of a horseman killing a dragon probably do not show George.",
+   "cite": [
+    "s4",
+    "s19"
+   ]
+  }
+ ]
+}

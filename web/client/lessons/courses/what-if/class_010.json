@@ -1,0 +1,941 @@
+{
+ "about": {
+  "title": "Case studies: the Moon landings, a presidential assassination and other open questions",
+  "course": "what-if",
+  "class_n": 10,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. There are three case studies (Moon landings, the Kennedy assassination, Roswell), each with its own tier, one idea per beat, and a check question after each idea. If you are short on time, you can skip the Roswell case study (beats 25 to 29) and still meet the goal. If you want longer, pause at the thought experiment and work through it on paper. The third case is Roswell because it targets no group, carries no health risk, and has a real secret at its centre."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Apollo 11 Landing Site (image from the Lunar Reconnaissance Orbiter)",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/resource/apollo-11-landing-site/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Apollo 11 landing site from Lunar Reconnaissance Orbiter",
+   "publisher": "The Planetary Society",
+   "date": "n.d.",
+   "link": "https://www.planetary.org/space-images/apollo-11-from-lro",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Reflectors placed on the moon by Apollo 11 astronauts 50 years ago continue to provide fresh lunar laser ranging data",
+   "publisher": "NASA Goddard Space Flight Center",
+   "date": "2019-07-31",
+   "link": "https://earth.gsfc.nasa.gov/geo/projects/sgp/updates/reflectors-placed-moon-apollo-11-astronauts-50-years-ago-continue-provide",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "One Apollo 11 Experiment Is Still Going 50 Years Later",
+   "publisher": "IEEE Spectrum",
+   "date": "n.d.",
+   "link": "https://spectrum.ieee.org/one-apollo-11-experiment-is-still-going-50-years-later",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "How do we know that we went to the Moon?",
+   "publisher": "Institute of Physics (IOP)",
+   "date": "n.d.",
+   "link": "https://www.iop.org/explore-physics/moon/how-do-we-know-we-went-to-the-moon",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Apollo 11 Hoax Photos: 8 Moon-Landing Myths Busted",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/science/article/apollo-11-hoax-photos--8-moon-landing-myths-busted",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Lunar ore geology and feasibility of ore mineral detection using a far-IR spectrometer",
+   "publisher": "arXiv (preprint, 2402.02614)",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2402.02614",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Was the Moon Landing Fake? What Lunar Rocks and Dust Reveal",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/was-the-moon-landing-fake-what-lunar-rocks-and-dust-reveal/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Report of the President's Commission on the Assassination of President Kennedy, Chapter 1: Summary and Conclusions",
+   "publisher": "U.S. National Archives",
+   "date": "1964",
+   "link": "https://www.archives.gov/research/jfk/warren-commission-report/chapter-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Final Report of the Assassination Records Review Board, Chapter 1: The Problem of Secrecy and the Solution of the JFK Act",
+   "publisher": "Assassination Records Review Board (hosted by the Federation of American Scientists)",
+   "date": "1998",
+   "link": "https://sgp.fas.org/advisory/arrb98/part03.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Summary of Findings and Recommendations, Select Committee on Assassinations",
+   "publisher": "U.S. National Archives",
+   "date": "1979",
+   "link": "https://www.archives.gov/research/jfk/select-committee-report/summary.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Views and Dissent of Members of the Committee (HSCA report)",
+   "publisher": "U.S. National Archives",
+   "date": "1979",
+   "link": "https://www.archives.gov/research/jfk/select-committee-report/part-4.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Expert Discounts JFK 'Second Gunman' Theory",
+   "publisher": "ABC News",
+   "date": "n.d.",
+   "link": "https://abcnews.com/amp/WNT/story?amp=&id=131461&page=1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Synchronization of the acoustic evidence in the assassination of President Kennedy (Garwin and Patlach)",
+   "publisher": "IBM Research / Forensic Science Society",
+   "date": "2005",
+   "link": "https://researcher.ibm.com/publications/synchronization-of-the-acoustic-evidence-in-the-assassination-of-president-kennedy",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Dealey Plaza acoustics: the Thomas study and the NAS panel response",
+   "publisher": "PBS FRONTLINE (archived page)",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/wgbh/pages/frontline/shows/oswald/conspiracy/acoustics.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "JFK Assassination Records - 2025 Documents Release",
+   "publisher": "U.S. National Archives",
+   "date": "2025-03-18",
+   "link": "https://archives.gov/research/jfk/release-2025",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Current Status of the JFK Records Collection",
+   "publisher": "U.S. National Archives (Transforming Classification blog)",
+   "date": "2026-05-18",
+   "link": "https://transforming-classification.blogs.archives.gov/2026/05/18/current-status-of-the-jfk-records-collection/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "JFK Assassination Records – 2025 Documents Release",
+   "publisher": "The Sixth Floor Museum at Dealey Plaza",
+   "date": "2025-03-31",
+   "link": "https://www.jfk.org/timeline-events/jfk-assassination-records-2025-documents-release/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "GAO Report on Roswell, NM UFO Crash",
+   "publisher": "U.S. Government Accountability Office (hosted by the Federation of American Scientists)",
+   "date": "n.d.",
+   "link": "https://sgp.fas.org/othergov/roswell.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Roswell Report: Case Closed",
+   "publisher": "U.S. Air Force (af.mil)",
+   "date": "1997",
+   "link": "https://www.af.mil/The-Roswell-Report/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Intelligence Agents Investigate UFOs in Roswell (7 JUL 1947)",
+   "publisher": "U.S. Army Intelligence Center of Excellence (DVIDS)",
+   "date": "n.d.",
+   "link": "https://www.dvidshub.net/news/475677/intelligence-agents-investigate-ufos-roswell-7-jul-1947",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "50 years later, some still believe the moon landing was faked",
+   "publisher": "Global News (Canadian Press)",
+   "date": "2019",
+   "link": "https://globalnews.ca/news/5488706/moon-landing-conspiracies-debunked/amp",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Wildest Apollo 11 Moon Landing Conspiracy Theories, Debunked",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/moon-landing-fake-conspiracy-theories",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The Roswell Incident: What U.S. Government Reports Concluded",
+   "publisher": "UAP Archive",
+   "date": "n.d.",
+   "link": "https://uap-archive.org/uap/learn/roswell-incident-government-reports/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "JFK Assassination Records: Background",
+   "publisher": "U.S. National Archives",
+   "date": "n.d.",
+   "link": "https://www.archives.gov/research/jfk/background",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Today we test three famous ideas. Before we look at any of them, we say where each one stands."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where this idea stands"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A quick reminder from Class 1. There are five tiers: mainstream consensus, active research debate, minority scholarly view, popular speculation, and fiction."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Mainstream consensus\n2. Active research debate\n3. Minority scholarly view\n4. Popular speculation\n5. Fiction"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are today's three cases. Each idea sits in the same tier, popular speculation. But the accepted account behind each one is different, and we will say it out loud each time."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LEFT (the idea): The Moon landings were faked | A second gunman or wider plot killed President Kennedy | Alien craft crashed at Roswell\nRIGHT (the accepted account): Apollo astronauts landed on the Moon | Oswald fired the shots that hit the President | The debris was from a secret Air Force balloon project"
+   },
+   "cite": [
+    "s5",
+    "s10",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "None of this is meant to mock anyone. People doubt official stories for real reasons. The Warren Commission worked partly in secret and sealed some records, and the public never trusted its conclusion."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Doubt has a history"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We will use the checklist from Class 9. This is the short version. If your notes word it differently, use yours."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What is the claim?\nWhat is the accepted account?\nWhat is the evidence on each side?\nCan strangers check it?\nWhat would change my mind?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Case one: the Moon landings. The accepted account is that six crewed Apollo missions landed on the Moon between 1969 and 1972, and twelve astronauts walked there."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "moon",
+    "count": 6,
+    "layout": "group",
+    "text": "Six crewed landings, 1969 to 1972"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The idea says NASA faked it. Doubts began around the time of the landing itself. Polls over the years show roughly 5 to 6 in 100 Americans think it was faked."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5 to 6 in 100"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Claim one: the flag seems to wave, and there is no wind on the Moon. NASA put a horizontal rod along the top of the flag to hold it open."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flag on the Moon held out sideways by a rod along its top edge, with rippled folds in the cloth."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why did it move at all? It only moved when the astronauts were handling the pole. The flag kept swinging for a moment after they let go, and it has stayed still since."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Motion only while touched"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Claim two: there are no stars in the photos. The astronauts' cameras used short exposures. That suited the bright suits and the bright ground, but it was too quick to catch dim stars."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bright Moon surface photo with a pitch-black sky and no stars."
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why don't stars show up in the Apollo surface photos?",
+    "right": "The cameras used short exposures to capture the bright ground and suits, so the dim stars did not register.",
+    "wrong": [
+     "There are no stars visible from the Moon at all.",
+     "The photos were taken in daytime on Earth.",
+     "NASA edited the stars out of every picture."
+    ],
+    "why": "A short exposure that works for bright sunlit objects is too quick to record faint starlight. The stars are still there."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fair enough, but photos can be staged. Is there anything that doesn't rely on pictures?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Things strangers can check"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Yes. Apollo 11, 14 and 15 astronauts left mirror arrays on the Moon. Observatories in New Mexico, France, Italy and Germany fire lasers at them and time the bounce, to within a few millimetres."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A green laser beam rising from a telescope dome toward the Moon at night."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And the mirrors still work. Laser ranging to the Moon is routinely done today, in several countries."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still working today"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is the laser-mirror evidence especially strong?",
+    "right": "Observatories in several countries can repeat it without relying on NASA's photos.",
+    "wrong": [
+     "Because NASA says the mirrors are there.",
+     "Because the mirrors appear in the flag photos.",
+     "Because it was shown on television in 1969."
+    ],
+    "why": "Evidence that strangers in different countries can repeat for themselves is much harder to fake than a photo."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the rocks. Apollo brought back about 382 kilograms of Moon rock. Only about 2 more kilograms have come from Soviet Luna and Chinese Chang'e-5 missions put together."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Moon rock returned to Earth",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And the Soviet Union, a Cold War rival, returned small samples of its own by robot. Independent analysis found them consistent with the Apollo collection."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A rival's samples agree"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Orbiters have also photographed the sites. They show the lander's descent stage left behind, and dark paths where astronauts walked."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A view from orbit of the Apollo 11 site: a small lander base with dark footpaths leading to and from it."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But NASA launched that orbiter! Why trust NASA's photos?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Whose camera?"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Good challenge. India's and Japan's orbiters have also seen Apollo sites or signs of them. And the laser mirrors are used by observatories that are not NASA's."
+   },
+   "show": {
+    "kind": "list",
+    "text": "India's Chandrayaan-1\nJapan's SELENE (Kaguya)\nObservatories in France, Italy and Germany"
+   },
+   "cite": [
+    "s8",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So, where does it stand? The landings themselves are mainstream consensus. The claim that they were faked is popular speculation, because each specific claim has an answer and the key evidence can be checked by others."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LEFT: The landings happened — mainstream consensus\nRIGHT: The landings were faked — popular speculation"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which tier fits 'the Moon landings were faked'?",
+    "right": "Popular speculation",
+    "wrong": [
+     "Mainstream consensus",
+     "Active research debate",
+     "Fiction"
+    ],
+    "why": "Many people hold the idea, but the evidence does not support it. It is not an active debate among researchers. Fiction means it is openly made up, which most believers do not intend."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Case two: the assassination of President Kennedy in Dallas. The accepted account starts with the Warren Commission. Ten months later it concluded that Lee Harvey Oswald acted alone, shooting from the Texas School Book Depository."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Case two: a presidential assassination"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But that was not the last word. Here is how the investigations unfolded."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1964: Warren Commission report | 1976: House Select Committee on Assassinations (HSCA) set up | 1979: HSCA report | 1982: National Academy of Sciences panel reviews the HSCA's sound evidence | 1992: JFK Records Act | 2025: withheld records released"
+   },
+   "cite": [
+    "s10",
+    "s25",
+    "s12",
+    "s13",
+    "s17",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1979 the HSCA concluded there was a probable conspiracy. But it also agreed that Oswald fired the two bullets that hit the President, and that one bullet struck both Kennedy and Governor Connally."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LEFT (Warren Commission): Oswald acted alone\nRIGHT (HSCA): Oswald fired the shots that hit; probable conspiracy"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On what basis? The HSCA's experts studied a police radio recording. They said they were 95 percent certain it held the sound of a second shooter, and the committee majority built its finding on that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A police radio recording"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the HSCA's 'probable conspiracy' finding mainly rest on?",
+    "right": "An acoustic analysis of a police radio recording.",
+    "wrong": [
+     "A confession from a second gunman.",
+     "New autopsy photographs.",
+     "Soviet documents."
+    ],
+    "why": "The committee majority relied on experts who said the recording showed a shot from a second location."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then in 1982 a National Academy of Sciences panel re-examined it. It found the reliable sound data did not support a second gunman. The suspect sounds were recorded about one minute after the shooting."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two stacked strips of sound recording, with the suspect noises marked one minute after the shooting."
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Was that challenged? Yes. A 2001 study disputed the panel's timing, and the panel's chair and colleagues re-checked. A later paper found serious errors in the 2001 study and reaffirmed the one-minute timing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Checked, challenged, checked again"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meanwhile the records kept opening. The collection holds over 5 million pages. In 2025 the previously withheld records were released unredacted, nearly 80,000 documents."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "over 5 million pages"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And the Sixth Floor Museum, which tells the story of the assassination, says reviewing those documents will take time. It will not guess what they show."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still being read"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our placement: a second gunman or wider plot is popular speculation. It is the closest call of the three, because one official committee once leaned that way. But its main scientific evidence was rejected by a National Academy panel."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LEFT: Oswald fired the shots that hit — agreed by Warren Commission and HSCA\nRIGHT: A second gunman or wider plot — popular speculation"
+   },
+   "cite": [
+    "s10",
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A tier is a judgement, not a verdict on anyone. If strong new evidence appears, the tier can move."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tiers can move"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What did the Warren Commission and the HSCA agree on?",
+    "right": "That Oswald fired the shots that hit President Kennedy.",
+    "wrong": [
+     "That there was no conspiracy.",
+     "That a second gunman fired from the grassy knoll.",
+     "That Oswald was innocent."
+    ],
+    "why": "They disagreed about conspiracy, but both said Oswald fired the shots that hit the President."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Case three: Roswell, New Mexico, July 1947. I chose it because it targets no group and carries no health risk. It also has a real secret at its centre."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Case three: Roswell"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The accepted account is that the debris came from a Project Mogul balloon train. Mogul was a classified Army Air Forces project meant to detect Soviet nuclear tests."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What fell: a Project Mogul balloon train\nWhat Mogul was for: detecting Soviet nuclear tests\nWho says so: the Air Force 1994 report and a GAO review"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So why the confusion? First a base announced a 'flying disc'. Then officials said it was a weather balloon. Reasonable people noticed the story changed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The story changed"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Air Force says later 'alien body' stories were likely descriptions of real Air Force events. It says events spread over many years were folded into two or three days in 1947."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LEFT: Stories of bodies\nRIGHT: Air Force explanation: publicised research and accidents, including a 1956 aircraft crash and a 1959 balloon mishap"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was the real secret behind the Roswell debris?",
+    "right": "A classified balloon project designed to detect Soviet nuclear tests.",
+    "wrong": [
+     "A captured alien spacecraft.",
+     "A weather balloon with no secret at all.",
+     "A crashed commercial airliner."
+    ],
+    "why": "A real secret existed, but the Air Force and GAO traced it to Project Mogul, not to aliens."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where it stands: what fell is settled by the Air Force's records as Project Mogul. The idea that an alien craft crashed is popular speculation. A real secret does not mean the secret you guessed is the true one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real secret, wrong guess"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A word on what we left out on purpose. We skipped ideas that blame a group of people, and ideas that could lead someone to harm their health."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What was left out on purpose"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Those questions aren't forbidden. But a thought experiment shouldn't cost anyone their dignity or their safety. For health questions, ask a doctor or pharmacist."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ideas that target a group of people\nIdeas that could harm someone's health\nWhat we kept: ideas where the only cost is being wrong"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the thought experiment. You are the investigator. Think about what would convince you, before you look at any evidence."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "If you were the investigator"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pick one case. Write down one thing that would convince you it is true, and one that would convince you it is false. If nothing could change your mind either way, notice that."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Which case?\n2. What would convince me it's true?\n3. What would convince me it's false?\n4. Could a stranger check it?"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which kind of evidence is the easiest for strangers to check?",
+    "right": "A measurement anyone with the right equipment can repeat, like bouncing a laser off the Moon mirrors.",
+    "wrong": [
+     "A witness who remembers an event decades later.",
+     "A document nobody is allowed to read.",
+     "A photograph with no record of who took it."
+    ],
+    "why": "A repeatable measurement does not depend on trusting one person. That makes it the easiest to check."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You can now take a well-known theory and state the accepted account. You can set out the evidence on each side and place the idea in a tier. Next class, you choose your own 'What if?'"
+   },
+   "show": {
+    "kind": "list",
+    "text": "State the accepted account\nSet out the evidence on each side\nPlace the idea in a tier\nSay what would change your mind"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Moon rock returned to Earth (kilograms)",
+   "rows": [
+    {
+     "label": "Apollo missions (1969 to 1972)",
+     "value": 382,
+     "source": "s7"
+    },
+    {
+     "label": "Soviet Luna and Chinese Chang'e-5 combined (about)",
+     "value": 2,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Apollo landing evidence: mirrors, rocks and orbital photos",
+   "links": [
+    "[[Lunar laser ranging]]",
+    "[[Checklist for weighing evidence]]"
+   ]
+  },
+  {
+   "topic": "JFK assassination investigations: Warren Commission, HSCA and the acoustic evidence",
+   "links": [
+    "[[Real conspiracies and unproven ones]]",
+    "[[Credibility tiers]]"
+   ]
+  },
+  {
+   "topic": "Roswell and Project Mogul",
+   "links": [
+    "[[Ancient astronauts]]",
+    "[[Credibility tiers]]"
+   ]
+  },
+  {
+   "topic": "Thought experiment: what would convince me?",
+   "links": [
+    "[[Your own What if]]",
+    "[[Checklist for weighing evidence]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1947",
+   "elsewhere": "The early Cold War. The United States ran a secret balloon project to listen for Soviet nuclear tests.",
+   "cite": [
+    "s19"
+   ]
+  },
+  {
+   "when": "1964",
+   "elsewhere": "The first crewed Apollo Moon landing was still five years away. Six crewed landings followed between 1969 and 1972.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "1975 to 1979",
+   "elsewhere": "Congress created the Church and Pike committees in 1975 to examine intelligence activities. The House reopened the Kennedy investigation in 1976.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "when": "1969 to 1972",
+   "elsewhere": "While Apollo landed crews on the Moon, the Soviet Union ran a robotic Luna programme that returned small samples in the 1970s.",
+   "cite": [
+    "s8",
+    "s7"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Apollo Moon landings really happened.",
+   "other_view": "Doubts began around the time of the landing, and polls over the years show roughly 5 to 6 percent of Americans believe it was faked. Distrust of institutions is understandable. The answer is that key evidence, like the laser mirrors and rock samples, can be checked by people outside NASA.",
+   "cite": [
+    "s22",
+    "s3",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Oswald fired the shots that hit the President, and there is no reliable evidence of a second gunman.",
+   "other_view": "The 1979 House committee majority concluded there was a probable conspiracy. It also said the Warren Commission had not investigated conspiracy adequately. A 2001 study disputed the timing the National Academy panel used, but the panel and colleagues re-checked and held to their conclusion.",
+   "cite": [
+    "s10",
+    "s11",
+    "s15",
+    "s14"
+   ]
+  },
+  {
+   "claim": "The Roswell debris was a Project Mogul balloon train, and the 'bodies' accounts come from other events.",
+   "other_view": "Some people find the Air Force explanation unconvincing, because some witnesses recall seeing specific things. The Air Force's own answer is that memories of events across many years merged into one.",
+   "cite": [
+    "s20"
+   ]
+  }
+ ]
+}

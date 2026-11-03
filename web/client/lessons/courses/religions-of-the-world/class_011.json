@@ -1,0 +1,1094 @@
+{
+ "about": {
+  "title": "Chinese Traditions: Confucianism, Daoism and Folk Religion",
+  "course": "religions-of-the-world",
+  "class_n": 11,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are six topics, each taught in small steps with a check question. The pace is slow on purpose, so learners who need time to think or recall can keep up. Fast readers can skip the checks and finish in about 20."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Ren (Confucianism)",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/religion-and-philosophy/ren-confucianism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Confucianism",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/confucianism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Family Ethics: Filial Piety",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/history/news-wires-white-papers-and-books/family-ethics-filial-piety",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Confucius: Ren, Li and the Ethics of the Analects",
+   "publisher": "Philosophy Professor",
+   "date": "n.d.",
+   "link": "https://www.philosophyprofessor.com/philosophers/confucius/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Taoism (chapter 8, Daoism)",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/philosophy-and-religion/eastern-religions/buddhism/taoism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Daoism: An Overview",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/daoism-overview",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Daoist Philosophy",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/daoismdaoist-philosophy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Daoism",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Daoism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Confucianism, Taoism and Chinese folk religions",
+   "publisher": "Pew Research Center",
+   "date": "2023-08-30",
+   "link": "https://www.pewresearch.org/religion/2023/08/30/confucianism-taoism-and-chinese-folk-religions/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Measuring Religion in China (report PDF)",
+   "publisher": "Pew Research Center",
+   "date": "2023-08-30",
+   "link": "https://www.pewresearch.org/religion/wp-content/uploads/sites/7/2023/08/PF_2023.08.30_religion-china_REPORT.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Measuring Religion in China (report PDF, second copy)",
+   "publisher": "Pew Research Center",
+   "date": "2023-08-30",
+   "link": "https://www.pewresearch.org/wp-content/uploads/sites/20/2023/08/PF_2023.08.30_religion-china_REPORT.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Ancestor veneration, funerals and afterlife beliefs (Religion and Spirituality in East Asian Societies, ch. 5)",
+   "publisher": "Pew Research Center",
+   "date": "2024-06-17",
+   "link": "https://www.pewresearch.org/religion/2024/06/17/ancestor-veneration-funerals-and-afterlife-beliefs/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The World's Religious Groups: How Their Sizes Changed from 2010 to 2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/how-the-global-religious-landscape-changed-from-2010-to-2020/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Lunar New Year: Introduction (research guide)",
+   "publisher": "Case Western Reserve University Libraries",
+   "date": "n.d.",
+   "link": "https://researchguides.case.edu/lunar-new-year",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Qingming festival (Tomb-Sweeping Day)",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/sports-and-leisure/qingming-festival-tomb-sweeping-day/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Moon Festival",
+   "publisher": "Smithsonian National Museum of Asian Art",
+   "date": "n.d.",
+   "link": "https://asia-archive.si.edu/learn/for-educators/teaching-china-with-the-smithsonian/videos/moon-festival/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Mooncake",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/moon-cake",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Rethinking syncretism: the unity of the three teachings and ...",
+   "publisher": "Taylor & Francis Online (journal article)",
+   "date": "n.d.",
+   "link": "https://www.tandfonline.com/doi/pdf/10.1179/073776993805307448",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Taiwan's religious success story (editorial quoting Pew figures for Singapore)",
+   "publisher": "Taipei Times",
+   "date": "2023-11-19",
+   "link": "https://www.taipeitimes.com/News/editorials/archives/2023/11/19/2003809370",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we meet three Chinese traditions: Confucianism, Daoism, and Chinese folk religion. We will take them one at a time, slowly."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Chinese Traditions: Confucianism, Daoism and Folk Religion"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our path. First Confucius, then Daoism, then folk religion. After that, festivals, why people mix traditions, and where they are practised today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Confucius and family ethics\n2. Daoism\n3. Folk religion\n4. Festivals\n5. Why people mix them\n6. Where they are practised today"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We start with Confucius, who lived from 551 to 479 BCE. His talks with students were written down in a book called the Analects."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "551–479 BCE"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His central idea is called ren. It means humanity, or kindness toward other people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "ren = humanity, kindness toward others"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The written character for ren joins the signs for 'human' and 'two'. A person is understood as living alongside others."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Chinese character for ren shown large. Beside it, two small notes: 'human' and 'two'."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does ren mean in Confucian teaching?",
+    "right": "Humanity, or kindness toward other people",
+    "wrong": [
+     "Winning arguments in public debate",
+     "Obeying the emperor without question",
+     "A spring festival for visiting graves"
+    ],
+    "why": "Sources describe ren as humanity or kindness. Its written character joins 'human' and 'two', which points to our relationships with others."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Confucius taught that kindness starts at home. It begins with respect and care for parents, elders and ancestors. This is called filial piety, or xiao."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Filial piety (xiao): respect and care for family"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He hoped that harmony in the family would spread outward. It would reach the village, then the city, then the whole nation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Family → Village → City → Nation"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In Confucian teaching, where does kindness begin?",
+    "right": "At home, in the family",
+    "wrong": [
+     "In the royal palace",
+     "At a mountain temple",
+     "In the marketplace"
+    ],
+    "why": "The source says Confucius saw ren beginning in the home. From there it was meant to spread outward to the village, city and nation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is what filial piety looked like in practice: supporting your parents, sharing their care with your brothers, burying them properly, and holding rites for them afterward."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Support parents\nShare their care with brothers\nBury them properly\nHold rites for them afterward"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is an example of filial piety in traditional Confucian ethics?",
+    "right": "Caring for aging parents and holding rites for them after they die",
+    "wrong": [
+     "Leaving parents to look after themselves",
+     "Avoiding all contact with relatives",
+     "Choosing a new family every year"
+    ],
+    "why": "The source lists supporting parents, sharing their care, proper burial, and ancestral rites as the proper behaviours of filial piety."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Traditional Confucian family ethics gave people different duties by age and by gender. Scholars also stress that filial piety was meant as real care, not only obedience."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Duties differed by age and gender. Right: Meant as personal care, not only obedience."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A second idea is li, which means proper conduct and ritual. Rituals were meant to build respect and a sense of community."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "li = proper conduct and ritual"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which word means proper conduct and ritual?",
+    "right": "li",
+    "wrong": [
+     "ren, which means kindness toward others",
+     "xiao, which means filial piety",
+     "Analects, which is a book"
+    ],
+    "why": "Li is the virtue of propriety and ritual. Ren is kindness, xiao is filial piety, and the Analects is the book of Confucius's talks."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Confucian teaching is also linked to a version of the golden rule, which asks us to treat others as we would like to be treated."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"do not do unto others what you would not want others to do unto you\" (as given by National Geographic Education)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Confucius also held that education builds good character. He called a person who shows ren a junzi, a word first meaning a gentleman."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "junzi = a person who shows ren"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a second tradition. Daoism, also spelled Taoism, is built around the Dao. Dao means 'the Way'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Daoism: following the Way"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two books are central. The Dao De Jing was composed sometime between the sixth and third centuries BCE and is traditionally credited to Laozi. The Zhuangzi was written around 350 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "6th–3rd century BCE: Dao De Jing\nabout 350 BCE: Zhuangzi"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Dao De Jing compares the Way to water. Water flows to the lowest ground without a struggle. In this picture, the Way works with nature and interferes as little as possible."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A stream flowing around stones and down to low ground."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the Dao De Jing, what natural thing is used to picture the Way?",
+    "right": "Water",
+    "wrong": [
+     "A mountain peak",
+     "A fire",
+     "A drum"
+    ],
+    "why": "The source says chapter eight of the Dao De Jing compares the operation of the Dao to water, which finds the lowest ground without effort."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Zhuangzi stresses staying calm in the face of death and other natural changes. It also speaks of a mystical union with the Dao."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Zhuangzi: calm and union with the Dao"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which two books are key texts of Daoism?",
+    "right": "The Dao De Jing and the Zhuangzi",
+    "wrong": [
+     "The Analects only",
+     "The Analects and the Dao De Jing",
+     "The Analects and the Zhuangzi"
+    ],
+    "why": "The Dao De Jing and the Zhuangzi are the two classic Daoist texts. The Analects is the Confucian book."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Daoism has two sides. One is a school of thought about the Dao, built on those two texts. The other is religious movements that began in the late Han dynasty, around the 100s CE."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Daojia, the school of the Dao (texts and thinkers). Right: Daojiao, the teaching of the Dao (religious movements)."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Because of this, Daoism is seen by some as a philosophy, by some as a religion, and by some as both. We will hear more on this in 'The Other Side'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Philosophy, religion, or both"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In a Daoist temple, rites can include chanting, ritual prayers, meditation, burning incense, and prayers to gods and goddesses."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Chanting\nRitual prayers\nMeditation\nIncense\nPrayers to gods and goddesses"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A yellow banner outside the temple is said to attract the gods' attention. Some people also keep a small shrine at home instead of going to a large temple."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A temple gate with a yellow banner, and a small home shrine on a shelf."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these might you find in a Daoist temple service?",
+    "right": "Chanting, prayers, meditation and burning incense",
+    "wrong": [
+     "Nothing but silence, with no prayers or incense",
+     "Flying kites on a hillside",
+     "Writing exam essays on the Analects"
+    ],
+    "why": "The source lists chanting, ritual prayers, meditation, discussion of the Dao De Jing, incense, and prayers to gods and goddesses."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Beijing, the White Cloud Temple is the base of the organisation that coordinates Daoist practice in China."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of China with Beijing marked: White Cloud Temple."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our third strand is Chinese folk religion. Pew describes it as beliefs and practices aimed at unseen forces, such as wishes made to ancestors and gods, and fortune telling."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Chinese folk religion"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At its heart is ancestor veneration. People may keep a home shrine, or visit graves and leave offerings of food, drink, flowers or incense."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Home shrine\nGrave visits\nOfferings: food, drink, flowers, incense"
+   },
+   "cite": [
+    "s2",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pew asked adults whether they had told their ancestors about events in their lives in the past year. Fewer than half said yes. The most common answers came from Vietnam, Taiwan and Japan."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Told ancestors about life events in the past year (%)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other rituals are even more common. In Taiwan, about eight in ten people had burned incense for ancestors in the past year. A majority had offered money or other things ancestors may need."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 8 in 10 in Taiwan burned incense for ancestors"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which of these is an example of ancestor veneration?",
+    "right": "Offering food, incense or paper money at a family grave or home shrine",
+    "wrong": [
+     "Voting in a local election",
+     "Reading a newspaper at breakfast",
+     "Walking to work"
+    ],
+    "why": "Ancestor veneration means honouring family members who have died, for example with offerings of food and incense at graves or home shrines."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Folk religion also includes local deities with their own temples. One example is Mazu, a goddess of merchants and fishermen."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mazu: goddess of merchants and fishermen"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 2014 survey found local temples or shrines in about one in five neighbourhood committees in China. Pew notes that folk religious sites may be undercounted."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "19% of neighbourhood committees (2014 survey)"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mazu also appears in Daoist temple life. Daoism took in popular deities like her through temple associations. This is a first hint of how traditions blend."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Popular gods inside Daoist temples"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is true of Mazu, according to our source?",
+    "right": "She is a popular goddess of merchants and fishermen who was taken into Daoism",
+    "wrong": [
+     "She founded Confucianism",
+     "She wrote the Analects",
+     "She is a festival pastry"
+    ],
+    "why": "The source says temple associations brought popular deities such as Mazu, goddess of merchants and fishermen, into Daoism."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Festivals are where these traditions become visible. Pew notes that they stay tied to Chinese social norms and national holidays."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Festivals: Lunar New Year, Qingming, Mid-Autumn"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, Lunar New Year. On the 23rd of the last lunar month, tradition says the Kitchen God goes up to heaven to report on the family."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small paper picture of the Kitchen God above a kitchen stove."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On New Year's Eve, offerings are made to gods and ancestors. Then the family shares a reunion meal."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Offerings to gods and ancestors\n2. Family reunion meal"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "On Lunar New Year's Eve, what do many families do before the reunion meal?",
+    "right": "Make offerings to gods and ancestors",
+    "wrong": [
+     "Take down the family altar",
+     "Skip the meal altogether",
+     "Send the ancestors a letter by post"
+    ],
+    "why": "The guide says offerings to gods and ancestors are made on New Year's Eve, and family reunion meals take place."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second, Qingming, which means 'pure brightness'. It falls on April 4 or 5. Its main purpose is to honour ancestors, often by cleaning their graves."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "April 4 or 5"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Qingming is also a celebration of spring. Families fly kites and eat traditional foods, often cold dishes that vary by region."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A family on a hillside beside a grave, with a kite in the sky."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the main purpose of Qingming?",
+    "right": "To honour ancestors, often by cleaning graves, and to welcome spring",
+    "wrong": [
+     "To start the lunar new year",
+     "To send the Kitchen God to heaven",
+     "To read the Dao De Jing aloud"
+    ],
+    "why": "The source says Qingming's main purpose is to honour the memory of ancestors. It is also a celebration of spring."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third, the Mid-Autumn Festival. It falls on the fifteenth day of the eighth lunar month, when the moon is full and at its roundest."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large, round full moon above rooftops."
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Families and friends gather to view the moon, recite poetry and listen to music. They celebrate the harvest and share mooncakes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "View the moon\nPoetry and music\nCelebrate the harvest\nShare mooncakes"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A traditional mooncake is a thin pastry around a rich filling, such as lotus seed paste. A salted egg yolk was added at some point to stand for the moon."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A mooncake cut into wedges, showing a round yolk at the centre."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the Mid-Autumn Festival best known for?",
+    "right": "A full-moon night when families gather, view the moon and share mooncakes",
+    "wrong": [
+     "A spring day of tomb sweeping",
+     "The last day of the lunar year",
+     "The day the Kitchen God goes to heaven"
+    ],
+    "why": "The Smithsonian describes a full-moon night of family reunion, moon viewing and mooncakes. Tomb sweeping belongs to Qingming."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we can ask why many people do not sort themselves into one box. In China, Confucianism, Daoism and Buddhism have often been called the Three Teachings."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The Three Teachings:\nConfucianism\nDaoism\nBuddhism"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A scholarly article says the Three Teachings were distinct, but far from exclusive. They could mingle freely, so a person did not need to choose just one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Distinct teachings. Right: Not exclusive, so they could mingle."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does 'the Three Teachings' refer to?",
+    "right": "Confucianism, Daoism and Buddhism, which have often lived side by side",
+    "wrong": [
+     "Three books written by Confucius",
+     "Three festivals of the lunar year",
+     "Three kinds of mooncake"
+    ],
+    "why": "Pew and the scholarly source both use the term for Confucianism, Daoism and Buddhism, traditions that were distinct but not mutually exclusive."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A second reason is the word 'religion'. In China and parts of East Asia, it is understood mainly to mean formal, organised religions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "zongjiao (宗教) = 'religion', usually formal and organised"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So someone may honour ancestors and visit temples without saying 'my religion'. Pew notes that some who worship deities do not think of themselves as religious in the formal sense."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Practices can be part of daily life without a religious label."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement is fair?",
+    "right": "Many people take part in practices from more than one tradition without seeing a conflict",
+    "wrong": [
+     "Everyone must choose exactly one tradition",
+     "All people in China follow all three traditions",
+     "The three traditions are the same thing"
+    ],
+    "why": "Sources describe the Three Teachings as distinct but not exclusive. They also note that some people who worship deities do not call themselves religious. Neither claim means that everyone follows all three."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where are they practised today? In mainland China, Pew's analysis of a 2018 survey found only about 3 percent of adults identify as followers of folk religion."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 3%: identify as folk religion adherents (2018 survey)"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But Pew warns that people who say they have no religion may still hold religious beliefs and take part in religious activities. So that number leaves a lot out."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'No religion' does not always mean no religious practice"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why might the 3 percent figure understate how many people take part in folk practices?",
+    "right": "Many people take part in rituals without naming it as their 'religion'",
+    "wrong": [
+     "Because folk religion has no rituals",
+     "Because the survey counted only Daoist priests",
+     "Because folk religion is banned in every country"
+    ],
+    "why": "Pew says unaffiliated people may still hold religious beliefs and do religious activities. The Chinese word for 'religion' mainly means formal, organised religion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Government statistics show about 1,600 Confucian temples across China. Taiwan is the only place where Pew finds 'other religions' in the majority, reflecting many Daoists and folk religion followers."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of China and Taiwan. Mainland: about 1,600 Confucian temples. Taiwan: marked as a majority of 'other religions', mostly Daoism and folk religion."
+   },
+   "cite": [
+    "s9",
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where does Pew find that 'other religions', mainly Daoism and folk religion, are in the majority?",
+    "right": "Taiwan",
+    "wrong": [
+     "Japan",
+     "Singapore",
+     "Mongolia"
+    ],
+    "why": "Pew says Taiwan is the only place where the 'other religions' category is a majority. It points to many Daoists and followers of Chinese folk religion."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Chinese communities abroad keep these traditions too. In Singapore, Pew found 6 percent identify with Chinese traditional religions such as Taoism or Confucianism."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6% in Singapore"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lunar New Year is the most important holiday for Chinese Malaysians. In Vietnam, the Tet new year also has a Kitchen God tradition. We will meet Vietnam again in the next class."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of East and Southeast Asia: China, Taiwan, Singapore, Malaysia, Vietnam."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us recap. Confucius taught kindness, starting with family. Daoism follows the Way. Folk religion honours ancestors and local gods. Festivals bring them together, and many people mix them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Confucianism: ren, li, filial piety\nDaoism: the Way, two key texts, temple rites\nFolk religion: ancestors, local deities\nFestivals: Lunar New Year, Qingming, Mid-Autumn\nMany people combine them"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done for working through this. In the next class, we visit Shinto and the other religions of Japan, Korea and Vietnam."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Shinto and Other Religions of Japan, Korea and Vietnam"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Adults who told ancestors about events in their lives in the past 12 months (%), Pew 2023 survey (the three most common places)",
+   "rows": [
+    {
+     "label": "Vietnam",
+     "value": 45,
+     "source": "s12"
+    },
+    {
+     "label": "Taiwan",
+     "value": 38,
+     "source": "s12"
+    },
+    {
+     "label": "Japan",
+     "value": 37,
+     "source": "s12"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Confucian ideas: ren, li, xiao and junzi",
+   "links": [
+    "[[Ancestor veneration]]",
+    "[[Filial piety]]"
+   ]
+  },
+  {
+   "topic": "Daoism: the Dao, the Dao De Jing and the Zhuangzi",
+   "links": [
+    "[[Buddhism]]",
+    "[[Three Teachings]]"
+   ]
+  },
+  {
+   "topic": "Chinese folk religion: ancestors, local deities and temples",
+   "links": [
+    "[[Ancestor veneration]]",
+    "[[Shinto and Other Religions of Japan, Korea and Vietnam]]"
+   ]
+  },
+  {
+   "topic": "Festivals: Lunar New Year, Qingming, Mid-Autumn",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  },
+  {
+   "topic": "Why many people do not see these as separate religions",
+   "links": [
+    "[[Three Teachings]]",
+    "[[Buddhism]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Confucianism is mainly an ethical philosophy, not a religion.",
+   "other_view": "National Geographic Education describes it as a system of philosophical and ethical teachings. Yet it also includes ancestor rites and has temples. Pew treats it as one of China's religious traditions, and Chinese government statistics count about 1,600 Confucian temples. Scholars and followers differ on which word fits best.",
+   "cite": [
+    "s2",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Daoism is a philosophy.",
+   "other_view": "The Internet Encyclopedia of Philosophy says Daoism covers thought and practice that are sometimes viewed as philosophical, sometimes as religious, and sometimes as a mix of both. Temple rites, chanting, incense and prayers to gods are part of Daoism as practised.",
+   "cite": [
+    "s7",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Chinese folk religion is just superstition.",
+   "other_view": "Folk religion is commonly regarded as superstition in China, and the government discourages it. It has historically been marginalised as illegitimate. But some Chinese people regard practices like fortune telling or offering food at graves as customs, not superstition. In Pew's account, the line between custom and superstition is fuzzy.",
+   "cite": [
+    "s9",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Only about 3 percent of adults in China follow folk religion.",
+   "other_view": "That figure is from a survey in which people named their 'religion'. Pew cautions that people who say they have no religion may still hold religious beliefs and do religious activities. Ancestor rituals are widespread in East Asia, so the true level of practice is hard to measure.",
+   "cite": [
+    "s10",
+    "s13",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Filial piety simply means obeying parents.",
+   "other_view": "The source describes a hierarchy of age and gender in traditional Confucian families. It also says filial piety was more than passive obedience, because it meant personal commitment to parents' well-being.",
+   "cite": [
+    "s3"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1501 @@
+{
+ "about": {
+  "title": "Christianity",
+  "course": "religions-of-the-world",
+  "class_n": 7,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 38,
+  "length_note": "A little over the 35-minute target. The lesson covers seven topics and has a check question after most ideas, and going slowly lets each idea sink in. Pause after each question."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Christians (Global Religious Landscape)",
+   "publisher": "Pew Research Center",
+   "date": "2012-12-18",
+   "link": "https://www.pewresearch.org/religion/2012/12/18/global-religious-landscape-christians/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Christian Traditions (Global Christianity report)",
+   "publisher": "Pew Research Center",
+   "date": "2011-12-19",
+   "link": "https://www.pewresearch.org/religion/2011/12/19/global-christianity-traditions/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "How the Global Religious Landscape Changed From 2010 to 2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/how-the-global-religious-landscape-changed-from-2010-to-2020/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Size and Distribution of the World's Christian Population",
+   "publisher": "Pew Research Center",
+   "date": "2011-12-19",
+   "link": "https://www.pewresearch.org/religion/2011/12/19/global-christianity-exec/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Regional Distribution of Christians",
+   "publisher": "Pew Research Center",
+   "date": "2011-12-19",
+   "link": "https://www.pewresearch.org/religion/2011/12/19/global-christianity-regions/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Projected Changes in the Global Christian Population",
+   "publisher": "Pew Research Center",
+   "date": "2015-04-02",
+   "link": "https://www.pewresearch.org/religion/2015/04/02/christians/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Christianity",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Christianity",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "History of early Christianity",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/history-of-early-Christianity",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Sermon on the Mount",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Sermon-on-the-Mount",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Trinity",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Trinity-Christianity",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Nicene Creed (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/religion-and-philosophy/nicene-creed/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Christianity - Dogma, Definition & Beliefs",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/history-of-christianity",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Resurrection",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/resurrection-religion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Jesus",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Jesus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Why Are Protestant and Catholic Bibles Different? (John Meade)",
+   "publisher": "Text & Canon Institute",
+   "date": "n.d.",
+   "link": "https://textandcanon.org/why-the-catholic-bible-has-more-books-than-the-protestant-bible/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Old Testament",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Old_Testament",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Orthodoxy",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Orthodoxy",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Christian denomination",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Christian_denomination",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "East-West Schism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/East-West-Schism-1054",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Christianity - Schism, 1054, East-West",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Christianity/The-Schism-of-1054",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Catholic, Orthodox, and Protestant: Understanding the Main Branches",
+   "publisher": "God's Faith Book (church-run explainer blog; each family's own telling of its history is noted)",
+   "date": "n.d.",
+   "link": "https://www.godsfaithbook.com/catholic-orthodox-and-protestant-understanding-the-main-branches/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Main Branches of Christianity: Catholic, Orthodox and Protestant Explained",
+   "publisher": "Christian Way",
+   "date": "n.d.",
+   "link": "https://christianway.net/the-main-branches-of-christianity-catholic-orthodox-and-protestant-explained/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Comparison between Orthodoxy, Protestantism & Roman Catholicism",
+   "publisher": "Christianity in View",
+   "date": "n.d.",
+   "link": "http://christianityinview.com/comparison.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "sacrament Facts",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/facts/sacrament",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "sacrament",
+   "publisher": "The Religion Stylebook (Religion News Association)",
+   "date": "n.d.",
+   "link": "https://religionstylebook.com/entries/sacrament",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Catechism of the Catholic Church, Part Two, Section Two: The Seven Sacraments of the Church",
+   "publisher": "Vatican",
+   "date": "n.d.",
+   "link": "https://www.vatican.va/content/catechism/en/part_two/section_two.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "What Makes Us Protestant: Why Just Two Sacraments?",
+   "publisher": "The United Church of Canada",
+   "date": "n.d.",
+   "link": "https://united-church.ca/blogs/round-table/what-makes-us-protestant-why-just-two-sacraments",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Sacrament",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sacrament",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "The Liturgical Year",
+   "publisher": "The Church of England",
+   "date": "n.d.",
+   "link": "https://www.churchofengland.org/prayer-and-worship/worship-texts-and-resources/liturgical-year",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Liturgical Year & Calendar",
+   "publisher": "United States Conference of Catholic Bishops",
+   "date": "n.d.",
+   "link": "https://www.usccb.org/prayer-worship/liturgical-year",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "What Is the Liturgical Year?",
+   "publisher": "Ordo Digitalis",
+   "date": "n.d.",
+   "link": "https://ordodigitalis.com/liturgical-year/what-is-the-liturgical-year",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "The Christian Year: An Introduction",
+   "publisher": "De Pree Center (Fuller Seminary)",
+   "date": "n.d.",
+   "link": "https://depree.org/life-for-leaders/the-christian-year-an-introduction/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Why do Catholics and Orthodox Christians celebrate Easter on different days?",
+   "publisher": "U.S. Catholic",
+   "date": "2015-04",
+   "link": "https://uscatholic.org/articles/201504/why-do-catholics-and-orthodox-christians-celebrate-easter-on-different-days/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "The Calendar of the Orthodox Church",
+   "publisher": "Greek Orthodox Archdiocese of America",
+   "date": "n.d.",
+   "link": "https://www.goarch.org/-/the-calendar-of-the-orthodox-church",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Some Common Misperceptions about the Date of Pascha/Easter",
+   "publisher": "Greek Orthodox Archdiocese of America",
+   "date": "n.d.",
+   "link": "https://www.goarch.org/-/fordham-pascha",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Orthodox Holidays",
+   "publisher": "timeanddate.com",
+   "date": "n.d.",
+   "link": "https://www.timeanddate.com/holidays/type/orthodox",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "Why do Catholics and Orthodox celebrate Easter on different dates?",
+   "publisher": "Euronews",
+   "date": "2026-04-05",
+   "link": "https://www.euronews.com/2026/04/05/why-do-catholics-and-orthodox-celebrate-easter-on-different-dates",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Orthodox Easter Day",
+   "publisher": "timeanddate.com",
+   "date": "n.d.",
+   "link": "https://www.timeanddate.com/holidays/common/orthodox-easter-day",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "The Lord's Prayer",
+   "publisher": "BibleProject",
+   "date": "n.d.",
+   "link": "https://bibleproject.com/guides/the-lords-prayer/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "Christians",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Christians",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s41",
+   "title": "Seasons of the Church Year",
+   "publisher": "St. Paul's United Methodist Church, Tucson",
+   "date": "n.d.",
+   "link": "https://stpaulsumctucson.org/seasons-of-the-church-year/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s42",
+   "title": "Protestantism - Rites and Ceremonies",
+   "publisher": "Patheos Library",
+   "date": "n.d.",
+   "link": "https://www.patheos.com/library/protestantism/ritual-worship-devotion-symbolism/rites-and-ceremonies",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we look at Christianity. It is a very large family of traditions, so we will take it one piece at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Christianity"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our path: Jesus, the Bible, the branches, worship, festivals, and where Christians live today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Jesus\n2. The Bible\n3. Branches\n4. Worship and sacraments\n5. Festivals and calendars\n6. Where Christians live"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us start at the beginning. Christianity started with Jesus Christ, in Roman Palestine, about two thousand years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A simple drawing of a small hillside town of low stone houses under a wide sky."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Gospels say Jesus was born in Bethlehem and grew up in Nazareth. In his early thirties he became a traveling preacher and healer."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bethlehem, Nazareth"
+   },
+   "cite": [
+    "s7",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "According to the Gospels, where did Jesus grow up?",
+    "right": "Nazareth",
+    "wrong": [
+     "Rome",
+     "Athens",
+     "Cairo"
+    ],
+    "why": "Britannica says Jesus was born in Bethlehem and raised in Nazareth."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His first followers were Jewish. Early Christianity began as a movement inside Judaism."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Began inside Judaism"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His best-known teachings are gathered in the Sermon on the Mount. It describes a way of life built on love, even for enemies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Love, even for enemies"
+   },
+   "cite": [
+    "s9",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which idea is at the heart of the Sermon on the Mount?",
+    "right": "A way of life built on love, even toward enemies",
+    "wrong": [
+     "Winning every argument",
+     "Keeping away from other people",
+     "Collecting as much wealth as possible"
+    ],
+    "why": "Britannica describes the sermon as guiding people toward a new law of love, even to enemies."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Gospels say Jesus was crucified in Jerusalem by Roman soldiers, and his body was laid in a tomb. The cross became the symbol of Christianity."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A plain wooden cross on a hill at sunset."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Christians believe that on the third day Jesus was raised from the dead. This belief is central to the whole faith."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The resurrection"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do Christians believe happened on the third day after the crucifixion?",
+    "right": "Jesus was raised from the dead",
+    "wrong": [
+     "Jesus travelled to Rome",
+     "Jesus wrote the Gospels",
+     "Jesus was crowned king of Judea"
+    ],
+    "why": "Britannica calls the resurrection a core Christian doctrine: Jesus raised on the third day."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Christians believe Jesus is the Son of God, sent to save the world. They believe his death and resurrection offer reconciliation with God and eternal life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Son of God, sent to save"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most Christians also believe in one God in three persons: Father, Son and Holy Spirit. This teaching is called the Trinity."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trinity: one God, three persons"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the teaching of the Trinity say?",
+    "right": "There is one God, in three persons",
+    "wrong": [
+     "There are three separate gods",
+     "There are two gods",
+     "God is only one person with no Son"
+    ],
+    "why": "Britannica defines the Trinity as the unity of Father, Son and Holy Spirit as three persons in one God."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A creed is a short statement of belief. The Nicene Creed came from church councils in 325 and 381. Catholics, Orthodox and some Protestants use it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nicene Creed: 325 and 381"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, where do Christians read about all this? In the Bible, which has two parts: the Old Testament and the New Testament."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Old Testament | New Testament (27 books, including the Gospels, which tell of Jesus's life)"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many Old Testament writings come from the Hebrew Bible. Christians often read them in light of the New Testament. Jewish readers do not call them 'old' and read them in their own way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shared writings, read differently"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "All the major Christian traditions share the same 27 New Testament books. Where Bibles differ is the Old Testament."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Old Testament books by tradition",
+    "chart": "c2"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In which part of the Bible do Christian traditions differ in their books?",
+    "right": "The Old Testament",
+    "wrong": [
+     "The New Testament",
+     "Neither, because all Bibles are identical",
+     "Only the four Gospels"
+    ],
+    "why": "The 27-book New Testament is shared; the differences are about the Old Testament canon."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The extra books come from an old Greek translation of the Hebrew Bible. Catholics call them deuterocanonical. Protestants call them the Apocrypha."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Deuterocanonical or Apocrypha"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In many churches, Bible passages are read aloud on set days of the year. We will see how that fits the church calendar soon."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Readings for set days"
+   },
+   "cite": [
+    "s41"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next: branches. A branch is a group of denominations with similar beliefs, practices and history. Three are most often named: Catholic, Orthodox and Protestant."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Branches of Christianity"
+   },
+   "cite": [
+    "s18",
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That three-part picture is useful but incomplete. First, how big is each? Pew estimated about half of Christians are Catholic, 37 percent Protestant, 12 percent Orthodox, 1 percent other, in 2010."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of the world's Christians, 2010",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s21"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In Pew's 2010 estimate, which branch made up about half of all Christians?",
+    "right": "Catholic",
+    "wrong": [
+     "Orthodox",
+     "Protestant",
+     "Other Christian groups"
+    ],
+    "why": "Pew found 50% Catholic, 37% Protestant, 12% Orthodox and 1% other."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did the branches form? Over centuries. Three turning points were the Council of Chalcedon in 451, the schism of 1054, and the Reformation in the 1500s."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "451 Council of Chalcedon: Oriental Orthodox churches part ways | 1054 East-West Schism: Catholic and Eastern Orthodox | 1500s Reformation: Protestant churches begin"
+   },
+   "cite": [
+    "s17",
+    "s19",
+    "s20",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these came last?",
+    "right": "The Protestant Reformation, in the 1500s",
+    "wrong": [
+     "The Council of Chalcedon, in 451",
+     "The East-West Schism, in 1054",
+     "The Council of Nicaea, in 325"
+    ],
+    "why": "Chalcedon was 451 and the schism 1054. The Reformation was in the 16th century. Nicaea was 325."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Catholic Church is led by the Pope. Catholics look to Scripture and tradition, read with the pope and bishops. They honor Mary and the saints. Pew counted about 1.1 billion in 2010."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Catholic: led by the Pope"
+   },
+   "cite": [
+    "s19",
+    "s21",
+    "s22",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Eastern Orthodox churches, such as the Greek and Russian, see themselves as local churches sharing one faith. The patriarch of Constantinople holds honor, not rule. Pew counted about 260 million."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Orthodox: a communion of local churches"
+   },
+   "cite": [
+    "s21",
+    "s22",
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Divine Liturgy is the center of Orthodox worship. We will see more of worship soon. First, one more point: Eastern Christianity is wider than Eastern Orthodoxy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Eastern Orthodox\nOriental Orthodox\nAssyrian Church of the East\nEastern Catholic Churches"
+   },
+   "cite": [
+    "s23",
+    "s18",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Protestantism began in Europe with the 16th-century Reformation. Pew counted about 801 million, including Anglicans and independent churches. Most Protestants give Scripture the final say."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Protestant: began with the Reformation"
+   },
+   "cite": [
+    "s2",
+    "s1",
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which tradition began with the 16th-century Reformation in Europe?",
+    "right": "Protestant",
+    "wrong": [
+     "Eastern Orthodox",
+     "Oriental Orthodox",
+     "Assyrian Church of the East"
+    ],
+    "why": "Pew says the Reformation split Western Christianity in 16th-century Europe and gave birth to Protestantism."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some groups sit between the three. Anglicans often see themselves as keeping much of the older church while embracing Protestant ideas. Pew also lists Latter-day Saints and Jehovah's Witnesses as other Christian groups."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not every group fits neatly"
+   },
+   "cite": [
+    "s21",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, worship. Christian worship runs from formal liturgy, changed little in a thousand years, to services with no fixed text at all."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Worship, sacraments and prayer"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In many traditions the heart of worship is the Eucharist, also called Holy Communion. Bread and wine are blessed, then shared by the congregation."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Bread and a cup on a simple table."
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why do this? The Gospel of Luke describes Jesus's last meal with his followers, where he said to do this in remembrance of him."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "In remembrance of him"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the Eucharist remember?",
+    "right": "Jesus's last meal with his followers",
+    "wrong": [
+     "The birth of Jesus",
+     "The building of the first church",
+     "The giving of the Ten Commandments"
+    ],
+    "why": "Luke 22:19 has Jesus telling his followers at his final meal to do this in remembrance of him."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Traditions understand Communion differently. Catholics teach the bread and wine truly become Christ's body and blood, called transubstantiation. Orthodox Christians affirm Christ's real presence and call the how a holy mystery."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Catholic: bread and wine truly become body and blood | Orthodox: real presence, the manner is a holy mystery"
+   },
+   "cite": [
+    "s27",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Protestants hold a range of views. Martin Luther taught that Christ is present with the bread and wine, though they do not change. Other Protestants differ."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Protestants: a range of views"
+   },
+   "cite": [
+    "s27",
+    "s42"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Communion is one example of a sacrament. A sacrament is a sacred rite that is seen as a visible sign of God's grace."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sacrament: a visible sign of God's grace"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Baptism is another. Water is used in the name of the Father, Son and Holy Spirit, following Jesus's words in Matthew 28:19. Churches disagree about baptizing babies."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small stone basin of water in a quiet church."
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Catholic and Orthodox churches count seven sacraments: baptism, confirmation, the Eucharist, reconciliation, anointing of the sick, marriage and holy orders."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 7,
+    "layout": "row",
+    "text": "Seven sacraments (Catholic and Orthodox)"
+   },
+   "cite": [
+    "s24",
+    "s25",
+    "s26"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most Protestant churches count two: baptism and Communion. They say Jesus himself commanded those two. Other rites still matter. Some groups, like Quakers, keep none of these rites."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 2,
+    "layout": "row",
+    "text": "Two sacraments (most Protestant churches)"
+   },
+   "cite": [
+    "s25",
+    "s27",
+    "s28"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many sacraments do most Protestant churches count?",
+    "right": "Two: baptism and Communion",
+    "wrong": [
+     "Seven",
+     "Five",
+     "Ten"
+    ],
+    "why": "Protestant reformers generally accepted only baptism and the Lord's Supper as sacraments."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now prayer, which Christians describe as speaking with God. The best-known prayer, the Lord's Prayer, comes from the Sermon on the Mount, in Matthew chapter 6."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Lord's Prayer"
+   },
+   "cite": [
+    "s39",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where does the Lord's Prayer come from in the Bible?",
+    "right": "The Sermon on the Mount",
+    "wrong": [
+     "The Nicene Creed",
+     "The schism of 1054",
+     "A letter written after the Reformation"
+    ],
+    "why": "Matthew 6:9-13 sits inside the Sermon on the Mount, Matthew chapters 5 to 7."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Catholic and Orthodox Christians also ask Mary and the saints to pray for them, and keep sacred images. This is one of the most visible differences in daily devotion."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mary, saints and sacred images"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now festivals. Christians keep a year of seasons. It begins with Advent, four Sundays before Christmas. In Western churches, Advent 2026 begins on November 29."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Advent, Christmas, Lent, Easter, Pentecost, Ordinary Time"
+   },
+   "cite": [
+    "s29",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Christmas celebrates the birth of Jesus. Most Western churches keep it on December 25."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Christmas: December 25"
+   },
+   "cite": [
+    "s12",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before Easter comes Lent. It starts on Ash Wednesday. It is often described as forty days, not counting Sundays, of reflection and preparation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lent: about forty days"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How is Lent often described?",
+    "right": "About forty days of reflection, not counting Sundays",
+    "wrong": [
+     "Four days of feasting",
+     "One full year of fasting",
+     "Ten days after Christmas"
+    ],
+    "why": "The Church of England describes Lent as lasting forty days, excluding Sundays."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Easter marks Jesus's resurrection. The holiest three days of the Catholic year, the Triduum, recall his suffering, death and rising. The Easter season lasts fifty days."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Easter: the resurrection"
+   },
+   "cite": [
+    "s29",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Easter ends with Pentecost, the fiftieth day. Pentecost remembers the Holy Spirit coming on Jesus's disciples. Easter's date moves each year, and Lent and Pentecost move with it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pentecost: the Holy Spirit comes"
+   },
+   "cite": [
+    "s29",
+    "s31"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does Pentecost remember?",
+    "right": "The Holy Spirit coming on the disciples",
+    "wrong": [
+     "The birth of Jesus",
+     "The Last Supper",
+     "The start of Advent"
+    ],
+    "why": "The Church of England says Pentecost celebrates the Holy Spirit coming on the disciples in Acts chapter 2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why do Orthodox and Western Christians often keep these days on different dates? Two calendars. The Julian came first, then Pope Gregory XIII issued the Gregorian in 1582 to fix its drift."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Julian calendar: still used by many Orthodox churches | Gregorian calendar (1582): used by most Western churches"
+   },
+   "cite": [
+    "s33",
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Julian calendar is now 13 days behind. So December 25 on the Julian calendar is January 7 on the Gregorian. Russian Orthodox and Coptic Christians keep Christmas then."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "13 days"
+   },
+   "cite": [
+    "s36",
+    "s33"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not all Orthodox churches do this. The Greek Orthodox Church uses a revised calendar for fixed feasts like Christmas, so Greeks celebrate it on December 25."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Greek Orthodox: Christmas on Dec 25"
+   },
+   "cite": [
+    "s37"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do some Orthodox Christians celebrate Christmas on January 7?",
+    "right": "They keep the Julian calendar, which is 13 days behind the Gregorian",
+    "wrong": [
+     "They celebrate a different event",
+     "The Pope moves the date each year",
+     "They count Christmas as part of Lent"
+    ],
+    "why": "December 25 on the Julian calendar falls on January 7 on the Gregorian calendar."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Easter works the same way. It falls on the first Sunday after the first full moon after the spring equinox. The calendar used changes the answer."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Easter: first Sunday after the spring full moon"
+   },
+   "cite": [
+    "s38"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So Western Easter falls between March 22 and April 25. Orthodox Easter falls between April 4 and May 8. Sometimes they match, and sometimes they are up to five weeks apart."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Western Easter: March 22 to April 25 | Orthodox Easter: April 4 to May 8 (Gregorian dates)"
+   },
+   "cite": [
+    "s33",
+    "s34"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is Orthodox Easter often later than Western Easter?",
+    "right": "Its calculation uses the Julian calendar, which is 13 days behind",
+    "wrong": [
+     "Orthodox Christians do not celebrate the resurrection",
+     "It always falls exactly one week after Western Easter",
+     "The Pope sets it each year"
+    ],
+    "why": "The Orthodox calculation uses the Julian calendar, so its range is shifted later."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: where Christians live. In 2020, about 29 of every 100 people in the world were Christian, according to Pew."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "28.8%"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is where they lived in 2010, region by region. Europe, Latin America and sub-Saharan Africa each held about a quarter."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Where the world's Christians lived, 2010",
+    "chart": "c3"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Christianity began in the Middle East. Yet 99 percent of Christians live outside the Middle East and North Africa today."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "99%"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A century ago, Europe and the Americas held 93 percent of Christians. By 2010 that was 63 percent. Pew summed it up in one short line."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Christianity today – unlike a century ago – is truly a global faith. (Pew Research Center, 2011)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The center has kept moving. By 2020, sub-Saharan Africa had 30.7 percent of the world's Christians. Europe had 22.3 percent."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30.7% vs 22.3%"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "As of 2020, which region has the largest number of Christians?",
+    "right": "Sub-Saharan Africa",
+    "wrong": [
+     "Europe",
+     "North America",
+     "The Middle East and North Africa"
+    ],
+    "why": "Pew found sub-Saharan Africa now has the most Christians, surpassing Europe."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By country in 2010: the United States had the most, then Brazil, Mexico, Russia, the Philippines and Nigeria. Brazil had more Catholics than Italy, France and Spain combined."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with markers on the United States, Brazil, Mexico, Russia, the Philippines and Nigeria."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In Pew's 2010 data, which country had the most Christians?",
+    "right": "The United States",
+    "wrong": [
+     "Italy",
+     "Greece",
+     "Egypt"
+    ],
+    "why": "Pew listed the United States first at 11% of the world's Christians, followed by Brazil at 8%."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Christians are a majority in some places and a small minority in others. The Philippines was about 93 percent Christian. China had about 67 million Christians, around 5 percent of its people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Majority here, minority there"
+   },
+   "cite": [
+    "s5",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us pull it together: Jesus at the center, a shared New Testament, several branches, sacraments counted differently, two calendars, and a faith that now lives all over the world."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Jesus at the center\nThe same 27 New Testament books\nCatholic, Orthodox, Protestant and others\nTwo or seven sacraments\nTwo calendars, two Easter dates\nA global faith"
+   },
+   "cite": [
+    "s40"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What do Christians in all the branches have in common, according to this lesson?",
+    "right": "A belief that Jesus has a unique significance",
+    "wrong": [
+     "The same date for Easter",
+     "The same number of sacraments",
+     "The same Old Testament books"
+    ],
+    "why": "Christians differ on dates, sacraments and the Old Testament canon, but share belief in the unique significance of Jesus."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Next class, we meet Islam."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Islam"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of the world's Christians by tradition, 2010 (percent)",
+   "rows": [
+    {
+     "label": "Catholic",
+     "value": 50,
+     "source": "s1"
+    },
+    {
+     "label": "Protestant (broadly defined)",
+     "value": 37,
+     "source": "s1"
+    },
+    {
+     "label": "Orthodox",
+     "value": 12,
+     "source": "s1"
+    },
+    {
+     "label": "Other Christian groups",
+     "value": 1,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Old Testament books by tradition (Orthodox: up to 49)",
+   "rows": [
+    {
+     "label": "Protestant",
+     "value": 39,
+     "source": "s16"
+    },
+    {
+     "label": "Catholic",
+     "value": 46,
+     "source": "s16"
+    },
+    {
+     "label": "Orthodox (up to)",
+     "value": 49,
+     "source": "s16"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "pie",
+   "title": "Where the world's Christians lived, 2010 (percent of all Christians; Middle East-North Africa is under 1%, shown as 1)",
+   "rows": [
+    {
+     "label": "Europe",
+     "value": 26,
+     "source": "s1"
+    },
+    {
+     "label": "Latin America and Caribbean",
+     "value": 24,
+     "source": "s1"
+    },
+    {
+     "label": "Sub-Saharan Africa",
+     "value": 24,
+     "source": "s1"
+    },
+    {
+     "label": "Asia and Pacific",
+     "value": 13,
+     "source": "s1"
+    },
+    {
+     "label": "North America",
+     "value": 12,
+     "source": "s1"
+    },
+    {
+     "label": "Middle East and North Africa (under 1)",
+     "value": 1,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Christian branches and how they formed",
+   "links": [
+    "[[Judaism]]",
+    "[[Islam]]"
+   ]
+  },
+  {
+   "topic": "The Bible and its different canons",
+   "links": [
+    "[[Judaism]]"
+   ]
+  },
+  {
+   "topic": "Sacraments: two or seven",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  },
+  {
+   "topic": "The Christian year and the Julian and Gregorian calendars (the Orthodox year begins in September, and Western Advent is called the Nativity Fast by Orthodox Christians)",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]",
+    "[[Judaism]]"
+   ]
+  },
+  {
+   "topic": "Where Christians live today",
+   "links": [
+    "[[Islam]]",
+    "[[Newer Movements and Non-Religious Worldviews]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Christianity has three branches: Catholic, Orthodox and Protestant.",
+   "other_view": "The three-way picture is common, but it leaves out Oriental Orthodox churches, the Assyrian Church of the East and Eastern Catholic Churches. Each family also tells the story of its divisions in its own way, and several hold that only their own body is the one holy catholic and apostolic Church.",
+   "cite": [
+    "s18",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Orthodox Easter comes later because it relies on an out-of-date calendar.",
+   "other_view": "A Greek Orthodox Archdiocese essay says the Julian-based calculation is inaccurate. It asks whether it still fits the spirit of the Council of Nicaea. Others keep the traditional calendar because it was the one in use at that council, and Old Calendarists and New Calendarists disagree within Orthodoxy.",
+   "cite": [
+    "s35",
+    "s34",
+    "s38"
+   ]
+  },
+  {
+   "claim": "Christians count two sacraments.",
+   "other_view": "Catholic teaching holds that Christ instituted seven sacraments. Most Protestants hold that only baptism and the Lord's Supper were clearly commanded by Christ, though they still value other rites.",
+   "cite": [
+    "s26",
+    "s27",
+    "s25"
+   ]
+  },
+  {
+   "claim": "The Old Testament has 39 books.",
+   "other_view": "That is the Protestant count, which follows the Hebrew canon. Catholics count 46 and Orthodox traditions include still more, regarding the extra books as part of Scripture that Protestants call Apocrypha. The scholar John Meade argues the differences between the canons are not trivial.",
+   "cite": [
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "claim": "The Trinity is plainly stated in the New Testament.",
+   "other_view": "Britannica notes that neither the word nor the full doctrine appears in the New Testament. It says the New Testament laid the basis, and the doctrine took its lasting form in the 4th century.",
+   "cite": [
+    "s10"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,784 @@
+{
+ "about": {
+  "title": "Predictive processing and the controlled hallucination",
+  "course": "consciousness",
+  "class_n": 7,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are four ideas (guessing and checking, the controlled hallucination, the body and self, the critics). Each is taught slowly with a check question, so the class fits the usual length."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Is Perception a 'Controlled Hallucination'?",
+   "publisher": "Big Questions Online",
+   "date": "2017-09-06",
+   "link": "https://bigquestionsonline.com/2017/09/06/perception-controlled-hallucination/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Anil Seth on the predictive brain and how to study consciousness (#206)",
+   "publisher": "80,000 Hours podcast",
+   "date": "n.d.",
+   "link": "https://80000hours.org/podcast/episodes/anil-seth-predictive-brain-explaining-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Active interoceptive inference and the emotional brain",
+   "publisher": "Philosophical Transactions of the Royal Society B",
+   "date": "2016",
+   "link": "https://royalsocietypublishing.org/rstb/article/371/1708/20160007/42206/Active-interoceptive-inference-and-the-emotional",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Being a Beast Machine: The Somatic Basis of Selfhood",
+   "publisher": "Trends in Cognitive Sciences (ScienceDirect)",
+   "date": "2018",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S1364661318302079",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Predictive codes of interoception, emotion, and the self",
+   "publisher": "Frontiers in Psychology (PubMed Central)",
+   "date": "2014",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3940887/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Predictive Coding Account of Psychosis",
+   "publisher": "Biological Psychiatry (PubMed Central)",
+   "date": "2018",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6169400/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "New directions in predictive processing",
+   "publisher": "ResearchGate (paper)",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/339621889_New_directions_in_predictive_processing",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Is predictive coding falsifiable?",
+   "publisher": "Neuroscience & Biobehavioral Reviews (ScienceDirect)",
+   "date": "2023",
+   "link": "https://www.sciencedirect.com/science/article/pii/S0149763423003731",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Anil Seth on the Real Problem of Consciousness",
+   "publisher": "Philosophy Bites",
+   "date": "n.d.",
+   "link": "https://philosophybites.com/podcast/anil-seth-on-the-real-problem-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Beast Machines and Hallucination Networks: Anil Seth Discusses Consciousness at BNA 2021",
+   "publisher": "Technology Networks",
+   "date": "2021",
+   "link": "https://www.technologynetworks.com/neuroscience/articles/beast-machines-and-hallucination-networks-anil-seth-discusses-consciousness-at-bna-2021-347650",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Dissociation of perception and action unmasked by the hollow-face illusion",
+   "publisher": "Brain Research (ScienceDirect)",
+   "date": "2006",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0006899306002009",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Hollow Face Illusion",
+   "publisher": "Optical Wonderful",
+   "date": "n.d.",
+   "link": "https://opticalwonderful.com/illusions/depth/hollow-face-illusion/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The prediction-confirmation account of the sense of body ownership: Evidence from a rubber hand illusion paradigm",
+   "publisher": "Psychonomic Bulletin & Review (Springer)",
+   "date": "2024",
+   "link": "https://link.springer.com/article/10.3758/s13423-024-02553-w",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Body ownership and tactile processing: Effects of bilateral rubber hand illusion on tactile temporal order judgment",
+   "publisher": "PubMed Central",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11672382/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Extending predictive processing to the body: Emotion as interoceptive inference (Seth and Critchley)",
+   "publisher": "PhilPapers (abstract)",
+   "date": "2013",
+   "link": "https://philpapers.org/rec/SETEPP",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Anil Seth and the 'real' problem of consciousness",
+   "publisher": "Medium (blog commentary)",
+   "date": "n.d.",
+   "link": "https://medium.com/@matherscd/anil-seth-and-the-real-problem-of-consciousness-fd32270e44b9",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Being You - Part II (review)",
+   "publisher": "The Consciousness Realist (blog)",
+   "date": "n.d.",
+   "link": "https://www.consciousnessrealist.com/being-you-II/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Errors or Adaptations? A Critical Review of Predictive Processing in Psychiatry",
+   "publisher": "Behavioral Sciences (MDPI)",
+   "date": "2026",
+   "link": "https://doi.org/10.3390/bs16071116",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Predictive processing - The Map of Consciousness",
+   "publisher": "Mapa de la Conciencia",
+   "date": "n.d.",
+   "link": "https://mapadelaconsciencia.es/en/theory/predictive-processing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Being a beast machine: The origins of selfhood in control-oriented interoceptive inference",
+   "publisher": "PsyArXiv preprint (OSF)",
+   "date": "2018-05-01",
+   "link": "https://osf.io/preprints/psyarxiv/vg5da_v1",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 7. Today's big idea is that your brain may work by guessing, then checking its guesses."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Predictive processing: the brain as a guessing machine"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will go in four steps: how guessing works, why perception is called a 'controlled hallucination', what this says about body and self, and then two criticisms."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Guess and check\n2. Controlled hallucination\n3. Body, emotion and self\n4. Two criticisms"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one. In this theory, a prediction is the brain's best guess about what is causing the signals reaching your senses."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prediction = a best guess"
+   },
+   "cite": [
+    "s2",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The brain compares each guess with the incoming signal. The leftover difference is called a prediction error."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prediction error = guess minus signal"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is an everyday example. You don't notice your clothes on your skin, because the brain already expects that feeling. If something unexpected touches you, the error is big, and you notice."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person sitting calmly, then startled by a sudden tap on the arm"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In predictive processing, what is mainly passed up from the senses to higher levels of the brain?",
+    "right": "The mismatch between the guess and the signal (the prediction error)",
+    "wrong": [
+     "A full copy of everything the senses pick up",
+     "Only the things you already expected",
+     "Only your memories"
+    ],
+    "why": "In this theory the brain already has a guess, so what is worth sending up is the part the guess got wrong."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This flips the usual picture. We tend to think the senses send a picture up to the brain. Here, guesses flow down and errors flow up."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Everyday view: senses send the picture UP.\nPredictive view: guesses flow DOWN, errors flow UP."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What does the brain do with errors? It updates its model, so the next guess is better. It can also act, so the world matches the guess. Seth calls that second route active inference."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Guess\nCompare with the signal\nError found: update the guess, or act to change the signal"
+   },
+   "cite": [
+    "s19",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A guess keeps failing to match the signals. What does the theory say the brain does?",
+    "right": "It updates its model so the next guess fits better",
+    "wrong": [
+     "It ignores the signals for good",
+     "It stops making guesses",
+     "It switches off the senses"
+    ],
+    "why": "The whole system works by shrinking errors and updating its models when guesses fail."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two. Let's see the guess win over the evidence. Picture a face mask, turned so you look into its hollow inside."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The hollow inside of a face mask, which still looks like a normal face bulging towards you"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It still looks like a bulging face. Researchers read this as top-down knowledge: you have seen countless bulging faces, so your brain's expectation beats the real shape."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Expectation can beat the evidence"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why does a hollow mask usually look like a bulging face?",
+    "right": "The brain's strong expectation that faces bulge outward overrides the evidence",
+    "wrong": [
+     "The mask is secretly bulging",
+     "The eyes cannot see shapes at all",
+     "The mask is lit from behind"
+    ],
+    "why": "The illusion is described as a knowledge-based, top-down effect that favours the familiar convex face over the true hollow shape."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we can name the idea. Seth calls perception a controlled hallucination. It is a hallucination in the sense that it is generated from the inside out."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Controlled hallucination"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And it is controlled because the world keeps correcting it with useful errors."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "perception is a controlled hallucination (Anil Seth's slogan)"
+   },
+   "cite": [
+    "s2",
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the phrase 'controlled hallucination', what does 'controlled' point to?",
+    "right": "The world's error signals keep the brain's guesses tied to reality",
+    "wrong": [
+     "You can steer your perception by willpower",
+     "It only happens during illness",
+     "The guesses are random"
+    ],
+    "why": "The brain builds the experience, and the world corrects it through prediction errors."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice what this does not say. It does not say the world is unreal. It says there is no bright line between hallucination and ordinary perception. Ordinary perception uses the same machinery, held in check."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The world is real\nExperience is built by the brain\nThe world checks the build"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Seth suggests psychedelic experiences are hallucinations that have become uncontrolled. The same guessing machinery runs, with less holding it in check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Controlled becomes uncontrolled"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Researchers also use this idea to study psychosis, such as hearing voices. Please remember these are research ideas, not a verdict on any person."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Research summaries link hallucinations to perception tilting toward prior beliefs\nHallucinations and delusions may involve different changes\nThe picture is not simple"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does the psychosis review say about hallucinations and delusions?",
+    "right": "They may relate to distinct changes in predictive coding, even though they often occur together",
+    "wrong": [
+     "One single fault explains both",
+     "They have nothing to do with prediction",
+     "They are always caused by the same thing"
+    ],
+    "why": "The reviewers point out that the two may involve different alterations, which is one challenge for a simple account."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step three: the body. Interoception is the brain's sense of the inside of the body. Think of hunger or a pounding heart."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Interoception = sensing the body from inside"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Seth and Critchley's proposal: the brain also guesses about these inner signals, and an emotion is its best guess about what is causing them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Emotion = a best guess about inner body signals"
+   },
+   "cite": [
+    "s15",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "On this proposal, what is an emotion?",
+    "right": "The brain's best guess about the causes of signals from the body",
+    "wrong": [
+     "A direct readout of the body with no guessing",
+     "A thought with nothing to do with the body",
+     "A guess about what other people are thinking"
+    ],
+    "why": "Emotions are described as states built from top-down predictions and bottom-up prediction errors about the body's inner signals."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the famous phrase: beast machine. The philosopher Descartes held that animals were unfeeling machines, like clockwork."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Beast machine"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Seth turns it around. He suggests our sense of self arises because we are living animal bodies, not in spite of it."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Selfhood may arise because we are 'beast machines', not despite it (Seth and Friston, 2016)"
+   },
+   "cite": [
+    "s3",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What are the body guesses for? Seth says they are control-oriented: they help keep vital body conditions in a safe range, rather than build a perfect picture."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Aim: keep the body in balance\nNot: a perfect internal picture"
+   },
+   "cite": [
+    "s4",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The self is not one thing. It runs from simply being a body, up to reflective self-awareness and the social self. Seth and Tsakiris suggest these all rest on those body-regulating guesses."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Being a body, then reflective self-awareness, then the social self"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A test case is the rubber hand illusion. Your real hand is hidden. A fake hand is in view. Both are stroked at the same moment."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hidden real hand and a visible rubber hand, both stroked with paintbrushes at the same time"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many people then feel the fake hand is their own. One prediction-based account says the brain predicts when touch should arrive, and the matching timing confirms it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Matching timing, so 'that hand is mine'"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is done to make the rubber hand illusion work?",
+    "right": "The hidden real hand and the visible rubber hand are stroked at the same time",
+    "wrong": [
+     "Only the rubber hand is stroked, once",
+     "The real hand is shown and the rubber hand is hidden",
+     "Nothing is touched at all"
+    ],
+    "why": "The synchronised stroking is what makes the fake hand feel like part of the body."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So here is the best case. One idea covers illusions, hallucinations and the sense of a body self. Supporters say that unifying power is the reason to take it seriously."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Illusions: the hollow mask\nMental illness and hallucination: research under way\nThe self: the rubber hand and the beast machine"
+   },
+   "cite": [
+    "s11",
+    "s6",
+    "s4",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four: criticisms. First, is it too broad to test? A good theory should be able to be proven wrong. Critics say predictive processing is so flexible that it may fit any result."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Criticism 1: too broad to test?"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One version of the worry is that for any behaviour you can find some set of priors that fits. Defenders reply that some results would count against it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Critics: flexible enough to fit anything.\nDefenders: some data patterns would count against it, though adjusting precision complicates this."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do critics worry predictive processing may be too broad to test?",
+    "right": "Because adjusting its guesses and their reliability can make it fit almost any result",
+    "wrong": [
+     "Because experiments have already proved it false",
+     "Because it only applies to vision",
+     "Because nobody has ever measured the brain"
+    ],
+    "why": "The concern is flexibility. Defenders reply that some patterns of data would still count against it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second criticism: the hard problem. Easy problems are about how the brain does its jobs. The hard problem asks why any of it is felt at all."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Easy problems: how the brain works.\nHard problem: why there is any experience."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Prediction explains a lot about what we perceive. Does it explain why there is experience at all, or only the easy problems?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Criticism 2: only the easy problems?"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Seth's reply is the real problem: use brain and body mechanisms to explain, predict and control features of experience. He hopes this dissolves the hard problem rather than solving it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Explain\nPredict\nControl\n...the properties of conscious experience"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Seth accepts that science is not well placed to answer the metaphysical question of why consciousness is in the universe at all. One critic says that means he is avoiding the hard problem."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Seth: map experience to mechanisms; the big mystery may shrink.\nCritic: that sidesteps the hard problem."
+   },
+   "cite": [
+    "s9",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the 'real problem' approach try to do?",
+    "right": "Explain, predict and control the features of experience using brain and body mechanisms",
+    "wrong": [
+     "Prove that consciousness does not exist",
+     "Answer once and for all why anything is felt",
+     "Replace science with philosophy"
+    ],
+    "why": "It aims to make progress on the features of experience, hoping the deeper mystery shrinks as the links get closer. Critics say it leaves that mystery open."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: the brain guesses and corrects, perception is a controlled hallucination, emotion and self may come from guesses about the body, and there are two big criticisms."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Guess and correct\nControlled hallucination\nBody, emotion, self\nCriticisms: too broad to test? only the easy problems?"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which pair names the two criticisms from this class?",
+    "right": "It may be too broad to test, and it may explain only the 'easy' problems, not why there is experience",
+    "wrong": [
+     "It ignores the body, and it denies emotions exist",
+     "It cannot explain any illusions, and it has been proven false",
+     "It is too narrow for mental illness, and it is too old"
+    ],
+    "why": "Those two are the objections we covered: the worry about testability, and the question of the hard problem."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class, we look at strange loops and the self: how a mind might come to see itself."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Class 8, Strange loops and the self"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "prediction error",
+   "links": [
+    "[[perception as controlled hallucination]]",
+    "[[active inference]]"
+   ]
+  },
+  {
+   "topic": "controlled hallucination",
+   "links": [
+    "[[hollow-face illusion]]",
+    "[[psychedelics and psychosis]]"
+   ]
+  },
+  {
+   "topic": "interoception and emotion",
+   "links": [
+    "[[beast machine]]",
+    "[[the self]]"
+   ]
+  },
+  {
+   "topic": "the real problem versus the hard problem",
+   "links": [
+    "[[the hard problem]]",
+    "[[strange loops and the self]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Predictive processing is a testable scientific theory.",
+   "other_view": "Critics say it is flexible enough to fit nearly any result. Defenders argue some data patterns would count against it, though adjusting precision complicates this.",
+   "cite": [
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Predictive processing helps with the hard problem of consciousness.",
+   "other_view": "Seth aims to dissolve the hard problem and accepts that science is not well placed to address the metaphysical question. One critic says this sidesteps it.",
+   "cite": [
+    "s9",
+    "s10",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Experience is fixed by top-down predictions rather than by incoming sensory signals.",
+   "other_view": "One reviewer of Seth's book found it unclear why the link to Bayesian inference supports this claim about perceptual content.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "claim": "Predictive processing gives a unified account of mental illness.",
+   "other_view": "Reviewers note that hallucinations and delusions may involve different changes. A critical review argues that if conditions can come from accurate and inaccurate models alike, the theory's testability is weakened.",
+   "cite": [
+    "s6",
+    "s18"
+   ]
+  }
+ ]
+}

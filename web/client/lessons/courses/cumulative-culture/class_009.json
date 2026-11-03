@@ -1,0 +1,966 @@
+{
+ "about": {
+  "title": "The Extended Mind: Tools as Part of How We Think",
+  "course": "cumulative-culture",
+  "class_n": 9,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 45,
+  "length_note": "About 45 minutes. This is the last class, so it has a recap of all nine classes and a personal project. Finish the project at your own pace after class, so the class itself stays near 45 minutes."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Externalism About the Mind",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "not shown on page",
+   "link": "https://plato.stanford.edu/entries/content-externalism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Extended Cognition and Extended Consciousness (David J. Chalmers)",
+   "publisher": "consc.net (author's site)",
+   "date": "not shown on page",
+   "link": "https://consc.net/papers/excexc.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The Mark of the Cognitive and the Coupling-Constitution Fallacy: A Defense of the Extended Mind Hypothesis",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "not shown on page",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5712358/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "A Challenge to the Extended Mind Hypothesis (Elaine Jackson)",
+   "publisher": "PhilArchive",
+   "date": "2018-12",
+   "link": "https://philarchive.org/archive/JACACT-13",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Google Effects on Memory: Cognitive Consequences of Having Information at Our Fingertips (Sparrow, Liu, Wegner)",
+   "publisher": "Science, via JSTOR",
+   "date": "2011-08-05",
+   "link": "https://www.jstor.org/stable/27978404",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Investigating the Intentional Google Effect: A Pilot Study Using Antisaccade Eye-Tracking Paradigm",
+   "publisher": "European Psychiatry abstract, via PubMed Central",
+   "date": "2025-08-26",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12438855/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Habitual use of GPS negatively impacts spatial memory during self-guided navigation (Dahmani and Bohbot)",
+   "publisher": "Scientific Reports (Nature)",
+   "date": "2020",
+   "link": "https://www.nature.com/articles/s41598-020-62877-0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Improving access to Assistive Technology",
+   "publisher": "World Health Organization",
+   "date": "not shown on page",
+   "link": "https://www.who.int/health-topics/assistive-technology/improving-access-to-assistive-technology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "What Is Assistive Technology (AT)?",
+   "publisher": "Cleveland Clinic",
+   "date": "not shown on page",
+   "link": "https://my.clevelandclinic.org/health/articles/assistive-technology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Memory Problems After Traumatic Brain Injury (TBI)",
+   "publisher": "Model Systems Knowledge Translation Center (MSKTC)",
+   "date": "not shown on page",
+   "link": "https://msktc.org/tbi/factsheets/memory-and-traumatic-brain-injury",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Memory After a TBI",
+   "publisher": "Vanderbilt University Medical Center",
+   "date": "not shown on page",
+   "link": "https://www.vumc.org/traumatic-brain-injury/memory-after-tbi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Shared intentionality, reason-giving and the evolution of human culture",
+   "publisher": "Philosophical Transactions of the Royal Society B",
+   "date": "2022",
+   "link": "https://royalsocietypublishing.org/rstb/article/377/1843/20200320/108778/Shared-intentionality-reason-giving-and-the",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Annu. Rev. Anthropol. 1999, 28:509-29 (Michael Tomasello)",
+   "publisher": "Annual Review of Anthropology, hosted by Cognition and Culture",
+   "date": "1999",
+   "link": "https://www.cognitionandculture.net/wp-content/uploads/Tomasello1999.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Where Does Cumulative Culture Begin? A Plea for a Sociologically Informed Perspective",
+   "publisher": "Springer",
+   "date": "2020",
+   "link": "https://link.springer.com/article/10.1007/s13752-020-00351-w",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Hauser reviews Tomasello's The Cultural Origins of Human Cognition",
+   "publisher": "UCLA CogWeb",
+   "date": "not shown on page",
+   "link": "http://cogweb.ucla.edu/Abstracts/Hauser_on_Tomasello_00.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Wonderwerk Cave bones reveal possible fire use by human ancestors 1.79 million years ago",
+   "publisher": "Phys.org (reporting a 2026 PLOS One study)",
+   "date": "2026-06",
+   "link": "https://phys.org/news/2026-06-wonderwerk-cave-bones-reveal-human.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Earliest evidence of fire use",
+   "publisher": "Archaeology Division, Wonderwerk Cave news (archaeology.org.za)",
+   "date": "2012-04",
+   "link": "https://www.archaeology.org.za/news/2012/April/earliest-evidence-fire-use",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The first writing: counting beer for the workers",
+   "publisher": "British Museum, via Google Arts & Culture",
+   "date": "not shown on page",
+   "link": "https://artsandculture.google.com/asset/the-first-writing-counting-beer-for-the-workers/fgF9ioy89DC2Uw?hl=en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The Gutenberg Bible",
+   "publisher": "Library of Congress",
+   "date": "not shown on page",
+   "link": "https://www.loc.gov/exhibits/bibles/the-gutenberg-bible.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "A Brief History of Printing - Printing Press Studio",
+   "publisher": "Collins Memorial Library, University of Puget Sound",
+   "date": "not shown on page",
+   "link": "https://library.pugetsound.edu/c.php?g=1240906&p=9081200",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "A short history of the Web",
+   "publisher": "CERN",
+   "date": "not shown on page",
+   "link": "https://home.cern/science/computing/the-birth-of-the-web/short-history-web/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Memory Paradox: Why Our Brains Need Knowledge in an Age of AI (preprint)",
+   "publisher": "arXiv",
+   "date": "2025-06",
+   "link": "https://arxiv.org/pdf/2506.11015",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to our last class. We have followed how people hand knowledge down. Today we ask: where does thinking happen?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 9: The Extended Mind"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look back. The ratchet means each generation keeps the good improvements and adds a little more."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ratchet: keep what works, then add"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the ratchet idea, what happens to a good improvement?",
+    "right": "It is kept and passed on, so the next generation can add to it.",
+    "wrong": [
+     "It is forgotten when the inventor dies.",
+     "Everyone has to reinvent it from scratch.",
+     "It stays secret so no one can change it."
+    ],
+    "why": "In cumulative culture each generation builds on the one before, so the better changes are kept and the weaker ones are left behind."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hold that thought. Now today's question: is your thinking only inside your head?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Is thinking only inside the head?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a small example. You book a dentist visit and type it into your phone calendar. Then you stop thinking about it. At 8 a.m. a reminder buzzes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A phone lying on a kitchen table. The screen shows a reminder: Dentist, 9:30."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So who did the remembering? You and the phone, working together. That teamwork is today's idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Remembering together"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The idea has a name: the extended mind. It says some thinking can reach out of the brain and into the world, including tools."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Extended mind"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two philosophers, Andy Clark and David Chalmers, gave it that name in 1998."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Clark and Chalmers, 1998"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their story has two people, Inga and Otto, who both want to visit a museum. Inga recalls the address. Otto looks it up in his notebook. They argue that both are remembering."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Inga: the address is in her memory | Otto: the address is in his notebook"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the story, what job does Otto's notebook do?",
+    "right": "The same job that memory does for Inga.",
+    "wrong": [
+     "It is only decoration.",
+     "It makes Otto forget the museum.",
+     "It lets Inga skip the trip."
+    ],
+    "why": "The argument is that Otto's notebook entry and Inga's memory do the same job, so they count as the same kind of thing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Everyday tools work this way too: notebooks, calendars, alarms. After a brain injury, people are often taught to use them on purpose."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A notebook or organizer\nA phone calendar\nAlarms and reminders\nA 'memory station' by the door for keys, wallet and phone"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These tools are a kind of assistive technology. Assistive products are mainly meant to keep or improve a person's functioning and independence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Assistive technology"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It is very common. The World Health Organization estimates that 2.5 billion people need at least one assistive product."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.5 billion"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It is not only for some people. Cleveland Clinic says nearly everyone uses assistive technology at some point in life."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hearing aids\nScreen readers\nSpeech recognition\nCurb cuts at street corners"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "According to Cleveland Clinic, who uses assistive technology?",
+    "right": "Nearly everyone, at some point in life.",
+    "wrong": [
+     "Only older adults.",
+     "Only people with a brain injury.",
+     "Only people in hospital."
+    ],
+    "why": "The source says that many of these technologies benefit everyone, and that nearly everyone uses assistive technology at some point."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For memory problems, brain-injury clinicians say the best approach is to work around the difficulty with tools we all use, like lists and phone alarms."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Work-around strategy: use a tool to cover a difficulty"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a fair question. Is a notebook really part of the mind, or just a helper for the mind? Experts disagree, and that is fine."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Part of the mind | A helper for the mind"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the main disagreement about the extended mind?",
+    "right": "Whether tools linked to our thinking are truly part of the mind, or only help it.",
+    "wrong": [
+     "Whether notebooks exist.",
+     "Whether memory matters at all.",
+     "Whether Clark and Chalmers wrote a paper in 1998."
+    ],
+    "why": "Defenders say outside tools can be part of thinking. Critics say there is a real boundary, so tools help the mind but are not part of it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Chalmers himself names the strongest objection: that perception and action may mark a real boundary around the mind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The boundary objection"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You do not need to settle that debate to use tools well. Next, let us look at what tools might change. A famous 2011 study asked what happens when we expect to look things up later."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Expecting to look it up later"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When people expected future access to information, they remembered less of the facts. They remembered more about where to find them."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Remembered less: the facts | Remembered more: where to find them"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In that study, what did people remember better when they expected to look things up later?",
+    "right": "Where to find the information.",
+    "wrong": [
+     "The facts themselves.",
+     "The exact words on the screen.",
+     "Nothing at all."
+    ],
+    "why": "The authors report lower recall of the information itself and better recall of where to access it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A caution. Later attempts to repeat one part of that study, a word-reaction test, did not work. Treat it as a clue, not the last word."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One study is a clue, not a verdict"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Maps give a clearer example. A 2020 study followed people who used GPS a lot."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A driver glancing at a phone map on the dashboard, with a paper road map folded on the seat beside them."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Those who used GPS more between tests showed a bigger drop in spatial memory. More GPS use went with more decline."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More GPS use, bigger decline"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the GPS study, what went with heavier GPS use?",
+    "right": "A larger decline in spatial memory.",
+    "wrong": [
+     "A better sense of direction.",
+     "No change at all.",
+     "A decline in every kind of thinking."
+    ],
+    "why": "The study found that the more GPS people used, the larger their decline in spatial memory. It did not claim a decline in all thinking."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The researchers argue the decline likely came from GPS use, not the other way around. People did not pick GPS because they already felt lost."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Which came first?"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So tools can free us, and tools can change us. Used in moderation, sharing work between head and tool can be efficient."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Tools can free our attention | A skill we stop using can weaken"
+   },
+   "cite": [
+    "s22",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So choose on purpose. Ask: what do I want this tool to free me for? Which skill do I want to keep? Can I cope if the tool is missing?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "What does it free me for?\nWhich skill do I want to keep?\nCan I cope without it?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For many people the tool is what makes independence possible. The aim is independence, not doing everything unaided."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Independence is the aim"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Sam keeps a good sense of direction in their own town but uses a map app in new cities. What does this show?",
+    "right": "Sam is choosing tools on purpose, based on which skill matters to them.",
+    "wrong": [
+     "Sam is misusing the tool.",
+     "GPS is always harmful.",
+     "Sam should give up every tool."
+    ],
+    "why": "Choosing a tool by what you want to free up and what you want to keep is the wise approach. It does not mean rejecting tools."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now widen the view. Culture works like a shared extended mind. Picture one person alone on a desert island: they cannot rebuild what a whole culture knows."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One person on a tiny island. Behind them, over the water, a long line of people passes a lit lamp from hand to hand."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We are built for this. Researchers argue humans are biologically adapted for culture, and only human traditions pile up changes over history."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Built to learn from others"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us put it together. Part one: the ratchet keeps improvements (class 1), and our biology makes us good at learning from others (class 2)."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Class 1: The ratchet\nClass 2: Gene-culture coevolution"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part two: the handing-down tools. Speech, writing, printing and schools, then the internet and AI. Each helps knowledge travel further."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Class 3: Speech\nClass 4: Writing\nClass 5: Printing and schools\nClass 7: The internet and AI"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part three: science improves our methods of learning (class 6). And loss (class 8): in other species, details of traditions are often lost."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Learning to learn: science improves the methods | Loss: details slip when they are not passed on"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part four, today: the extended mind. The tools that hold knowledge are not just storage. They are part of how we think."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tools are part of how we think"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What does the extended mind idea add to our picture of cumulative culture?",
+    "right": "Tools and records can be part of how we think, not only places to keep things.",
+    "wrong": [
+     "We should stop using tools.",
+     "Memory does not matter.",
+     "Only brains can think."
+    ],
+    "why": "The extended mind idea says that thinking can reach into tools. That fits how culture holds knowledge in objects, writing and other people, as well as in heads."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a final walk through time, from fire to AI. Fire first. Burnt bones in Wonderwerk Cave, South Africa, may show controlled fire 1.07 to 1.79 million years ago. Scientists still debate it."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Fire: about 1.07 to 1.79 million years ago (debated)"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Writing next. Some of the earliest writing is on clay tablets from Uruk, in southern Iraq, from about 3200 BCE. One famous tablet counts beer for workers."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Fire, then writing on clay tablets, about 3200 BCE"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Printing. The Gutenberg Bible was probably finished in 1455 in Mainz. It was the first great book in Western Europe printed from movable metal type."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Fire, writing (about 3200 BCE), the Gutenberg Bible (1455)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The web. Tim Berners-Lee wrote the first proposal in March 1989 at CERN. He released his software in 1991."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Fire, writing (about 3200 BCE), printing (1455), the web (1989)"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And now AI tools, the newest chapter. The same question applies: what do I hand to the tool, and what do I keep? Offloading can change what we remember."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Fire - speech - writing - printing and schools - science - the web - AI"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "See how young the newest tools are. Counting to 2026, writing is about 5,200 years old, the Gutenberg Bible 571, and the web proposal 37."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "About how many years ago each tool appeared",
+    "chart": "c1"
+   },
+   "cite": [
+    "s18",
+    "s19",
+    "s21"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check of the order, oldest first."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Writing (about 3200 BCE) - Gutenberg Bible (1455) - World Wide Web (1989)"
+   },
+   "cite": [
+    "s18",
+    "s19",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which list is in the right order, oldest to newest?",
+    "right": "Writing on clay tablets, the Gutenberg Bible, the World Wide Web.",
+    "wrong": [
+     "The Gutenberg Bible, writing on clay tablets, the World Wide Web.",
+     "The World Wide Web, writing on clay tablets, the Gutenberg Bible.",
+     "Writing on clay tablets, the World Wide Web, the Gutenberg Bible."
+    ],
+    "why": "Writing began about 3200 BCE, the Gutenberg Bible was finished around 1455, and the web proposal came in 1989."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now your project. Pick one thing you know. Name who taught you. Decide how you could pass it on."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. One thing I know\n2. Who taught me\n3. How I could pass it on"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is an example. You make a good pot of tea. Your aunt showed you, and she learned from her mother. You could show a friend, write the steps, or record your voice."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "cup",
+    "count": 3,
+    "layout": "row",
+    "text": "Three cups: you, your aunt, her mother"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Choose a tool to help you keep it, such as a notebook, a phone note, or a voice recording. That tool is part of your extended mind, and a link in the ratchet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "My tool, my link in the chain"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which is a way to pass on what you know?",
+    "right": "Any of these: showing someone, writing the steps down, or recording your voice.",
+    "wrong": [
+     "Only by publishing a book.",
+     "Only by teaching a class.",
+     "Only if you are an expert."
+    ],
+    "why": "Culture is passed on in many small ways. Showing, writing and recording all keep the ratchet turning."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You are one link in a very long chain. Thank you for walking all nine classes with us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The ratchet turns because people share"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "About how many years ago each tool appeared (counting to 2026)",
+   "rows": [
+    {
+     "label": "Writing on clay tablets, Uruk (about 3200 BCE)",
+     "value": 5200,
+     "source": "s18"
+    },
+    {
+     "label": "Gutenberg Bible, Mainz (1455)",
+     "value": 571,
+     "source": "s19"
+    },
+    {
+     "label": "World Wide Web proposal, CERN (1989)",
+     "value": 37,
+     "source": "s21"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "extended mind",
+   "links": [
+    "[[cumulative culture]]",
+    "[[assistive technology]]",
+    "[[transactive memory]]"
+   ]
+  },
+  {
+   "topic": "dependence and independence",
+   "links": [
+    "[[assistive technology]]",
+    "[[GPS and spatial memory]]"
+   ]
+  },
+  {
+   "topic": "culture as a shared extended mind",
+   "links": [
+    "[[the ratchet]]",
+    "[[gene-culture coevolution]]",
+    "[[how knowledge gets lost]]"
+   ]
+  },
+  {
+   "topic": "personal project: pass it on",
+   "links": [
+    "[[speech]]",
+    "[[writing]]",
+    "[[printing and schools]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1 to 1.8 million years ago (fire at Wonderwerk Cave)",
+   "elsewhere": "At Wonderwerk, the likely maker of the one-million-year-old fire layer is Homo erectus, who also made the Acheulean stone handaxes found at the site.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "when": "1455 (Gutenberg Bible, Mainz)",
+   "elsewhere": "In China, movable type had already been made from ceramic tiles in the 11th century, about 400 years before the Gutenberg Bible.",
+   "cite": [
+    "s20",
+    "s19"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "A notebook or phone can be part of a person's mind.",
+   "other_view": "Some philosophers say there is a real boundary at perception and action, so tools help the mind without being part of it. A defence paper names a related objection, that being linked to a tool is not the same as being part of the mind, and argues that it fails. The debate is still open.",
+   "cite": [
+    "s2",
+    "s3"
+   ]
+  },
+  {
+   "claim": "Searching online changes what we remember, so we recall where things are, not what they are.",
+   "other_view": "One part of that 2011 study could not be repeated in later attempts. Some writers also see sharing work between head and tool as sensible when done in moderation.",
+   "cite": [
+    "s5",
+    "s6",
+    "s22"
+   ]
+  },
+  {
+   "claim": "Heavy GPS use weakens spatial memory.",
+   "other_view": "This is one study, and it concerns navigation only. Others argue that tools free attention for other work, especially in moderation.",
+   "cite": [
+    "s7",
+    "s22"
+   ]
+  },
+  {
+   "claim": "The cultural ratchet is a uniquely human pattern.",
+   "other_view": "Researchers still disagree about where cumulative culture begins, and what counts as it.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  }
+ ]
+}

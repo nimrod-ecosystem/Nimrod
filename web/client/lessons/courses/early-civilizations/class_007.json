@@ -1,0 +1,1014 @@
+{
+ "about": {
+  "title": "The Indus Valley I: Planned Cities and Water",
+  "course": "early-civilizations",
+  "class_n": 7,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 38,
+  "length_note": "A little over the usual 35 minutes. There are five topics, and each is taught in small steps with a check question. You can pause after any step."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Archaeological Ruins at Moenjodaro",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "n.d. (site inscribed 1980)",
+   "link": "https://whc.unesco.org/en/list/138/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Mohenjo-daro: An Ancient Indus Valley Metropolis",
+   "publisher": "Harappa.com",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/content/mohenjo-daro-ancient-indus-valley-metropolis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Wonder land: Discovery of Harappa and Mohenjodaro 100 years ago (Supriya Varma)",
+   "publisher": "The Tribune (India)",
+   "date": "2024",
+   "link": "https://www.tribuneindia.com/news/in-depth/wonder-land-discovery-of-harappa-and-mohenjodaro-100-years-ago/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Sir Alexander Cunningham, 1853-1873",
+   "publisher": "Harappa.com",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/content/sir-alexander-cunningham-1853-1873",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Summit Mound Dug for Bricks 41",
+   "publisher": "Harappa.com",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/excavations/1924-25-lost-city-emerges/summit-mound-dug-bricks",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Indus Script: some Observations based on Archaeology",
+   "publisher": "Journal of the Royal Asiatic Society (Cambridge University Press)",
+   "date": "2011-03-15 (online)",
+   "link": "https://resolve.cambridge.org/core/journals/journal-of-the-royal-asiatic-society/article/indus-script-some-observations-based-on-archaeology/C0EAB502B60C70B598D79D25CBD33934",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Inside Mohenjo Daro, the 5,000-year-old metropolis frozen in time",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/graphics/mohenjo-daro-indus-valley-civilization-pakistan",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Special Lecture: Study of the Indus Script (Asko Parpola)",
+   "publisher": "Harappa.com (PDF)",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/sites/default/files/pdf/indusscript(2).pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "The Archaeology of Measurement: Measuring the Harappan World (J. M. Kenoyer)",
+   "publisher": "Harappa.com (PDF)",
+   "date": "2010",
+   "link": "https://www.harappa.com/sites/default/files/pdf/Kenoyer%202010%20Measuring%20the%20Harappan%20World.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Killing the Priest-King: Addressing Egalitarianism in the Indus Civilization",
+   "publisher": "Journal of Archaeological Research (Springer)",
+   "date": "2020",
+   "link": "https://link.springer.com/article/10.1007/s10814-020-09147-9",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Did this ancient society thrive without elites?",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/indus-valley-egalitarian-ancient-society-mohenjo-daro",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Indus Valley Civilisation",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Indus_Valley_Civilisation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Indus Valley Civilisation (mirror of the Wikipedia article)",
+   "publisher": "Wikiwand",
+   "date": "n.d.",
+   "link": "https://www.wikiwand.com/en/Indus_Valley_Civilisation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Harappan architecture",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Harappan_architecture",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Street, Mohenjo-daro (photograph and caption, J. M. Kenoyer)",
+   "publisher": "Harappa.com",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/slide/street-mohenjo-daro",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Mohenjo-daro! (slideshow by J. M. Kenoyer)",
+   "publisher": "Harappa.com",
+   "date": "n.d.",
+   "link": "https://www.harappa.com/slideshows/mohenjo-daro",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Harappa's 5 mega-urban sites were located on a grid, at calculated distances (excerpt from Discovering India Anew)",
+   "publisher": "ThePrint",
+   "date": "n.d.",
+   "link": "https://theprint.in/pageturner/excerpt/harappas-5-mega-urban-sites-were-located-on-a-grid-at-calculated-distances/2250965/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Tools of Manufacture and Trade in the Indus Civilization (Matthew G. Marsh)",
+   "publisher": "Rebus Community, History of Technology",
+   "date": "n.d.",
+   "link": "https://press.rebus.community/historyoftech/chapter/tools-of-manufacture-and-trade-in-the-indus-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Bricks and urbanism in the Indus Valley rise and decline",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1303.1426",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Great Bath",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Great_Bath",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Dholavira",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Dholavira",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Shambhudan Gadhvi",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Shambhudan_Gadhvi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Great Pyramid of Giza (timeline)",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/timeline/Great_Pyramid_of_Giza/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Indus Valley Civilization: How Harappan Cities Rose and Fell",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/indus-valley-civilization-how-harappan-cities-rose-and-fell/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Carnelian",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Carnelian",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Mohenjo-Daro (page quoting UNESCO)",
+   "publisher": "Facts and Details",
+   "date": "n.d.",
+   "link": "https://factsanddetails.com/india/History/sub7_1a/entry-7117.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Mohenjo Daro (IVC), The Great Bath, Urban Planning, Culture, Decline",
+   "publisher": "Testbook",
+   "date": "n.d.",
+   "link": "https://testbook.com/ias-preparation/mohenjo-daro",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Harappa (3500-1900 BCE)",
+   "publisher": "The Human Journey",
+   "date": "n.d.",
+   "link": "https://humanjourney.us/ideas/connecting-with-the-gods/harappa-3500-1900-bce/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Mohenjo-daro",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mohenjo-daro",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "R. D. Banerji",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/R._D._Banerji",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Mohenjo Daro: A Forgotten Report by R.D. Banerji",
+   "publisher": "Ancient Indians",
+   "date": "n.d.",
+   "link": "https://ancientindians.org/mohenjo-daro-a-forgotten-report-by-rd-banerji/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Great Pyramid of Giza (2007 Schools Wikipedia Selection)",
+   "publisher": "EPFL Wikispeedia",
+   "date": "2007",
+   "link": "https://dlab.epfl.ch/wikispeedia/wpcd/wp/g/Great_Pyramid_of_Giza.htm",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class seven. Today we visit the cities of the Indus Valley and ask what their streets, drains and bricks can tell us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Indus Valley I: Planned Cities and Water"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, what is the Indus civilization? It was a Bronze Age civilization in South Asia, also called the Harappan civilization. It was at its height from about 2600 to 1900 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Indus (Harappan) civilization: c. 2600-1900 BCE at its height"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the same era as Mesopotamia and Egypt. They lasted longer, but all three existed together. Of the three, the Indus covered the most ground."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Three civilizations at once. The Indus was the largest."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the map in words. The Indus River runs through Pakistan. Mohenjo-daro stands on its right bank. Harappa lies to the north, on the Ravi river. Another river system, the Ghaggar-Hakra, lay to the east."
+   },
+   "show": {
+    "kind": "map",
+    "text": "West: the Indus plain in Pakistan, with Mohenjo-daro on the Indus. North: Harappa on the Ravi. East: the Ghaggar-Hakra beds in north-west India and east Pakistan. South-east: Dholavira in Gujarat."
+   },
+   "cite": [
+    "s1",
+    "s12",
+    "s17",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check on the map."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Two river systems"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which two river systems did the Indus civilization grow up along?",
+    "right": "The Indus and the Ghaggar-Hakra",
+    "wrong": [
+     "The Tigris and the Euphrates",
+     "The Nile only",
+     "A single mountain lake"
+    ],
+    "why": "The civilization flourished on the Indus plain and along rivers that once ran near the Ghaggar-Hakra."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One catch: the Ghaggar-Hakra is dry or seasonal today. Research suggests it was once a set of monsoon-fed rivers. They became seasonal about 4,000 years ago, as the cities faded."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ghaggar-Hakra: monsoon-fed then, seasonal now"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, how do we know about these cities? For a long time, nobody did. As late as 1920, people thought the story of civilization in the subcontinent began only around the 4th century BCE."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How the cities were found"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Yet the ruins were in plain sight. A traveller named Charles Masson saw Harappa's big brick mounds in 1826. Alexander Cunningham visited in 1853 and again in 1856."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1826 Masson visits Harappa | 1853 Cunningham visits | 1856 Cunningham visits again"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then railway builders arrived. They used Harappa's old bricks as ballast, the stones packed under tracks. Cunningham wrote that the mounds gave enough bricks for about 100 miles of the Lahore-Multan line."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A railway track laid on a bed of broken old bricks, with the ruined brick mounds of Harappa behind it."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What happened to many of Harappa's ancient bricks in the 1850s?",
+    "right": "Railway builders used them as ballast under the tracks",
+    "wrong": [
+     "They were shipped away as souvenirs",
+     "They were used to build Mohenjo-daro",
+     "They were buried to protect them"
+    ],
+    "why": "Cunningham wrote that Harappa's bricks supplied ballast for about 100 miles of the Lahore-Multan Railway."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The turning point came in the 1920s. Daya Ram Sahni began digging at Harappa in 1921. R. D. Banerji began digging at Mohenjo-daro in 1922. The two sites are about 590 kilometres apart."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1921 Sahni digs at Harappa | 1922 Banerji digs at Mohenjo-daro | sites about 590 km apart"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In June 1924, Marshall, Sahni and Banerji compared notes. Similar objects had turned up at both sites. They belonged to a civilization far older than anyone had known. Marshall announced it on 20 September 1924."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1924: two sites, one civilization"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why was the comparison of finds in 1924 so important?",
+    "right": "It showed that two distant sites belonged to one earlier, unknown civilization",
+    "wrong": [
+     "It proved the sites were Buddhist monasteries",
+     "It showed that Alexander had built the cities",
+     "It showed the sites were only a few years old"
+    ],
+    "why": "Similar artefacts at Harappa and Mohenjo-daro showed they belonged to a much earlier civilization than was then known."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A site can have two dates: when it was built and when it was found. Mohenjo-daro was built about 5,000 years ago. Archaeologists found it in 1922, and only about a third has been dug since."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "BUILT: start of the 3rd millennium BCE, about 5,000 years ago | FOUND: 1922, by R. D. Banerji"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Harappa also has two dates. It became a true city from about 2800 to 2600 BCE, though people lived there earlier. Masson noticed it in 1826, but Sahni's dig from 1921 showed what it was."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "BUILT: city phase from c. 2800-2600 BCE | FOUND: noticed 1826; recognised from 1921"
+   },
+   "cite": [
+    "s30",
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we walk into Mohenjo-daro. Archaeologists describe two parts: a raised mound in the west, called the citadel, and a lower town to the east, where most homes stood."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "City planning: what the layout shows"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the lower town, streets ran north-south and east-west and met at right angles. The main street was about ten metres wide. Narrow lanes led off into quieter neighbourhoods."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bird's-eye view of a grid of brick streets: one wide main street, with narrow lanes branching off between blocks of houses."
+   },
+   "cite": [
+    "s17",
+    "s15",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many houses had two storeys. The walls were thick and the ceilings high, which kept rooms cooler in the hot summer."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A two-storey brick house with thick walls, facing a narrow lane."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'planned city' mean here?",
+    "right": "Streets and buildings laid out in an organised pattern",
+    "wrong": [
+     "A city that grew at random with no pattern",
+     "A city with no houses, only temples",
+     "A city built in a single day"
+    ],
+    "why": "UNESCO calls Mohenjo-daro the most ancient planned city on the Indian subcontinent. Its buildings lie along streets that cross at right angles."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, bricks. The Indus plains have little stone, so big cities like Mohenjo-daro and Harappa were built of brick. Some bricks were sun-dried mud, and some were baked in kilns."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Standard bricks"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The baked bricks followed a set shape: thickness 1, width 2, length 4. That is the ratio 1:2:4. It was chosen because bricks in that shape lock together well."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1 : 2 : 4"
+   },
+   "cite": [
+    "s8",
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For example, one brick measured 7 by 14 by 28 centimetres. Each side is double the one before it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "thickness 7 cm | width 14 cm | length 28 cm"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A brick in the 1:2:4 ratio is 10 cm thick. How long is it?",
+    "right": "40 cm",
+    "wrong": [
+     "20 cm",
+     "30 cm",
+     "80 cm"
+    ],
+    "why": "Width is double the thickness, so 20 cm. Length is double the width, so 40 cm."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now water. According to National Geographic, many Mohenjo-daro households had their own wells. The wells were lined with wedge-shaped bricks."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Water: wells and drains"
+   },
+   "cite": [
+    "s7",
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Used water left the houses through drains. Covered drains ran along the streets, joined up, and emptied onto the plains beyond the city. Some covers were cut from limestone."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A narrow brick street with a covered drain running along one side, capped with flat limestone slabs."
+   },
+   "cite": [
+    "s7",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where did waste water from Mohenjo-daro's houses go?",
+    "right": "Along covered street drains and out beyond the city",
+    "wrong": [
+     "Into the Great Bath",
+     "Back into the wells",
+     "Into a palace cellar"
+    ],
+    "why": "The drains joined together and emptied onto the plains outside the city."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On the citadel stood the Great Bath, a large brick pool. Water probably came from a well in a nearby room, and a drain at one corner carried it away. It was probably used for ritual bathing."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large rectangular brick pool with steps, a well in a side room, and a drain at one corner."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Water mattered even more at Dholavira, in dry Gujarat. People there built at least sixteen reservoirs to store rain and water from nearby streams. The reservoirs and channels were built of stone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dholavira: reservoirs in a dry land"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Dholavira's people build reservoirs?",
+    "right": "To store rain and stream water in a dry land",
+    "wrong": [
+     "To keep fish for trade",
+     "To hold the river back from the sea",
+     "To make bricks from sand"
+    ],
+    "why": "The reservoirs stored fresh water brought by rains or diverted from nearby streams."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dholavira has two dates too. It was built around 2650 BCE. A geologist from Gujarat found it in the early 1960s. In 2021 it became a UNESCO World Heritage Site."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "BUILT: c. 2650 BCE | FOUND: early 1960s; UNESCO World Heritage 2021"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now weights. The Indus people cut small cubes of hard stone, called chert, to use as weights. They follow a pattern of doubling and then a decimal system. The basic unit is about 13 grams."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Weights, measures and crafts"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the doubling, in grams: 1 unit, 2 units, 4, 8, 16. Each step is twice the one before. The values are rounded."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Weights double at each step (about 13 g per unit)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "A 2-unit weight is about 26 g. About how much is a 4-unit weight?",
+    "right": "About 52 g",
+    "wrong": [
+     "About 28 g",
+     "About 39 g",
+     "About 104 g"
+    ],
+    "why": "The weights double at each step, so 4 units is twice 2 units, about 52 g."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The crafts were skilled too. Indus workers made etched carnelian beads. Archaeologists have found bronze smiths' tool kits across the region. So smiths were an important part of society."
+   },
+   "show": {
+    "kind": "list",
+    "text": "etched carnelian beads | bronze smiths' kits | standard weights"
+   },
+   "cite": [
+    "s26",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Over thirty Indus seals have been found in Western Asia. So have stained carnelian beads of Harappan origin."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Indus goods found in Western Asia"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do Indus seals and beads found in Western Asia suggest?",
+    "right": "Goods travelled between the Indus region and Western Asia",
+    "wrong": [
+     "Western Asia ruled the Indus cities",
+     "The Indus people never left their cities",
+     "The beads were made in Egypt"
+    ],
+    "why": "Harappan seals and beads turning up far to the west show contact and trade over long distances."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the puzzle. In Mesopotamia and Egypt, archaeologists find palaces, grand royal tombs and big temples. Egypt's Great Pyramid, built around 2560 BCE, was a tomb for King Khufu."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "EGYPT and MESOPOTAMIA: palaces, royal tombs, monumental temples | INDUS: no clear palaces, elaborate tombs or large temples"
+   },
+   "cite": [
+    "s25",
+    "s24",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Indus cities do have big buildings, such as the Great Bath and large non-residential structures. But after a century of digging, no building has been clearly identified as a palace or a royal tomb."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Big buildings, but no clear palaces or royal tombs"
+   },
+   "cite": [
+    "s10",
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement fits what archaeologists have found?",
+    "right": "Indus cities had drains, wells and standard bricks, but no clearly identified palaces or royal tombs",
+    "wrong": [
+     "Indus cities had huge pyramid tombs like Egypt",
+     "Indus cities had no buildings at all",
+     "Indus cities had no wells or drains"
+    ],
+    "why": "The Indus cities show careful planning and water systems, but clear evidence for palaces and elaborate tombs is missing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So were there no rulers? Experts disagree. One archaeologist argues that a century of digging should have found them by now. Another thinks parts of the cities are still buried."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'Sometimes, the absence of evidence is actually evidence of absence.' (Adam Green, University of York)"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Indus cities had a grid of streets, standard 1:2:4 bricks, wells and covered drains. They also had standard weights and fine crafts. Their layout shows planning and shared standards, but not who was in charge."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Grid streets | Standard bricks 1:2:4 | Wells and covered drains | Standard weights | No clear palaces or royal tombs"
+   },
+   "cite": [
+    "s1",
+    "s8",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does the layout of Indus cities best tell us?",
+    "right": "The building, water supply and drains were organised to shared standards",
+    "wrong": [
+     "Each family built wherever it liked",
+     "Kings built them as pyramid tombs",
+     "They were built by Egypt"
+    ],
+    "why": "Grid streets, standard bricks and weights, and drains point to planning and shared standards. The evidence does not say who organised it."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Indus weights double each step (approximate grams, using about 13 g per unit)",
+   "rows": [
+    {
+     "label": "1 unit",
+     "value": 13,
+     "source": "s8"
+    },
+    {
+     "label": "2 units",
+     "value": 26,
+     "source": "s8"
+    },
+    {
+     "label": "4 units",
+     "value": 52,
+     "source": "s8"
+    },
+    {
+     "label": "8 units",
+     "value": 104,
+     "source": "s8"
+    },
+    {
+     "label": "16 units",
+     "value": 208,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Indus cities and their layout",
+   "links": [
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]"
+   ]
+  },
+  {
+   "topic": "Mohenjo-daro (site: built about 5,000 years ago; found 1922)",
+   "links": [
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]",
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  },
+  {
+   "topic": "Harappa (site: city phase from c. 2800-2600 BCE; recognised from 1921)",
+   "links": [
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]"
+   ]
+  },
+  {
+   "topic": "Dholavira (site: built c. 2650 BCE; found early 1960s; UNESCO 2021)",
+   "links": [
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  },
+  {
+   "topic": "Standard bricks, weights and measures",
+   "links": [
+    "[[Mesopotamia III: Trade, Everyday Life and Empires]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Few palaces or royal tombs compared with Egypt and Mesopotamia",
+   "links": [
+    "[[Egypt I: The Nile, Unification and the Pharaoh]]",
+    "[[Mesopotamia II: Writing, Law and Religion]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 2600-1900 BCE (the Indus civilization at its height)",
+   "elsewhere": "Mesopotamia and Egypt were also flourishing. They lasted longer than the Indus civilization, but all three existed together.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "when": "c. 2560 BCE",
+   "elsewhere": "In Egypt, the Great Pyramid of Giza was built as the tomb of King Khufu (who reigned 2589-2566 BCE). This was around the time Mohenjo-daro and other Indus cities were growing.",
+   "cite": [
+    "s24",
+    "s1"
+   ]
+  },
+  {
+   "when": "1920s (Indus cities found and dug)",
+   "elsewhere": "In Egypt, the tomb of Queen Hetepheres, mother of Khufu, was found at Giza in 1925. Archaeologists were uncovering both worlds in the same decade.",
+   "cite": [
+    "s34",
+    "s3"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Indus civilization probably had no kings or ruling class.",
+   "other_view": "Archaeologist Adam Green argues that a century of digging without finding palaces or royal tombs counts as real evidence that there were none. Massimo Vidale of the University of Padua thinks outer suburbs of Indus cities are still deeply buried, which could change the picture. The authors of the 2020 paper also allow that palaces and tombs may exist but be undiscovered, or look too much like other buildings to recognise.",
+   "cite": [
+    "s11",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Mohenjo-daro was discovered in 1922 by R. D. Banerji.",
+   "other_view": "Sources differ on the date and the credit. Harappa.com gives 1922 for Banerji's discovery. Another source gives 1921. Banerji had surveyed the site from 1919, and Marshall wrote that Banerji deserved credit for discovering its great age if not the site itself. Some writers argue that Marshall is wrongly given the credit.",
+   "cite": [
+    "s2",
+    "s32",
+    "s33"
+   ]
+  },
+  {
+   "claim": "The Great Granary was a granary and the Great Bath was a ritual bath.",
+   "other_view": "Mortimer Wheeler named a large Mohenjo-daro building the Great Granary. Researchers have disputed that use. The Great Bath is described as 'likely' a ritual tank, which is an interpretation and not proof.",
+   "cite": [
+    "s31",
+    "s14",
+    "s7"
+   ]
+  },
+  {
+   "claim": "All Indus bricks followed the 1:2:4 ratio.",
+   "other_view": "The ratio was typical, and moulds helped keep to it. But some cities, such as Kalibangan, also used other ratios like 3:2:1. In the late phase, brick sizes drifted away from the standard.",
+   "cite": [
+    "s19"
+   ]
+  },
+  {
+   "claim": "Mohenjo-daro had a set number of wells and people.",
+   "other_view": "Sources disagree. Well counts range from about 60 deep wells excavated to around 700 in other accounts. Population estimates for the largest Indus cities run from about 30,000-60,000 up to as many as 100,000.",
+   "cite": [
+    "s28",
+    "s29",
+    "s14",
+    "s7"
+   ]
+  },
+  {
+   "claim": "The Ghaggar-Hakra was a great snow-fed river, possibly the Sarasvati of old texts.",
+   "other_view": "Recent geophysical research suggests the Ghaggar-Hakra was a system of monsoon-fed rivers, not a snow-fed one. Sediment studies find that glacier-fed rivers did not flow across the region in recent geological times. Even so, rivers were active there during the city period.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Dholavira was discovered by Jagat Pati Joshi in 1967-68.",
+   "other_view": "The official Archaeological Survey of India marker credits Joshi with finding Dholavira in 1967-68. A local account says Gujarat geologist Shambhudan Gadhvi found it in the early 1960s.",
+   "cite": [
+    "s22"
+   ]
+  }
+ ]
+}

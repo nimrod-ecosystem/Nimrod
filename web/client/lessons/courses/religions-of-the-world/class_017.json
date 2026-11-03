@@ -1,0 +1,1042 @@
+{
+ "about": {
+  "title": "Putting It Together: Calendars, Sacred Places and Living Side by Side",
+  "course": "religions-of-the-world",
+  "class_n": 17,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. There are 37 short steps of roughly 40 seconds each. Calendars take the longest because there are three kinds and each needs an example. The last six steps are a quick review that can be paused or replayed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Islamic calendar",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Islamic-calendar",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Why Does Islam Follow The Lunar Calendar?",
+   "publisher": "UK Islamic Mission (UKIM)",
+   "date": "n.d.",
+   "link": "https://www.ukim.org/media-centre/latest-news-&-updates/why-does-islam-follow-the-lunar-calendar/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Jewish religious year",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Jewish-religious-year",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Diwali 2026: What Is Diwali?",
+   "publisher": "Old Farmer's Almanac",
+   "date": "2026",
+   "link": "https://www.almanac.com/content/diwali",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Bahá'í Calendar",
+   "publisher": "Bahá'ís of the United Kingdom",
+   "date": "n.d.",
+   "link": "https://www.bahai.org.uk/calendar",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Bahá'í Calendar",
+   "publisher": "Bahá'í International Community (bahai.org)",
+   "date": "n.d.",
+   "link": "https://www.bahai.org/action/devotional-life/calendar",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Frequently asked questions about the date of Easter",
+   "publisher": "World Council of Churches",
+   "date": "n.d.",
+   "link": "https://www.oikoumene.org/resources/documents/frequently-asked-questions-about-the-date-of-easter",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Explainer: Why do churches celebrate Christmas and Easter on different dates?",
+   "publisher": "Religion Media Centre",
+   "date": "n.d.",
+   "link": "https://religionmediacentre.org.uk/news/explainer-why-do-churches-celebrate-christmas-and-easter-on-different-dates/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Why Orthodox Christians celebrate Christmas in January",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/why-celebrate-christmas-january",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Diwali: Festival of lights",
+   "publisher": "Statistics Canada",
+   "date": "2025-10-15",
+   "link": "https://www.statcan.gc.ca/o1/en/plus/8604-diwali-festival-lights",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "What is Diwali, the Indian festival of lights?",
+   "publisher": "Religion News Service",
+   "date": "2025-10-20",
+   "link": "https://religionnews.com/2025/10/20/what-is-diwali-the-indian-festival-of-lights/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Hajj 2025 draws over 1.67 million pilgrims, Saudi statistics show",
+   "publisher": "Xinhua",
+   "date": "2025-06-06",
+   "link": "https://english.news.cn/20250606/51b0a5bf4c7f4fcbba74d29a9b96dbce/c.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Nearly 2 million Muslim pilgrims begin annual Hajj pilgrimage in Saudi Arabia",
+   "publisher": "Anadolu Agency",
+   "date": "n.d.",
+   "link": "https://www.aa.com.tr/en/middle-east/nearly-2-million-muslim-pilgrims-begin-annual-hajj-pilgrimage-in-saudi-arabia/3588652",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Decision of the Intergovernmental Committee: 12.COM 11.B.12 (Kumbh Mela)",
+   "publisher": "UNESCO Intangible Cultural Heritage",
+   "date": "2017",
+   "link": "https://ich.unesco.org/en/decisions/12.COM/11.B.12",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Kumbh Mela declared India's 'Intangible Cultural Heritage' by UNESCO",
+   "publisher": "WION",
+   "date": "n.d.",
+   "link": "https://www.wionews.com/india-news/kumbh-mela-declared-as-indias-intangible-cultural-heritage-by-unesco-26274",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Mahashivratri: hundreds of thousands take holy dip in Haridwar",
+   "publisher": "Deccan Herald (AFP report)",
+   "date": "n.d.",
+   "link": "https://www.deccanherald.com/india/mahashivratri-hundreds-of-thousands-take-holy-dip-in-haridwar-960673.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Christians find unity in restoring holiest Jerusalem church: The Church of the Holy Sepulchre",
+   "publisher": "Gulf News",
+   "date": "n.d.",
+   "link": "https://gulfnews.com/world/mena/christians-find-unity-in-restoring-holiest-jerusalem-church-the-church-of-the-holy-sepulchre-1.86546366",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Christian church so holy that Muslims hold its keys",
+   "publisher": "Big Think",
+   "date": "n.d.",
+   "link": "https://bigthink.com/strange-maps/holy-sepulcher/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Who holds the key to Christianity's greatest shrine? Two Muslim families",
+   "publisher": "The Arab Weekly",
+   "date": "n.d.",
+   "link": "https://thearabweekly.com/who-holds-key-christianitys-greatest-shrine-two-muslim-families",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Pluralism Project: Home",
+   "publisher": "The Pluralism Project, Harvard University",
+   "date": "n.d.",
+   "link": "https://pluralism.org/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Interfaith",
+   "publisher": "The Pluralism Project, Harvard University",
+   "date": "n.d.",
+   "link": "https://pluralism.org/interfaith-infrastructure",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Unpacking Pluralism",
+   "publisher": "The Interfaith Observer",
+   "date": "2016-01-09",
+   "link": "http://www.theinterfaithobserver.org/journal-articles/2016/1/9/unpacking-pluralism.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Religion and Interfaith Engagement at Harvard (2025)",
+   "publisher": "The Pluralism Project, Harvard University",
+   "date": "2025",
+   "link": "https://pluralism.org/religion-and-interfaith-engagement-harvard-2025",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Presidential Initiative on Interfaith Engagement",
+   "publisher": "Harvard University",
+   "date": "n.d.",
+   "link": "https://interfaith-engagement.harvard.edu/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Historical Movements and the Theology behind the Pluralism Project (master's thesis)",
+   "publisher": "Liberty University Digital Commons",
+   "date": "n.d.",
+   "link": "https://digitalcommons.liberty.edu/cgi/viewcontent.cgi?article=1352&context=masters",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Islamic Calendar Guide: How Hijri Dates Work",
+   "publisher": "IslamCal",
+   "date": "n.d.",
+   "link": "https://islamcal.com/calendar-guide/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. Today we put the pieces together: how traditions mark time, how they mark place, and how people of different faiths share both."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Putting It Together: Calendars, Sacred Places and Living Side by Side"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with time. A calendar is a way of counting days into months and years. Each tradition chooses what to follow: the sun, the moon, or both."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Calendar"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That gives three kinds. Solar calendars follow the sun. Lunar calendars follow the moon. Lunisolar calendars use moon months but add a correction to keep up with the sun."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Solar: follows the sun | Lunar: follows the moon | Lunisolar: moon months, corrected by the sun"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a solar example. The Bahá'í calendar has 19 months of 19 days each. A few extra days are added so the year matches the sun."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "19 months × 19 days = 361 days, plus 4 or 5 extra days"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Bahá'í New Year, called Naw-Rúz, is fixed to the spring equinox in March. So it always arrives in the same season."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Naw-Rúz = the spring equinox"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When does the Bahá'í New Year, Naw-Rúz, begin?",
+    "right": "At the spring equinox, in March",
+    "wrong": [
+     "At the first new moon after winter",
+     "On 1 January",
+     "When the crescent moon is sighted"
+    ],
+    "why": "Naw-Rúz is fixed to the vernal (spring) equinox, which is a marker from the sun. That is why the Bahá'í calendar is solar."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a lunar example. The Islamic calendar has 12 months, each starting around the new moon. Months last 29 or 30 days, so a year is 354 or 355 days."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "moon",
+    "count": 12,
+    "layout": "row",
+    "text": "12 moon months in an Islamic year"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The calendar relies on people sighting the thin new crescent each month. Ramadan traditionally begins with the sighting of that crescent."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A thin crescent moon low in the evening sky, just after sunset"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 354-day year is about 11 days shorter than the sun's year. No leap month is added, so Islamic months drift earlier through the seasons. Ramadan travels through every season about every 32 and a half years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lunar year: about 11 days shorter"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Ramadan begins on a certain Gregorian date this year. About when will it begin next year?",
+    "right": "About 10 or 11 days earlier",
+    "wrong": [
+     "On the same date",
+     "About 10 or 11 days later",
+     "About a month later"
+    ],
+    "why": "The Islamic year is about 10 to 11 days shorter than the 365-day solar year, so Islamic dates move earlier on the Gregorian calendar each year."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, lunisolar. The Jewish calendar usually has 12 months of 29 or 30 days. In a leap year, an extra 30-day month is added to stay in step with the solar year."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "moon",
+    "count": 13,
+    "layout": "group",
+    "text": "13 months in a Jewish leap year"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Leap years come seven times in every 19-year cycle. A common year runs 353 to 355 days. A leap year runs 383 to 385."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "7 leap years in every 19-year cycle"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why does the Jewish calendar add a leap month?",
+    "right": "To keep the moon-based year in step with the sun's year",
+    "wrong": [
+     "Because the moon sometimes disappears for a whole month",
+     "To make the year match the Islamic year",
+     "Because the months used to be 40 days long"
+    ],
+    "why": "Twelve moon months fall short of the solar year. An added month every few years aligns the calendar with the sun."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Hindu calendar is moon-based too. Diwali's main day is tied to the new moon of the month of Kartik, so its date moves between mid-October and mid-November. In 2026 the main day is Sunday, 8 November."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Diwali: the new moon of Kartik"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What decides the main day of Diwali?",
+    "right": "The new moon of the Hindu month of Kartik",
+    "wrong": [
+     "A fixed date, 1 November",
+     "The spring equinox",
+     "The sighting of the crescent that opens Ramadan"
+    ],
+    "why": "Diwali's main day falls on the new moon of Kartik. That is why its Gregorian date changes from year to year."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's compare year lengths side by side. These are typical numbers of days in a year."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Typical days in a year, by calendar",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s5"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which year in the chart is the longest?",
+    "right": "The Jewish leap year, about 384 days",
+    "wrong": [
+     "The Islamic year, about 354 days",
+     "The Bahá'í year, about 365 days",
+     "The solar year, about 365 days"
+    ],
+    "why": "A Jewish leap year has an extra month, so it runs 383 to 385 days. That is the longest bar in the chart."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One tradition can even use two calendars. Many Christians celebrate Christmas on 25 December on the Gregorian calendar. Some Orthodox churches keep the older Julian calendar, where 25 December falls on 7 January on ours."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Gregorian calendar: Christmas on 25 December | Julian calendar: Christmas on 25 December, which is 7 January on the Gregorian calendar"
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not every Orthodox church does this. Only six keep the old Julian calendar. Most use a revised version that matches the Gregorian one for now. Even so, that is just under half of all Eastern Orthodox Christians."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6 Orthodox churches keep the old Julian calendar"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why do some Orthodox Christians celebrate Christmas on 7 January?",
+    "right": "Their church uses the Julian calendar, where 25 December falls on 7 January on the Gregorian calendar",
+    "wrong": [
+     "They celebrate a different event, not the birth of Jesus",
+     "They follow the Islamic calendar",
+     "Their Christmas moves with the moon each year"
+    ],
+    "why": "They keep Christmas on 25 December too. The Julian calendar runs 13 days behind the Gregorian one, so that day lands on 7 January on ours."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Calendars sometimes bring festivals of different traditions close together. A good example is Diwali time in autumn."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same season, different stories"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many Hindus worship Lakshmi and remember Rama's return to Ayodhya. Jains remember Mahavira reaching nirvana. Sikhs mark Bandi Chhor Divas, the release of Guru Hargobind from Mughal captivity. Newar Buddhists in Nepal also observe the occasion, called Tihar, with light offerings."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hindus: Lakshmi, Rama's return to Ayodhya | Jains: Mahavira's nirvana | Sikhs: Bandi Chhor Divas | Newar Buddhists: Tihar"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These festivals fall at the same time, but they are not the same festival. Statistics Canada uses each community's own name: Bandi Chhor Divas for Sikhs and Mahavira Nirvana Diwas for Jains."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Use each community's own name"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "At Diwali time, what do Jains remember?",
+    "right": "Mahavira reaching nirvana",
+    "wrong": [
+     "The release of Guru Hargobind from prison",
+     "The pilgrimage to Mecca",
+     "The spring equinox"
+    ],
+    "why": "For Jains this day marks the nirvana of Mahavira. The release of Guru Hargobind is what Sikhs remember."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now place. A pilgrimage is a journey to a holy place for religious reasons. Calendar and place often meet, because pilgrimages are timed by the calendar."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pilgrimage"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hajj is the pilgrimage to Mecca. Pilgrims circle the Kaaba there. It is the fifth pillar of Islam, and Muslims who are able should do it at least once. It takes place on set days of the Hijri calendar."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Pilgrims circling the Kaaba in the holy city of Mecca"
+   },
+   "cite": [
+    "s13",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which calendar sets the days of Hajj?",
+    "right": "The Islamic (Hijri) lunar calendar, so Hajj moves through the seasons",
+    "wrong": [
+     "The Gregorian calendar, so it is always in June",
+     "The Bahá'í calendar",
+     "The Julian calendar"
+    ],
+    "why": "Hajj happens on specific days of the Hijri calendar. That calendar is lunar, so those days shift earlier on the Gregorian calendar each year."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 2025, Saudi Arabia's statistics authority counted 1,673,230 pilgrims. Most of them, 1,506,576, arrived from abroad."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Hajj 2025 pilgrims",
+    "chart": "c2"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a Hindu pilgrimage. At the Kumbh Mela, pilgrims bathe in a sacred river. UNESCO lists it as living heritage and calls it the largest peaceful gathering of pilgrims on earth."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Pilgrims bathing in a sacred river at dawn during the Kumbh Mela"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Devotees believe that bathing in the Ganges frees them from sins. The Kumbh Mela rotates among four holy sites, about every 12 years. The 2019 gathering in Allahabad drew around 55 million people over 48 days."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 55 million people over 48 days (Allahabad, 2019)"
+   },
+   "cite": [
+    "s14",
+    "s15",
+    "s16"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What do pilgrims do at the Kumbh Mela?",
+    "right": "They bathe, or take a dip, in a sacred river",
+    "wrong": [
+     "They circle the Kaaba in Mecca",
+     "They fast from sunrise to sunset for a month",
+     "They read one holy book aloud for 12 years"
+    ],
+    "why": "The Kumbh Mela is a festival where participants bathe in a sacred river. Circling the Kaaba belongs to the Hajj."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some holy places are shared. In Jerusalem, Christians revere the Church of the Holy Sepulchre as the place where Jesus was buried and rose again. Several Christian communities share it under a strict arrangement called the status quo, in place since 1852."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Jerusalem's Old City, with the Church of the Holy Sepulchre marked"
+   },
+   "cite": [
+    "s19",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The keys to the church's door are held by two Muslim families. The Christian communities accept them as neutral guardians. A Muslim family has held the keys for at least 800 years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Neutral keepers of the keys"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do Muslim families hold the keys to this church?",
+    "right": "All the Christian communities accept them as neutral caretakers",
+    "wrong": [
+     "Because Muslims built the church",
+     "Because Christians are not allowed to hold keys",
+     "Because the church is now a mosque"
+    ],
+    "why": "The communities sharing the church disagree among themselves. Muslim families stand outside that dispute, so all of them trust the families with the door."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People of different faiths do more than share places. They work together. The word for purposeful contact across faiths is interfaith."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Interfaith"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Harvard's Pluralism Project says pluralism is more than tolerance. You can tolerate people without knowing anything about them. Pluralism means actively seeking to understand across differences, while keeping your own commitments."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "not mere tolerance or relativism, but the real encounter of commitments"
+   },
+   "cite": [
+    "s20",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the Pluralism Project's sense, what does pluralism mean?",
+    "right": "Actively seeking to understand others across differences, while keeping your own commitments",
+    "wrong": [
+     "Believing that all religions are identical",
+     "Putting up with others without learning about them",
+     "Choosing one shared religion for everyone"
+    ],
+    "why": "The Pluralism Project says pluralism is not just tolerance and not relativism. It is an encounter between people who each keep their own commitments."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is one example. At Harvard, the College Interfaith Council has co-sponsored events with the Islamic Society, Hillel, Harvard Dharma, the Catholic Student Association and a Christian fellowship."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Harvard Islamic Society | Harvard Hillel | Harvard Dharma | Catholic Student Association | Harvard-Radcliffe Christian Fellowship"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is another. In Jerusalem, the Catholic, Greek Orthodox and Armenian Apostolic communities began restoring the church's ancient stone floor together. The project was led by Osama Hamdan, a Palestinian Muslim architect who has worked on Jewish, Christian and Muslim sites."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Workers lifting a stone from the floor of the Church of the Holy Sepulchre during restoration"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cooperation can also be hard. Reporters describe the Christian communities sharing that church as doing so \"uneasily\" for centuries. A renovation agreement left out three of the six denominations. Harvard's own interfaith office calls this work active and sometimes difficult."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real, valuable, and sometimes difficult"
+   },
+   "cite": [
+    "s17",
+    "s18",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement best fits what we have seen?",
+    "right": "Interfaith cooperation is real and valuable, and it can also be difficult",
+    "wrong": [
+     "People of different faiths never cooperate",
+     "Cooperation is always easy once people meet",
+     "Sharing a holy place always ends disagreements"
+    ],
+    "why": "We saw real cooperation, such as the shared restoration and the Harvard events. We also saw tension over who has a say, and Harvard's interfaith office says the work can be difficult."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone agrees about pluralism. One Christian university thesis argues the Pluralism Project leans toward relativism. Its founder, Diana Eck, says pluralism is not relativism, because people keep their commitments."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A critic's view: it leans toward relativism | Eck's view: it is the encounter of commitments"
+   },
+   "cite": [
+    "s25",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How can you learn more, respectfully? First, ask. Followers know their own practice. One person does not speak for a whole tradition, and even Diwali days can vary by place and community."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask kindly. One person is not a whole tradition."
+   },
+   "cite": [
+    "s4",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second, read a community's own sources, like the Bahá'í calendar page or the UK Islamic Mission's explainer on the Islamic calendar. Third, use careful neutral sources, as we did today: encyclopedias, UNESCO and university projects."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Ask kindly | 2. Read the community's own sources | 3. Check reliable neutral sources"
+   },
+   "cite": [
+    "s6",
+    "s2",
+    "s1",
+    "s14",
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You want to know when a friend's festival happens. What is the best first step?",
+    "right": "Ask your friend, and check their community's own calendar",
+    "wrong": [
+     "Assume it matches a festival from another faith in the same season",
+     "Guess from the time of year",
+     "Look only at the Gregorian calendar, since festival dates never move"
+    ],
+    "why": "Festival dates often follow moon or other calendars, and practice can vary within a tradition. Asking and checking the community's own calendar gives the most reliable answer."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Time for a review. Calendars come in three kinds. Bahá'í is solar. Islamic is lunar. Jewish and Hindu are lunisolar."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Solar: Bahá'í, New Year at the spring equinox | Lunar: Islamic, 354 or 355 days, drifts through seasons | Lunisolar: Jewish, 7 leap months in 19 years | Hindu: Diwali on the new moon of Kartik"
+   },
+   "cite": [
+    "s5",
+    "s1",
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which calendar has no leap month, so its months drift through the seasons?",
+    "right": "The Islamic calendar",
+    "wrong": [
+     "The Jewish calendar",
+     "The Bahá'í calendar",
+     "The Hindu calendar"
+    ],
+    "why": "The Islamic calendar adds no leap month, so its months move through the seasons. The Jewish calendar adds a month seven times in 19 years, and the Bahá'í calendar adds extra days to match the sun."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Places we met: Mecca for Hajj, sacred rivers for the Kumbh Mela, and a Jerusalem church shared by several Christian communities."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mecca: Hajj | Sacred rivers: Kumbh Mela | Jerusalem: the Church of the Holy Sepulchre"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Across 17 classes you met traditions of South Asia, West Asia, East Asia, Africa and the African diaspora, the Americas and the Arctic, Australia and the Pacific, plus newer movements and non-religious worldviews. Large and small."
+   },
+   "show": {
+    "kind": "list",
+    "text": "South Asia | West Asia | China, Japan, Korea, Vietnam | Africa and the diaspora | Americas and the Arctic | Australia and the Pacific | Newer movements and non-religious worldviews"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To talk about any tradition respectfully: describe it as its followers do. Say \"believe\" instead of claiming what is true. Use their own names. Don't rank. And ask when you're unsure."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Describe it as followers do | Say \"believe\", not \"it is true\" | Use their own names | Don't rank | Ask when unsure"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence talks about Diwali time respectfully?",
+    "right": "Sikhs mark Bandi Chhor Divas, remembering the release of Guru Hargobind.",
+    "wrong": [
+     "Sikhs and Jains just copy the Hindu Diwali.",
+     "Diwali is the best festival of lights, better than all the others.",
+     "All these festivals are really the same thing."
+    ],
+    "why": "The respectful sentence uses the community's own name and story. The others rank festivals or erase what is different about them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thank you for learning with Nimrod. Keep asking questions, kindly, and keep listening to the answers."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thank you for learning with us"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Typical days in a year, by calendar",
+   "rows": [
+    {
+     "label": "Islamic (354 or 355)",
+     "value": 354,
+     "source": "s1"
+    },
+    {
+     "label": "Jewish common year (353 to 355)",
+     "value": 354,
+     "source": "s3"
+    },
+    {
+     "label": "Jewish leap year (383 to 385)",
+     "value": 384,
+     "source": "s3"
+    },
+    {
+     "label": "Bahá'í (361 + 4 or 5)",
+     "value": 365,
+     "source": "s5"
+    },
+    {
+     "label": "Solar year (about 365 and a quarter)",
+     "value": 365,
+     "source": "s3"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Hajj 2025 pilgrims",
+   "rows": [
+    {
+     "label": "Total pilgrims",
+     "value": 1673230,
+     "source": "s12"
+    },
+    {
+     "label": "Arrived from abroad",
+     "value": 1506576,
+     "source": "s12"
+    },
+    {
+     "label": "From within Saudi Arabia",
+     "value": 166654,
+     "source": "s12"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Solar, lunar and lunisolar calendars",
+   "links": [
+    "[[Islam]]",
+    "[[Judaism]]",
+    "[[Hinduism]]",
+    "[[Zoroastrianism and the Baháʼí Faith]]"
+   ]
+  },
+  {
+   "topic": "Festivals that fall near each other: Diwali, Bandi Chhor Divas and Jain Diwali",
+   "links": [
+    "[[Hinduism]]",
+    "[[Jainism]]",
+    "[[Sikhism]]",
+    "[[Buddhism]]"
+   ]
+  },
+  {
+   "topic": "Pilgrimage: Hajj and the Kumbh Mela",
+   "links": [
+    "[[Islam]]",
+    "[[Hinduism]]"
+   ]
+  },
+  {
+   "topic": "Shared holy places: the Church of the Holy Sepulchre",
+   "links": [
+    "[[Christianity]]",
+    "[[Smaller Faiths of West Asia: Yazidis, Druze, Mandaeans and Samaritans]]"
+   ]
+  },
+  {
+   "topic": "Interfaith cooperation and pluralism",
+   "links": [
+    "[[How to Learn About Religions Respectfully]]",
+    "[[Newer Movements and Non-Religious Worldviews]]"
+   ]
+  },
+  {
+   "topic": "Where to learn more: asking followers and reading their own sources",
+   "links": [
+    "[[How to Learn About Religions Respectfully]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Pluralism means engaging with people of other faiths while keeping your own beliefs.",
+   "other_view": "Diana Eck, who founded the Pluralism Project, says pluralism is not relativism but an encounter of commitments. A Liberty University master's thesis argues the Pluralism Project's approach leans toward relativism and the idea that no religion is superior. Readers can weigh both views.",
+   "cite": [
+    "s22",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Islamic months begin when the new crescent moon is sighted.",
+   "other_view": "UKIM describes the calendar as based on visual sighting. IslamCal notes that some calculated Hijri calendars also exist and that regions can differ on where the crescent is visible. Communities can therefore differ on the exact start of a month.",
+   "cite": [
+    "s2",
+    "s26"
+   ]
+  },
+  {
+   "claim": "Easter has a movable date that differs between Western and Orthodox churches.",
+   "other_view": "The World Council of Churches reports that most Western churches preferred a fixed date for Easter. Orthodox churches wanted a common movable date based on the rule from the Council of Nicaea.",
+   "cite": [
+    "s7"
+   ]
+  }
+ ]
+}

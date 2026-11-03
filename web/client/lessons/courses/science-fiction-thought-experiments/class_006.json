@@ -1,0 +1,905 @@
+{
+ "about": {
+  "title": "Economics: Scarcity, Trade and Fair Shares",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are 29 short beats and 18 quick checks. This class has five ideas plus a hands-on deal, so it runs a little longer than a single-idea class. It splits cleanly in two: stop after the beat on what the simple model leaves out, then pick up with shared resources. Take the questions slowly."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "1.1 What Is Economics, and Why Is It Important? (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/1-1-what-is-economics-and-why-is-it-important",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Ch. 2 Key Concepts and Summary (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/2-key-concepts-and-summary",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "33.1 Absolute and Comparative Advantage (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/33-1-absolute-and-comparative-advantage",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Ch. 33 Key Concepts and Summary (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/33-key-concepts-and-summary",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "33.2 What Happens When a Country Has an Absolute Advantage in All Goods (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/33-2-what-happens-when-a-country-has-an-absolute-advantage-in-all-goods",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "20.1 Absolute and Comparative Advantage (Principles of Macroeconomics 2e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-macroeconomics-2e/pages/20-1-absolute-and-comparative-advantage",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "13.3 Public Goods (Principles of Economics 3e)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-3e/pages/13-3-public-goods",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "13.3 Public Goods (Principles of Economics 2e): Common Resources and the Tragedy of the Commons",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/principles-economics-2e/pages/13-3-public-goods",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Elinor Ostrom (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/biography/elinor-ostrom",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Elinor Ostrom: Fighting the Tragedy of the Commons",
+   "publisher": "Books & Ideas",
+   "date": "n.d.",
+   "link": "https://booksandideas.net/Elinor-Ostrom-Fighting-the-Tragedy-of-the-Commons",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "On the Determinants of Sanctions Effectiveness: An Empirical Analysis by Using Duration Models",
+   "publisher": "Economies (MDPI), vol. 11, no. 5",
+   "date": "2023",
+   "link": "https://www.mdpi.com/2227-7099/11/5/136",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "When Do Imposed Economic Sanctions Work? A Critical Review of the Sanctions Effectiveness Literature",
+   "publisher": "Defence and Peace Economics, vol. 30, no. 6 (Taylor & Francis)",
+   "date": "2019",
+   "link": "https://www.tandfonline.com/doi/abs/10.1080/10242694.2019.1625250",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Economic sanctions and academia: Overlooked impact and long-term consequences",
+   "publisher": "PubMed Central (US National Library of Medicine)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6772044/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Does foreign aid affect growth?",
+   "publisher": "CEPR VoxEU",
+   "date": "n.d.",
+   "link": "https://cepr.org/voxeu/columns/does-foreign-aid-affect-growth",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "IMF Survey: Foreign Aid: Good or Bad?",
+   "publisher": "International Monetary Fund",
+   "date": "n.d.",
+   "link": "https://www.imf.org/en/news/articles/2015/09/28/04/53/soint090910a",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "16.5 From the 1990s to the 2020s: Current Issues in IPE (Introduction to Political Science)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introduction-political-science/pages/16-5-from-the-1990s-to-the-2020s-current-issues-in-ipe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Winners and Losers from International Trade: What do we know and what are the implications for policy?",
+   "publisher": "UK Trade Policy Observatory, University of Sussex",
+   "date": "n.d.",
+   "link": "https://blogs.sussex.ac.uk/uktpo/publications/winners-and-losers-from-international-trade-what-do-we-know-and-what-are-the-implications-for-policy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Ricardian Theory of Comparative Advantage (International Trade Theory and Policy)",
+   "publisher": "Saylor Academy",
+   "date": "n.d.",
+   "link": "https://saylordotorg.github.io/text_international-trade-theory-and-policy/s05-the-ricardian-theory-of-compar.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class, the Concord's worlds met at their model UN. Today we ask what they want from each other: trade, shared things, and pressure."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Economics: Scarcity, Trade and Fair Shares"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One rule for today. The economics is real. The Concord, its worlds, goods and money are made up. We will say which is which."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: scarcity, opportunity cost, comparative advantage, shared resources, public goods, sanctions, aid | INVENTED: the Concord, its worlds, goods, currencies, distances"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the invented map. Four worlds, and distance is counted in lamp-days. To keep the sums simple, we will swap goods directly, not use money."
+   },
+   "show": {
+    "kind": "map",
+    "text": "INVENTED. Tamsin Deep (ocean world, grows grain; money: brine-marks). Kerrow Station (mining moon, digs metal; money: chits). Fenwick Reach (farm world, grows sweetroot). Orrin Spur (glassworks, makes lensglass). Tamsin to Kerrow: 3 lamp-days. Fenwick to Orrin: 5 lamp-days. Tamsin to Fenwick: 9 lamp-days. Between them lie the Glimmer Shoals, a fishing ground."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First idea: scarcity. It means people want more than there is. Even the richest person has only 24 hours in a day."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scarcity: wants are bigger than what is available"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture Kerrow Station: six loaves of bread, eight hungry people. Each wants one. That gap is scarcity."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "bread",
+    "count": 6,
+    "layout": "group",
+    "text": "6 loaves, 8 people who each want one"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Kerrow has 6 loaves and 8 people who each want one. Why is this scarcity?",
+    "right": "What people want (8 loaves) is more than what is available (6).",
+    "wrong": [
+     "Because the people on Kerrow are poor.",
+     "Because bread is a cheap thing to make.",
+     "Because six is a small number."
+    ],
+    "why": "Scarcity means wants are bigger than what is available. It is not about being poor or about how big a number is."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Because of scarcity, every choice gives something up. What you give up is the opportunity cost."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Opportunity cost: what you give up to get something"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meet Tamsin Deep, an invented world. In one season it can grow 24 crates of grain, or dig 12 crates of metal. Not both at full strength."
+   },
+   "show": {
+    "kind": "list",
+    "text": "TAMSIN DEEP (invented). One season, all workers: 24 crates of grain OR 12 crates of metal. So 1 crate of metal costs 2 crates of grain."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Tamsin can make 24 grain or 12 metal in a season. What does one crate of metal cost, in grain?",
+    "right": "2 crates of grain.",
+    "wrong": [
+     "12 crates of grain.",
+     "24 crates of grain.",
+     "Half a crate of grain."
+    ],
+    "why": "24 grain divided by 12 metal is 2 grain per metal. Those 2 grain are what Tamsin gives up, which is the opportunity cost."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now Kerrow Station, also invented. Its workers can make 8 crates of grain, or 16 crates of metal."
+   },
+   "show": {
+    "kind": "list",
+    "text": "KERROW STATION (invented). One season, all workers: 8 crates of grain OR 16 crates of metal. So 1 crate of metal costs half a crate of grain."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which world gives up less grain to make one crate of metal?",
+    "right": "Kerrow gives up half a crate. Tamsin gives up 2.",
+    "wrong": [
+     "Tamsin, because it has more workers.",
+     "They give up the same amount.",
+     "You cannot tell from the numbers."
+    ],
+    "why": "Kerrow's metal costs half a crate of grain. Tamsin's costs 2 crates, so metal is cheaper to make on Kerrow."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That gap has a name. A world has a comparative advantage in a good when making it costs less, measured in the other goods given up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Comparative advantage: the lower opportunity cost"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "One grain costs Tamsin half a metal. One grain costs Kerrow 2 metal. Who has the comparative advantage in grain?",
+    "right": "Tamsin, because its grain costs less in metal given up.",
+    "wrong": [
+     "Kerrow, because it has the cheaper metal.",
+     "Neither world.",
+     "Both worlds, equally."
+    ],
+    "why": "Comparative advantage goes to whoever gives up less. Tamsin gives up half a metal per grain, and Kerrow gives up 2."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a test. Before any trade, each world splits its workers half and half between grain and metal."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "TAMSIN, no trade: 12 grain + 6 metal | KERROW, no trade: 4 grain + 8 metal. Together: 16 grain + 14 metal. (All numbers invented.)"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now each world does only what it is relatively best at. Tamsin grows only grain. Kerrow digs only metal. Look at the totals."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Together, with and without specialising (invented numbers)"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "When each world does only its comparative-advantage job, what happens to the combined total?",
+    "right": "There is more of both goods: 24 grain and 16 metal, up from 16 and 14.",
+    "wrong": [
+     "There is less of both goods.",
+     "The totals stay exactly the same.",
+     "Grain goes up but metal goes down."
+    ],
+    "why": "Tamsin makes 24 grain and Kerrow makes 16 metal. That beats the 16 grain and 14 metal from before. Textbooks make this same point: specialising on comparative advantage raises total output."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The extra stuff only helps if it moves. So they swap: 7 grain from Tamsin for 7 metal from Kerrow, one for one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "TAMSIN after: 17 grain + 7 metal (before: 12 + 6) | KERROW after: 7 grain + 9 metal (before: 4 + 8). Both have more of both goods."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Tamsin pays 1 grain for each metal, but making its own metal costs it 2 grain. Why does Tamsin gain?",
+    "right": "It gets metal for less grain than it would give up making the metal itself.",
+    "wrong": [
+     "It gets free metal.",
+     "Kerrow is forced to sell cheaply.",
+     "Tamsin makes more grain than before without trading."
+    ],
+    "why": "Trading is a cheaper route to metal than making it. Tamsin gives up 1 grain, not 2. Kerrow gains the same way on grain."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A deal only works inside a range. Tamsin should pay less than 2 grain per metal, its own cost. Kerrow should want more than half a grain."
+   },
+   "show": {
+    "kind": "number_line",
+    "text": "Price of 1 metal, in grain: Kerrow's own cost is 0.5. Tamsin's own cost is 2. A deal helps both only between 0.5 and 2."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Would Tamsin agree to pay 3 grain for 1 metal?",
+    "right": "No. Making the metal itself costs only 2 grain.",
+    "wrong": [
+     "Yes, any price is good for Tamsin.",
+     "Yes, because trade always helps.",
+     "Only if Kerrow is far away."
+    ],
+    "why": "Tamsin would give up more in a trade than by making its own. A price outside the range helps one side and hurts the other."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if one world is better at everything? Real economists say trade can still help both sides, because the gain comes from comparative advantage."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Being best at everything does not end the gains from trade"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So far we counted worlds. But worlds are made of people. Real trade creates winners and losers inside each place."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Winners: consumers who get cheaper goods. Losers: workers in industries that cannot keep up with imports. Overall gains are real, but they are not shared evenly."
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Kerrow starts buying cheap grain from Tamsin. Who on Kerrow is most likely to lose?",
+    "right": "Kerrow's own grain growers, who now face cheap imports.",
+    "wrong": [
+     "Kerrow's bread buyers.",
+     "Tamsin's grain growers.",
+     "No one, because the total went up."
+    ],
+    "why": "Research on real trade finds that workers who compete with imports tend to lose, while consumers gain. A higher total does not mean everyone gains."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Every model leaves things out. The simple trade model uses two places, two goods, and one thing to make them with. Shipping is treated as free."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The simple model assumes: 2 countries, 2 goods, 1 input (labour), free shipping. The Concord has long trips of 3, 5 and 9 lamp-days, and trips cost time and cargo."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these did our simple trade example leave out?",
+    "right": "The cost and time of shipping goods between worlds.",
+    "wrong": [
+     "How much each world can make in a season.",
+     "What each world gives up to make each good.",
+     "How much each world had before trading."
+    ],
+    "why": "We counted output, opportunity costs and starting amounts. We treated shipping as free, which is the standard simplification in the textbook model."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "New topic: shared things. Some resources are open to everyone, and one person's use leaves less for others. Economists call these common resources."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Common resource: hard to keep people out (nonexcludable) AND what I take, you cannot (rivalrous)"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Glimmer Shoals is such a place. Three fleets fish it. Each fish one fleet takes is a fish the others cannot. Real fishing grounds behave this way."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "fish",
+    "count": 12,
+    "layout": "scattered",
+    "text": "12 shoal-fish left (invented). Three fleets, 4 fish each, and the shoal is gone."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why might each fleet take as many fish as it can?",
+    "right": "Each fleet keeps its whole catch, while running out of fish hurts everyone.",
+    "wrong": [
+     "Each fleet wants to destroy the shoal.",
+     "The fleets do not know fish exist.",
+     "Open water means nothing can run out."
+    ],
+    "why": "Because the water is open to all and every fish taken is gone for others, fishers tend to overharvest. This is the tragedy of the commons."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But it is not fate. Elinor Ostrom won a Nobel Prize in 2009. She found many shared resources that users manage well, with their own rules."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Ostrom separated resources held as common property from those open to anyone. Rules, not doom, made the difference."
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Ostrom's research find about shared resources?",
+    "right": "Many are managed well by the people who use them.",
+    "wrong": [
+     "They are always destroyed.",
+     "Only a distant government can protect them.",
+     "Only private owners can protect them."
+    ],
+    "why": "She found numerous commons well managed by their users. Users often found better solutions than ones imposed from outside."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A different thing: a public good. Here no one can be kept out, and one person's use does not leave less for others. That second part is called nonrival."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Public good: nonexcludable AND nonrival"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "The Lamplight beacons guide every ship, and no ship can be shut out. One ship's use never dims them. What are they?",
+    "right": "A public good: no one is kept out, and use does not use it up.",
+    "wrong": [
+     "A common resource, because everyone shares it.",
+     "A private good, because someone built it.",
+     "Neither, because they are in space."
+    ],
+    "why": "A common resource gets used up when others take some. A beacon does not, so it is nonrival as well as nonexcludable."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the catch. If the beacons are free to use, why pay? A free rider uses a public good that others paid for."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Free rider: lets others pay, then uses the good anyway"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is a free rider?",
+    "right": "Someone who uses a public good that others paid for, without paying.",
+    "wrong": [
+     "Someone who gets paid to run the public good.",
+     "Someone who pays twice as much as others.",
+     "Someone who is kept out of the public good."
+    ],
+    "why": "Free riders let others pay and then enjoy the good. If too many do it, the good may never get built. Real governments solve this with taxes, and the Concord could do it with treaty dues."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now pressure between worlds. A sanction cuts trade to raise the cost for a target. Imagine Tamsin refusing to buy Kerrow's metal until Kerrow changes a policy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sanction: cutting trade to lower a target's economic welfare"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What is a sanction meant to do?",
+    "right": "Cut trade to raise the target's costs, to push it to change.",
+    "wrong": [
+     "Give the target free goods.",
+     "Make the target richer.",
+     "Get both worlds to trade more."
+    ],
+    "why": "Sanctions aim to lower the target's economic welfare by reducing trade. The hope is that the pain will change its behaviour."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Do they work? Honestly, it is mixed. Studies reach different results, and judging success is hard. Sanctions can also spill onto bystanders, like university research."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Research on sanctions gives varied results. Success can be measured in biased ways. Side effects can reach ordinary people and schools."
+   },
+   "cite": [
+    "s11",
+    "s12",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the research say about whether sanctions work?",
+    "right": "Results are mixed, so there is no simple, firm answer.",
+    "wrong": [
+     "They always work.",
+     "They never work.",
+     "Nobody has studied it."
+    ],
+    "why": "Reviews find a diversity of results that do not allow firm conclusions. They also warn that how success is measured can bias the answer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The opposite tool is aid: giving help, such as grain, to another world. Incentives matter here. Aid can change what both giver and receiver choose to do."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Aid: no consensus that it boosts growth. Results depend on what it is used for and how well it is invested. One economist argued a flood of aid can weaken the receiver's exports."
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement best fits the research on foreign aid?",
+    "right": "It is debated, and results depend on how the aid is used.",
+    "wrong": [
+     "It always makes the receiver grow fast.",
+     "It never does any good anywhere.",
+     "Economists all agree it works."
+    ],
+    "why": "There is no consensus on whether aid affects growth. Another source says its effect depends on what it is used for, how efficiently, and the policy response."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn: make a trade deal. Two new invented worlds, Fenwick Reach and Orrin Spur. Check the numbers, then pick a price."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "FENWICK REACH: 30 sweetroot OR 10 lensglass | ORRIN SPUR: 10 sweetroot OR 10 lensglass. No trade, half and half: Fenwick 15 sweetroot + 5 lensglass; Orrin 5 sweetroot + 5 lensglass. (Invented.)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which world has the comparative advantage in lensglass?",
+    "right": "Orrin Spur. A lensglass costs it 1 sweetroot, but costs Fenwick 3.",
+    "wrong": [
+     "Fenwick Reach, because it makes more sweetroot.",
+     "Neither, since both make 10 lensglass.",
+     "Both, because they make the same amount."
+    ],
+    "why": "Both can make 10 lensglass, but Fenwick gives up 30 sweetroot for them and Orrin gives up only 10. Orrin's cost is lower, so Orrin has the advantage."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step one: each world does only its better job. Then work out the combined totals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fenwick makes only sweetroot: 30. Orrin makes only lensglass: 10. Before: 20 sweetroot + 10 lensglass together."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "If Fenwick makes only sweetroot and Orrin only lensglass, what are the combined totals?",
+    "right": "30 sweetroot and 10 lensglass.",
+    "wrong": [
+     "20 sweetroot and 10 lensglass.",
+     "40 sweetroot and 20 lensglass.",
+     "30 sweetroot and 20 lensglass."
+    ],
+    "why": "Fenwick's full output is 30 sweetroot and Orrin's full output is 10 lensglass. Together that is more sweetroot than the 20 before, with the same lensglass."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: set a price. Fenwick buys 5 lensglass from Orrin, which keeps both worlds' lensglass the same as before. The price in sweetroot decides who gets the extra sweetroot."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Extra sweetroot each world gains, at three prices (invented numbers)"
+   },
+   "cite": [],
+   "move": "bars-grow",
+   "ask": {
+    "q": "The price is 3 sweetroot per lensglass. Who gains?",
+    "right": "Only Orrin gains. Fenwick ends up no better off than before.",
+    "wrong": [
+     "Only Fenwick gains.",
+     "Both gain equally.",
+     "Neither world gains."
+    ],
+    "why": "Fenwick pays 15 sweetroot for 5 lensglass and ends with 15 sweetroot and 5 lensglass, exactly as before. Orrin gains 10 sweetroot. The price fixes the split, and a price of 2 shares it evenly."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three: look inside each world. Orrin's sweetroot growers and Fenwick's lensglass cutters stop their old jobs. Who are the losers, and what could help them?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Write your deal: 1. The price you chose. 2. The extra goods each world gains. 3. Who loses jobs in each world. 4. One thing that might help them."
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick recap. Scarcity forces choices. Opportunity cost is what you give up. Trade can help both sides, but not everyone inside them. Next time, we meet the aliens: what language is."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL: scarcity, opportunity cost, comparative advantage, commons, public goods, sanctions, aid. INVENTED: the Concord, its worlds, goods, money, lamp-days. Next: First Contact, Part 1."
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Combined output of Tamsin Deep and Kerrow Station (invented numbers)",
+   "rows": [
+    {
+     "label": "Grain, no trade",
+     "value": 16
+    },
+    {
+     "label": "Grain, both specialise",
+     "value": 24
+    },
+    {
+     "label": "Metal, no trade",
+     "value": 14
+    },
+    {
+     "label": "Metal, both specialise",
+     "value": 16
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Extra sweetroot gained from the Fenwick-Orrin deal, by price (invented numbers)",
+   "rows": [
+    {
+     "label": "Fenwick gain at price 1",
+     "value": 10
+    },
+    {
+     "label": "Orrin gain at price 1",
+     "value": 0
+    },
+    {
+     "label": "Fenwick gain at price 2",
+     "value": 5
+    },
+    {
+     "label": "Orrin gain at price 2",
+     "value": 5
+    },
+    {
+     "label": "Fenwick gain at price 3",
+     "value": 0
+    },
+    {
+     "label": "Orrin gain at price 3",
+     "value": 10
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Scarcity",
+   "links": [
+    "[[opportunity cost]]",
+    "[[tragedy of the commons]]"
+   ]
+  },
+  {
+   "topic": "Opportunity cost",
+   "links": [
+    "[[comparative advantage]]",
+    "[[scarcity]]"
+   ]
+  },
+  {
+   "topic": "Comparative advantage and gains from trade",
+   "links": [
+    "[[opportunity cost]]",
+    "[[winners and losers from trade]]",
+    "[[model assumptions]]"
+   ]
+  },
+  {
+   "topic": "Winners and losers from trade",
+   "links": [
+    "[[comparative advantage and gains from trade]]",
+    "[[sanctions, aid and incentives]]"
+   ]
+  },
+  {
+   "topic": "Common resources and the tragedy of the commons",
+   "links": [
+    "[[public goods]]",
+    "[[Ostrom]]"
+   ]
+  },
+  {
+   "topic": "Public goods and free riders",
+   "links": [
+    "[[common resources and the tragedy of the commons]]",
+    "[[Diplomacy: The Intergalactic Model UN]]"
+   ]
+  },
+  {
+   "topic": "Sanctions, aid and incentives",
+   "links": [
+    "[[winners and losers from trade]]",
+    "[[Diplomacy: The Intergalactic Model UN]]"
+   ]
+  },
+  {
+   "topic": "What a simple model leaves out",
+   "links": [
+    "[[comparative advantage and gains from trade]]",
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Trade makes both sides better off.",
+   "other_view": "Economists broadly agree trade raises totals. But research finds winners and losers inside countries. Workers in import-competing sectors tend to lose, while consumers gain. So a deal can be good overall and still hurt some people.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Shared resources are always overused until they are ruined (the tragedy of the commons).",
+   "other_view": "Ostrom found many commons that users manage well with their own rules. The danger is real where a resource is open to all with no rules. It is not a law of nature.",
+   "cite": [
+    "s8",
+    "s9",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Sanctions are a reliable way to change another world's behaviour.",
+   "other_view": "Reviews of the research find mixed results, and measuring success is itself contested. Sanctions can cut trade, but the costs can also fall on ordinary people and fields like research.",
+   "cite": [
+    "s11",
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Aid reliably helps poorer places grow.",
+   "other_view": "There is no consensus. Some studies find no robust effect on growth. Others say the result depends on how the aid is used and invested. Both camps agree that incentives matter.",
+   "cite": [
+    "s14",
+    "s15"
+   ]
+  }
+ ]
+}

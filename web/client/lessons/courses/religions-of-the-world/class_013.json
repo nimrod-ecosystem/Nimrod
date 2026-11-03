@@ -1,0 +1,1234 @@
+{
+ "about": {
+  "title": "Traditional Religions of Africa and the African Diaspora",
+  "course": "religions-of-the-world",
+  "class_n": 13,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The lesson has 36 short steps and 14 questions, so each idea gets its own explanation and check. The class covers African religions plus three diaspora traditions. A teacher can pause after the Osun-Osogbo festival and finish the diaspora part in a second sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "African religions",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/African-religions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "African religion and the spiritual realm",
+   "publisher": "Smarthistory",
+   "date": "n.d.",
+   "link": "https://smarthistory.org/religion-and-the-spiritual-realm/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Traditions of Africa",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/religion-and-philosophy/traditions-africa/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "African traditional religions",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/African_traditional_religions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Yoruba Religion: A Beginner's Guide To Ifá, Òrìṣà, And Yoruba Spirituality",
+   "publisher": "Ileifa (Yoruba religious organisation)",
+   "date": "n.d.",
+   "link": "https://ileifa.org/yoruba-religion-and-spirituality-beginners-journey/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Orisha",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Orisha",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Babalawo",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Babalawo",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Egungun Masquerade Costume",
+   "publisher": "Raclin Murphy Museum of Art, University of Notre Dame",
+   "date": "n.d.",
+   "link": "https://marble.nd.edu/item/aa1391f7-28b9-452c-ab76-fa3416797073",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Paka Egúngún (Egúngún Masquerade Dance Costume)",
+   "publisher": "Brooklyn Museum",
+   "date": "n.d.",
+   "link": "https://www.brooklynmuseum.org/objects/159425",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Masquerade costume",
+   "publisher": "National Museum of African Art, Smithsonian Institution",
+   "date": "n.d.",
+   "link": "https://www.si.edu/object/masquerade-costume:nmafa_2005-2-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Osun-Osogbo Sacred Grove",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "n.d.",
+   "link": "https://whc.unesco.org/en/list/1118/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Osun-Osogbo (Sacred Journeys with Bruce Feiler)",
+   "publisher": "PBS",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/wgbh/sacredjourneys/content/osun-osogbo/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Santeria",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Santeria",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Santería (Students)",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/Santer%C3%ADa/633720",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Santeria",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/philosophy-and-religion/other-religious-beliefs-and-general-terms/miscellaneous-religion/santeria",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Santería",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Santer%C3%ADa",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Candomblé",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/philosophy-and-religion/bible/early-christianity-biographies/candomble",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "2022 Report on International Religious Freedom: Brazil",
+   "publisher": "United States Department of State",
+   "date": "2022 report",
+   "link": "https://www.state.gov/reports/2022-report-on-international-religious-freedom/brazil",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Afro-Brazilian Religions: History of Candomblé and Umbanda",
+   "publisher": "Bahia.ws",
+   "date": "n.d.",
+   "link": "https://bahia.ws/en/historia-religioes-afro-brasileiras-bahia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "A Brief Overview of Umbanda and Candomblé",
+   "publisher": "University of Pittsburgh, Center for Latin American Studies",
+   "date": "n.d.",
+   "link": "https://www.ucis.pitt.edu/clas/sites/default/files/activity_sheet.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Candomblé, Afro-Brazilian Women, and African Religiosity in Brazil",
+   "publisher": "African American Intellectual History Society",
+   "date": "n.d.",
+   "link": "https://www.aaihs.org/candomble-afro-brazilian-women-and-african-religiosity-in-brazil/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "What is Vodou?",
+   "publisher": "University of Nevada, Reno (World Religions open textbook)",
+   "date": "n.d.",
+   "link": "https://unr.pressbooks.pub/worldreligions/chapter/what-is-vodou/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "lwa",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/lwa-Vodou",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Vodou is the heartbeat of Haiti, not a Hollywood punchline",
+   "publisher": "CBC Documentaries",
+   "date": "n.d.",
+   "link": "https://www.cbc.ca/documentaries/vodou-is-the-heartbeat-of-haiti-not-a-hollywood-punchline-9.7398070",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Haitian Vodou",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Haitian_Vodou",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "West African Vodun",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/religion-and-philosophy/west-african-vodun/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Fête du Vodoun",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/F%C3%AAte_du_Vodoun",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Vodun Days 2026",
+   "publisher": "Bénin Tourisme",
+   "date": "n.d.",
+   "link": "https://benin.bj/en/news/vodun-days-2026",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Religion in Benin (summarising a Pew Research Center estimate for 2020)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Religion_in_Benin",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Crescimento de umbanda e candomblé reflete combate à intolerância (reporting the 2022 IBGE census)",
+   "publisher": "Agência Brasil",
+   "date": "2025-06-06",
+   "link": "https://agenciabrasil.ebc.com.br/geral/noticia/2025-06/crescimento-de-umbanda-e-candomble-reflete-combate-intolerancia",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Candomblé",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Candombl%C3%A9",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Demographics of Benin",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Demographics_of_Benin",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 13. Last time we visited Shinto and the traditions of Japan, Korea and Vietnam. Today we go to Africa, then across the Atlantic to the Americas."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Traditional Religions of Africa and the African Diaspora"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First idea: Africa is not one religion. It is a huge continent with a wide array of beliefs and practices."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many traditions, not one"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are three examples. The Yoruba of West Africa. The Zulu of South Africa, whose tradition includes a creator and honouring ancestors. And the Baga of Guinea, who speak of water spirits."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Yoruba (West Africa) | Zulu (South Africa) | Baga (Guinea)"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do we say African religions, in the plural?",
+    "right": "Different peoples have their own beliefs and practices, so there are many traditions.",
+    "wrong": [
+     "Every African country has exactly one religion.",
+     "They are all one religion with different names.",
+     "African peoples have no religious beliefs of their own."
+    ],
+    "why": "Most traditional religions in Africa grew up locally and belong to a particular society."
+   },
+   "ask_cite": [
+    "s2"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most of these traditions do not point to one founder. Their beginnings are told in stories of deities creating the world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Creation stories, not one founder"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even so, writers notice shared themes. Theme one: a creator. Many traditions speak of one creator God who made the world and then became remote."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Theme 1: A creator"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For example, the Yoruba name their creator Olodumare. Yoruba religion teaches that Olodumare works through many spirits called orisha."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Olodumare"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In many African traditions, how do people usually approach the creator?",
+    "right": "Mostly through lesser spirits and ancestors who act as go-betweens.",
+    "wrong": [
+     "Through many statues and paintings of the creator.",
+     "These traditions have no idea of a creator.",
+     "Only by travelling to one holy city."
+    ],
+    "why": "The creator is rarely shown in art or approached directly. People petition through intermediaries such as lesser spirits."
+   },
+   "ask_cite": [
+    "s2"
+   ]
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Theme two: spirits. Some spirits are linked to nature and its powers. In Guinea, the Baga describe water spirits, tied to wealth and danger, that take the form of snakes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Theme 2: Spirits"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Yoruba call their spirits orisha. Yoruba tradition often says there are 400 plus 1, though oral traditions give other counts too."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "400 + 1 orishas (one traditional count)"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is an orisha?",
+    "right": "A divine spirit tied to nature or to human life, who stands between people and the creator.",
+    "wrong": [
+     "A priest who leads ceremonies.",
+     "A sacred book of the Yoruba.",
+     "A festival held each August."
+    ],
+    "why": "Yoruba religion describes the orisha as divine personalities tied to nature, ancestry and human roles. They mediate between people and the creator."
+   },
+   "ask_cite": [
+    "s5",
+    "s1"
+   ]
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Theme three: ancestors. Many traditions honour family members who have died. They are seen as guides who can speak up for the living."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Theme 3: Ancestors"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. Among the Yoruba, egungun is a masquerade danced to honour the ancestral dead. The name means power concealed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dancer fully covered in layers of cloth strips, spinning so the cloth swirls outward"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The costume hides the whole body. Drummers and singers join in. People who feel the breeze from the spinning cloth receive a blessing from the ancestors."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Costume covers the body | Drummers and singers | Breeze = ancestral blessing"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does the word egungun mean?",
+    "right": "Power concealed.",
+    "wrong": [
+     "River of wisdom.",
+     "Way of the saints.",
+     "Festival of the sea."
+    ],
+    "why": "The costume hides the dancer, and the ancestors' power is understood to be present in the masquerade."
+   },
+   "ask_cite": [
+    "s8",
+    "s10"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Egungun shows our next theme: ritual, music and dance. Masked performances are used to speak with spirits, honour ancestors, heal sickness and uphold community standards."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Theme 4: Ritual, music and dance"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another practice is divination, which means seeking guidance from the spirits. Among the Yoruba, a well-known system is Ifá, linked to Orunmila, the orisha of wisdom."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Divination: Ifá"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Trained priests called babalawo keep Ifá's knowledge. They perform its ceremonies. People use it for guidance on decisions and to understand their destiny."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Babalawo: keepers of Ifá | Guidance for decisions | Understanding destiny"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ifá is a central part of Yoruba religion, but not all of it. There are also many orisha traditions, ancestor customs, festivals and priesthoods."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Ifá: divination and its priesthood | Yoruba religion: Ifá plus orisha traditions, ancestors, festivals"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is Ifá the same as the whole Yoruba religion?",
+    "right": "No. It is one central part: a divination tradition and its priesthood.",
+    "wrong": [
+     "Yes, they are exactly the same thing.",
+     "No, Ifá is a festival held once a year.",
+     "Yes, Ifá is the name of the creator."
+    ],
+    "why": "Ifá is the divination body of verses plus the priesthood that interprets it. The Yoruba religion is broader."
+   },
+   "ask_cite": [
+    "s5"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a festival. In Nigeria, the Osun Sacred Grove near Osogbo is a UNESCO World Heritage Site. The river through it is the home of the river goddess Osun."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dense green forest with a river winding through it, dotted with shrines and sculptures"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Each year a festival renews the bond between the goddess and the town's people. UNESCO says it runs twelve days in July and August. A royal young woman called the arugba leads the procession."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Drumming and dancing | Procession to the grove | The arugba leads | Renewing the bond with Osun"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the Osun-Osogbo festival mainly about?",
+    "right": "Renewing the bond between the goddess Osun and the people of the town.",
+    "wrong": [
+     "Choosing a new national government.",
+     "Marking the end of the school year.",
+     "Celebrating the harvest of a single crop."
+    ],
+    "why": "UNESCO describes the festival as re-establishing the mystic bonds between the goddess and the people. PBS describes it as a renewed promise between the community and the divine."
+   },
+   "ask_cite": [
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we cross the Atlantic. Yoruba and other African peoples were enslaved and taken to the Americas. A diaspora is a people spread far from their homeland."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Diaspora"
+   },
+   "cite": [
+    "s14",
+    "s25"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Out of that history grew new religions. Santería in Cuba. Candomblé in Brazil. Vodou in Haiti. Each took shape in the Americas, so each is its own tradition."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cuba: Santería | Brazil: Candomblé | Haiti: Vodou"
+   },
+   "cite": [
+    "s13",
+    "s17",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A word you will need: syncretism, meaning a blending of traditions. In these religions, African spirits came to be linked with Catholic saints."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Syncretism"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Santería developed in Cuba among enslaved Yoruba people, who were called Lucumí there. The name means the way of the saints."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Santería = way of the saints"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is it called the way of the saints?",
+    "right": "Because devotees linked the Yoruba orishas with the saints of Roman Catholicism.",
+    "wrong": [
+     "Because it was founded by a saint in Cuba.",
+     "Because it honours only people who have died.",
+     "Because it is written in a book of saints' lives."
+    ],
+    "why": "The name comes from the links some devotees made between orishas and Catholic saints."
+   },
+   "ask_cite": [
+    "s13"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Santería teaches a creator, Olodumare, with spirits called oricha beneath. People build relationships with the orishas through divination, sacrifice, initiation and mediumship."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Creator: Olodumare | Spirits: oricha | Divination, sacrifice, initiation, mediumship"
+   },
+   "cite": [
+    "s16",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People explain the saints in different ways. Some say they were a public face for the orishas. Many santeros also see themselves as Catholic. Practitioners decide for themselves."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A public face for the orishas | Catholic and orisha devotion together"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now Brazil. Candomblé grew in the northeast, around Salvador in Bahia, in the late 1700s and 1800s. Enslaved Africans and their descendants created it. It draws on Yoruba, Jeje and Bantu roots."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Brazil with Salvador, in the state of Bahia on the northeast coast, marked"
+   },
+   "cite": [
+    "s17",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its spirits are called orixás. Worship happens in a terreiro. In ceremonies, priests use divination and possession to communicate with the orixás."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Terreiro"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a terreiro?",
+    "right": "A place of worship for Candomblé and related Afro-Brazilian religions.",
+    "wrong": [
+     "A sacred drum.",
+     "A priest's title.",
+     "A spirit of the sea."
+    ],
+    "why": "The US State Department report describes terreiros as places of worship for Afro-Brazilian religious groups."
+   },
+   "ask_cite": [
+    "s18"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Orixás have their own areas of life. Yemanjá is goddess of the sea. Oxum is of fresh water. Yansã is of wind and storms. Oxóssi is of the forest."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Yemanjá: sea | Oxum: fresh water | Yansã: wind and storms | Oxóssi: forest"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Community matters in Candomblé. Each terreiro holds yearly celebrations for its patron orixás, and elders are respected. In Bahia, many gather on February 2 to honour Yemanjá."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "February 2: Festa de Yemanjá"
+   },
+   "cite": [
+    "s17",
+    "s20"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which orixá is honoured at the big Bahia celebration on February 2?",
+    "right": "Yemanjá, goddess of the sea.",
+    "wrong": [
+     "Oxóssi, spirit of the forest.",
+     "Yansã, spirit of wind and storms.",
+     "Oxum, spirit of fresh water."
+    ],
+    "why": "The February 2 festival in Bahia honours Yemanjá. Offerings are made on the beach."
+   },
+   "ask_cite": [
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now Haiti. Vodou developed among Afro-Haitian communities during the Atlantic slave trade. Haitians say Vodou, not voodoo."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vodou"
+   },
+   "cite": [
+    "s25",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Vodou teaches a good creator, Bondye, who is distant from daily life. People serve spirits called lwa, created by Bondye to help the living. Some say there are more than a thousand lwa."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Bondye: the distant creator | Lwa: spirits who help the living"
+   },
+   "cite": [
+    "s22",
+    "s23",
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What are lwa?",
+    "right": "Spirits created by Bondye to help the living.",
+    "wrong": [
+     "The priests and priestesses.",
+     "The temple building.",
+     "A written holy book."
+    ],
+    "why": "Britannica describes lwa as the primary spirits of Vodou, created by Bondye to help the living."
+   },
+   "ask_cite": [
+    "s23"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ceremonies are held in a temple called an ounfò. Priests and priestesses are called oungan and manbo. Songs, dances, prayers, drumming and offerings invite the lwa to join the living."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ounfò: temple | Oungan and manbo: priest and priestess | Songs, dances, drumming"
+   },
+   "cite": [
+    "s23",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many Vodouists took part in the Haitian Revolution of 1791 to 1801, which ended slavery. Most Haitians practise both Vodou and Catholicism. Vodou is often misunderstood outside Haiti."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1791–1801: Haitian Revolution | Later: Vodou becomes Haiti's dominant religion"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement fits Vodou and Catholicism in Haiti?",
+    "right": "Many Haitians practise both and see no contradiction.",
+    "wrong": [
+     "People must give up one before taking up the other.",
+     "Vodou is a branch of the Catholic Church.",
+     "The two have never had any connection."
+    ],
+    "why": "Most Haitians practise both Vodou and Catholicism and do not see a contradiction between them."
+   },
+   "ask_cite": [
+    "s25"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back in West Africa, Vodun is practised mainly in Benin and Togo, with followers also in parts of Ghana and Nigeria. It has been described as a way of life. Haitian Vodou formed in Haiti, rooted in West African practices."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of West Africa with Benin, Togo, Ghana and Nigeria marked"
+   },
+   "cite": [
+    "s26",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Benin, January 10 is a public holiday for Vodoun, and Vodoun was declared a religion there in 1996. Ouidah hosts the biggest celebrations. In 2026, Vodun Days was planned for January 8 to 10."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "January 10: Vodoun holiday in Benin"
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "On what date is Benin's national Vodoun holiday?",
+    "right": "January 10.",
+    "wrong": [
+     "February 2.",
+     "August 12.",
+     "December 25."
+    ],
+    "why": "Fête du Vodoun is held every January 10, with the biggest celebrations in the city of Ouidah."
+   },
+   "ask_cite": [
+    "s27"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where are these traditions practised today? Yoruba religion in Nigeria, Benin and Togo, and Ifá among Yoruba communities worldwide. Santería in Cuba and beyond. Candomblé mainly in Brazil. Vodou in Haiti and Haitian communities abroad."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Atlantic: West Africa (Yoruba religion, Vodun), Cuba (Santería), Brazil (Candomblé), Haiti (Vodou)"
+   },
+   "cite": [
+    "s5",
+    "s7",
+    "s13",
+    "s31",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Brazil's 2022 census counted about 1.85 million people who named Umbanda or Candomblé. That is about 1%, roughly triple the count ten years earlier. Umbanda is a separate religion from the 1920s."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of Brazilians naming Umbanda or Candomblé",
+    "chart": "c1"
+   },
+   "cite": [
+    "s30",
+    "s31"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What does the chart show?",
+    "right": "The share of Brazilians naming Umbanda or Candomblé rose from about 0.3% to about 1%.",
+    "wrong": [
+     "The share fell by half.",
+     "The share stayed exactly the same.",
+     "Almost all Brazilians now name these religions."
+    ],
+    "why": "The 2022 census reported the number of followers more than tripled in ten years, reaching 1% of the population."
+   },
+   "ask_cite": [
+    "s30"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One caution on counts. Some groups think followers of Afro-Brazilian religions are significantly underreported, given how many terreiros there are."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Counts can miss people"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Benin. A Pew estimate for 2020 put Christians at 53%, Muslims at 31%, other religions including traditional faiths at 11%, and no religion at 5%."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Religion in Benin, 2020 estimate",
+    "chart": "c2"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why might this chart miss part of the picture in Benin?",
+    "right": "Many people combine traditional practice with Christianity or Islam.",
+    "wrong": [
+     "Nobody in Benin practises a traditional religion.",
+     "Pie charts cannot show percentages.",
+     "Benin has only one religion."
+    ],
+    "why": "It is not unusual for members of one family in Benin to practise Christianity, Islam, a traditional religion, or a mix of them."
+   },
+   "ask_cite": [
+    "s29"
+   ]
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us bring it together. Shared themes: a creator, spirits, ancestors, and ritual, music and dance. These are patterns, not rules for every tradition."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A creator | Spirits | Ancestors | Ritual, music, dance"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check. Match each tradition with the place where it developed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Santería | Candomblé | Vodou"
+   },
+   "cite": [
+    "s13",
+    "s17",
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which match is correct?",
+    "right": "Santería in Cuba, Candomblé in Brazil, Vodou in Haiti.",
+    "wrong": [
+     "Santería in Brazil, Candomblé in Haiti, Vodou in Cuba.",
+     "Santería in Haiti, Candomblé in Cuba, Vodou in Brazil.",
+     "All three developed only in Nigeria."
+    ],
+    "why": "Santería developed in Cuba, Candomblé in northeastern Brazil, and Vodou in Haiti. Each blends African roots with its new setting."
+   },
+   "ask_cite": [
+    "s13",
+    "s17",
+    "s25"
+   ]
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of Brazilians naming Umbanda or Candomblé as their religion (%)",
+   "rows": [
+    {
+     "label": "Previous census (about ten years earlier)",
+     "value": 0.3,
+     "source": "s30"
+    },
+    {
+     "label": "2022 census",
+     "value": 1,
+     "source": "s30"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "pie",
+   "title": "Religion in Benin, 2020 estimate (%)",
+   "rows": [
+    {
+     "label": "Christian",
+     "value": 53,
+     "source": "s29"
+    },
+    {
+     "label": "Muslim",
+     "value": 31,
+     "source": "s29"
+    },
+    {
+     "label": "Other religions, including traditional faiths",
+     "value": 11,
+     "source": "s29"
+    },
+    {
+     "label": "No religion",
+     "value": 5,
+     "source": "s29"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "African traditional religions",
+   "links": [
+    "[[Yoruba religion]]",
+    "[[Ancestor veneration]]",
+    "[[Egungun]]"
+   ]
+  },
+  {
+   "topic": "Yoruba religion",
+   "links": [
+    "[[Orisha]]",
+    "[[Ifá divination]]",
+    "[[Osun-Osogbo festival]]"
+   ]
+  },
+  {
+   "topic": "Orisha",
+   "links": [
+    "[[Santería]]",
+    "[[Candomblé]]",
+    "[[Yoruba religion]]"
+   ]
+  },
+  {
+   "topic": "Santería",
+   "links": [
+    "[[Syncretism]]",
+    "[[Orisha]]",
+    "[[Ifá divination]]"
+   ]
+  },
+  {
+   "topic": "Candomblé",
+   "links": [
+    "[[Orisha]]",
+    "[[Terreiro]]",
+    "[[Umbanda]]"
+   ]
+  },
+  {
+   "topic": "Haitian Vodou",
+   "links": [
+    "[[Lwa]]",
+    "[[West African Vodun]]",
+    "[[Syncretism]]"
+   ]
+  },
+  {
+   "topic": "West African Vodun",
+   "links": [
+    "[[Haitian Vodou]]",
+    "[[Egungun]]"
+   ]
+  },
+  {
+   "topic": "Syncretism",
+   "links": [
+    "[[Santería]]",
+    "[[Candomblé]]",
+    "[[Haitian Vodou]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1500s",
+   "elsewhere": "Spain began colonizing Cuba, and the Atlantic slave trade that shaped Haitian Vodou was under way (it ran from the 16th to the 19th century).",
+   "cite": [
+    "s14",
+    "s25"
+   ]
+  },
+  {
+   "when": "Late 1700s",
+   "elsewhere": "In Haiti, the revolution of 1791 to 1801 overthrew French colonial rule and abolished slavery. In northeastern Brazil, Candomblé was taking shape around the same time.",
+   "cite": [
+    "s25",
+    "s17"
+   ]
+  },
+  {
+   "when": "1920s",
+   "elsewhere": "Umbanda emerged in Rio de Janeiro, while Candomblé spread out from Bahia with people moving across Brazil.",
+   "cite": [
+    "s31"
+   ]
+  },
+  {
+   "when": "After 1959",
+   "elsewhere": "Many Cubans left their country, and the orisha tradition spread to other communities in the United States.",
+   "cite": [
+    "s14"
+   ]
+  },
+  {
+   "when": "1996",
+   "elsewhere": "Benin officially declared Vodoun a religion, with a January 10 public holiday.",
+   "cite": [
+    "s27"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Many African religions believe in one creator God who withdrew from the world.",
+   "other_view": "Britannica reports this as a common feature while stressing that traditions vary across the continent. Another account calls these religions traditionally polytheistic and says single-creator ideas from Abrahamic religions arrived early. Sources differ on whether to call these traditions monotheistic or polytheistic, and on where the creator idea came from.",
+   "cite": [
+    "s1",
+    "s4"
+   ]
+  },
+  {
+   "claim": "In Santería, Catholic saints were a mask that hid the orishas.",
+   "other_view": "Some accounts describe the saints as a public face. One encyclopedia notes that present-day practitioners argue the tradition is purely African. Other writers point out that many santeros also see themselves as Catholic, and some practitioners since the late 20th century have tried to remove Catholic influences.",
+   "cite": [
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "claim": "The number of Vodun followers in Benin is well known.",
+   "other_view": "Estimates vary widely. EBSCO says roughly 40 percent of Benin's population adheres to Vodun. A Pew estimate summarised for 2020 puts other religions, including traditional faiths, at 11 percent. Many people also combine traditional practice with Christianity or Islam, so counts depend on how the question is asked.",
+   "cite": [
+    "s26",
+    "s29"
+   ]
+  },
+  {
+   "claim": "Census numbers show how many people follow Candomblé and Umbanda in Brazil.",
+   "other_view": "The 2022 census reports about 1% of Brazilians. Some non-governmental organizations believe followers of Afro-Brazilian religions are significantly underreported, given how many terreiros exist.",
+   "cite": [
+    "s30",
+    "s18"
+   ]
+  }
+ ]
+}

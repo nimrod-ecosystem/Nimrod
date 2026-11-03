@@ -1,0 +1,1001 @@
+{
+ "about": {
+  "title": "Challenges evolution answered: gaps, 'missing links' and irreducible complexity",
+  "course": "what-if",
+  "class_n": 7,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. The class covers four ideas: the evidence, 'missing links', irreducible complexity and a thought experiment. It ends with why people find these objections convincing. It has about 38 short beats and 10 quick checks. You can pause between beats. If you need a shorter session, stop after the eye-model check and finish the last part next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "What has the head of a crocodile and the gills of a fish? (Tiktaalik news brief)",
+   "publisher": "Understanding Evolution, University of California Museum of Paleontology",
+   "date": "2006-05",
+   "link": "https://evolution.berkeley.edu/evo-news/what-has-the-head-of-a-crocodile-and-the-gills-of-a-fish/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Transitional Fossils Are Not Rare",
+   "publisher": "National Center for Science Education",
+   "date": "n.d.",
+   "link": "https://ncse.ngo/transitional-fossils-are-not-rare",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Transitional Tetrapod Fossil (from NOVA: Judgment Day)",
+   "publisher": "PBS / WGBH Evolution",
+   "date": "2007",
+   "link": "https://www.pbs.org/wgbh/evolution/library/03/4/l_034_49.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "11.3 Evidence of Evolution, Concepts of Biology",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/concepts-biology/pages/11-3-evidence-of-evolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "18.1 Understanding Evolution, Biology 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/biology-2e/pages/18-1-understanding-evolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Evidence of Evolution (BIOL 102 open textbook chapter)",
+   "publisher": "California State University Pressbooks",
+   "date": "n.d.",
+   "link": "https://pressbooks.calstate.edu/biol102/chapter/wk4-evidence-of-evolution/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Fine-tuning citrate synthase flux potentiates and refines metabolic innovation in the Lenski evolution experiment",
+   "publisher": "eLife",
+   "date": "2016",
+   "link": "https://elifesciences.org/articles/09696",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Innovation in an E. coli evolution experiment is contingent on maintaining adaptive potential until competition subsides",
+   "publisher": "PLOS Genetics",
+   "date": "2018",
+   "link": "https://journals.plos.org/plosgenetics/article?id=10.1371%2Fjournal.pgen.1007348",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Richard Lenski, E. coli, and the Long-Term Evolution Experiment (LTEE)",
+   "publisher": "Answers in Genesis",
+   "date": "n.d.",
+   "link": "https://answersingenesis.org/genetics/mutations/richard-lenski-e-coli-ltee/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The completeness of the fossil record (Michael Benton)",
+   "publisher": "Significance, Royal Statistical Society / Wiley",
+   "date": "2009",
+   "link": "https://rss.onlinelibrary.wiley.com/doi/full/10.1111/j.1740-9713.2009.00374.x",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Darwin's fear was unjustified: Study suggests fossil record gaps not a major issue",
+   "publisher": "Phys.org (reporting a Utrecht University study)",
+   "date": "2024-08",
+   "link": "https://phys.org/news/2024-08-darwin-unjustified-fossil-gaps-major.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Tiktaalik: Bridging the Gap Between Water and Land",
+   "publisher": "BioLogos",
+   "date": "n.d.",
+   "link": "https://biologos.org/articles/tiktaalik-bridging-the-gap-between-water-and-land",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Kitzmiller v. Dover Area School District, 400 F. Supp. 2d 707 (M.D. Pa. 2005)",
+   "publisher": "Justia (U.S. District Court opinion)",
+   "date": "2005",
+   "link": "https://law.justia.com/cases/federal/district-courts/FSupp2/400/707/2414073/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Excerpt from the Decision of Judge John E. Jones III in Kitzmiller v Dover",
+   "publisher": "SAGE Journals",
+   "date": "2013",
+   "link": "https://journals.sagepub.com/doi/10.1089/dst.2013.1501?icid=int.sj-abstract.similar-articles.1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Flagellum Unspun (Kenneth R. Miller)",
+   "publisher": "millerandlevine.com",
+   "date": "n.d.",
+   "link": "http://www.millerandlevine.com/km/evol/design2/article.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "FliO is an evolutionarily conserved yet diversified core component of the bacterial flagellar type III secretion system",
+   "publisher": "PNAS, via PubMed Central",
+   "date": "2025",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12403147/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Non-Flagellar Type III Secretion System Evolved from the Bacterial Flagellum and Diversified into Host-Cell Adapted Systems",
+   "publisher": "PLOS Genetics, via PubMed Central",
+   "date": "2012",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3459982/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "FliO is an evolutionarily conserved yet diversified core component of the bacterial flagellar type III secretion system (preprint)",
+   "publisher": "bioRxiv",
+   "date": "2025",
+   "link": "https://www.biorxiv.org/content/10.1101/2025.05.06.652439.full.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Responding to Criticisms of Irreducible Complexity of the Bacterial Flagellum from the Australian Broadcasting Network",
+   "publisher": "Discovery Institute",
+   "date": "n.d.",
+   "link": "https://www.discovery.org/a/24481/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Exaptation",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Exaptation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Nilsson-Pelger model of eye evolution",
+   "publisher": "Oxford Reference",
+   "date": "n.d.",
+   "link": "https://www.oxfordreference.com/display/10.1093/oi/authority.20110803100234897",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "A pessimistic estimate of the time required for an eye to evolve (Nilsson and Pelger, 1994)",
+   "publisher": "Lund University research portal",
+   "date": "1994",
+   "link": "https://portal.research.lu.se/en/publications/a-pessimistic-estimate-of-the-time-required-for-an-eye-to-evolve/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Science, Evolution, and Creationism",
+   "publisher": "National Academies Press",
+   "date": "2008",
+   "link": "https://www.nationalacademies.org/publications/11876",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Evolution Resources (Science and Religion)",
+   "publisher": "National Academies",
+   "date": "n.d.",
+   "link": "https://www.nationalacademies.org/evolution-resources",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Scientific Evidence Supporting Evolution Continues To Grow; Nonscientific Approaches Do Not Belong In Science Classrooms",
+   "publisher": "National Academy of Sciences / Institute of Medicine",
+   "date": "2008",
+   "link": "https://www.nationalacademies.org/news/scientific-evidence-supporting-evolution-continues-to-grow-nonscientific-approaches-do-not-belong-in-science-classrooms",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Majority Still Credits God for Humankind, but Not Creationism",
+   "publisher": "Gallup",
+   "date": "2024-07-22",
+   "link": "https://news.gallup.com/poll/647594/majority-credits-god-humankind-not-creationism.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Michael Behe",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Michael_Behe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Kitzmiller v. Dover: Decision of the Court, Part 2",
+   "publisher": "TalkOrigins Archive (copy of the court decision)",
+   "date": "2005",
+   "link": "https://talkorigins.org/faqs/dover/kitzmiller_v_dover_decision2.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Where this idea stands: popular speculation. Many people hold today's two objections sincerely. Scientific bodies don't accept them as science. That is a statement about the claims, not a judgment of the people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Popular speculation"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the accepted view, plainly. Living things share common ancestors and changed over a very long time. The National Academies call the evidence overwhelming. OpenStax calls it compelling and extensive."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The accepted view"
+   },
+   "cite": [
+    "s25",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Details are still being researched, like how particular features evolved. But scientists don't debate whether evolution happened. Keep that split in mind today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Details debated. Big picture settled."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our plan: first the evidence. Then the 'missing links' objection. Then the 'too complex to build' objection. Then a thought experiment, and why these objections feel convincing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The evidence | 2. 'Missing links' | 3. Irreducible complexity | 4. A thought experiment | 5. Why it feels convincing"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Evidence one: fossils. Horses have an especially rich record, running back about 55 million years. Many of those fossils show in-between anatomy."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of skeleton drawings: an early horse relative on the left, a modern horse on the right, and in-between forms between them."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Evidence two: bodies and DNA. A human arm, dog leg, bird wing and whale flipper all share the same bones. And the DNA code is shared across all life."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same bones: human, dog, bird, whale | Same DNA code across all life"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Evidence three: the lab. Since 1988, scientists have kept twelve separate populations of E. coli bacteria growing, generation after generation."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 12,
+    "layout": "group",
+    "text": "Twelve separate bacteria populations"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "About fifteen years in, one population evolved a new food skill. It could use citrate, which the others couldn't. It took a chain of several mutations."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15 years"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And it was rare. Thirty years in, only that one population had done it. Chance and history matter in evolution."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1 of 12"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did the citrate result show?",
+    "right": "In a lab, a new ability can arise through a series of small mutations, and scientists can study each step.",
+    "wrong": [
+     "That all twelve populations changed in exactly the same way.",
+     "That bacteria turned into animals.",
+     "That fossils are no longer needed as evidence."
+    ],
+    "why": "Only one of twelve populations gained the skill, and it took several mutations in sequence. The researchers could study those steps directly."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair point from the other side: the mutation put an existing gene to new use. Both sides agree on that. They differ on whether that counts as 'new'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Researchers: existing parts co-opted for a new role | Critics: not truly new, since the gene already existed"
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the first objection: 'Where are the missing links?' Scientists prefer the phrase 'transitional fossil'. It means a species in between two others."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Transitional fossil"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In-between doesn't mean half an animal. It means a mix of features from an earlier group and a later group. It also isn't always the exact parent of anything living."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Earlier group's features | Later group's features | A transitional fossil shows both"
+   },
+   "cite": [
+    "s4",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which best describes a transitional fossil?",
+    "right": "A fossil with a mix of features from an earlier group and a later group.",
+    "wrong": [
+     "A fossil of one animal caught changing into another during its life.",
+     "A fossil that must be the exact parent of a living animal.",
+     "A fossil of an animal with half a body."
+    ],
+    "why": "Transitional fossils show intermediate anatomy between earlier and later forms. They are often close relatives of an ancestor, not necessarily the ancestor itself."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One example is Tiktaalik, about 375 million years old. It had a flexible neck and still had gills. Its fins held limb-like bones, like the bones in our own limbs."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat-headed, fish-like animal with sturdy fins, shown beside a drawing of an arm bone pattern."
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists already had an idea of what such a fossil would look like. Tiktaalik looked like the one they'd been searching for. Other evidence had already pointed to a fish ancestor for land animals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Other evidence pointed to a fish ancestor | Scientists predicted what a link would look like | Tiktaalik matched the picture"
+   },
+   "cite": [
+    "s12",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why is Tiktaalik called a transitional fossil?",
+    "right": "It combines fish features, like gills, with features like a flexible neck and limb-like fin bones.",
+    "wrong": [
+     "It is a living fish that can walk on land.",
+     "It shows that land animals appeared a week after fish.",
+     "It is the only transitional fossil ever found."
+    ],
+    "why": "Its mix of fish-like and limb-like features is what makes it transitional. It is also one of many such fossils."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tiktaalik isn't alone. Fossils showing the gradual origins of whales, horses, birds, early four-legged animals and more are well known. Thousands of complete feathered fossil birds have turned up since 1980."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Whales | Horses | Birds | Early four-legged animals | Early mammals"
+   },
+   "cite": [
+    "s2",
+    "s4",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The gaps are real, though. Fossilising is rare, and Earth's crust is recycled, which destroys some fossils. Still, enough survive to illustrate many major transitions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gaps are real"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's a curious thing. Each new fossil that slots between two known ones splits one gap into two smaller gaps. So gaps never fully vanish, even as knowledge grows."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: one big gap | After one new fossil: two smaller gaps"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A new fossil is found between two known fossils. What happens to the number of gaps?",
+    "right": "One gap becomes two smaller gaps.",
+    "wrong": [
+     "The gap is gone for good.",
+     "Nothing changes.",
+     "The gaps get larger."
+    ],
+    "why": "The new fossil sits in the middle, so there is now a gap on each side of it. Each gap is smaller than the original."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 2024 study found that how regular the gaps are matters more than how many there are. And not understanding something today is not proof it can't be understood tomorrow."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Regular gaps are manageable"
+   },
+   "cite": [
+    "s11",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second objection: irreducible complexity. The idea is a system whose parts all work together, so that removing any one makes it stop working. It was argued in a 1996 book by Michael Behe. The argument says such a system couldn't be built step by step."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Irreducible complexity"
+   },
+   "cite": [
+    "s15",
+    "s14",
+    "s27"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The best-known example is the bacterial flagellum, a tiny motor-like tail that helps bacteria move. About fifty proteins help build and run it. Behe also pointed to blood clotting and the immune system."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 50 proteins"
+   },
+   "cite": [
+    "s16",
+    "s15",
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "According to the irreducible complexity argument, what happens if you remove one part?",
+    "right": "The whole system stops working.",
+    "wrong": [
+     "The system works better.",
+     "The system builds a new part.",
+     "Nothing happens, because every part does the same job."
+    ],
+    "why": "That is the definition: the parts are so well-matched that taking one away stops the function."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists' first reply: parts can have other jobs. Some flagellum proteins resemble a different bacterial system that injects proteins. So a smaller set of parts can work on its own."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Whole flagellum: helps the cell move | Subset of related parts: injects proteins in other bacteria"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An honest update: newer research suggests the injection system came from the flagellum, not before it. The simple story was refined. The lesson stayed: one complex machine can become another by reusing parts."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Science refines its own stories"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second reply: parts can change jobs. Feathers first helped with heat and display, and later were used for flight. Biologists call this exaptation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Exaptation: a part gains a new job"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third reply: at the Dover trial, experts testified that the argument ignores known ways evolution works, like parts changing jobs. Behe also accepted that his definition focuses on removing parts, not on how selection would build a system."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ignores parts changing jobs | Focuses on removal, not building"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the 'exaptation' reply to irreducible complexity?",
+    "right": "Parts can start with one job and later be reused for another, so a system's parts may have had earlier uses.",
+    "wrong": [
+     "All parts of a system appear at the same moment.",
+     "Evolution plans parts ahead for future use.",
+     "Parts never change what they do."
+    ],
+    "why": "Feathers are an example: they were used for heat and display before flight. Reuse means a part's current job isn't its only possible history."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the 2005 Dover trial, the judge wrote that irreducible complexity is a negative argument against evolution, not proof of design. He also noted scientists had answered its blood-clotting example in peer-reviewed papers."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A negative argument against evolution, not proof of design."
+   },
+   "cite": [
+    "s13",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Thought experiment time. Picture a stone arch. Pull out one stone and it falls. It looks irreducible. So how was it ever built?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A simple stone arch, with one stone near the top highlighted."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With a temporary pile of earth underneath. Stones go on, the pile washes away, and the arch stands alone. The support is gone, so the arch hides its own history. This is an analogy, not evidence."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Pile of earth holds stones | 2. Stones added | 3. Pile washes away | 4. Arch stands alone"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the arch story, what stands in for a part that disappears later?",
+    "right": "The temporary pile of earth.",
+    "wrong": [
+     "The top stone.",
+     "The weight of the stones.",
+     "The stone arch itself."
+    ],
+    "why": "The pile held the stones up during building and then washed away. That hides the history, so the finished arch looks like it needs every stone at once."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another picture: a word ladder. Cat, cot, cog, dog. Every step is a real word. A long change can pass only through stages that work."
+   },
+   "show": {
+    "kind": "list",
+    "text": "cat | cot | cog | dog"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a real model. Two Swedish scientists, Nilsson and Pelger, pictured an eye starting as a flat light-sensitive patch. It becomes a cup, then gains a lens. Each small step gives a sharper image."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Flat patch | Cup | Cup with lens"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Using pessimistic assumptions, they found about 364,000 generations. At one generation a year, that is 364,000 years, a short time geologically."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "364,000 generations"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Limits matter. The model covers the eye's optical parts, not the brain. And it shows a possible route, not a record of what happened."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Possible, not proven history"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the eye model show?",
+    "right": "A possible route of small useful steps, and a rough time it could take.",
+    "wrong": [
+     "A fossil record of the very first eye.",
+     "That the brain evolved in 364,000 years.",
+     "That design is impossible."
+    ],
+    "why": "The model looks only at the eye's optical structures. It shows what could happen, and evidence from fossils, DNA and experiments shows what did."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why do these objections convince people? A moving motor looks designed. Millions of years is hard to feel. A gap is easy to see, and a filled gap is easy to overlook. These are very human reasons."
+   },
+   "show": {
+    "kind": "list",
+    "text": "It looks designed | Deep time is hard to feel | Gaps are easy to see"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2024, Gallup asked Americans about human origins. 37% said God created humans in their present form within the past 10,000 years or so. 34% said humans evolved with God's guidance. 24% said they evolved without God's involvement."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Gallup 2024: views on human origins",
+    "chart": "c1"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice that many people accept evolution and keep their faith. The National Academies say science and religion are different ways of understanding the world. They say the evidence for evolution can fit with religious faith."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Science and religion are different ways of understanding the world."
+   },
+   "cite": [
+    "s23",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So separate two kinds of question. A scientific question can be tested with evidence. A belief question is about ultimate purpose and meaning. Science can neither prove nor disprove religion."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Scientific: can be tested with evidence | Belief: purpose and meaning"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is a scientific question?",
+    "right": "Do fossils show intermediate forms between fish and early four-legged animals?",
+    "wrong": [
+     "Does life have an ultimate meaning?",
+     "Should a good person accept evolution?",
+     "Which view gives you more hope?"
+    ],
+    "why": "Only the fossil question can be checked by looking at evidence. The others are about meaning, values or feelings, which science doesn't settle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You can disagree with an idea and still respect the person. Ask what they have read. Share one piece of evidence. Then listen to the answer."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ask what they've read | Share one example | Listen"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A friend says 'there are no missing links.' Which reply fits this class best?",
+    "right": "Ask what they've read, share one example like Tiktaalik, and listen.",
+    "wrong": [
+     "Laugh, since the claim is out of date.",
+     "Recite every statistic until they give up.",
+     "Change the subject and never raise it again."
+    ],
+    "why": "Curiosity and one clear example keep the conversation kind. Mockery or pressure usually ends it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A quick tour of dates from today. The bacteria experiment began in 1988. The eye model came in 1994, and Behe's book in 1996. Citrate use appeared around 2003. The Dover ruling was in 2005, and Tiktaalik's news brief in 2006."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1988 bacteria experiment begins | 1994 eye model | 1996 Behe's book | about 2003 citrate use appears | 2005 Dover ruling | 2006 Tiktaalik news brief"
+   },
+   "cite": [
+    "s7",
+    "s22",
+    "s27",
+    "s13",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up. Fossils, DNA and lab work support the accepted view. 'Missing links' are transitional fossils, and they are not rare. Irreducible complexity has had answers, and thought experiments show what's possible. Next class: ancient astronauts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Accepted view: strong evidence | Gaps: real, and shrinking into smaller ones | Irreducible complexity: answered | Science and belief: different questions"
+   },
+   "cite": [
+    "s25",
+    "s2",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "How U.S. adults answered Gallup on human origins, 2024 (percent; other answers not shown)",
+   "rows": [
+    {
+     "label": "God created humans in present form within about 10,000 years",
+     "value": 37,
+     "source": "s26"
+    },
+    {
+     "label": "Humans evolved, with God's guidance",
+     "value": 34,
+     "source": "s26"
+    },
+    {
+     "label": "Humans evolved, with God not involved",
+     "value": 24,
+     "source": "s26"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "transitional fossil",
+   "links": [
+    "[[Tiktaalik]]",
+    "[[homologous structures]]",
+    "[[fossil record gaps]]"
+   ]
+  },
+  {
+   "topic": "irreducible complexity",
+   "links": [
+    "[[bacterial flagellum]]",
+    "[[exaptation]]",
+    "[[Kitzmiller v. Dover]]"
+   ]
+  },
+  {
+   "topic": "Lenski long-term evolution experiment",
+   "links": [
+    "[[citrate innovation]]",
+    "[[co-option of existing parts]]"
+   ]
+  },
+  {
+   "topic": "eye evolution model",
+   "links": [
+    "[[thought experiments]]",
+    "[[possible versus proven]]"
+   ]
+  },
+  {
+   "topic": "science and belief",
+   "links": [
+    "[[credibility tiers]]",
+    "[[how to weigh evidence]]",
+    "[[Challenges evolution absorbed: when outsiders improved the science]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Irreducible complexity has been answered by research and rejected by the scientific community.",
+   "other_view": "Michael Behe and the Discovery Institute hold that a part having another function doesn't show the whole system could evolve. They say it would still not explain how the parts were assembled. The Dover court and the National Academies took the opposite view. Courts don't decide science, so the scientific replies matter most.",
+   "cite": [
+    "s19",
+    "s13",
+    "s28"
+   ]
+  },
+  {
+   "claim": "The Lenski citrate result shows a new trait evolving.",
+   "other_view": "Answers in Genesis argues that the bacteria already had the gene and only changed when it was expressed, so the trait isn't truly new. Researchers describe the same mechanism as co-opting existing cellular pathways for a new role. The two sides agree on the mechanism and differ on what 'new' means.",
+   "cite": [
+    "s9",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Tiktaalik is a transitional form.",
+   "other_view": "The Berkeley team notes that some tetrapod footprints may be older than Tiktaalik's fossils. They ask whether that would change its status. That timing question is being discussed. Tiktaalik is still described as a close relative of the ancestor of four-legged animals.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "claim": "Gaps in the fossil record are not a major problem.",
+   "other_view": "The Utrecht study says regular gaps are manageable. It also says that if gaps get too long and irregular, reconstructions become strongly biased. Benton notes that more fossils always leave more, smaller gaps.",
+   "cite": [
+    "s11",
+    "s10"
+   ]
+  },
+  {
+   "claim": "The flagellum shows that complex machines can be built from reused parts.",
+   "other_view": "Newer research suggests the injection system evolved from the flagellum rather than the reverse. A recent preprint says our understanding of flagellar evolution is still incomplete. The general point about reusing parts stands, but the details are an active research area.",
+   "cite": [
+    "s17",
+    "s18"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1532 @@
+{
+ "about": {
+  "title": "Zoroastrianism and the Baháʼí Faith",
+  "course": "religions-of-the-world",
+  "class_n": 9,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. Two traditions fit in one class because each is taught in short steps: one idea at a time, then a check question. Each could fill a class of its own. Pause or replay any step you need."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Baháʼí Faith",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Bahai-Faith",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The Báb",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/the-Bab",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Zarathushtra",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Zarathustra",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Zoroastrianism",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/philosophy-and-religion/ancient-religions/ancient-religion/zoroastrianism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Zoroastrianism",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/zoroastrianism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Nowruz",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Nowruz",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "What Is Nowruz? Spring Festival Celebrated by Millions",
+   "publisher": "TIME",
+   "date": "n.d.",
+   "link": "https://time.com/6958290/what-is-nowruz-persian-new-year-origins-celebrations-explainer/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Heard of Zoroastrianism? The ancient religion still has fervent followers",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/culture/article/zoroastrianism-ancient-religion-followers",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Zoroastrianism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Zoroastrianism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Atash Behram",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Atash_Behram",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Iranshah Atash Behram",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Iranshah_Atash_Behram",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Zoroastrianism in India",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Zoroastrianism_in_India",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Zoroastrian rituals: Navjote/Sudre-Pooshi (initiation) ceremony",
+   "publisher": "avesta.org",
+   "date": "n.d.",
+   "link": "https://www.avesta.org/ritual/navjote.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "A Prayer Guide: Suggested prayers for all occasions (Dr. Kersey H. Antia)",
+   "publisher": "avesta.org",
+   "date": "n.d.",
+   "link": "https://www.avesta.org/antia/A_Prayer_Guide_R1.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Bahá'í Faith",
+   "publisher": "The Pluralism Project, Harvard University",
+   "date": "n.d.",
+   "link": "https://pluralism.org/bahai",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Factsheet: The Baháʼí faith",
+   "publisher": "Religion Media Centre",
+   "date": "n.d.",
+   "link": "https://religionmediacentre.org.uk/factsheets/factsheet-the-bahai-faith/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "BAHAISM iv. The Bahai Communities",
+   "publisher": "Encyclopaedia Iranica",
+   "date": "n.d.",
+   "link": "https://www.iranicaonline.org/articles/bahaism-iv/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Bahá'í Faith: beliefs",
+   "publisher": "Bahá'ís of the United States",
+   "date": "n.d.",
+   "link": "https://www.bahai.us/beliefs/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The Oneness of Humanity",
+   "publisher": "Bahá'ís of the United States",
+   "date": "n.d.",
+   "link": "https://www.bahai.us/beliefs/building-community/oneness-of-humanity/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Covenant Library: Bahá'í Dates Calendar",
+   "publisher": "Bahá'í World Centre (compiler), hosted on Bahá'í Library",
+   "date": "2024",
+   "link": "https://bahai-library.com/covenant_library_dates_calendar",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Feast and Holy Day Dates",
+   "publisher": "Bahá'í Community of Ottawa",
+   "date": "n.d.",
+   "link": "https://www.bahai-ottawa.org/feast_and_holy_day_dates.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Baha'i Holidays and Festivals",
+   "publisher": "ReligionFacts",
+   "date": "n.d.",
+   "link": "https://religionfacts.com/bahai/holidays",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Persecution of Baháʼís",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Persecution_of_Bah%C3%A1%CA%BC%C3%ADs",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Major religious groups",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Major_religious_groups",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Zoroastrian fire temple serves a steadfast community here and abroad",
+   "publisher": "Brays Oaks Management District",
+   "date": "2021",
+   "link": "https://www.braysoaksmd.org/2021/07/zoroastrian-fire-temple-serves-a-steadfast-community-here-and-abroad/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Gatha (Zoroaster)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gatha_(Zoroaster)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Navjote, Sudreh Pooshi, Zoroastrian Initiation Ceremony",
+   "publisher": "Heritage Institute",
+   "date": "n.d.",
+   "link": "https://www.heritageinstitute.com/zoroastrianism/navjote/index.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Baháʼí Faith",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Bah%C3%A1%CA%BC%C3%AD_Faith",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "History of the Baháʼí Faith",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_the_Bah%C3%A1%CA%BC%C3%AD_Faith",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "What Is the Baha'i Faith? An Introduction",
+   "publisher": "bahaiteachings.org",
+   "date": "n.d.",
+   "link": "https://bahaiteachings.org/bahai-faith/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Baháʼí teachings",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Bah%C3%A1%CA%BC%C3%AD_teachings",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "New world order (Baháʼí)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/New_world_order_(Bah%C3%A1%CA%BC%C3%AD)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Prayer in the Baháʼí Faith",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Prayer_in_the_Bah%C3%A1%CA%BC%C3%AD_Faith",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Bahá'í Dates, Calendar and Readings",
+   "publisher": "bahaidates.org",
+   "date": "n.d.",
+   "link": "https://bahaidates.org/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Why Nineteen Months?",
+   "publisher": "nineteenmonths.com",
+   "date": "n.d.",
+   "link": "https://www.nineteenmonths.com/about/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Shrine of Baháʼu'lláh",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Shrine_of_Bah%C3%A1%CA%BCu%27ll%C3%A1h",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "Statistics",
+   "publisher": "Bahaipedia",
+   "date": "n.d.",
+   "link": "https://bahaipedia.org/Statistics",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Countries With The Largest Bahá'i Populations",
+   "publisher": "WorldAtlas",
+   "date": "n.d.",
+   "link": "https://www.worldatlas.com/articles/countries-with-the-largest-baha-i-populations.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "Zoroastrianism in Azerbaijan",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Zoroastrianism_in_Azerbaijan",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "Chapter Eight: Holy Days (Local Spiritual Assembly guidelines)",
+   "publisher": "Bahá'í community of New Zealand",
+   "date": "2022-07-26",
+   "link": "https://guidelines.bahai.org.nz/wp-content/uploads/2022/07/GLSA-08-Holy-Days.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s41",
+   "title": "Nineteen Day Feast",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Nineteen_Day_Feast",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s42",
+   "title": "Baháʼí Faith: History & Facts",
+   "publisher": "World History Edu",
+   "date": "n.d.",
+   "link": "https://worldhistoryedu.com/baha%CA%BCi-faith-history-facts/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class nine. Today we meet two faiths that began in Iran: Zoroastrianism, which is very old, and the Baháʼí Faith, which is much newer."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Zoroastrianism and the Baháʼí Faith"
+   },
+   "cite": [
+    "s9",
+    "s1",
+    "s24"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "As always, we describe each faith the way its own followers and scholars describe it. We don't rank faiths, and we don't say which is true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Described respectfully"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's start with Zoroastrianism. It is centred on the teachings of a prophet called Zarathustra. The Greeks called him Zoroaster."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Zarathustra (Zoroaster)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nobody knows exactly when he lived. Tradition says 628 to 551 BCE. Many scholars think he lived much earlier."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Traditional dates: 628–551 BCE | Some scholars: at least as early as about 1500–1200 BCE"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do books say 'perhaps' or 'about' when they give dates for Zarathustra?",
+    "right": "Sources disagree: the traditional dates and many scholars' dates differ by centuries.",
+    "wrong": [
+     "Because he was a character in a novel.",
+     "Because his followers have never heard of him.",
+     "Because calendars were invented after he died, so no one can count."
+    ],
+    "why": "Britannica notes that his dates cannot be fixed with certainty. Some scholars accept the traditional 6th-century dates and others argue for the 2nd millennium BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Zoroastrians worship one god, Ahura Mazda. The name means 'Wise Lord'. He is the creator of all things."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ahura Mazda: 'Wise Lord'"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Followers sum up how to live in three phrases: good thoughts, good words, good deeds."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 3,
+    "layout": "row",
+    "text": "Good thoughts, good words, good deeds"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What are the three 'goods' in Zoroastrian teaching?",
+    "right": "Good thoughts, good words and good deeds.",
+    "wrong": [
+     "Good fire, good water and good earth.",
+     "Good prayer, good fasting and good pilgrimage.",
+     "Good bread, good salt and good wine."
+    ],
+    "why": "The three-part principle of Good Thoughts, Good Words and Good Deeds is how the faith encourages followers to express their beliefs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The teachings describe a struggle between good and evil. People are free to choose the good."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Good: Spenta Mainyu, the 'Bountiful Spirit' | Evil: Angra Mainyu, the 'Destructive Spirit'"
+   },
+   "cite": [
+    "s4",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nature is sacred to Zoroastrians because Ahura Mazda is good and pure. Writers have even called it 'the world's first ecological (or environmental) religion'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The natural world is sacred"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The sacred scripture is the Avesta. Its oldest and most treasured part is the Gathas, hymns that tradition links to Zarathustra himself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Avesta → Gathas"
+   },
+   "cite": [
+    "s4",
+    "s9",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Gathas are five hymns. They were handed down by mouth, then placed inside a 72-chapter prayer service called the Yasna."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Avesta (scripture) | Yasna (72-chapter prayer service) | Gathas (five hymns inside it)"
+   },
+   "cite": [
+    "s26",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What are the Gathas?",
+    "right": "Five hymns in the Avesta that tradition links to Zarathustra.",
+    "wrong": [
+     "The names of the Zoroastrian fire temples.",
+     "A calendar of festivals.",
+     "The cord a child receives at initiation."
+    ],
+    "why": "The Gathas are Avestan hymns from the oral tradition. They were later placed inside the Yasna."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to fire temples. A Zoroastrian fire temple keeps a sacred flame burning. The highest grade is called an Atash Behram, or 'Victorious Fire'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large white stone-and-wood temple compound behind high walls. Two huge winged, human-headed bull statues flank the gate."
+   },
+   "cite": [
+    "s10",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Followers say they do not worship fire. Fire is a symbol of purity and of Ahura Mazda. In daytime they pray facing the sun, and at night facing a light."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Fire represents the symbol of Ahura Mazda."
+   },
+   "cite": [
+    "s39",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How do Zoroastrians themselves describe the sacred fire?",
+    "right": "As a symbol of purity and of Ahura Mazda.",
+    "wrong": [
+     "As a second god, equal to Ahura Mazda.",
+     "As a decoration with no meaning.",
+     "As a tool for cooking only."
+    ],
+    "why": "Zoroastrians say it is wrong to call them fire-worshippers. Fire is the most important symbol of purity in the faith."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One fire has burned for about 1,300 years. The Iranshah Atash Behram was kindled in 721 CE at Sanjan, India. It has been in Udvada since 1741."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "721 CE"
+   },
+   "cite": [
+    "s10",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "India has eight Atash Behrams, and Yazd in Iran has the only other one. Many are for Zoroastrians only, so ask before you visit. Some temples elsewhere, such as one in Houston, welcome visitors."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: eight Atash Behrams in India (such as Udvada, Gujarat); one in Yazd, Iran; an open fire temple in Houston, USA."
+   },
+   "cite": [
+    "s11",
+    "s8",
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is it kind to ask before visiting a Zoroastrian fire temple?",
+    "right": "Many fire temples are only for Zoroastrians, though some welcome visitors.",
+    "wrong": [
+     "Because every fire temple is closed to everyone, always.",
+     "Because visitors must bring their own flame.",
+     "Because fire temples are only open one day each century."
+    ],
+    "why": "Access rules differ. Some temples limit entry to those of sufficient ritual purity, and the Houston fire temple is open to visitors."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, a rite of passage. Navjote is the initiation of a child into the faith. After it, the child is responsible for saying prayers and keeping the customs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Navjote: initiation"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At navjote the child is given a white vest, the sudreh, and a woollen cord, the kusti. Of 72 threads, in fact. The kusti prayers are said each morning and each night."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sudreh: white vest | Kusti: cord of lamb's wool, 72 threads"
+   },
+   "cite": [
+    "s27",
+    "s13",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "At a navjote, what does the child receive?",
+    "right": "A white vest (sudreh) and a woollen cord (kusti).",
+    "wrong": [
+     "A fire to carry home.",
+     "A copy of the whole Avesta.",
+     "A new name chosen by the priest."
+    ],
+    "why": "The sudreh and kusti are put on at the navjote and worn from then on. The kusti is tied during daily prayers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the festivals. The best known is Nowruz, which means 'new day'. It falls on the spring equinox, around 20 or 21 March."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nowruz = 'new day'"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nowruz began as part of the ancient Zoroastrian religion. Today it is a largely secular festival kept by some 300 million people, in Iran and well beyond."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 300 million people"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Customs include jumping over bonfires on the Tuesday evening before Nowruz. Parsis in India keep Nowruz twice a year, using two different calendars."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bonfire jumping the evening before | New year at the equinox | Parsis in India: March and August"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "On what natural event does Nowruz fall?",
+    "right": "The spring equinox.",
+    "wrong": [
+     "The longest night of winter.",
+     "The first full moon of summer.",
+     "The autumn harvest."
+    ],
+    "why": "Nowruz marks the first day of the Persian year, which begins at the spring equinox."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The United Nations named 21 March the International Day of Nowruz in 2010. UNESCO had listed Nowruz as intangible cultural heritage in 2009."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "2009: UNESCO list | 2010: UN International Day of Nowruz, 21 March"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are other Zoroastrian festivals too. Six seasonal feasts called gahambars, and Khordad Sal, which marks the birthday of Zarathustra."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gahambars: six seasonal festivals | Khordad Sal: Zarathustra's birthday | Nowruz: new year"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, where do Zoroastrians live? Let's meet the Parsis. After the Muslim conquest of Persia, many Zoroastrians left. Their descendants in India are called Parsis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Parsis: Zoroastrians of India"
+   },
+   "cite": [
+    "s12",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Parsi families have long been part of India's story. Even though the community is small, they've shaped India's economy, culture and politics."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Parsi fire temple (agiary) in Mumbai, with a priest in white at the entrance."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Parsis are not all of one mind about who can join the faith. The most orthodox accept only children of Zoroastrian parents. Some communities abroad welcome converts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Most orthodox Parsis: only children of Zoroastrian parents | Some temples abroad: welcome newcomers"
+   },
+   "cite": [
+    "s8",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today Zoroastrians live mainly in India and Iran, and in diaspora communities, especially in North America. India has the largest community."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: India (largest community), Iran, and diaspora communities across North America and beyond."
+   },
+   "cite": [
+    "s9",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 2012 survey counted between about 111,700 and 122,000 Zoroastrians worldwide. Low birth rates, ageing and emigration have shrunk established communities."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 112,000–122,000 (2012 survey)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Roughly how many Zoroastrians did the 2012 survey count worldwide?",
+    "right": "Between about 110,000 and 120,000.",
+    "wrong": [
+     "About 11 million.",
+     "About 1,100.",
+     "About 1 billion."
+    ],
+    "why": "The Federation of Zoroastrian Associations of North America estimated 111,691 to 121,962, so Zoroastrianism is now a small community."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's pause for a quick recap. Zoroastrianism is the faith of Ahura Mazda, the Gathas, sacred fire, and the new year at the spring equinox."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One god, Ahura Mazda | Avesta and Gathas | Fire as a symbol | Navjote and Nowruz | India, Iran and diaspora"
+   },
+   "cite": [
+    "s5",
+    "s26",
+    "s39",
+    "s13",
+    "s6",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the second faith. The Baháʼí Faith was founded in the mid-19th century in Persia by Baháʼu'lláh, whose name means 'Glory of God'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Baháʼí Faith"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The story starts with the Báb, 'the Gate'. In 1844 he began preaching in Persia that a new messenger of God was coming. Baháʼís see him as the forerunner."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Báb: 'the Gate'"
+   },
+   "cite": [
+    "s28",
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His teachings spread, but the government and clergy opposed them. He was executed in Tabriz on 9 July 1850, and his followers were persecuted."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1844: the Báb begins preaching | 1850: the Báb is executed in Tabriz"
+   },
+   "cite": [
+    "s2",
+    "s28"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who was the Báb in the Baháʼí story?",
+    "right": "The forerunner of Baháʼu'lláh, whose title means 'the Gate'.",
+    "wrong": [
+     "The founder of Zoroastrianism.",
+     "The son of Baháʼu'lláh.",
+     "A king of Persia."
+    ],
+    "why": "Baháʼís honour the Báb as a forerunner and a messenger in his own right. His title means Gateway."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1863, in Baghdad, Baháʼu'lláh declared he was the messenger the Báb had promised. Most of the Báb's followers then became Baháʼís."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1844 Báb | 1850 Báb executed | 1863 Baháʼu'lláh declares his mission in Baghdad"
+   },
+   "cite": [
+    "s29",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Baháʼís describe that Baháʼu'lláh received his revelation in 1852, while in prison. He died in 1892, and his shrine at Bahjí is the holiest place for Baháʼís."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Holiest place: the Shrine of Baháʼu'lláh, Bahjí"
+   },
+   "cite": [
+    "s30",
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After him came his son, ʻAbdu'l-Bahá. Under his leadership the faith took root in Europe and America. The Báb, Baháʼu'lláh and ʻAbdu'l-Bahá are called the three central figures."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The Báb | Baháʼu'lláh | ʻAbdu'l-Bahá"
+   },
+   "cite": [
+    "s29",
+    "s28"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which three are the central figures of the Baháʼí Faith?",
+    "right": "The Báb, Baháʼu'lláh and ʻAbdu'l-Bahá.",
+    "wrong": [
+     "Zarathustra, the Báb and Baháʼu'lláh.",
+     "Ahura Mazda, Baháʼu'lláh and ʻAbdu'l-Bahá.",
+     "The Báb, Shoghi Effendi and Zarathustra."
+    ],
+    "why": "Baháʼís name these three as their central figures. The Báb and Baháʼu'lláh are regarded as manifestations of God."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Baháʼí teaching rests on three 'onenesses': the oneness of God, of religion, and of humanity."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 3,
+    "layout": "row",
+    "text": "Oneness of God · of religion · of humanity"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Oneness of religion means Baháʼís see the world's religions as teaching one truth. They honour messengers like Abraham, Moses, Buddha, Jesus and Muhammad."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One truth, many messengers"
+   },
+   "cite": [
+    "s1",
+    "s42"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Oneness of humanity means all people form one family. Baháʼu'lláh wrote, 'earth is but one country, and mankind its citizens.'"
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The earth is but one country, and mankind its citizens."
+   },
+   "cite": [
+    "s32",
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'the oneness of humanity' mean in Baháʼí teaching?",
+    "right": "All people form one human family, so prejudice goes against it.",
+    "wrong": [
+     "Everyone must live in the same country.",
+     "Everyone must speak the same language today.",
+     "Only Baháʼís belong to the human family."
+    ],
+    "why": "Baháʼís describe humanity as a single family and work to end racial, class and religious prejudice."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other teachings follow from this: equality of women and men, harmony of science and religion, and education for everyone."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Equality of women and men | Science and religion in harmony | Education for all"
+   },
+   "cite": [
+    "s30",
+    "s42"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On to practice. The Baháʼí Faith has no clergy, no sacraments and no initiation ceremonies. Each person is responsible for their own relationship with God."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No clergy"
+   },
+   "cite": [
+    "s1",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Baháʼís pray every day. From age 15 they choose one of three set prayers written by Baháʼu'lláh, after washing hands and face."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Short, medium or long obligatory prayer | Hands and face washed first | Face the Shrine of Baháʼu'lláh"
+   },
+   "cite": [
+    "s16",
+    "s33",
+    "s36"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who leads worship in a Baháʼí community?",
+    "right": "Any community member, because there are no clergy.",
+    "wrong": [
+     "A priest chosen at birth.",
+     "Only the head of the family.",
+     "A guardian who is appointed for life in each town."
+    ],
+    "why": "With no clergy, any member may lead worship."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Baháʼís also avoid alcohol and other mind-altering substances, practise monogamy, and seek parents' consent for marriage."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No mind-altering substances | One partner | Parents' consent to marry"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Baháʼís elect their leaders. There are local and national councils, and the nine-member Universal House of Justice, elected every five years in Haifa, Israel."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Local spiritual assemblies | National spiritual assemblies | Universal House of Justice (Haifa)"
+   },
+   "cite": [
+    "s1",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Nineteen Day Feast is held on the first day of each Baháʼí month. It brings prayer and readings, community business, and time to socialise."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Devotions | Community consultation | Social time"
+   },
+   "cite": [
+    "s21",
+    "s41"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Baháʼí Houses of Worship welcome people of every faith. There are eight continental ones, in Wilmette, Kampala, Sydney, Langenhain, Panama City, Apia, New Delhi and Santiago."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: eight Houses of Worship, one on each of several continents: USA, Uganda, Australia, Germany, Panama, Samoa, India, Chile."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who may visit a Baháʼí House of Worship?",
+    "right": "People of all faiths and none.",
+    "wrong": [
+     "Only Baháʼís.",
+     "Only clergy.",
+     "Only people over 70."
+    ],
+    "why": "Baháʼí Houses of Worship are open to people of all religions and beliefs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Baháʼí calendar. It was set out by the Báb. It has 19 months, each 19 days long."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "moon",
+    "count": 19,
+    "layout": "group",
+    "text": "19 months of 19 days"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many months are in the Baháʼí year?",
+    "right": "Nineteen.",
+    "wrong": [
+     "Twelve.",
+     "Thirteen.",
+     "Twenty-four."
+    ],
+    "why": "The Báb's calendar has 19 months of 19 days, plus extra days."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nineteen times nineteen is 361. Four extra days, five in a leap year, called Ayyám-i-Há, fill the rest of the year with visits and gifts."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "19 × 19 = 361, plus 4 or 5 days"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The year starts at Naw-Rúz, on the spring equinox. Each Baháʼí day starts at sunset."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Naw-Rúz: new year"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "When does a Baháʼí day begin?",
+    "right": "At sunset.",
+    "wrong": [
+     "At sunrise.",
+     "At midnight.",
+     "At noon."
+    ],
+    "why": "A Baháʼí day ends and a new one begins at sunset."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Before Naw-Rúz comes a 19-day fast, in the last month, 'Alá. It's roughly 2 to 20 March. Baháʼís between 15 and 70, if able, take no food or drink from sunrise to sunset."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "2–20 March: the Fast | Naw-Rúz ends the Fast"
+   },
+   "cite": [
+    "s22",
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There are eleven holy days. On nine of them, Baháʼís are urged to suspend work and school."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Naw-Rúz | Ridván: 1st, 9th and 12th days | Declaration of the Báb | Ascension of Baháʼu'lláh | Martyrdom of the Báb | Birth of the Báb | Birth of Baháʼu'lláh"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The most important festival is Ridván, meaning 'Paradise'. It lasts twelve days from 21 April and remembers Baháʼu'lláh's declaration of 1863."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ridván: 21 April – 2 May"
+   },
+   "cite": [
+    "s34",
+    "s22",
+    "s40"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the festival of Ridván remember?",
+    "right": "Baháʼu'lláh's declaration of his mission in 1863.",
+    "wrong": [
+     "The Báb's birth.",
+     "The end of the Fast.",
+     "The opening of the first House of Worship."
+    ],
+    "why": "Ridván commemorates Baháʼu'lláh declaring his mission in 1863, as he left Baghdad."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next week brings the Twin Birthdays of the Báb and Baháʼu'lláh. One calendar lists them as 10 and 11 November 2026. Check with a local community for exact times."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10 and 11 November 2026"
+   },
+   "cite": [
+    "s35",
+    "s20"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, where do Baháʼís live? Baháʼís live in nearly every country. The Baháʼí World Centre says more than five million; one outside estimate for 2000 was 7.1 million."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Baháʼí World Centre: more than 5 million | World Christian Encyclopedia (2000): 7.1 million"
+   },
+   "cite": [
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is one snapshot from 1985. Most Baháʼís lived in Asia, then Africa and the Americas. Today's exact numbers will differ."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Baháʼís by region, 1985",
+    "chart": "c1"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In the 1985 snapshot, which region had the largest share of Baháʼís?",
+    "right": "Asia.",
+    "wrong": [
+     "Europe.",
+     "Africa.",
+     "Australasia."
+    ],
+    "why": "The 1985 figures put 59 percent of the world total in Asia."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "India has the biggest Baháʼí community, close to two million. Many members there come from Hindu backgrounds. Iranians are now fewer than a tenth of all Baháʼís."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Close to 2 million in India"
+   },
+   "cite": [
+    "s17",
+    "s38"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which country has the world's largest Baháʼí community?",
+    "right": "India.",
+    "wrong": [
+     "Iran.",
+     "Israel.",
+     "Australia."
+    ],
+    "why": "Sources put India's Baháʼí community at close to two million, the largest of any country."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Persecution of Baháʼís has been the most extensive and sustained in Iran. They are Iran's largest non-Muslim minority. Many Baháʼís worldwide hope for an end to this."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Iran: ongoing persecution"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Baháʼí world centre is in Haifa and western Galilee. UNESCO named the Shrine of Baháʼu'lláh and the surrounding sites as World Heritage in 2008."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: Haifa and western Galilee, Israel: the Shrine of the Báb, the Universal House of Justice, and Bahjí."
+   },
+   "cite": [
+    "s16",
+    "s36"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One link between today's two faiths: both keep a new year at the spring equinox. Nowruz has Zoroastrian roots, and Naw-Rúz is the Baháʼí New Year."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Nowruz: spring equinox, Zoroastrian roots | Naw-Rúz: spring equinox, Baháʼí New Year"
+   },
+   "cite": [
+    "s6",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do Nowruz and Naw-Rúz have in common?",
+    "right": "Both mark a new year at the spring equinox.",
+    "wrong": [
+     "Both fall in the middle of winter.",
+     "Both are held on 1 January.",
+     "Both are kept on the day of the full moon."
+    ],
+    "why": "Nowruz is the Persian new year at the equinox. The Baháʼí New Year, Naw-Rúz, also falls at the spring equinox."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today you met two faiths from Iran: one very old, with sacred fire and the Gathas, and one newer, built on the oneness of humanity."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Zoroastrianism: Ahura Mazda, fire, Nowruz, Parsis | Baháʼí Faith: oneness, 19 months, Houses of Worship"
+   },
+   "cite": [
+    "s5",
+    "s10",
+    "s6",
+    "s12",
+    "s31",
+    "s20",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class we visit the smaller faiths of West Asia: the Yazidis, Druze, Mandaeans and Samaritans."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Smaller Faiths of West Asia"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Where Baháʼís lived, by region (percent of world total, 1985 estimate)",
+   "rows": [
+    {
+     "label": "Asia",
+     "value": 59,
+     "source": "s17"
+    },
+    {
+     "label": "Africa",
+     "value": 20,
+     "source": "s17"
+    },
+    {
+     "label": "Americas",
+     "value": 18,
+     "source": "s17"
+    },
+    {
+     "label": "Australasia",
+     "value": 1.6,
+     "source": "s17"
+    },
+    {
+     "label": "Europe",
+     "value": 0.5,
+     "source": "s17"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Zoroastrianism",
+   "links": [
+    "[[Nowruz]]",
+    "[[Parsis]]",
+    "[[Fire temples]]",
+    "[[Islam]]",
+    "[[Hinduism]]"
+   ]
+  },
+  {
+   "topic": "Baháʼí Faith",
+   "links": [
+    "[[Nineteen Day Feast]]",
+    "[[Baháʼí calendar]]",
+    "[[Islam]]",
+    "[[Smaller Faiths of West Asia: Yazidis, Druze, Mandaeans and Samaritans]]"
+   ]
+  },
+  {
+   "topic": "Nowruz and Naw-Rúz",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "633–651 CE",
+   "elsewhere": "Arab Muslim armies conquered Sasanian Persia. A few decades later, in 721 CE, a sacred fire was kindled at Sanjan in India, where Zoroastrians who left Persia had settled.",
+   "cite": [
+    "s6",
+    "s10",
+    "s12"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Zarathustra lived in the 6th century BCE (traditional dates 628–551 BCE).",
+   "other_view": "Many scholars place him much earlier, in the 2nd millennium BCE, based on the old language of the Gathas. Britannica notes that his dates cannot be fixed with certainty.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "claim": "Zoroastrianism is monotheistic: one god, Ahura Mazda.",
+   "other_view": "Zoroastrian teaching also describes a struggle between good and evil spirits, so some writers stress its dualism. Some scholars add that early Zoroastrianism may have been closer to hierarchical polytheism with ethical dualism.",
+   "cite": [
+    "s4",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Zoroastrianism is a faith that people can join by choice.",
+   "other_view": "The most orthodox Parsis accept only children of Zoroastrian parents. Some Zoroastrian communities elsewhere, such as in Houston, welcome outsiders.",
+   "cite": [
+    "s8",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Nowruz is a Zoroastrian festival.",
+   "other_view": "Nowruz began as part of Zoroastrianism, but Britannica describes it today as a largely secular festival kept widely across Iran and Central Asia.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "claim": "The Baháʼí Faith is an independent world religion.",
+   "other_view": "Baháʼís say it is a distinct religion with its own scriptures and laws. Scholars note that it arose in a Shia Islam setting, so some classify it as a divergent strand of Islam, and others as a new religious movement.",
+   "cite": [
+    "s24",
+    "s28"
+   ]
+  },
+  {
+   "claim": "The Baháʼí world population is over five million.",
+   "other_view": "Counting is hard, and estimates differ. The Baháʼí World Centre says more than five million, while the World Christian Encyclopedia estimated 7.1 million in 2000.",
+   "cite": [
+    "s37"
+   ]
+  }
+ ]
+}

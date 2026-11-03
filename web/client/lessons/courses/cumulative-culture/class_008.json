@@ -1,0 +1,976 @@
+{
+ "about": {
+  "title": "How Knowledge Gets Lost",
+  "course": "cumulative-culture",
+  "class_n": 8,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. The class has 32 short beats and 11 check questions. Each way of losing knowledge needs its own example and a check, and the 'sorting' habit needs a real myth to practise on. To shorten it, skip the Archimedes beats (21-22). To lengthen it, spend more time on the question beats."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Demography and Cultural Evolution: How Adaptive Cultural Processes Can Produce Maladaptive Losses - The Tasmanian Case",
+   "publisher": "Joseph Henrich, University of British Columbia (author's copy)",
+   "date": "2004",
+   "link": "https://www2.psych.ubc.ca/~henrich/Website/Papers/HenrichTasmania.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Population size does not explain past changes in cultural complexity",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "2016",
+   "link": "https://www.pnas.org/content/pnas/113/16/E2241.full.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Cumulative Cultural Evolution and Demography",
+   "publisher": "PLOS ONE (via PubMed Central)",
+   "date": "2012",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3404092/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Decipherment of Linear B: Introduction",
+   "publisher": "Faculty of Classics, University of Cambridge",
+   "date": "undated",
+   "link": "https://www.classics.cam.ac.uk/research/projects/mycep/decipherment",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Michael Ventris: the man who deciphered Linear B",
+   "publisher": "The British Museum",
+   "date": "undated",
+   "link": "https://www.britishmuseum.org/events/members-exclusive/michael-ventris-man-who-deciphered-linear-b",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Decoding Linear B",
+   "publisher": "History Today",
+   "date": "undated",
+   "link": "https://www.historytoday.com/archive/months-past/decoding-linear-b",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Michael Ventris",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/Michael-Ventris",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Domesday Redux: The Rescue of the BBC Domesday Project Videodiscs",
+   "publisher": "Ariadne (Darlington, Finney and Pearce)",
+   "date": "2003",
+   "link": "https://ariadne.ac.uk/issue/36/tna/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Domesday Disc Preservation Project",
+   "publisher": "The Centre for Computing History",
+   "date": "undated",
+   "link": "https://www.computinghistory.org.uk/pages/8792/BBC-Domesday-System-Preservation/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Digital Formats Sustainability: A Growing Resource",
+   "publisher": "Library of Congress, Digital Preservation",
+   "date": "undated",
+   "link": "https://www.digitalpreservation.gov/series/challenge/sustainability.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Digital Preservation Guide",
+   "publisher": "Duke University Libraries",
+   "date": "undated",
+   "link": "https://library.duke.edu/using/policies/digital-preservation-guide",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Sustainability Factors",
+   "publisher": "Library of Congress, Preservation",
+   "date": "undated",
+   "link": "https://www.loc.gov/preservation/digital/formats/sustain/sustain.shtml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Researchers dig up secrets of 'self-healing' Roman concrete",
+   "publisher": "Phys.org",
+   "date": "2023-01",
+   "link": "https://phys.org/news/2023-01-secrets-self-healing-roman-concrete.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Maya books (destruction of)",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/literature-and-writing/maya-books-destruction/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Diego de Landa: The Friar Who Burned - and Saved - Maya Knowledge",
+   "publisher": "mayan.org",
+   "date": "undated",
+   "link": "https://mayan.org/civilization/landa/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Library of Alexandria: 3 The destruction of the library",
+   "publisher": "The Open University (OpenLearn)",
+   "date": "undated",
+   "link": "https://www.open.edu/openlearn/history-the-arts/library-alexandria/content-section-3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Story of the Library of Alexandria Is Mostly a Legend, But the Lesson of Its Burning Is Still Crucial Today",
+   "publisher": "TIME",
+   "date": "undated",
+   "link": "https://time.com/5912689/library-of-alexandria-burning/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Lost and Found: The Secrets of Archimedes",
+   "publisher": "The Walters Art Museum",
+   "date": "undated",
+   "link": "https://thewalters.org/news/lost-and-found-the-secrets-of-archimedes/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "A Prayer Book's Secret: Archimedes Lies Beneath",
+   "publisher": "NPR",
+   "date": "2006-07-27",
+   "link": "https://www.npr.org/2006/07/27/5583668/a-prayer-books-secret-archimedes-lies-beneath",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "About the Document (Archimedes Palimpsest)",
+   "publisher": "Exploratorium",
+   "date": "undated",
+   "link": "https://annex.exploratorium.edu/archimedes/about.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Archimedes Rediscovered: Technology and Ancient History",
+   "publisher": "JSTOR Daily",
+   "date": "undated",
+   "link": "https://daily.jstor.org/archimedes-rediscovered-technology-and-ancient-history",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "When Online Content Disappears",
+   "publisher": "Pew Research Center",
+   "date": "2024-05-17",
+   "link": "https://www.pewresearch.org/wp-content/uploads/sites/20/2024/05/pl_2024.05.17_link-rot_report.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "One quarter of recent web pages have disappeared, Pew researchers found",
+   "publisher": "StateScoop",
+   "date": "2024-05-20",
+   "link": "https://statescoop.com/one-quarter-of-recent-web-pages-have-disappeared-pew-researchers-found/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Is the internet really forever? Link rot is an issue that requires infrastructure changes and human collaboration to solve, expert says",
+   "publisher": "Northeastern University",
+   "date": "2024-05-28",
+   "link": "https://news.northeastern.edu/2024/05/28/link-rot-internet-infrastructure/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Spaced Repetition and the Forgetting Curve",
+   "publisher": "Rework Resources",
+   "date": "undated",
+   "link": "https://resources.rework.com/libraries/edtech-growth/spaced-repetition-forgetting-curve",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Forgetting curve",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Forgetting_curve",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Domesday Redux: The rescue of the BBC Domesday Project videodiscs (abstract page)",
+   "publisher": "ResearchGate",
+   "date": "undated",
+   "link": "https://www.researchgate.net/publication/249944747_Domesday_Redux_The_rescue_of_the_BBC_Domesday_Project_videodiscs",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "BBC Micro Domesday System",
+   "publisher": "leoncode.co.uk",
+   "date": "undated",
+   "link": "https://leoncode.co.uk/articles/bbc-micro-domesday/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "The forgetting curve: Hermann Ebbinghaus (1885)",
+   "publisher": "Taalhammer",
+   "date": "undated",
+   "link": "https://www.taalhammer.com/the-forgetting-curve-hermann-ebbinghaus/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. So far we have watched knowledge click forward, like a ratchet. Today we look at how it can slip."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How Knowledge Gets Lost"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our goal is small and clear. By the end, you can name three ways knowledge gets lost, and one step that helps keep it alive."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Three ways knowledge gets lost | One step to keep it alive"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Knowledge travels along a chain. One person or thing hands it to the next: speech, then writing, then print."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chain"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Way one is a broken chain. A link breaks when teachers become few, a group shrinks, or war or disaster scatters people."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fewer teachers | A smaller group | War | Disaster"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a famous idea about small groups. Researcher Joseph Henrich suggested that when a group is cut off and shrinks, fewer people learn each hard skill, so some skills fade. His example was Tasmania, cut off by rising seas about 12,000 to 10,000 years ago."
+   },
+   "show": {
+    "kind": "map",
+    "text": "An island, Tasmania, south of mainland Australia, separated from it by rising seas."
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Henrich's idea, why would a smaller, cut-off group lose skills?",
+    "right": "With fewer people learning from each other, hard skills get passed on badly and can drop out.",
+    "wrong": [
+     "Smaller groups are always less intelligent.",
+     "The skills were never useful in the first place.",
+     "Skills disappear on their own after 8,000 years."
+    ],
+    "why": "The idea is that isolation shrinks the pool of people who learn from one another, and that this led to less complex skills."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But this is a debated case, not a settled fact. One 2016 paper says the Tasmanian evidence does not fit the model. Another study found the model itself holds up under tests."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Supporting side: the model largely holds up in robustness tests | Critics: the Tasmanian data do not fit the model"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How should we treat the Tasmania story?",
+    "right": "As a debated idea that researchers still argue about.",
+    "wrong": [
+     "As proven fact.",
+     "As a myth that someone made up from nothing.",
+     "As unrelated to how knowledge spreads."
+    ],
+    "why": "Researchers disagree about the Tasmanian evidence, and the model has both supporters and critics."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Way two is format change. The knowledge is still there, but the way it was stored can no longer be read."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Format change"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A script is a system of signs for writing. If nobody can read the script, the writing is just marks."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Script"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take Linear B. Clay tablets with this writing were found on Crete in 1900. They stayed unreadable for about fifty years."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A clay tablet with rows of simple signs and small drawings."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1952 Michael Ventris showed that Linear B wrote an early form of Greek. He built on others, such as the American classicist Alice Kober, who spotted patterns in the signs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1952"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Linear B tablets lasted for thousands of years but could not be read until 1952. What kind of loss was that?",
+    "right": "The writing survived, but nobody could read the script.",
+    "wrong": [
+     "The tablets were all burned.",
+     "The tablets were forged.",
+     "The writing was in a language that never existed."
+    ],
+    "why": "The tablets survived, but the script could not be read until Ventris worked out that it was Greek."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Format change hits modern things too. In 1986 the BBC gathered a picture of life in Britain onto special laserdiscs. Over a million people took part."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,000,000+ people took part"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then the disc players became rare. About 16 years later the record was nearly unrecoverable, because the hardware and software to read it were out of date."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A shelf holding a large silver disc and an old computer with no matching player."
+   },
+   "cite": [
+    "s27",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was rescued. The National Archives and partners found a system still working and built a way to read the discs. Their lesson: it is possible, if you do not leave it too late."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rescued, just in time"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was the main problem with the 1986 Domesday discs?",
+    "right": "The machines and software needed to read them became obsolete.",
+    "wrong": [
+     "The information on them was wrong.",
+     "Nobody wanted to look at them.",
+     "They were all destroyed in a fire."
+    ],
+    "why": "The record was nearly unrecoverable because the software and hardware needed to read it had become obsolete."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Way three is neglect or suppression. Neglect means nobody looks after the knowledge. Suppression means someone deliberately destroys or forbids it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Neglect: nobody looks after it | Suppression: someone destroys or forbids it"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A well-documented case of suppression: in 1562 the Spanish friar Diego de Landa burned Maya books at Maní, judging them to be falsehoods. Twenty-seven books are recorded as burned in that bonfire."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Maní, 1562"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Only four Maya books are known to have survived into the twentieth century. They are held in Dresden, Madrid, Paris and Mexico City."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "book",
+    "count": 4,
+    "layout": "row",
+    "text": "The four surviving Maya books"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There is a twist. Landa also wrote an account of Maya life, and scholars later used it as a clue to reading Maya writing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Burned, and also a clue"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which way of losing knowledge best describes the Maya bonfire?",
+    "right": "Suppression: someone chose to destroy the books.",
+    "wrong": [
+     "Format change: the books became unreadable on their own.",
+     "Neglect only: nobody noticed the books.",
+     "A broken chain caused by a flood."
+    ],
+    "why": "Landa ordered the books burned because he judged them to be falsehoods, which is deliberate suppression."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Famous loss stories are often told wrongly. A good habit is to sort each claim into one of three bins."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Well supported: strong evidence | Debated: experts disagree | Myth: evidence says no"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try it on the Library of Alexandria. Many people picture one great fire. Historians describe mostly a slow fade through neglect, as the institution weakened and papyrus scrolls fell out of use."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hall of shelves stacked with papyrus scrolls."
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some parts are well supported. The Emperor Aurelian's recapture of Alexandria in 273 CE almost certainly damaged the library. The story that Arab conquerors burned it is, scholars widely agree, fiction."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Well supported: Aurelian's attack in 273 CE probably damaged it | Debated: how much the Serapeum held | Myth: Arab conquerors burned it"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which Alexandria claim do scholars widely agree is fiction?",
+    "right": "That seventh-century Arab conquerors burned the library.",
+    "wrong": [
+     "That the library declined gradually through neglect.",
+     "That Aurelian's attack in 273 CE probably damaged it.",
+     "That papyrus scrolls fell out of use over time."
+    ],
+    "why": "The story of the Arab conquerors burning the library is widely regarded as fiction, while the gradual neglect and Aurelian's damage are supported."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some parts stay debated. The Serapeum's destruction probably cost real holdings, but we cannot know what its daughter library held."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Debated"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Loss can be partial, and recovery is possible. Archimedes' work was copied in 10th-century Constantinople. In the 13th century a monk erased it and wrote a prayer book on top."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A page of prayer text with faint older writing running across it at right angles."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A recycled book like this is called a palimpsest. A museum team began reading it in 1999, and it holds the only surviving copy of Archimedes' Method. Oddly, being a prayer book may have helped it survive, because people treasured it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Palimpsest"
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a palimpsest?",
+    "right": "A manuscript whose old writing was erased and written over.",
+    "wrong": [
+     "A scroll that cannot burn.",
+     "A copy made on a printing press.",
+     "A code used for secret messages."
+    ],
+    "why": "A palimpsest is a document with hidden writing: the old text was scraped off and the page reused."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now today's world. Web pages disappear too, which is called link rot. A 2024 Pew study found that 38% of web pages from 2013 were gone ten years later."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "38% of 2013 pages gone"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "New pages go as well. About 8% of 2023 pages were already gone. Across the whole decade, a quarter of pages collected were no longer accessible."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of web pages no longer accessible",
+    "chart": "c1"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Archives push back. The Wayback Machine lets people see old versions of pages that are gone. The Library of Congress studies file formats to judge which are likely to last, and its site covers nearly 400 of them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Archives"
+   },
+   "cite": [
+    "s24",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Archivists choose well-documented formats. They also migrate: they move data from an old format to a newer one before the old one fades."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Migrate"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In digital preservation, what does 'migration' mean?",
+    "right": "Moving data from an obsolete format to a more current one.",
+    "wrong": [
+     "Deleting old files to save space.",
+     "Printing a file once and throwing away the original.",
+     "Copying a file into a bigger folder."
+    ],
+    "why": "Format migration means moving data from an obsolete format to a more current version so it can still be used."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Knowledge is lost inside one person's life too. Memory fades fast soon after learning, then more slowly. A 2015 repeat of the old experiment found a similar curve."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Forgetting curve"
+   },
+   "cite": [
+    "s29",
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to the forgetting curve, when does memory fade fastest?",
+    "right": "Soon after learning, then it slows down.",
+    "wrong": [
+     "Evenly, the same amount every day.",
+     "Only after a full year.",
+     "Never, if you learned it well."
+    ],
+    "why": "The curve is steep early and very slow later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The good news: reviewing at spaced times flattens the curve. Each review slows the next round of forgetting."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A line that drops steeply then levels out, drawn again flatter after each review."
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notes, routines and other people are the ratchet in small. A note is memory outside your head, like writing. A routine is a review. A friend who knows what you know is a second copy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Notes: memory outside your head | Routines: regular review | People: a second copy"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put today's stories on the timeline. Losses and recoveries are spread across thousands of years."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1400-1200 BCE Linear B in use | 3rd c. BCE Archimedes lives in Syracuse | 10th c. CE his work copied | 273 CE Aurelian's attack on Alexandria | 13th c. text erased | 1562 Maní bonfire | 1900 Linear B tablets found | 1952 Linear B read | 1986 Domesday discs | 1999 palimpsest project begins | 2024 Pew link-rot study"
+   },
+   "cite": [
+    "s7",
+    "s18",
+    "s17",
+    "s14",
+    "s5",
+    "s8",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three ways to lose knowledge: a broken chain, a format change, and neglect or suppression."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Broken chain | Format change | Neglect or suppression"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which one is an example of format change?",
+    "right": "Linear B tablets that nobody could read until 1952.",
+    "wrong": [
+     "Maya books burned in 1562.",
+     "A small group that stops teaching a skill.",
+     "A library slowly losing its funding."
+    ],
+    "why": "In format change the writing survives but can no longer be read, which is what happened to Linear B."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the one step. Copy it forward: make a fresh copy in a common, well-documented format before the old one fades, and keep another copy somewhere else."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Copy it forward"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Your family videos are in an old file type that new phones are dropping. What is the best step?",
+    "right": "Copy them into a common, well-documented format and keep a second copy elsewhere.",
+    "wrong": [
+     "Leave them as they are, because digital files last forever.",
+     "Delete them so they cannot be lost.",
+     "Write the file names on paper and discard the videos."
+    ],
+    "why": "Old formats can become unusable, so migrating to a common, well-documented format helps keep the data usable."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time, in class nine, we look at the extended mind: how tools become part of how we think."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Extended Mind"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of web pages no longer accessible (Pew, 2024)",
+   "rows": [
+    {
+     "label": "Pages from 2013 (checked in 2023)",
+     "value": 38,
+     "source": "s22"
+    },
+    {
+     "label": "All pages collected 2013 to 2023",
+     "value": 25,
+     "source": "s22"
+    },
+    {
+     "label": "Pages from 2023",
+     "value": 8,
+     "source": "s23"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Broken chains",
+   "links": [
+    "[[cultural ratchet]]",
+    "[[speech]]",
+    "[[gene-culture coevolution]]"
+   ]
+  },
+  {
+   "topic": "Format change and dead media",
+   "links": [
+    "[[writing]]",
+    "[[printing and schools]]",
+    "[[internet and AI]]"
+   ]
+  },
+  {
+   "topic": "Neglect and suppression",
+   "links": [
+    "[[writing]]",
+    "[[science]]"
+   ]
+  },
+  {
+   "topic": "Sorting claims: well supported, debated, myth",
+   "links": [
+    "[[science]]",
+    "[[internet and AI]]"
+   ]
+  },
+  {
+   "topic": "Digital preservation and archives",
+   "links": [
+    "[[internet and AI]]",
+    "[[extended mind]]"
+   ]
+  },
+  {
+   "topic": "Forgetting in one life",
+   "links": [
+    "[[extended mind]]",
+    "[[writing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 1400-1200 BCE (Linear B in use)",
+   "elsewhere": "This is roughly the period of the events told in the Homeric epics.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "3rd century BCE",
+   "elsewhere": "Archimedes lived in the Greek city of Syracuse.",
+   "cite": [
+    "s18"
+   ]
+  },
+  {
+   "when": "273 CE",
+   "elsewhere": "Emperor Aurelian recaptured Alexandria after it had been occupied by a rebellion backed by Palmyra.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "when": "1086 and 1986",
+   "elsewhere": "In 1086 King William the Conqueror ordered the written Domesday survey of England. The BBC project of 1986 marked its 900th anniversary.",
+   "cite": [
+    "s28"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Small, cut-off groups lose skills, as shown in Tasmania.",
+   "other_view": "A 2016 PNAS paper argues the Tasmanian data do not fit Henrich's model. A 2012 test found the model largely holds up, though only as a model. Researchers still disagree.",
+   "cite": [
+    "s2",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The Library of Alexandria was lost in a single fire.",
+   "other_view": "Sources describe a slow decline through neglect. Aurelian's attack in 273 CE likely did damage, but how much was lost, and what the Serapeum held, is still debated.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "The 1986 Domesday discs lasted only about 15 years.",
+   "other_view": "The discs were nearly unreadable, but the data were rescued by the National Archives and partners. The story shows the risk of obsolescence, not a total loss.",
+   "cite": [
+    "s8",
+    "s27"
+   ]
+  },
+  {
+   "claim": "The 2015 replication proves one fixed forgetting curve for everyone.",
+   "other_view": "The replication used one person and nonsense material, so it supports the curve's shape but does not prove it holds for everyone.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "claim": "The Archimedes manuscript was discovered in 1906.",
+   "other_view": "One museum site gives 1906 and another account gives 1907 for Heiberg's discovery, so the exact year differs between sources.",
+   "cite": [
+    "s20",
+    "s21"
+   ]
+  }
+ ]
+}

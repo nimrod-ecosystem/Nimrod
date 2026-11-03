@@ -1,0 +1,1465 @@
+{
+ "about": {
+  "title": "The first farms and villages",
+  "course": "prehistory",
+  "class_n": 10,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 32,
+  "length_note": "This class is a little over 30 minutes. It covers eight topics, three named sites (each given twice, once for when it was built and once for when it was found) and three disagreements. Each idea has a short check question, so you can pause at any question and pick up later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Neolithic Revolution",
+   "publisher": "HISTORY",
+   "date": "undated",
+   "link": "https://www.history.com/articles/neolithic-revolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Natufian Culture",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/agriculture-and-agribusiness/natufian-culture/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Who Were the Natufians? A Dental Assessment of their Biological Coherency",
+   "publisher": "Journal of Dental Anthropology",
+   "date": "undated",
+   "link": "https://journal.dentalanthropology.org/index.php/jda/article/view/209",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Twenty Thousand-Year-Old Huts at a Hunter-Gatherer Settlement in Eastern Jordan",
+   "publisher": "PLOS ONE (via PubMed Central)",
+   "date": "2012",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3280235/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Domestication and early agriculture in the Mediterranean Basin: Origins, diffusion, and impact",
+   "publisher": "PNAS",
+   "date": "2008",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.0801317105",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "How did the domestication of Fertile Crescent grain crops increase their yields?",
+   "publisher": "Functional Ecology (via PubMed Central)",
+   "date": "2017",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5324541/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Development of Agriculture",
+   "publisher": "National Geographic Education",
+   "date": "undated",
+   "link": "https://education.nationalgeographic.org/resource/development-agriculture/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Origins of Agriculture: From Wild Plant Gathering to Crop Domestication",
+   "publisher": "Origin Trace",
+   "date": "undated",
+   "link": "https://origin-trace.com/article/origins-of-agriculture/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Professor Klaus Schmidt's views on Gobekli Tepe",
+   "publisher": "Stone Pages Archaeo News",
+   "date": "2011-01-31",
+   "link": "https://www.stonepages.com/news/archives/004220.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Klaus Schmidt - Göbekli Tepe",
+   "publisher": "Google Arts & Culture",
+   "date": "undated",
+   "link": "https://artsandculture.google.com/asset/klaus-schmidt-g%C3%B6bekli-tepe/nQFOKh6sbummLg?hl=en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "What is Göbekli Tepe? History, Significance & Discovery",
+   "publisher": "gobekli-tepe.com",
+   "date": "undated",
+   "link": "https://gobekli-tepe.com/about/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Göbekli Tepe: The Complete British Travellers Guide (2026)",
+   "publisher": "Hidden Turkey",
+   "date": "2026",
+   "link": "https://hiddenturkey.co.uk/destinations/gobekli-tepe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Tower of Jericho",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Tower_of_Jericho",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Tell es-Sultan",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Tell_es-Sultan",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Jericho — Tell es-Sultan",
+   "publisher": "Cultural Heritage Online",
+   "date": "undated",
+   "link": "https://culturalheritageonline.com/places/jericho-tell-es-sultan/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The Tower of Jericho: Humanity's First Monumental Mystery",
+   "publisher": "All That History (Substack)",
+   "date": "undated",
+   "link": "https://allthathistory.substack.com/p/the-tower-of-jericho-humanitys-first",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Çatalhöyük",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Catalhoyuk/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "A network of mutualities of being: socio-material archaeological networks and biological ties at Çatalhöyük",
+   "publisher": "arXiv",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2406.19149",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Çatalhöyük",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/%C3%87atalh%C3%B6y%C3%BCk",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Catal Huyuk",
+   "publisher": "New World Encyclopedia",
+   "date": "undated",
+   "link": "https://www.newworldencyclopedia.org/entry/Catal_Huyuk",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Bioarchaeology of Neolithic Çatalhöyük reveals fundamental transitions in health, mobility, and lifestyle in early farmers",
+   "publisher": "PNAS",
+   "date": "2019",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1904345116",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "An integrative skeletal and paleogenomic analysis of prehistoric stature variation suggests relatively reduced health for early European farmers (preprint, version 1)",
+   "publisher": "bioRxiv",
+   "date": "2021",
+   "link": "https://www.biorxiv.org/content/10.1101/2021.03.31.437881v1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "An integrative skeletal and paleogenomic analysis of prehistoric stature variation suggests relatively reduced health for early European farmers (preprint, full text)",
+   "publisher": "bioRxiv",
+   "date": "2021",
+   "link": "https://www.biorxiv.org/content/10.1101/2021.03.31.437881.full.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "An integrative skeletal and paleogenomic analysis of stature variation suggests relatively reduced health for early European farmers",
+   "publisher": "PNAS",
+   "date": "2022",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.2106743119",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "An integrative skeletal and paleogenomic analysis of stature variation suggests relatively reduced health for early European farmers (publication page)",
+   "publisher": "ResearchGate",
+   "date": "2022",
+   "link": "https://www.researchgate.net/publication/359815662_An_integrative_skeletal_and_paleogenomic_analysis_of_stature_variation_suggests_relatively_reduced_health_for_early_European_farmers",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Early Farmers Were Sicker and Shorter Than Their Forager Ancestors",
+   "publisher": "Discover Magazine",
+   "date": "undated",
+   "link": "https://www.discovermagazine.com/early-farmers-were-sicker-and-shorter-than-their-forager-ancestors-944",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Early farmers from across Europe directly descended from Neolithic Aegeans",
+   "publisher": "PNAS",
+   "date": "2016",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1523951113",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Ancient DNA reveals farming spread through migration, locals slow to adopt it",
+   "publisher": "Penn State University",
+   "date": "2025",
+   "link": "https://www.psu.edu/news/research/story/ancient-dna-reveals-farming-spread-through-migration-locals-slow-adopt-it",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Ancient DNA Indicates Farmers, not Just Farming, Spread West",
+   "publisher": "PubMed Central",
+   "date": "undated",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2976716/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "How did farming spread across Stone Age Europe? Two paths found.",
+   "publisher": "The Christian Science Monitor",
+   "date": "2016-06",
+   "link": "https://www.csmonitor.com/Science/2016/0607/How-did-farming-spread-across-Stone-Age-Europe-Two-paths-found",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Early European Farmers",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Early_European_Farmers",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Historical Archaeology & Anthropological Sciences (review of the Neolithic transition)",
+   "publisher": "MedCrave",
+   "date": "undated",
+   "link": "https://medcraveonline.com/JHAAS/JHAAS-01-00013",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "The Neolithic Agricultural Revolution and the Origins of Private Property",
+   "publisher": "Journal of Political Economy (University of Chicago Press)",
+   "date": "2019",
+   "link": "https://www.journals.uchicago.edu/doi/10.1086/701789",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Theories of agricultural origins",
+   "publisher": "Fiveable",
+   "date": "undated",
+   "link": "https://fiveable.me/world-prehistory/unit-7/theories-agricultural-origins/study-guide/lEzRvr5IWGb3hXOD",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Agricultural Revolution: Transition to Farming",
+   "publisher": "OER Project",
+   "date": "undated",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/Origins/Unit2/The-Transition-to-Farming",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Mesopotamia: Civilization Begins",
+   "publisher": "The J. Paul Getty Museum",
+   "date": "undated",
+   "link": "https://www.getty.edu/art/exhibitions/mesopotamia/explore.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "Recorded history",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Recorded_history",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Inventing Writing in South-west Asia",
+   "publisher": "ANE Today",
+   "date": "2025-01",
+   "link": "https://anetoday.org/writing-southwest-asia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "Origins of agriculture - Pre-Columbian, Mesoamerica, Andes",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/agriculture/The-Americas",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "Origins of World Agriculture",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/1886/origins-of-world-agriculture/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s41",
+   "title": "Neolithic Revolution",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Neolithic_Revolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s42",
+   "title": "Agrarian society",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Agrarian_society",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to our last class. Today we follow people from wild food to farms, and from camps to villages."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The first farms and villages"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will meet settled people, the first crops and animals, three famous sites, some big arguments, and the end of prehistory."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Settled people | First crops and animals | Three sites | Why farming began | Villages | The end of prehistory"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the weather. The last Ice Age ended, and the world grew warmer and wetter. In the Middle East, wild wheat and barley began to spread."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Warmer and wetter"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What happened in the Middle East as the Ice Age ended?",
+    "right": "It grew warmer and wetter, and wild wheat and barley spread.",
+    "wrong": [
+     "It grew colder and drier.",
+     "Farms already covered the land.",
+     "People first learned to write."
+    ],
+    "why": "Warmer, wetter weather helped wild grains grow. That set the scene for what came next."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a surprise. Some people settled in one place before they farmed. 'Sedentary' means living in one place for most of the year."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sedentary = living in one place most of the year"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Natufians of the Levant did this, roughly 13,000 to 10,000 years ago. Sources give slightly different dates."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 13,000 to 10,000 years ago: the Natufians, settled hunter-gatherers"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They gathered wild wheat and barley with sickles and stone bowls. Their round houses were dug partly underground, with pits to store spare food."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A round Natufian house, sunk into the ground, with storage pits beside it and a stone bowl and a sickle on the floor."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They still hunted gazelle and ibex, and fished. Their only domesticated animal was the dog."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Settled, but still hunter-gatherers"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Were the Natufians farmers?",
+    "right": "No. They gathered wild plants and hunted, but lived in one place for much of the year.",
+    "wrong": [
+     "Yes, they grew wheat in planted fields.",
+     "No, they never stayed in one place.",
+     "Yes, they kept herds of sheep and cattle."
+    ],
+    "why": "They gathered wild grain and hunted, and the dog was their only domesticated animal. So they were settled foragers, not farmers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Settling may be older still. In eastern Jordan, archaeologists found hut remains about 20,000 years old, made by hunter-gatherers."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "20,000 years old"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now farming. We need one word: domestication. It means people choose which plants or animals to breed, generation after generation, for traits they want."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Domestication"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: wild grasses let seeds scatter. Domesticated cereals keep seeds on the stalk, and have bigger seeds and less chaff, which makes them easier to harvest."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two stalks side by side. A wild one drops its seeds on the ground. A domesticated one holds big seeds on the stalk."
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is domestication?",
+    "right": "Choosing and breeding plants or animals over generations for useful traits.",
+    "wrong": [
+     "Hunting wild animals more often.",
+     "Living in one place all year.",
+     "Storing grain in pits."
+    ],
+    "why": "Domestication is selective breeding over many generations, like seeds that stay on the stalk."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Farming first took hold in the Fertile Crescent. It is a curved band of land from the Levant through southeastern Turkey into Iraq and Iran. That was roughly 12,000 to 10,000 years ago."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A curved band of land shaped like a boomerang: from the eastern Mediterranean coast, up through southeastern Turkey, and down to Iraq and southwestern Iran."
+   },
+   "cite": [
+    "s1",
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dating it is hard. People were managing wild plants at least 12,000 years ago. Clear signs of domesticated cereals show by about 10,500 years ago."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "12,000 years ago: managing wild plants | 10,500 years ago: clear domesticated cereals"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first crops are often called the eight founder crops: three cereals, four pulses such as lentils and peas, and flax."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "leaf",
+    "count": 8,
+    "layout": "group",
+    "text": "Eight founder crops: emmer wheat, einkorn wheat, barley, lentil, pea, chickpea, bitter vetch, flax"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first farm animals were sheep, goats, cattle and pigs, first kept in the Fertile Crescent. Dates run from about 13,000 to 10,000 years ago."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sheep | Goats | Cattle | Pigs"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These came from animals people already hunted. Animals that pull loads, like oxen, donkeys and camels, came much later, around 4000 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pulling animals came much later"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which animals were among the first farm animals in the Fertile Crescent?",
+    "right": "Sheep, goats, cattle and pigs.",
+    "wrong": [
+     "Elephants, lions and bears.",
+     "Camels, donkeys and oxen pulling carts.",
+     "Wolves and foxes."
+    ],
+    "why": "Sheep, goats, cattle and pigs came first. Pulling animals appeared much later."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not every great building was made by farmers. About 9500 BCE, hunter-gatherers raised huge stone circles at Göbekli Tepe, in southeastern Turkey."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site 1: Göbekli Tepe, built about 9500 BCE"
+   },
+   "cite": [
+    "s11",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its T-shaped pillars are over five metres tall and weigh up to ten tonnes. They date to the Pre-Pottery Neolithic A, before pottery."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A ring of tall, T-shaped limestone pillars on a hilltop, with a pair of larger pillars at the centre."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Found in 1994. German archaeologist Klaus Schmidt saw that big stones on the hill were pillar tops. An earlier survey had missed it. By 2011 only about five percent was dug."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 9500 BCE: built | 1994 CE: recognised by Klaus Schmidt"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Göbekli Tepe: when was it built, and when did Klaus Schmidt recognise what it was?",
+    "right": "Built about 9500 BCE; recognised in 1994.",
+    "wrong": [
+     "Built in 1994; recognised about 9500 BCE.",
+     "Built about 3000 BCE; recognised in 1958.",
+     "Built about 7000 BCE; recognised in 1850."
+    ],
+    "why": "The builders raised it about 11,500 years ago. Schmidt recognised what the buried stones were in 1994."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Farming did not start in only one place. In several regions, people began it on their own."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Independent starts"
+   },
+   "cite": [
+    "s40"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In China: rice and millet. In Mexico: squash, then maize. In the Andes: potatoes and quinoa. In Africa's Sahel: sorghum and pearl millet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "China: rice, millet | Mexico: squash, maize | Andes: potato, quinoa | Sahel: sorghum, pearl millet"
+   },
+   "cite": [
+    "s1",
+    "s40",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This chart shows rough start dates for farming in six regions. Remember: estimates differ between sources."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "When farming began, by region"
+   },
+   "cite": [
+    "s41"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Using the chart, which region started farming earliest?",
+    "right": "The Fertile Crescent.",
+    "wrong": [
+     "Central Mexico.",
+     "Sub-Saharan Africa.",
+     "Northern South America."
+    ],
+    "why": "The Fertile Crescent bar is the tallest, at about 11,000 years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why did farming begin? Nobody wrote down the reason, so scientists argue. We will meet four ideas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Climate | Population pressure | Feasting and ritual | Gradual experiment"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea one: climate. Warmer, wetter weather meant more wild grain, so growing plants became possible and useful."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Idea 1: Climate"
+   },
+   "cite": [
+    "s33",
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea two: population pressure. More people needed more food, so people grew it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Idea 2: Population pressure"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But here is a puzzle. Did a growing population lead to farming, or did farming let the population grow? We are not sure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Which came first?"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea three: feasting and ritual. Brian Hayden argued that people grew surplus food to hold feasts and gain status."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Idea 3: Feasting and ritual"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Göbekli Tepe fits this idea. Schmidt suggested the temple may have driven farming, not the reverse. One guide reports domesticated einkorn came from only 30 km away, about 1,000 years later."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A map pin at Göbekli Tepe, with a second pin about 30 km away marking where domesticated einkorn wheat first appeared."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea four: no single decision. Farming may have grown slowly, partly by accident. Foraging and farming could mix for thousands of years, and people sometimes went back to foraging."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Idea 4: Gradual experiment"
+   },
+   "cite": [
+    "s35",
+    "s32"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which idea says farming began with surplus food for feasts and status?",
+    "right": "Feasting and ritual.",
+    "wrong": [
+     "Climate change.",
+     "Population pressure.",
+     "Gradual experiment."
+    ],
+    "why": "Hayden's feasting idea says people grew surplus to hold feasts and gain prestige."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everyone accepts the older ideas. One study says climate and population pressure get little support from recent evidence. Some of the earliest farming happened where food was plentiful and crowding was low."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Some of the earliest farming took place at sites of resource abundance and limited population pressure."
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many scholars think no single cause explains it. It was likely a mix of climate, people, society and technology, working differently in each place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A mix of causes"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do many scholars now think about why farming began?",
+    "right": "A mix of causes, working differently in different places.",
+    "wrong": [
+     "One single cause has been proven.",
+     "Farming was invented by one person.",
+     "Climate played no part at all."
+    ],
+    "why": "The evidence points to several factors interacting, not one proven cause."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, villages. Take Jericho, beside a spring in the Jordan Valley. A first permanent settlement began here between about 10,000 and 9000 BCE, before farming."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site 2: Jericho, Tell es-Sultan"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The tower was built around 8000 BCE; radiocarbon suggests about 8300. It stood 8.5 metres tall against a stone wall, with an inside staircase of 22 steps."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "8.5 metres tall"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "John Garstang dug at the mound from 1930 to 1936. Kathleen Kenyon, digging from 1952 to 1958, found the tower and showed it was Neolithic."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 8000 BCE: tower built | 1952 to 1958 CE: Kathleen Kenyon finds it"
+   },
+   "cite": [
+    "s13",
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who found the Tower of Jericho, and when?",
+    "right": "Kathleen Kenyon, in 1952 to 1958.",
+    "wrong": [
+     "Klaus Schmidt, in 1994.",
+     "John Garstang, in 1930 to 1936.",
+     "Kathleen Kenyon, in 1994."
+    ],
+    "why": "Garstang dug earlier but did not recognise how old the settlement was. Kenyon found the tower in the 1950s."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What was the tower for? Kenyon first read it as defence. Other writers say its purpose is unknown: watchtower, store marker, or ritual place. Either way, a settled community organised big building work."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Defence (Kenyon's first view) | Purpose unknown: watchtower, store marker, ritual place"
+   },
+   "cite": [
+    "s16",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, Çatalhöyük, in Turkey's Konya Plain. People lived on this mound from about 7100 to 5950 BCE. They built mudbrick houses on top of older ones."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site 3: Çatalhöyük, lived in 7100 to 5950 BCE"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Digging shows 18 layers of buildings, one above another."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 18,
+    "layout": "group",
+    "text": "18 layers of buildings"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Found in 1958 by James Mellaart, on a survey of the Konya Plain. He dug there from 1961 to 1965. Ian Hodder led later digs, from 1993 to 2017."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "7100 BCE: settlement begins | 1958 CE: found by James Mellaart"
+   },
+   "cite": [
+    "s17",
+    "s19",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "About when did people live at Çatalhöyük, and when was it found?",
+    "right": "Lived in from about 7100 BCE; found in 1958.",
+    "wrong": [
+     "Lived in from about 9500 BCE; found in 1994.",
+     "Lived in from about 3400 BCE; found in 1958.",
+     "Lived in from about 7100 BCE; found in 1994."
+    ],
+    "why": "The Neolithic town began about 7100 BCE. Mellaart found the mound in 1958."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Çatalhöyük was made of homes, with no obvious public buildings. The houses look much alike, each a centre of daily work and ritual life."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A crowded cluster of flat-roofed mudbrick houses, packed side by side with no streets."
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mellaart once thought some richly painted houses were shrines for a religious elite. So how equal was life there? Experts weigh the evidence differently."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mellaart: shrines for an elite | Later work: houses look equal"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Farming allowed storage. Spare grain could be kept for winter or traded. Stored food can also become status, as Hayden's feasting idea suggests."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Surplus"
+   },
+   "cite": [
+    "s42",
+    "s34"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why might stored surplus food matter for society?",
+    "right": "It can be kept, traded or used for status, which can create differences in wealth.",
+    "wrong": [
+     "It made everyone exactly equal.",
+     "It meant people no longer needed houses.",
+     "It stopped diseases from spreading."
+    ],
+    "why": "Surplus can be saved, swapped and used to gain standing. That opens the door to inequality."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Village life had costs. Skeletons of early farmers often show more tooth decay and signs of infection than earlier foragers. At Çatalhöyük, cavities point to a diet heavy in cereals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Health costs"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Crowding helps germs spread. Animals kept close by carried diseases that jumped to people, such as measles and influenza."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A village with houses close together and a pen of sheep and goats beside them."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many early farmers were also shorter. This chart shows estimates from earlier studies. A newer study that corrected for genes found a smaller gap, a few centimetres."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "How much shorter early farmers were than the hunter-gatherers before them"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What may shorter average height in early farmers suggest?",
+    "right": "Poorer nutrition or more childhood disease.",
+    "wrong": [
+     "They ate far more meat.",
+     "They moved around more.",
+     "Nothing, because height never changes."
+    ],
+    "why": "Height reflects childhood nutrition and illness, so a dip can point to poorer health."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Be careful: results vary by place and by sex. And farming fed more people, so populations grew. It was a trade-off."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "More food, more people | More disease, shorter stature"
+   },
+   "cite": [
+    "s25",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a second argument. Farming began in the Middle East. How did it reach Europe? One view: farmers moved. Another: local foragers learned from neighbours."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "People moved | Ideas moved"
+   },
+   "cite": [
+    "s29",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ancient DNA from early farmers in Greece and northwest Turkey is very like DNA from early farmers across Europe. That points to people moving."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A map with arrows leading from northwest Turkey and Greece into central and southern Europe."
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 2025 study of 618 ancient Europeans used computer models. It found migration drove the spread, and learning from neighbours added little speed. About one in 1,000 farmers a year converted a forager."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "618 ancient Europeans studied"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The other side: foragers were not simply replaced. They mixed with farmers and left a mark in European DNA today. The strongest evidence is from Europe, and other regions may differ."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mixing, not replacing"
+   },
+   "cite": [
+    "s29",
+    "s28",
+    "s30"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does ancient DNA suggest about how farming reached Europe?",
+    "right": "Mainly farmers moved in from the Aegean and Anatolia, mixing a little with local foragers.",
+    "wrong": [
+     "Ideas spread alone, with no people moving.",
+     "Farming was invented separately in every European valley.",
+     "Farmers and foragers never met."
+    ],
+    "why": "DNA ties early European farmers to Aegean farmers. Some mixing with foragers also happened."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last question: where does prehistory end? Prehistory means the time before writing."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where prehistory ends"
+   },
+   "cite": [
+    "s37"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It is judged place by place. Prehistory covers the past where no written records exist, or where the writing is not understood."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Place by place"
+   },
+   "cite": [
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The earliest known writing appeared in southern Mesopotamia around 3400 BCE. It began as pictures pressed into clay."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 3400 BCE: earliest known writing, southern Mesopotamia"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Early tablets kept accounts, such as one recording malt and barley. Writing began as bookkeeping. Experts disagree on exactly when marks become true writing. Egyptian hieroglyphs also appear between 3400 and 3200 BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small clay tablet pressed with picture signs and number marks, recording barley."
+   },
+   "cite": [
+    "s38",
+    "s37"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What traditionally marks the end of prehistory?",
+    "right": "The invention of writing systems.",
+    "wrong": [
+     "The start of farming.",
+     "The end of the Ice Age.",
+     "The first villages."
+    ],
+    "why": "Prehistory traditionally means the time before writing, so writing marks its end."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us put it in order. Natufians settle. Göbekli Tepe, then Jericho's tower, then Çatalhöyük. Then writing. Well done for finishing the whole course."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 13,000 to 10,000 years ago: Natufians | 9500 BCE: Göbekli Tepe | 8000 BCE: Jericho tower | 7100 BCE: Çatalhöyük | 3400 BCE: writing"
+   },
+   "cite": [
+    "s3",
+    "s11",
+    "s13",
+    "s18",
+    "s36"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "When farming began, by region (approximate years ago, one source's estimates)",
+   "rows": [
+    {
+     "label": "Fertile Crescent",
+     "value": 11000,
+     "source": "s41"
+    },
+    {
+     "label": "Yangtze and Yellow River basins",
+     "value": 9000,
+     "source": "s41"
+    },
+    {
+     "label": "New Guinea Highlands",
+     "value": 9000,
+     "source": "s41"
+    },
+    {
+     "label": "Central Mexico",
+     "value": 5000,
+     "source": "s41"
+    },
+    {
+     "label": "Northern South America",
+     "value": 5000,
+     "source": "s41"
+    },
+    {
+     "label": "Sub-Saharan Africa",
+     "value": 5000,
+     "source": "s41"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "How much shorter early farmers were than earlier hunter-gatherers (cm, estimates from earlier studies)",
+   "rows": [
+    {
+     "label": "Western Europe, women",
+     "value": 8,
+     "source": "s23"
+    },
+    {
+     "label": "Western Europe, men",
+     "value": 14,
+     "source": "s23"
+    },
+    {
+     "label": "Eastern Mediterranean, women",
+     "value": 11,
+     "source": "s23"
+    },
+    {
+     "label": "Eastern Mediterranean, men",
+     "value": 8,
+     "source": "s23"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Natufians and settling before farming",
+   "links": [
+    "[[The Ice Age world]]",
+    "[[Fire and the changing body]]"
+   ]
+  },
+  {
+   "topic": "Domestication of plants and animals",
+   "links": [
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  },
+  {
+   "topic": "Göbekli Tepe",
+   "links": [
+    "[[Art, symbols and the mind: cave paintings and beyond]]",
+    "[[The Ice Age world]]"
+   ]
+  },
+  {
+   "topic": "Jericho and Çatalhöyük",
+   "links": [
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  },
+  {
+   "topic": "Farming reaching Europe",
+   "links": [
+    "[[Spreading across the world]]",
+    "[[Our species, our cousins: Homo sapiens, Neanderthals and Denisovans]]"
+   ]
+  },
+  {
+   "topic": "The end of prehistory",
+   "links": [
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 9500 BCE (Göbekli Tepe built)",
+   "elsewhere": "In the Levant, the Natufian people were settled but still gathering wild grain and hunting, not farming.",
+   "cite": [
+    "s2"
+   ]
+  },
+  {
+   "when": "About 8000 BCE (Tower of Jericho built)",
+   "elsewhere": "In Mexico, squash cultivation was beginning about 10,000 years ago. Rice and millet were also starting to be grown in Asia around this time.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "when": "About 7000 BCE (Çatalhöyük settled)",
+   "elsewhere": "Farmers from Anatolia began moving into southeastern Europe from around 7000 BC.",
+   "cite": [
+    "s31"
+   ]
+  },
+  {
+   "when": "About 3400 BCE (earliest writing)",
+   "elsewhere": "Egyptian hieroglyphs and Sumerian cuneiform both emerge in these centuries.",
+   "cite": [
+    "s37"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Climate change and population pressure explain why farming began.",
+   "other_view": "One study says these familiar explanations get little support from recent evidence, and notes that some of the earliest farming took place where food was plentiful and crowding was limited. Others stress feasting, ritual and status. Klaus Schmidt suggested Göbekli Tepe's temple may have driven farming. Many scholars favour a mix of causes that differed by place.",
+   "cite": [
+    "s33",
+    "s34",
+    "s12",
+    "s32"
+   ]
+  },
+  {
+   "claim": "Farming spread into Europe mainly because farmers migrated from Anatolia and the Aegean.",
+   "other_view": "Ancient DNA strongly supports migration in Europe. But local foragers were not simply replaced: they mixed with farmers and left a mark in European DNA. The strongest evidence is from Europe, so other regions may have a different story and need their own DNA studies.",
+   "cite": [
+    "s27",
+    "s28",
+    "s29",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Early farmers were less healthy than the foragers before them.",
+   "other_view": "Many skeletons show more dental disease and shorter stature, and a review found this pattern widely. But results vary by region and by sex, a newer analysis found a smaller height gap, and farming also let populations grow.",
+   "cite": [
+    "s21",
+    "s26",
+    "s24",
+    "s25",
+    "s22"
+   ]
+  },
+  {
+   "claim": "The dates for farming outside the Fertile Crescent are settled.",
+   "other_view": "They are not. One source dates Central Mexico's start to 5,000 to 4,000 years ago. Another says squash was grown in Mexico about 10,000 years ago, and Britannica puts the earliest crop evidence in Mexico and South America at 9,000 to 8,000 years ago. China's start is also given as 9,000 years ago in one source and 8,000 in another. Treat the chart as rough.",
+   "cite": [
+    "s41",
+    "s1",
+    "s39",
+    "s40"
+   ]
+  },
+  {
+   "claim": "The Tower of Jericho was a defensive structure.",
+   "other_view": "Kenyon first read the tower and wall as fortifications, and that view dominated for decades. Some writers now say the tower's purpose is unknown: it could have been a watchtower, a store marker or a ritual monument.",
+   "cite": [
+    "s16",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Çatalhöyük had an elite who lived in richly painted 'shrine' houses.",
+   "other_view": "Mellaart thought some decorated houses were shrines for a religious elite. Later work describes houses that appear to be equal, each a centre of both daily and ritual life, with no obvious public buildings.",
+   "cite": [
+    "s17",
+    "s18",
+    "s19"
+   ]
+  }
+ ]
+}

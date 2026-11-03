@@ -1,0 +1,1130 @@
+{
+ "about": {
+  "title": "Indigenous Religions of the Americas and the Arctic",
+  "course": "religions-of-the-world",
+  "class_n": 14,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 37 short beats and 12 check questions. Six traditions are covered, so each gets time without rushing. Mike's note 'not just the major ones' is why the Arctic (Inuit and Sámi) is included. Each tradition is only a glimpse, not a full portrait."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Religion and Spirituality of Indigenous Peoples in Canada",
+   "publisher": "The Canadian Encyclopedia (Historica Canada)",
+   "date": "undated",
+   "link": "https://www.thecanadianencyclopedia.ca/en/article/religion-of-aboriginal-people",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Haudenosaunee Guide for Educators",
+   "publisher": "Smithsonian National Museum of the American Indian, Education Office",
+   "date": "undated",
+   "link": "https://americanindian.si.edu/sites/1/files/pdf/education/HaudenosauneeGuide.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Haudenosaunee Thanksgiving Address: Greetings to the Natural World (translation published 1993)",
+   "publisher": "Smithsonian National Museum of the American Indian, 'American Indian Responses to Environmental Challenges'",
+   "date": "undated",
+   "link": "https://americanindian.si.edu/environment/pdf/01_02_Thanksgiving_Address.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Haudenosaunee Thanksgiving Address",
+   "publisher": "The American Yawp Reader",
+   "date": "undated",
+   "link": "https://www.americanyawp.com/reader/british-north-america/haudenosaunee-thanksgiving-address/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Blessing Way",
+   "publisher": "University of New Mexico Libraries (Hillerman Collection)",
+   "date": "undated",
+   "link": "https://ehillerman.unm.edu/1435",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Walking in Beauty with the Diné",
+   "publisher": "Museum of Northern Arizona",
+   "date": "undated",
+   "link": "https://musnaz.org/press-releases/walking-in-beauty-with-the-dine",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Mother's blessing ceremonies are helping some women with spiritual transition to motherhood",
+   "publisher": "Religion News Service",
+   "date": "2025-05-09",
+   "link": "https://religionnews.com/2025/05/09/mothers-blessing-ceremonies-are-helping-some-women-with-spiritual-transition-to-motherhood/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Native Perspectives on the 40th Anniversary of the American Indian Religious Freedom Act",
+   "publisher": "Smithsonian Magazine, National Museum of the American Indian blog",
+   "date": "2018-11-30",
+   "link": "https://www.smithsonianmag.com/blogs/national-museum-american-indian/2018/11/30/native-perspectives-american-indian-religious-freedom-act/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "U.S. Congress passes American Indian Religious Freedom Act on July 27, 1978",
+   "publisher": "HistoryLink.org",
+   "date": "undated",
+   "link": "https://www.historylink.org/File/20264",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "American Indian Religious Freedom Act (Kids)",
+   "publisher": "Britannica Kids",
+   "date": "undated",
+   "link": "https://kids.britannica.com/kids/article/American-Indian-Religious-Freedom-Act/636267",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "1978: American Indian freedom of religion legalized (Native Voices timeline)",
+   "publisher": "U.S. National Library of Medicine",
+   "date": "undated",
+   "link": "https://www.nlm.nih.gov/nativevoices/timeline/545.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "American Indian Religious Freedom Act (1978)",
+   "publisher": "Teaching Legal History, University of Nebraska–Lincoln",
+   "date": "undated",
+   "link": "https://teachinglegalhistory.unl.edu/s/oer/item/2052",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "American Indian Religious Freedom Act of 1978",
+   "publisher": "U.S. Civil Liberties (uscivilliberties.org)",
+   "date": "undated",
+   "link": "https://uscivilliberties.org/3089-american-indian-religious-freedom-act-of-1978.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Potlatch",
+   "publisher": "The Canadian Encyclopedia (Historica Canada)",
+   "date": "undated",
+   "link": "https://thecanadianencyclopedia.ca/en/article/potlatch",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The History of the Potlatch Collection",
+   "publisher": "U'mista Cultural Centre (Kwakwaka'wakw)",
+   "date": "undated",
+   "link": "https://www.umista.ca/pages/collection-history",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The Potlatch Ban",
+   "publisher": "Mulroney Institute of Government, St. Francis Xavier University",
+   "date": "undated",
+   "link": "https://www.mulroneyinstitute.ca/node/4096",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Lakota Religious Traditions",
+   "publisher": "Encyclopedia.com",
+   "date": "undated",
+   "link": "https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/lakota-religious-traditions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Black Hills",
+   "publisher": "Sacred Land Film Project (Earth Island Institute)",
+   "date": "undated",
+   "link": "https://sacredland.org/black-hills-united-states/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Angakkuq",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Angakkuq",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Inuit religion",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Inuit_religion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Arnapkapfaaluk",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Arnapkapfaaluk",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Arnakuagsak",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Arnakuagsak",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Inuit Qaujimajatuqangit",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Inuit_Qaujimajatuqangit",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The Inuit Way of Life: Traditions, Myths & Rich Culture",
+   "publisher": "Connolly Cove",
+   "date": "undated",
+   "link": "https://www.connollycove.com/the-inuit-way-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Inuit and the Arctic, Sedna, Angakkuq and protective objects",
+   "publisher": "iwell-guard.com",
+   "date": "undated",
+   "link": "https://iwell-guard.com/en/inuit-and-the-arctic-sedna-tornit-and-protective-practice/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "The Decline of the Sámi People's Indigenous Religion",
+   "publisher": "University of Texas at Austin (Sámi course pages)",
+   "date": "undated",
+   "link": "https://www.laits.utexas.edu/sami/diehtu/siida/christian/decline.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Sámi Drums",
+   "publisher": "University of Texas at Austin (Sámi course pages)",
+   "date": "undated",
+   "link": "https://www.laits.utexas.edu/sami/diehtu/giella/music/noaidi.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Sámi Noaidi and Inuit Angakoq: Traditional Shamanic Roles and Practices",
+   "publisher": "University of Texas at Austin (Sámi course pages)",
+   "date": "undated",
+   "link": "https://www.laits.utexas.edu/sami/diehtu/siida/shaman/inuit.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Introduction: The Making of Sámi Religion in Contemporary Society",
+   "publisher": "Scholarly volume introduction, hosted on Academia.edu",
+   "date": "undated",
+   "link": "https://www.academia.edu/78730650/Introduction_The_Making_of_S%C3%A1mi_Religion_in_Contemporary_Society",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Sami",
+   "publisher": "New World Encyclopedia",
+   "date": "undated",
+   "link": "https://www.newworldencyclopedia.org/entry/Sami",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Sámi shamanism",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/S%C3%A1mi_shamanism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Thanksgiving Address",
+   "publisher": "Waterloo Region Museum",
+   "date": "undated",
+   "link": "https://regionofwaterloomuseums.ca/en/exhibits/thanksgiving-address.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Sami Shamanism, fishing magic and drum symbolism",
+   "publisher": "University of Lapland (research repository)",
+   "date": "undated",
+   "link": "https://lacris.ulapland.fi/ws/files/2304681/ShamanVol23_Joy.pdf",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 14. Last time we looked at traditional religions of Africa and the African diaspora. Today we travel to the Americas and the Arctic."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Indigenous Religions of the Americas and the Arctic"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our goal is to describe a few traditions in their own terms. We will look at why land and ceremony matter, and why practices differ from nation to nation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Land; Story; Ceremony; Why nations differ"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: there is no single Native American religion. One encyclopedia says there is no one overarching Indigenous religion, and that beliefs vary widely."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many nations, many traditions"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is there one Native American religion?",
+    "right": "No. Beliefs and practices vary widely from nation to nation.",
+    "wrong": [
+     "Yes, all Native nations share one religion.",
+     "Yes, except for the Inuit, who have a different one.",
+     "No, because Native peoples have no spiritual traditions."
+    ],
+    "why": "Sources describe many distinct traditions, with beliefs and practices that vary widely, not one overarching religion."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Names matter. In Canada, the encyclopedia speaks of three groups: First Nations, Métis and Inuit. Nations also have their own names, like Haudenosaunee, or Diné, who are also called Navajo."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Canada: First Nations | Métis | Inuit. Nations' own names: Haudenosaunee (Iroquois) | Diné (Navajo)"
+   },
+   "cite": [
+    "s1",
+    "s4",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second idea: spiritual life is often not a separate box. The encyclopedia says hunting, clan membership and daily life may all carry spiritual meaning."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Daily life and the sacred are woven together"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does it mean that daily life and spiritual life are often woven together?",
+    "right": "Activities like hunting and belonging to a clan can carry spiritual meaning.",
+    "wrong": [
+     "Spiritual life only happens in one special building.",
+     "Daily tasks are never connected to beliefs.",
+     "Only priests have a spiritual life."
+    ],
+    "why": "The Canadian Encyclopedia says hunting, clan membership and other parts of daily life may be imbued with spiritual meaning."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now land. For many nations, ceremonies belong to particular places. Kenny Frost, a Ute Sun Dance chief, says that after people were moved to reservations, many no longer know where their traditional sacred areas are."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A wide open landscape with a distant rock butte at sunrise, a place that could be a sacred site."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He asks tribal leaders to help people travel back to their homelands and reconnect with sacred places. Knowledge of those places can be lost as elders pass on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Place and ceremony go together"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "According to Kenny Frost, why can being moved from homelands harm ceremonial life?",
+    "right": "People may lose knowledge of where their sacred places are, and lose access to them.",
+    "wrong": [
+     "Ceremonies can be performed anywhere without any change.",
+     "Sacred places are always marked with signs.",
+     "Only the government knows where sacred places are."
+    ],
+    "why": "He says displacement means many people do not know where traditional sacred areas are, and that this knowledge risks being lost."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third idea: story. For the Haudenosaunee, the Peacemaker Story explains how their Confederacy began. It is also a code for how people treat each other and run their traditional government."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Story as a way to live"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fourth idea: ceremony. A ceremony is something people do together, with words, song, dance, food or gifts. Let's meet some examples, as these nations and their own museums describe them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Haudenosaunee Thanksgiving Address; Diné Blessingway; Lakota Sun Dance; Northwest Coast potlatch; then Inuit and Sámi"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example one: the Haudenosaunee Thanksgiving Address, called Gano:nyok. The Haudenosaunee give thanks every day, not just once a year."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Haudenosaunee: giving thanks every day"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It is used to open and close major gatherings. It greets in turn the people, the Earth, the plants, the animals and the Four Winds."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The People; The Earth Mother; Plants; Animals; The Four Winds"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How often do the Haudenosaunee give thanks, according to the Smithsonian's guide?",
+    "right": "Every day, and the address also opens and closes major gatherings.",
+    "wrong": [
+     "Only once a year, in November.",
+     "Only at funerals.",
+     "Only when a chief is chosen."
+    ],
+    "why": "The guide says the Haudenosaunee give thanks every day, and the address opens and closes major gatherings."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After each greeting, everyone says a refrain."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Now our minds are one."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today, a Haudenosaunee educator in Ontario explains it in a museum exhibit. She describes it as the first thing said before anything important is done."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still spoken today"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example two: the Diné, also called Navajo. A central idea is hózhó. It means harmony, beauty, blessedness and balance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hózhó: harmony, beauty, balance"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A ceremony tied to hózhó is the Blessingway. It blesses the person sung over, for good health and good luck. It is done for things like a coming birth, or a young person leaving for the armed forces."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Blessingway: blesses and looks to good hope | Other chantways: used to cure a problem"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the Blessingway mainly for?",
+    "right": "To bless a person for good health, luck and well-being.",
+    "wrong": [
+     "Only to cure a serious illness.",
+     "To declare war.",
+     "To choose a new leader."
+    ],
+    "why": "The UNM entry says the Blessingway blesses the one sung over, unlike the other chantways, which are used to cure a problem."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The entry also says the English word Blessingway is not an exact translation of the Diné name, Hózhójí."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Words carry meaning that translation can miss"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 2025 news report shows why respect matters. It describes the Navajo community questioning outsiders who use the word Blessingway for their own 'mother's blessing' events. Some ceremonies belong to their people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Some ceremonies belong to their people"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example three: the Lakota and the Black Hills. The Hills are sacred to the Lakota, Northern Cheyenne and Omaha. To the Lakota, Paha Sapa is “the heart of everything that is.”"
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Black Hills, across western South Dakota, northeast Wyoming and southeast Montana."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Hills hold ceremonies, vision quests and burials. The Lakota tradition includes seven sacred rites, and the Sun Dance is often considered the most important."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ceremonies; Vision quests; Burials; Seven Sacred Rites; Sun Dance"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Sun Dance is held in summer. A sacred tree stands at the centre of the dance area, and it symbolizes Wakan Tanka, the centre of the universe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sun Dance: the sacred tree at the centre"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After gold was found in 1875, the Hills were taken for white settlement. That dispute is still contested today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A sacred land still in dispute"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why are the Black Hills important to the Lakota?",
+    "right": "They are a sacred landscape used for ceremonies, vision quests and burials.",
+    "wrong": [
+     "They are only important because of gold.",
+     "They are only a tourist attraction.",
+     "They belong to one single family."
+    ],
+    "why": "Sacred Land Film Project describes the Hills as sacred, the home of ceremonies, vision quests and burials. The gold rush is why they were taken."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example four: the potlatch. It is a ceremony among Northwest Coast peoples, including the Kwakwaka’wakw, Nuu-chah-nulth and Coast Salish, and among some Dene."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The potlatch of the Northwest Coast"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Canadian Encyclopedia says the potlatch is part of the governing structure, culture and spiritual traditions of these nations. It is not only a feast."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Governing, culture and spiritual life together"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we go north. The Inuit live across Arctic lands. The word Inuit means “the human beings.” Hunting is central to their way of life, and traditionally it was guided by religious taboos."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Arctic: Inuit"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In traditional Inuit belief, the sea goddess Sedna guards the sea mammals. She controls when they can be hunted. Shamans may visit her and put wrongs right, so that she releases the animals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sedna, keeper of sea animals"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The healer and spiritual figure is called an angakkuq. Among Central Inuit, an angakkuq joined an annual ceremony for Sedna. In spirit they travelled to her home and smoothed her hair, because she has no fingers."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A figure in the dark beneath the sea, a long tangle of hair, and a helper's hands smoothing it."
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In traditional Inuit belief, who is Sedna?",
+    "right": "The sea goddess who guards sea animals and controls when they can be hunted.",
+    "wrong": [
+     "A sky god of thunder.",
+     "The first human hunter.",
+     "A sun goddess who rules the seasons."
+    ],
+    "why": "The Canadian Encyclopedia describes Sedna as the guardian of sea mammals, who controls when they are available to hunt."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even this figure varies by place. Greenland's Arnakuagsak and Alaska's Nerrivik are described as equivalents of Sedna. Near the Coronation Gulf, Arnapkapfaaluk is described as feared, withholding animals when a taboo was broken."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sedna (Canada), Arnakuagsak (Greenland), Nerrivik (Alaska) | Arnapkapfaaluk (Coronation Gulf): feared, withholds animals"
+   },
+   "cite": [
+    "s22",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Inuit first met Christian Europeans in the 16th century. By the mid-20th century most had formally converted, and angakkuit largely declined. From the 1970s, a movement began to celebrate Inuit culture."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "16th century: first contact with Christian Europeans | mid-20th century: most formally Christian | 1970s: renewed celebration of Inuit culture"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today, many Inuit use the term Inuit Qaujimajatuqangit, or IQ. It is a body of knowledge about nature, humans and animals. Nunavut's government adopted IQ principles, including respect and care for land, animals and the environment."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inuit Qaujimajatuqangit (IQ)"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is Inuit Qaujimajatuqangit?",
+    "right": "A body of traditional knowledge and values that Inuit pass on and use today.",
+    "wrong": [
+     "The name of the sea goddess.",
+     "A ceremony only an angakkuq may attend.",
+     "A school exam in Nunavut."
+    ],
+    "why": "It is described as a body of knowledge about nature, humans and animals. Nunavut's government built public policy on its principles."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Sámi. Their homeland, Sápmi, covers parts of northern Norway, Sweden, Finland and Russia's Kola Peninsula. Estimates of their number run from about 75,000 to 100,000."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Sápmi, across the north of Norway, Sweden and Finland and the Kola Peninsula of Russia."
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Traditional Sámi religion was a worldview and a form of worship. Drumming and yoik, a rhythmic chant-song, were central. The noaidi was the healer and protector, and beliefs differed from region to region."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Worldview; Drum; Yoik; Noaidi (healer and protector)"
+   },
+   "cite": [
+    "s26",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The drum was more than an instrument. Images on its surface worked as a map of the spirit world for the noaidi's journeys. About 70 drums survive, and they are key sources for study."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An oval reindeer-hide drum with painted figures in zones, a world above, a world below and the living world between."
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Missionary campaigns targeted the drum. Noaidi were killed, and drums were smashed and burned. Some Sámi told to burn their drums burned “drums that did not work” instead."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The drum became the target"
+   },
+   "cite": [
+    "s28",
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did missionaries target the Sámi drum?",
+    "right": "It was one of the most important tools and symbols of traditional Sámi religion.",
+    "wrong": [
+     "It was made of valuable metal.",
+     "It was a toy for children.",
+     "It was only used for travel signals."
+    ],
+    "why": "The sources describe the drum and yoik as central to Sámi religion, and missionary efforts aimed to destroy traditional beliefs and tools."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today, scholars call Sámi religion pluralistic. It includes pre-Christian practices, Laestadianism (a Lutheran revival movement from the 19th century) and modern shamanism. Sámi religion also coexists with Christianity."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pre-Christian practices; Laestadianism; Modern shamanism"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the hard part of this history: restrictions. In the United States in 1883, an official wrote that Native dances, ceremonies and healers held people back from adopting white customs. That led to the Code of Indian Offenses, rules against Native religious practices."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Restrictions on practice"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Indian agents also prohibited ceremonies and dances and encouraged conversion. Boarding schools sought to erase students' religion, language and traditions. In Canada, administrators and missionaries suppressed Indigenous spirituality from the late 19th to the mid-20th century."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bans on ceremonies and dances; Boarding schools; Pressure to convert"
+   },
+   "cite": [
+    "s9",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Canada, the potlatch was banned by an 1884 amendment to the Indian Act, and the ban lasted until 1951. The Sun Dance was also banned. Masks and ceremonial objects were seized and taken to museums."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1884: Indian Act amended | 1885: ban in force | 1951: ban removed | 1952: first public potlatch"
+   },
+   "cite": [
+    "s14",
+    "s15",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Yet the ban did not end the potlatch. It went underground and was held in secret. In 1952, Chief Mungo Martin of the Kwakwaka’wakw hosted the first public potlatch, in Victoria. Many seized treasures are now at the U'mista Cultural Centre."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Held in secret, then in public"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did the potlatch survive the ban?",
+    "right": "Communities kept holding it in secret, and held public potlatches again after 1951.",
+    "wrong": [
+     "It was moved to another country.",
+     "It stopped completely and was invented again in 1952.",
+     "Museums performed it on behalf of the nations."
+    ],
+    "why": "Sources say potlatches went underground during the ban, and the first public one followed in 1952."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the United States, Congress passed the American Indian Religious Freedom Act in 1978. It set a policy to protect the right to believe, express and exercise traditional religions, including access to sites, sacred objects and ceremonies. It covers American Indians, Alaska Natives and Native Hawaiians."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1978: American Indian Religious Freedom Act"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A House study found Native people had been kept from sacred sites and denied sacred objects, including eagle feathers. The Act was a joint resolution with no penalties. In 1994 it was amended to protect the use of peyote as a sacrament in traditional ceremonies."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kept from sites; Denied sacred objects; Interference with ceremonies; Amended 1994"
+   },
+   "cite": [
+    "s11",
+    "s13",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did the 1978 Act do?",
+    "right": "It set a U.S. policy to protect traditional religious freedom, including access to sites and sacred objects.",
+    "wrong": [
+     "It created a national Native religion.",
+     "It banned all Native ceremonies.",
+     "It gave every tribe ownership of the Black Hills."
+    ],
+    "why": "The Act recognized past interference and set a policy to protect traditional religious freedom, though as a joint resolution it had no penalty provisions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where are these traditions practised today? Places we have met include the Black Hills, the Navajo Nation in Arizona, Alert Bay in British Columbia, Nunavut communities, and Sápmi. Many Indigenous communities in Canada have revived or continue traditional spirituality."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Black Hills (South Dakota); Navajo Nation (Arizona); Alert Bay (British Columbia); Igloolik (Nunavut); Sápmi (northern Europe)"
+   },
+   "cite": [
+    "s18",
+    "s6",
+    "s14",
+    "s1",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Revival is not finished. Kenny Frost says that, depending on federal policy, Native people today still cannot reach some sacred places on federal lands."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Revival and access: still unfinished"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So why do practices differ between nations? Each nation has its own homeland, language, stories and history. Haudenosaunee words of thanks, Diné hózhó, the Lakota Black Hills, Inuit sea animals and Sámi reindeer and drums all grew from different places and lives."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Shared themes: land, story, ceremony | Differences: homeland, language, history, animals and places"
+   },
+   "cite": [
+    "s2",
+    "s6",
+    "s18",
+    "s20",
+    "s31"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is a good reason why practices differ between Indigenous nations?",
+    "right": "Each nation has its own homeland, language, stories and history.",
+    "wrong": [
+     "They all copied one original religion.",
+     "Only some nations have real religions.",
+     "Differences are mistakes that should be corrected."
+    ],
+    "why": "As we saw, the traditions we met are tied to particular places, languages, stories and histories, so they differ nation to nation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: there is no single Native religion. Land, story and ceremony are woven through many traditions. Restrictions caused deep harm, and revival is still going on. Next class: Indigenous religions of Australia and the Pacific."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Many nations; Land, story, ceremony; Restriction and revival; Next: Australia and the Pacific"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "No single Native American religion",
+   "links": [
+    "[[How to Learn About Religions Respectfully]]",
+    "[[Traditional Religions of Africa and the African Diaspora]]"
+   ]
+  },
+  {
+   "topic": "Land, story and ceremony",
+   "links": [
+    "[[Haudenosaunee Thanksgiving Address]]",
+    "[[Paha Sapa (Black Hills)]]",
+    "[[Hózhó]]"
+   ]
+  },
+  {
+   "topic": "Inuit and Sámi traditions",
+   "links": [
+    "[[Sedna]]",
+    "[[Angakkuq]]",
+    "[[Noaidi and the Sámi drum]]",
+    "[[Inuit Qaujimajatuqangit]]"
+   ]
+  },
+  {
+   "topic": "Restrictions and revival",
+   "links": [
+    "[[Potlatch ban]]",
+    "[[American Indian Religious Freedom Act]]",
+    "[[Indigenous Religions of Australia and the Pacific]]"
+   ]
+  },
+  {
+   "topic": "Where these traditions are practised today",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1884–1951 (Canada's potlatch ban)",
+   "elsewhere": "In the United States, from the 1880s, the Code of Indian Offenses listed rules against Native religious practices. One source says it was enforced until 1978, while another says policies loosened in the 1930s.",
+   "cite": [
+    "s10",
+    "s9"
+   ]
+  },
+  {
+   "when": "1970s",
+   "elsewhere": "The U.S. Congress passed the American Indian Religious Freedom Act in 1978. In the same decade, a movement to celebrate Inuit culture and encourage Inuit pride began in the Arctic.",
+   "cite": [
+    "s9",
+    "s20"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "These traditions are best called 'religions'.",
+   "other_view": "The Canadian Encyclopedia pairs 'religion' and 'spirituality' and says ways of life are often woven into them. An Osage Native American Church leader, quoted by the Smithsonian, says that church is not a religion but a ceremony. So the word itself is debated.",
+   "cite": [
+    "s1",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Native ceremonies were banned in the United States until 1978.",
+   "other_view": "One children's encyclopedia says Native ceremonies were not allowed from the 1880s until 1978. HistoryLink says policies shifted in the 1930s to allow more religious freedom, though lasting damage had been done. The 1978 Act dealt with ongoing interference, such as lost access to sites and seized sacred objects including eagle feathers.",
+   "cite": [
+    "s10",
+    "s9",
+    "s13"
+   ]
+  },
+  {
+   "claim": "We know traditional Sámi religion well, in the Sámi's own words.",
+   "other_view": "Much early information was written down by missionaries and in court records. One research paper says its accounts come mainly from priests involved in stamping out the religion. Scholars also note that calling the noaidi a 'shaman' reflects changing outside attitudes.",
+   "cite": [
+    "s30",
+    "s33",
+    "s29"
+   ]
+  },
+  {
+   "claim": "Inuit traditions are being revived as a religion.",
+   "other_view": "Sources agree there is renewed interest from the 1970s. The Canadian Encyclopedia says many Indigenous communities have revived or continue traditional spirituality. One overview calls the Inuit movement more cultural self-affirmation than a religious revival in the narrow sense.",
+   "cite": [
+    "s20",
+    "s1",
+    "s25"
+   ]
+  }
+ ]
+}

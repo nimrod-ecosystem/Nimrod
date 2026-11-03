@@ -1,0 +1,1232 @@
+{
+ "about": {
+  "title": "Islam",
+  "course": "religions-of-the-world",
+  "class_n": 8,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has six topics and 11 short check questions. Each idea gets a short beat, so you can pause after any question. If you want a shorter session, stop after the Five Pillars and finish the rest later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Countries with the most Muslims & global Muslim population change, 2010-2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/muslim-population-change/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Islam was the world's fastest-growing religion from 2010 to 2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-10",
+   "link": "https://www.pewresearch.org/short-reads/2025/06/10/islam-was-the-worlds-fastest-growing-religion-from-2010-to-2020/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "How the Global Religious Landscape Changed From 2010 to 2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/how-the-global-religious-landscape-changed-from-2010-to-2020/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "How the Global Religious Landscape Changed From 2010 to 2020 (full report, PDF)",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/wp-content/uploads/sites/20/2025/06/PR_2025.06.09_global-religious-change_report.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Prophet Muhammad and the Origins of Islam (Art of the Islamic World, Unit One)",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "undated",
+   "link": "https://www.metmuseum.org/learn/educators/curriculum-resources/art-of-the-islamic-world/unit-one/the-prophet-muhammad-and-the-origins-of-islam",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Muhammad and the Rise of Islam",
+   "publisher": "History Guild",
+   "date": "undated",
+   "link": "https://historyguild.org/muhammad-and-the-rise-of-islam/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Islam",
+   "publisher": "Wikipedia",
+   "date": "undated (live page)",
+   "link": "https://en.wikipedia.org/wiki/Islam",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Quran and Sunnah",
+   "publisher": "Usmani Mosque (introduction to Islam)",
+   "date": "undated",
+   "link": "https://usmanimosque.com/introduction-to-islam/quran-and-sunnah/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Kutub al-Sittah",
+   "publisher": "Wikipedia",
+   "date": "undated (live page)",
+   "link": "https://en.wikipedia.org/wiki/Kutub_al-Sittah",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Five Pillars of Islam",
+   "publisher": "Islamic Relief Australia",
+   "date": "undated",
+   "link": "https://islamicrelief.org.au/five-pillars-of-islam/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Five Pillars of Islam: A Guide to Faith",
+   "publisher": "Azhar el Quran",
+   "date": "undated",
+   "link": "https://azharelquran.com/blog/five-pillars-of-islam",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The Five Pillars of Islam: Foundations of a Muslim's Life",
+   "publisher": "Aid Islam",
+   "date": "undated",
+   "link": "https://www.aidislam.org/articles/the-five-pillars-of-islam",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Eid al-Adha (Students)",
+   "publisher": "Britannica Kids",
+   "date": "undated",
+   "link": "https://kids.britannica.com/students/article/%CA%BFId-al-Adha/601845",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Eid al-Adha",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (revised by Adam Zeidan)",
+   "link": "https://britannica.com/print/article/281649",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Sunni-Shia Conflict",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/ethnic-and-cultural-studies/sunni-shia-conflict/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Islam's Sunni-Shia Divide, Explained",
+   "publisher": "History.com",
+   "date": "undated",
+   "link": "https://www.history.com/articles/sunni-shia-divide-islam-muslim",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Islam: Sunnis and Shiites (CRS Report RS21745)",
+   "publisher": "Congressional Research Service, via EveryCRSReport.com",
+   "date": "undated (about 2010)",
+   "link": "https://www.everycrsreport.com/reports/RS21745.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Mapping the Global Muslim Population",
+   "publisher": "Pew Research Center",
+   "date": "2009-10-07",
+   "link": "https://www.pewresearch.org/religion/2009/10/07/mapping-the-global-muslim-population/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Sufism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Sufism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "An Introduction to Sufism",
+   "publisher": "Asian Art Museum, Education",
+   "date": "undated",
+   "link": "https://education.asianart.org/resources/an-introduction-to-sufism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "What Is Sufism?",
+   "publisher": "Tony Blair Institute for Global Change",
+   "date": "undated",
+   "link": "https://institute.global/insights/geopolitics-and-security/what-sufism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Eid al-Fitr",
+   "publisher": "Wikipedia",
+   "date": "undated (live page)",
+   "link": "https://en.wikipedia.org/wiki/Eid_al-Fitr",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Ramadan 2027: Dates, Fasting Hours, Zakat, and Eid al-Fitr",
+   "publisher": "AcadCalendar",
+   "date": "undated",
+   "link": "https://acadcalendar.com/ramadan/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Islamic Calendar 2027: Key Dates",
+   "publisher": "Muslim Hands USA",
+   "date": "2026-09",
+   "link": "https://muslimhandsusa.org/latest/2026/09/islamic-calendar-2027-key-dates",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Ibadism",
+   "publisher": "Wikipedia",
+   "date": "undated (live page)",
+   "link": "https://en.wikipedia.org/wiki/Ibadism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Ibadis Are Ray of Hope for The Middle East",
+   "publisher": "IDN InDepthNews",
+   "date": "undated",
+   "link": "https://indepthnews.net/ibadis-are-ray-of-hope-for-the-middle-east/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Major Branches of Islam",
+   "publisher": "Islamic Brains",
+   "date": "2024-07",
+   "link": "https://www.islamicbrains.com/2024/07/major-branches-of-islam.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The 5 Pillars of Islam: Shahadah, Salah, Zakat, Sawm & Hajj",
+   "publisher": "Larayba",
+   "date": "undated",
+   "link": "https://larayba.com/pillars-of-islam/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "5 Pillars of Islam",
+   "publisher": "The Pilgrim",
+   "date": "undated",
+   "link": "https://thepilgrim.co/five-pillars-of-islam/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Muhammad",
+   "publisher": "New World Encyclopedia",
+   "date": "undated",
+   "link": "https://www.newworldencyclopedia.org/entry/Muhammad",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Muhammad",
+   "publisher": "Wikipedia",
+   "date": "undated (live page)",
+   "link": "https://en.wikipedia.org/wiki/Muhammad",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Sufism: Islamic Mysticism",
+   "publisher": "Fisher Digital Publications (St. John Fisher University)",
+   "date": "undated",
+   "link": "https://fisherpub.sjf.edu/cgi/viewcontent.cgi?article=1042&context=verbum",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Shia–Sunni relations",
+   "publisher": "Wikipedia",
+   "date": "undated (live page)",
+   "link": "https://en.wikipedia.org/wiki/Shia%E2%80%93Sunni_relations",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class eight. Today we learn about Islam: what Muslims believe, the Five Pillars, the main branches, the festivals, and where Muslims live."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Islam"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Islam is a religion based on the Quran and the teachings of the Prophet Muhammad. Its followers are called Muslims."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Islam → Muslims"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Muslims believe in one God, whom they call Allah. They believe Muhammad was the last in a long line of prophets, including Moses and Jesus."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One God · the last prophet"
+   },
+   "cite": [
+    "s10",
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who do Muslims believe the Prophet Muhammad was?",
+    "right": "The last in a long line of prophets, which includes Moses and Jesus.",
+    "wrong": [
+     "A second god whom Muslims worship alongside Allah.",
+     "The first king of Mecca.",
+     "The angel who carried God's messages."
+    ],
+    "why": "Muslims see Muhammad as God's messenger and the last of the prophets. They do not worship him."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many Muslims say 'peace be upon him' after the Prophet's name, as a mark of respect. In this lesson we will simply say Muhammad, and mean it respectfully."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A mark of respect"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the story of Muhammad's life. We tell it as Muslims tell it, using their own scripture, sayings and early biographies."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The life of the Prophet Muhammad, as Muslims tell it"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Muhammad's years in Mecca, in what is now Saudi Arabia, are dated from about 570 to 622. After that he lived in Medina until his death in 632."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 570 Mecca years begin → c. 610 first revelation → 622 move to Medina → 632 death in Medina"
+   },
+   "cite": [
+    "s6",
+    "s15",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Around the age of forty, Muhammad began having visions and hearing voices. He sometimes meditated at Mount Hira, near Mecca. Muslims believe the messages came from God through the angel Gabriel."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rocky mountain near a desert city at dawn, with a small cave in its side"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Life in Mecca became so hard for the new community that leaving was their only hope. In 622 they went to Medina, where they were promised freedom to practise their religion. That journey is called the hijra."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hijra = the flight to Medina, 622"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the hijra?",
+    "right": "The move of Muhammad and his followers from Mecca to Medina in 622.",
+    "wrong": [
+     "Muhammad's first vision on Mount Hira.",
+     "Muhammad's death in 632.",
+     "A message brought by the angel Gabriel."
+    ],
+    "why": "Hijra means the flight, the move from Mecca to Medina."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That year, 622, is year 1 of the Islamic calendar, called the hijri calendar. So the hijra is remembered every time Muslims write a date."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "622 = year 1 of the hijri calendar"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Medina, Muhammad kept receiving revelations and the community grew. After several years of clashes with the Quraish, who opposed them, Mecca surrendered. Muhammad died in Medina in 632."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Medina: the community grows · Mecca surrenders · 632: Muhammad dies"
+   },
+   "cite": [
+    "s5",
+    "s15",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Muslims strive to follow Muhammad's example. That is why his words and way of life matter, along with the book he is believed to have received."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Following his example"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So let us look at the two great sources of Islamic teaching: the Quran and the hadith."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Quran and the Hadith"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Quran is the sacred book of Muslims. They believe it was revealed to Muhammad through the angel Gabriel over about 23 years, in Arabic, and that it is God's final, unaltered word."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quran = the recitation"
+   },
+   "cite": [
+    "s8",
+    "s7",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It has 114 chapters, called surahs, and over six thousand verses. Muslims learn to recite it in Arabic, and many memorise all of it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "114 chapters (surahs)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In the Quran, what is a surah?",
+    "right": "A chapter of the Quran.",
+    "wrong": [
+     "A single verse of the Quran.",
+     "The angel who brought the message.",
+     "The mountain near Mecca where Muhammad meditated."
+    ],
+    "why": "The Quran has 114 chapters called surahs. Its verses are a separate unit."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The hadith are reports of what Muhammad said and did. His example is called the sunnah. After the Quran, they are the most important Muslim texts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Quran: the revealed book | Hadith: reports of Muhammad's sayings and actions (his sunnah)"
+   },
+   "cite": [
+    "s8",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The hadith were carefully recorded after Muhammad's death. Sunni Muslims, whom we meet soon, treasure six collections, compiled in the 9th and early 10th centuries. Bukhari and Muslim are the best known."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bukhari · Muslim · Tirmidhi · Abu Dawud · Nasai · Ibn Majah"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence is correct?",
+    "right": "The Quran is the sacred book, and the hadith record Muhammad's sayings and actions.",
+    "wrong": [
+     "The hadith are the chapters of the Quran.",
+     "The Quran is a collection of Muhammad's daily habits.",
+     "Both were first written down in the 20th century."
+    ],
+    "why": "The Quran is the revealed book. The hadith are separate reports about Muhammad, collected after his death."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Five Pillars. These are five key practices that Muslims are obliged to carry out in their lives."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "The Five Pillars"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of pillars holding up a house. These five practices hold a Muslim's faith together. Their names are Shahada, Salah, Zakat, Sawm and Hajj."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Shahada (faith) · 2 Salah (prayer) · 3 Zakat (giving) · 4 Sawm (fasting) · 5 Hajj (pilgrimage)"
+   },
+   "cite": [
+    "s29",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the Shahada: the declaration that there is no god but Allah and that Muhammad is God's messenger. Muslims repeat it in their prayers each day."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shahada: one God, one messenger"
+   },
+   "cite": [
+    "s12",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second, salah, the ritual prayer, five times a day. The times are dawn, midday, afternoon, sunset and night."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "clock",
+    "count": 5,
+    "layout": "row",
+    "text": "Five daily prayers: dawn, midday, afternoon, sunset, night"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many times a day do Muslims perform the ritual prayer, salah?",
+    "right": "Five times.",
+    "wrong": [
+     "Once.",
+     "Three times.",
+     "Seven times."
+    ],
+    "why": "Salah is prayed at dawn, midday, afternoon, sunset and night, which makes five."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third, zakat, required charity. Muslims who are able give 2.5 percent of their savings each year to people in need. The word means purification and growth."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.5% of savings, each year"
+   },
+   "cite": [
+    "s10",
+    "s12"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is zakat?",
+    "right": "Required yearly charity: giving a share of savings to people in need.",
+    "wrong": [
+     "Fasting from dawn to sunset.",
+     "The declaration of faith.",
+     "The journey to Mecca."
+    ],
+    "why": "Zakat is the third pillar. It is charity given each year by those who meet the wealth threshold."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fourth, sawm, fasting during the month of Ramadan. Muslims go without food and drink from dawn until sunset. We will return to Ramadan shortly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sawm: fasting, dawn to sunset"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fifth, hajj, the pilgrimage to Mecca. Every Muslim who is able, in health and means, is expected to go at least once in a lifetime. Pilgrims wear the same simple clothes and do the same acts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A very large crowd of pilgrims in plain white clothing, walking in a circle around a cube-shaped building in a courtyard"
+   },
+   "cite": [
+    "s13",
+    "s29",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement describes the hajj?",
+    "right": "A pilgrimage to Mecca that able Muslims are expected to make at least once.",
+    "wrong": [
+     "The five daily prayers.",
+     "A yearly gift of 2.5 percent of savings.",
+     "The declaration that there is one God."
+    ],
+    "why": "Hajj is the fifth pillar, the pilgrimage to Mecca, expected once in a lifetime for those who can."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the branches of Islam. After Muhammad died in 632, the community disagreed about who should lead it. That disagreement is where Sunni and Shia Islam began."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Sunni and Shia Islam"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The majority chose Muhammad's close friend Abu Bakr as the first caliph, or leader. They came to be called Sunni, after sunna, meaning tradition."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sunni: from sunna, tradition"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Others believed Muhammad had chosen his cousin and son-in-law, Ali. They were called Shia, from shiat Ali, meaning the party of Ali. Ali did later become the fourth caliph."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shia: the party of Ali"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Roughly 87 of every 100 Muslims are Sunni and about 13 are Shia. Estimates vary a little, and some give 85 and 15."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Sunni and Shia share of Muslims",
+    "chart": "c1"
+   },
+   "cite": [
+    "s15",
+    "s16",
+    "s18"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Shia Muslims are a majority in Iran, Iraq, Bahrain and Azerbaijan. The largest Shia group, the Twelvers, follow twelve imams in a line from Ali."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shia majorities: Iran · Iraq · Bahrain · Azerbaijan"
+   },
+   "cite": [
+    "s17",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did the Sunni–Shia split begin over?",
+    "right": "Who should lead the Muslim community after Muhammad died in 632.",
+    "wrong": [
+     "Whether the Quran is a sacred book.",
+     "Whether Muslims should perform the Five Pillars.",
+     "Where Muhammad was born."
+    ],
+    "why": "Both groups follow the Quran and the Five Pillars. The disagreement was about leadership after Muhammad's death."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sufism is not a third branch. It is Islam's mystical tradition, in which Muslims seek divine love and knowledge through direct, personal experience of God."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sufism: the inner path"
+   },
+   "cite": [
+    "s19",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The name probably comes from the Arabic word for wool, after the woollen clothes of early mystics. Sufi orders, called tariqas, exist from Marrakech to Manila, among both Sunnis and Shias."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Wool (suf) · Orders (tariqas) · Sunni and Shia Sufis"
+   },
+   "cite": [
+    "s19",
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which best describes Sufism?",
+    "right": "The mystical tradition within Islam, found among both Sunnis and Shias.",
+    "wrong": [
+     "A political party founded by Ali.",
+     "A collection of Muhammad's sayings.",
+     "A separate religion that left Islam."
+    ],
+    "why": "Sufism is Islam's inner, mystical dimension and is not limited to Sunnis or Shias."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are other communities too. Ibadi Muslims, mostly in Oman, with others in North and East Africa, are commonly seen as a third branch. Ahmadiyya Muslims began in India in the late 19th century."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map marking Oman, North Africa, Zanzibar and northern India"
+   },
+   "cite": [
+    "s25",
+    "s26",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Muslim year. Ramadan is the ninth month of the Islamic lunar calendar, and it is the month of fasting we met as the fourth pillar."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A thin crescent moon over a mosque dome at dusk"
+   },
+   "cite": [
+    "s28",
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The calendar follows the moon, so Ramadan moves through the seasons. In 2027 it is expected to begin on 8 February. The exact date depends on sighting the moon."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lunar calendar: Ramadan 2027 expected to begin 8 February"
+   },
+   "cite": [
+    "s14",
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does Ramadan fall in different seasons over the years?",
+    "right": "The Islamic calendar follows the moon, so its months drift through the seasons.",
+    "wrong": [
+     "Muslims choose a new season each year.",
+     "It is always held after the harvest.",
+     "It follows the date of the hijra each year."
+    ],
+    "why": "A lunar calendar is shorter than the solar year, so Ramadan and the Eids move through the seasons."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When Ramadan ends, Muslims celebrate Eid al-Fitr, the Festival of Breaking the Fast. It begins with a communal prayer, then visits to relatives, gifts and shared meals. A charity called zakat al-fitr is given before the prayer."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eid al-Fitr: Festival of Breaking the Fast"
+   },
+   "cite": [
+    "s23",
+    "s22",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Eid al-Fitr in 2027 is expected on 9 or 10 March. Then comes the second great festival, Eid al-Adha, the Festival of Sacrifice. It marks the end of the hajj and begins on the 10th of Dhu al-Hijjah, the last month of the year."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "2027 (expected): Ramadan from 8 Feb · Eid al-Fitr 9–10 Mar · Eid al-Adha about 16–17 May"
+   },
+   "cite": [
+    "s23",
+    "s14",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Eid al-Adha remembers Ibrahim, called Abraham in Judaism and Christianity. In the Quran's story he was ready to sacrifice his son, until God let him sacrifice a ram instead."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ibrahim and the ram"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Families who can afford it sacrifice an animal and share the meat with relatives, neighbours and the poor. As with Eid al-Fitr, the day begins with prayer at daybreak."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Eid al-Fitr: ends Ramadan, prayer, visits, gifts, zakat al-fitr | Eid al-Adha: ends the hajj, prayer, animal shared with family, neighbours and the poor"
+   },
+   "cite": [
+    "s14",
+    "s22",
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which festival remembers Ibrahim's readiness to sacrifice his son?",
+    "right": "Eid al-Adha.",
+    "wrong": [
+     "Eid al-Fitr.",
+     "The hijra.",
+     "The Shahada."
+    ],
+    "why": "Eid al-Adha, the Festival of Sacrifice, remembers Ibrahim and ends the hajj. Eid al-Fitr ends Ramadan."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: where Muslims live today. Pew Research Center estimates about 2.0 billion Muslims in 2020, about a quarter of the world. Islam is the second-largest religious group, after Christianity."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 2.0 billion Muslims, 25.6% of the world (2020)"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most Muslims live in Asia and the Pacific, 59 percent. Sub-Saharan Africa is home to 18 percent. The Middle East and North Africa is where Muslims are the biggest share of the people, at 94 percent."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Where the world's Muslims live, 2020",
+    "chart": "c3"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Where does the largest share of the world's Muslims live?",
+    "right": "Asia and the Pacific.",
+    "wrong": [
+     "The Middle East and North Africa.",
+     "Europe.",
+     "Sub-Saharan Africa."
+    ],
+    "why": "Pew finds 59 percent of Muslims live in Asia and the Pacific. Sub-Saharan Africa has 18 percent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The four countries with the most Muslims are Indonesia, Pakistan, India and Bangladesh. All four are outside the Middle East and North Africa. A third of all Muslims live in just Indonesia, Pakistan or India."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Countries with the most Muslims, 2020 (millions)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "India has 213 million Muslims, yet that is only 15 percent of India, so they are a minority there. Worldwide, Muslims are a majority in 53 countries and territories. About eight in ten Muslims are part of a religious majority where they live."
+   },
+   "show": {
+    "kind": "list",
+    "text": "India: 213 million, 15% of the country · Muslim-majority: 53 countries and territories · About 8 in 10 live as a majority"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 2020 Muslims were about 6 percent of Europe's population, up about one point from 2010. Muslims live on every inhabited continent, in many cultures and languages."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Europe: about 6% Muslim in 2020"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us recap. Muhammad received the Quran, the hijra began the Islamic calendar, the Five Pillars shape daily life, and Muslims belong to Sunni, Shia and other communities. Next time we meet Zoroastrianism and the Baháʼí Faith."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Muhammad and the Quran · Five Pillars · Sunni, Shia, Sufi · Ramadan and two Eids · Muslims across the world"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Sunni and Shia share of the world's Muslims (percent, approximate)",
+   "rows": [
+    {
+     "label": "Sunni",
+     "value": 87,
+     "source": "s15"
+    },
+    {
+     "label": "Shia",
+     "value": 13,
+     "source": "s15"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Countries with the most Muslims, 2020 (millions)",
+   "rows": [
+    {
+     "label": "Indonesia",
+     "value": 239,
+     "source": "s2"
+    },
+    {
+     "label": "Pakistan",
+     "value": 227,
+     "source": "s2"
+    },
+    {
+     "label": "India",
+     "value": 213,
+     "source": "s2"
+    },
+    {
+     "label": "Bangladesh",
+     "value": 151,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "pie",
+   "title": "Where the world's Muslims live, 2020 (percent)",
+   "rows": [
+    {
+     "label": "Asia and the Pacific",
+     "value": 59,
+     "source": "s1"
+    },
+    {
+     "label": "Sub-Saharan Africa",
+     "value": 18,
+     "source": "s1"
+    },
+    {
+     "label": "All other regions combined (100 minus the two above)",
+     "value": 23,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Five Pillars",
+   "links": [
+    "[[Ramadan]]",
+    "[[Hajj]]",
+    "[[Zakat and giving in world religions]]"
+   ]
+  },
+  {
+   "topic": "Hijra and the Islamic calendar",
+   "links": [
+    "[[Calendars and sacred time]]"
+   ]
+  },
+  {
+   "topic": "Quran and Hadith",
+   "links": [
+    "[[Sacred texts]]"
+   ]
+  },
+  {
+   "topic": "Sunni and Shia Islam",
+   "links": [
+    "[[Sufism]]",
+    "[[Ibadi Islam]]"
+   ]
+  },
+  {
+   "topic": "Ibrahim (Abraham)",
+   "links": [
+    "[[Judaism]]",
+    "[[Christianity]]"
+   ]
+  },
+  {
+   "topic": "Where Muslims live today",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Muhammad received his first revelation around the year 610.",
+   "other_view": "Sources give slightly different dates. One says 609 CE, another 610. The Met says only that he was roughly forty. The main early biographies were written by authors of the 2nd and 3rd centuries, so early dates are approximate, which is why this lesson tells the story as Muslims tell it.",
+   "cite": [
+    "s6",
+    "s30",
+    "s5",
+    "s31"
+   ]
+  },
+  {
+   "claim": "After Muhammad died, the community chose its leader by consensus, and Abu Bakr became the first caliph (the Sunni account).",
+   "other_view": "Shia Muslims believe Muhammad himself appointed Ali as his successor and that leadership should stay in his family line. Both accounts are held sincerely, and this lesson does not decide between them.",
+   "cite": [
+    "s15",
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "About 87 percent of Muslims are Sunni and about 13 percent are Shia.",
+   "other_view": "Estimates differ by source. Pew's 2009 estimate was 87–90% Sunni and 10–13% Shia. Others give about 85% and 15%, and some cite a wider 10–15% range for Shia.",
+   "cite": [
+    "s18",
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Sunni Muslims treasure six hadith collections, led by Bukhari and Muslim.",
+   "other_view": "Shia Muslims have their own four canonical books and do not accept many Sunni hadiths unless they also appear in Shia sources. Among Sunni scholars, a minority rank Sahih Muslim above Sahih al-Bukhari.",
+   "cite": [
+    "s7",
+    "s33",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Ibadi Islam is commonly regarded as a third branch alongside Sunni and Shia.",
+   "other_view": "Some writers describe the Ibadis as an offshoot of the early Khawarij movement, while also noting that they are among the most moderate Muslims. Where Ibadism fits is described differently by different authors.",
+   "cite": [
+    "s25",
+    "s26"
+   ]
+  },
+  {
+   "claim": "Ahmadiyya Muslims are a community within the wider Muslim world.",
+   "other_view": "Ahmadiyya Muslims regard their founder, Mirza Ghulam Ahmad, as the awaited Mahdi and Messiah. Theological differences over the finality of prophethood have led to persecution of Ahmadiyya in some countries, so how they are viewed by other Muslims is disputed.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "claim": "Sufism is an accepted, integral part of Islam.",
+   "other_view": "Sufis see themselves as following a spiritual path rooted in the Quran. Some Muslims have criticised Sufi practices, although Sufism is widely accepted in the Muslim community.",
+   "cite": [
+    "s32",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Eid al-Adha remembers Ibrahim's readiness to sacrifice his son Ismail (Ishmael).",
+   "other_view": "In the Jewish and Christian traditions the son in the story is Isaac, not Ishmael. Muslims and Jews and Christians therefore tell the story slightly differently.",
+   "cite": [
+    "s14"
+   ]
+  },
+  {
+   "claim": "Ramadan 2027 is expected to begin on 8 February, with Eid al-Fitr on 9 or 10 March.",
+   "other_view": "Some communities use astronomical calculations, such as the Umm al-Qura calendar, and others wait for the crescent moon to be sighted. Because of this, the start of Ramadan and the Eids can differ by a day between countries.",
+   "cite": [
+    "s23",
+    "s24"
+   ]
+  }
+ ]
+}

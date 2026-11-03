@@ -1,0 +1,511 @@
+{
+ "about": {
+  "title": "What If? How a Thought Experiment Works",
+  "course": "fantasy-thought-experiments",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 22,
+  "length_note": "About 22 minutes, slightly over the 20-minute target. This class teaches a routine, three labels and a cast of ten characters, and each idea gets its own short beat with a check question. Cutting that would bring back the rushing the learners complained about. Beats 6 and 7 (Einstein and the limits of thought experiments) can be skipped if you are short on time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Thought Experiments",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d. (current online edition)",
+   "link": "https://plato.stanford.edu/entries/thought-experiment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Galileo's Leaning Tower of Pisa experiment",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Galileo%27s_Leaning_Tower_of_Pisa_experiment",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Galileo, Ignoramus: Mathematics versus Philosophy in the Scientific Revolution",
+   "publisher": "arXiv (preprint)",
+   "date": "2021",
+   "link": "https://arxiv.org/pdf/2102.06595",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "On the Heels of a Light Beam",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/on-the-heels-of-a-light-beam1/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Chasing a Beam of Light: Einstein's Most Famous Thought Experiment",
+   "publisher": "John D. Norton, University of Pittsburgh",
+   "date": "n.d.",
+   "link": "https://sites.pitt.edu/~jdnorton/Goodies/Chasing_the_light/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "From Drag to Invariance: The Experimental Pressure Behind Special Relativity",
+   "publisher": "arXiv (preprint)",
+   "date": "2025",
+   "link": "https://arxiv.org/pdf/2510.20695",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to Fantasy Thought Experiments. Today we learn one habit: ask 'what if', then follow the answer one step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What If?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That habit has a name: a thought experiment. It is a tool of the imagination. We ask a 'what if' and work it out in our heads."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Thought experiment = a 'what if', followed step by step"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a thought experiment?",
+    "right": "A 'what if' that we work through step by step in our imagination.",
+    "wrong": [
+     "A machine built in a laboratory.",
+     "A guess we never think about again.",
+     "A way of reading other people's minds."
+    ],
+    "why": "It is a tool of the imagination. We ask 'what if' and follow the logic one step at a time."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a real one. Many people long ago believed that heavier things fall faster than lighter ones. Galileo is credited with a clever 'what if' about that belief."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big stone and a small stone, tied together with a string, held high above the ground."
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step one: pretend the old rule is true, so heavier falls faster. Tie the small stone to the big one. The small stone should hold the big one back, so the pair falls slower than the big stone alone."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Assume: heavier falls faster. || Then: the small stone drags the big one, so the pair is slower."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: the tied pair weighs more than the big stone alone. By the same rule, it should fall faster. So the rule says 'slower' and 'faster' together. That is a contradiction."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The pair is slower than the big stone. || The pair is heavier, so it is faster. Both cannot be true."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did this 'what if' show that the old rule had a problem?",
+    "right": "Following the old rule gave two answers that contradict each other.",
+    "wrong": [
+     "Someone dropped the stones and measured them.",
+     "The string broke.",
+     "The small stone was too light to count."
+    ],
+    "why": "The old rule predicted both 'slower' and 'faster' for the same pair. A rule that contradicts itself cannot be right."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another real one. At sixteen, Einstein imagined chasing a beam of light. He kept turning the idea over for years, and it later fed into his work on relativity."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A teenage boy running after a bright beam of light across a dark sky."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thought experiments can also go wrong. The answer is only as good as the rules we put in. Even famous ones get argued over."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Good rules in, good answer out"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "If the rules we assume are wrong, what can happen to the answer?",
+    "right": "The answer can be wrong too.",
+    "wrong": [
+     "The answer is always right anyway.",
+     "The answer turns into a real experiment.",
+     "Nothing, because it is only imagination."
+    ],
+    "why": "A thought experiment can fail. The result depends on the rules we start with."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's meet Nimrod's village. It is made up for this course. First, the royal family: King Kenny, Queen Rose, Princess Jess and Prince Vince."
+   },
+   "show": {
+    "kind": "list",
+    "text": "King Kenny | Queen Rose | Princess Jess | Prince Vince"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And the rest: Jack, Robin the Joker, Nimrod the cat, Merlin, Sir Michael and Dame Gladys. We will learn more about each of them as we go."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Jack | Robin the Joker | Nimrod the cat | Merlin | Sir Michael | Dame Gladys"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these characters is a cat?",
+    "right": "Nimrod",
+    "wrong": [
+     "Jack",
+     "Merlin",
+     "Sir Michael"
+    ],
+    "why": "Nimrod the cat is the village's cat. The others are people."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Every class uses three labels. REAL means checked against evidence, and we give a source. LEGEND means an old story that may hold some truth we cannot prove. INVENTED means made up on purpose."
+   },
+   "show": {
+    "kind": "list",
+    "text": "REAL = checked, with a source | LEGEND = old story, not proven | INVENTED = made up by us"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which label means 'made up on purpose by us'?",
+    "right": "INVENTED",
+    "wrong": [
+     "REAL",
+     "LEGEND",
+     "SOURCE"
+    ],
+    "why": "INVENTED marks things we made up, like King Kenny's village."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's practise. Galileo's tied-stones argument is REAL, because it is a written argument. The story that he dropped balls from the Tower of Pisa is LEGEND. There is no account of it by Galileo himself. King Kenny is INVENTED."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: the tied-stones argument || LEGEND: the tower-drop story. INVENTED: King Kenny."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which label fits the story that Galileo dropped balls from the Tower of Pisa?",
+    "right": "LEGEND",
+    "wrong": [
+     "REAL",
+     "INVENTED",
+     "None of them"
+    ],
+    "why": "It is a popular story, retold often. There is no account of it by Galileo himself, so we cannot prove it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the big idea of this course. Fantasy and science fiction use the same method. In fantasy, the rule-breaker is magic. In science fiction, it is a machine or discovery that follows rules we could explain."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Fantasy: assume magic || Science fiction: assume a machine with explainable rules"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The method is a simple routine with four steps. We will go through them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Question | 2. Assumptions | 3. Consequences | 4. What we learned"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step 1, the question. Start with 'What if', and keep it small and clear. Our example is INVENTED: what if Merlin could turn stones into bread?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1. Question: What if Merlin could turn stones into bread?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which is the clearest 'what if' question?",
+    "right": "What if Merlin could turn stones into bread?",
+    "wrong": [
+     "What if things were different?",
+     "Is bread good?",
+     "What if everything in the village were magic?"
+    ],
+    "why": "A clear question changes one thing, so we can follow it step by step."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step 2, assumptions. These are the rules we agree to pretend are true. Write them down. Ours: only Merlin can do it, one stone makes one loaf, and he can do it ten times a day."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Only Merlin can do it | One stone makes one loaf | Ten loaves a day"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is an assumption?",
+    "right": "A rule we agree to pretend is true while we work.",
+    "wrong": [
+     "A fact we have already proved.",
+     "The final answer.",
+     "A guess we hide from everyone."
+    ],
+    "why": "Assumptions are the starting rules. Writing them down keeps the experiment fair."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step 3, consequences. Keep asking 'and then what?'. Merlin makes ten loaves a day, so the baker may sell fewer loaves. Then the baker may need new work."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ten free loaves a day | The baker sells fewer loaves | The baker may need new work"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is a consequence, not an assumption?",
+    "right": "The baker may sell fewer loaves.",
+    "wrong": [
+     "Merlin can make ten loaves a day.",
+     "Only Merlin can do the spell.",
+     "One stone makes one loaf."
+    ],
+    "why": "The other three are rules we set at the start. A consequence follows from those rules."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step 4, what we learned. Say it in plain words, and label what is real and what is invented. The spell is INVENTED. Our guess about the baker is only logic so far. We have not checked it against real history yet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "4. What we learned: say it plainly, then label it"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "In our bread example, which part is INVENTED?",
+    "right": "Merlin turning stones into bread.",
+    "wrong": [
+     "That we follow four steps.",
+     "That Galileo's tied-stones argument is written down.",
+     "That thought experiments use imagination."
+    ],
+    "why": "The spell is made up for the story. The other answers describe the method or real history."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the same four steps with science fiction. Question: what if Dame Gladys had two mirrors that sent words instantly between villages? We assume it is a machine with rules we could explain, not a spell."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Question: instant mirror messages || Assumption: a machine, not magic"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Consequences: messengers carry less news, and Robin the Joker's jokes travel fast. What we learned: faster news changes who has work. All of this is INVENTED."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Messengers carry less | Jokes travel fast | Learned: fast news changes who has work"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What makes the mirror example science fiction rather than fantasy?",
+    "right": "We assumed a machine that follows rules we could explain.",
+    "wrong": [
+     "It has mirrors in it.",
+     "It happens in a village.",
+     "It has messengers in it."
+    ],
+    "why": "In this course, fantasy assumes magic. Science fiction assumes a machine or discovery with explainable rules."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn, at your own pace. Write one 'what if'. List two rules you assume. Then mark each part REAL, LEGEND or INVENTED."
+   },
+   "show": {
+    "kind": "list",
+    "text": "My question | Two assumptions | REAL, LEGEND or INVENTED?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. The routine is question, assumptions, consequences, what we learned. Next class we visit Life in a Medieval Village, where we start sorting REAL history from our invented village."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Question | Assumptions | Consequences | What we learned"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which step of the routine comes first?",
+    "right": "The question.",
+    "wrong": [
+     "The consequences.",
+     "What we learned.",
+     "Checking the labels."
+    ],
+    "why": "We start with a clear 'what if' question. The other steps follow from it."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "thought experiment",
+   "links": [
+    "[[assumptions]]",
+    "[[consequences]]",
+    "[[Galileo's tied stones]]"
+   ]
+  },
+  {
+   "topic": "labels REAL, LEGEND, INVENTED",
+   "links": [
+    "[[Life in a Medieval Village]]",
+    "[[Where Dragons Come From: The Myths]]"
+   ]
+  },
+  {
+   "topic": "the four-step routine",
+   "links": [
+    "[[Your Own Thought Experiment: Fantasy and Science Fiction]]"
+   ]
+  },
+  {
+   "topic": "Nimrod's village characters",
+   "links": [
+    "[[Inside the Castle]]",
+    "[[The Magic Market: Economics with Spells]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Galileo's tied-stones argument proves that heavy and light things fall alike.",
+   "other_view": "One analysis says the argument only works if we add an extra assumption about how tied objects behave. On that view, experience, not logic alone, backs the conclusion. The same source notes the argument was known before Galileo.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "claim": "Einstein's boyhood idea of chasing a light beam was the starting point of relativity.",
+   "other_view": "Einstein recalled that the idea played a memorable role. But the physicist John Norton has argued that the tidy story may be a later origin story, shaped by interviewers and biographers. No letters, drafts or notebooks show Einstein inventing the anecdote.",
+   "cite": [
+    "s5",
+    "s6"
+   ]
+  },
+  {
+   "claim": "We can learn about the world just by thinking through a 'what if'.",
+   "other_view": "The Stanford Encyclopedia says thought experiments can fail, so their results need care. Other scholars say that, in the end, we still rely on experience and experiment.",
+   "cite": [
+    "s1",
+    "s3"
+   ]
+  }
+ ]
+}

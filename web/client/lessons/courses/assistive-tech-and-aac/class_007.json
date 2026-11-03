@@ -1,0 +1,1080 @@
+{
+ "about": {
+  "title": "A short history of AAC",
+  "course": "assistive-tech-and-aac",
+  "class_n": 7,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 20,
+  "length_note": "About 20 minutes. The history is a chain of small steps, so the beats are short and each ends with a check question. I did not stretch or cut it. This is general background, not clinical advice."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Augmentative and alternative communication",
+   "publisher": "Wikipedia",
+   "date": "undated (living page)",
+   "link": "https://en.wikipedia.org/wiki/Augmentative_and_alternative_communication",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Speech-generating device",
+   "publisher": "Wikipedia",
+   "date": "undated (living page)",
+   "link": "https://en.wikipedia.org/wiki/Speech-generating_device",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Company History",
+   "publisher": "Possum Ltd",
+   "date": "undated page",
+   "link": "https://possum.co.uk/about-us/company-history/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "History",
+   "publisher": "The Sequal Trust",
+   "date": "undated page",
+   "link": "https://www.thesequaltrust.org.uk/history",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Who Invented the Possum? What Historians Can Learn ...",
+   "publisher": "Durham University repository",
+   "date": "undated",
+   "link": "https://durham-repository.worktribe.com/OutputFile/2332446",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Blissymbols",
+   "publisher": "Wikipedia",
+   "date": "undated (living page)",
+   "link": "https://en.wikipedia.org/wiki/Blissymbols",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Bringing Bliss to non-speakers",
+   "publisher": "idsgn (a design blog)",
+   "date": "undated",
+   "link": "http://idsgn.org/posts/bringing-bliss-to-non-speakers/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Picture communication symbols",
+   "publisher": "Wikipedia",
+   "date": "undated (living page)",
+   "link": "https://en.wikipedia.org/wiki/Picture_communication_symbols",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Telling tales: unlocking the potential of AAC technologies",
+   "publisher": "PubMed Central (NIH), open-access article",
+   "date": "undated page",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6491981/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Bringing A New Voice to Genius: MITalk, the CallText 5010, and Stephen Hawking's Wheelchair",
+   "publisher": "Computer History Museum",
+   "date": "undated",
+   "link": "https://computerhistory.org/blog/how-dectalk-gave-voice-to-a-genius-engineering-stephen-hawkings-wheelchair/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Stephen Hawking's Voice, Made By A Man Who Lost His Own",
+   "publisher": "BeyondWords",
+   "date": "undated",
+   "link": "https://beyondwords.io/blog/stephen-hawkings-voice/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Custom-made speech synthesiser for Stephen Hawking",
+   "publisher": "Science Museum Group Collection",
+   "date": "object made 1985-1995",
+   "link": "https://collection.sciencemuseumgroup.org.uk/objects/co521668/custom-made-speech-synthesiser-for-stephen-hawking",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The Technology That Gave Stephen Hawking A Voice",
+   "publisher": "Scientific India",
+   "date": "undated",
+   "link": "https://scind.org/article/The-Technology-That-Gave-Stephen-Hawking-A-Voice",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The democratization of communication",
+   "publisher": "AssistiveWare (on Medium). This is the app maker's own account.",
+   "date": "undated",
+   "link": "https://medium.com/@AssistiveWare/the-democratization-of-communication-cfa81eb2dd17",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Are there prerequisites for AAC?",
+   "publisher": "AssistiveWare",
+   "date": "undated page",
+   "link": "https://www.assistiveware.com/learn-aac/roadblock-aac-users-are-required-to-prove-themselves",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Early Cognitive Skills As Prerequisites to Augmentative and Alternative Communication Use: What Are We Waiting For?",
+   "publisher": "Augmentative and Alternative Communication (journal), via ResearchGate",
+   "date": "undated page",
+   "link": "https://www.researchgate.net/publication/232051843_Early_Cognitive_Skills_As_Prerequisites_to_Augmentative_and_Alternative_Communication_Use_What_Are_We_Waiting_For",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "When to consider? (AAC)",
+   "publisher": "Virginia's Assistive Technology Priority Project, quoting ASHA",
+   "date": "undated page",
+   "link": "https://atnetwork.ttaconline.org/aac-when-to-consider",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Communication Bill of Rights, 3rd Edition",
+   "publisher": "American Speech-Language-Hearing Association (ASHA), for the National Joint Committee (NJC)",
+   "date": "2024 (3rd ed.)",
+   "link": "https://www.asha.org/njc/communication-bill-of-rights/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Communication Bill of Rights Update",
+   "publisher": "National Center on Deaf-Blindness",
+   "date": "undated page",
+   "link": "https://www.nationaldb.org/updates/communication-bill-of-rights-update/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Convention on the Rights of Persons with Disabilities",
+   "publisher": "United Nations Human Rights Office (OHCHR)",
+   "date": "undated page",
+   "link": "https://www.ohchr.org/en/instruments-mechanisms/instruments/convention-rights-persons-disabilities",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Nothing About AAC Users Without AAC Users: A Call for Meaningful Inclusion in Research, Technology Development, and Professional Training",
+   "publisher": "PubMed Central (NIH)",
+   "date": "2025",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13090835/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Nothing about AAC users without AAC users: a call for meaningful inclusion in research, technology development, and professional training",
+   "publisher": "Augmentative and Alternative Communication (Taylor & Francis)",
+   "date": "2025",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/07434618.2025.2514748",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "\"Reach for the Stars\": Five Principles for the Next 25 Years of AAC",
+   "publisher": "Williams, Krezman and McNaughton, hosted by Penn State",
+   "date": "2008",
+   "link": "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/5/135916/files/2011/11/Williams_et_al_2008.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Lessons for the AAC field: a tribute to Dr. David Beukelman",
+   "publisher": "Augmentative and Alternative Communication (Taylor & Francis)",
+   "date": "2022",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/07434618.2022.2077831",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "What are ISAAC and ISAAC Canada?",
+   "publisher": "ISAAC Canada",
+   "date": "undated page",
+   "link": "https://isaac-canada.org/what-are-isaac-and-isaac-canada/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Augmentative and Alternative Communication (journal)",
+   "publisher": "Wikipedia",
+   "date": "undated (living page)",
+   "link": "https://en.wikipedia.org/wiki/Augmentative_and_Alternative_Communication_(journal)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Augmentative & Alternative Communication",
+   "publisher": "ADA Therapy (page repeating Wikipedia's AAC history text)",
+   "date": "undated",
+   "link": "https://adatherapy.net/therapies/aac.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The Belief That Everyone has a Voice: The History of Augmentative and Alternative Communication (AAC)",
+   "publisher": "Els for Autism",
+   "date": "2020-07-15",
+   "link": "https://www.elsforautism.org/the-belief-that-everyone-has-a-voice-the-history-of-augmentative-and-alternative-communication-aac/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "A History of Autism and AAC",
+   "publisher": "Medium (D. Mahmarian)",
+   "date": "undated",
+   "link": "https://medium.com/@dmahmarian/a-history-of-autism-and-aac-9a2b321b01f0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "CommunicationFIRST Nothing About Us Without Us Awardee Remarks",
+   "publisher": "Autistic Self Advocacy Network",
+   "date": "2025",
+   "link": "https://autisticadvocacy.org/2025/01/communicationfirst-nothing-about-us-without-us-awardee-remarks/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "\"Nothing About Us Without Us\" Leaves Voices Out",
+   "publisher": "Autism Spectrum News",
+   "date": "undated",
+   "link": "https://autismspectrumnews.org/nothing-about-us-without-us-leaves-voices-out/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Augmentative and Alternative Communication (journal article on technology and intervention)",
+   "publisher": "Taylor & Francis",
+   "date": "2013",
+   "link": "https://www.tandfonline.com/doi/pdf/10.3109/07434618.2013.848935",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 7. Today we place AAC on a timeline, from early boards to modern devices, and watch how attitudes changed along the way."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A short history of AAC"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We'll make seven stops, one idea at a time. This is general background, not clinical advice. For advice about one person, a speech-language pathologist is the right guide."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Boards and signs → first electronic aids → symbols → speech synthesis → a field forms → apps → rights and voices"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a quick reminder. AAC means methods that add to speech or writing, or take their place. Some need no equipment at all, like signing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "AAC = adds to, or replaces, speech or writing"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is an example of unaided AAC, meaning no equipment?",
+    "right": "Signing",
+    "wrong": [
+     "A speech-generating device",
+     "A tablet app",
+     "A sip-and-puff typewriter controller"
+    ],
+    "why": "Unaided communication uses no equipment, and signing is one example. The other three all need equipment."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first stop is the communication board. It holds letters and words, and the person points to them to build words or sentences."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat board printed with letters and words. A finger points at one word."
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a person do with a communication board?",
+    "right": "Points to letters, words or pictures to build a message",
+    "wrong": [
+     "Blows into a tube to type",
+     "Taps an app that speaks aloud",
+     "Records a voice to play back later"
+    ],
+    "why": "A board is low-tech. The person points, and their communication partner reads the message."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Boards came in many styles. An Iowa speech-language pathologist, Beverly Vicker, documented her work making boards for people with varied disabilities between 1964 and 1973."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Some boards used pictures|Some used letters or words|Some used symbols|Some mixed them"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Signing grew too. In the 1960s and 1970s, the West was more committed to including disabled people in everyday society. Manual sign language, then picture-style symbols, spread a lot."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1960s-70s: inclusion → signs and symbols grow"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What helped signs and symbols grow in the 1960s and 70s?",
+    "right": "A growing commitment to include disabled people in mainstream society",
+    "wrong": [
+     "The invention of the tablet",
+     "A law banning speech therapy",
+     "The arrival of home internet"
+    ],
+    "why": "The history describes a push towards inclusion and independence in the West. Tablets and the internet came much later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop two: the first electronic aid. In 1960 Reg Maling, in the UK, prototyped the Patient Operated Selector Mechanism, called POSM or POSSUM."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1960"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Maling was a volunteer at Stoke Mandeville Hospital. His mouthpiece worked by sucking or blowing, and it ran lights, TVs and an electric typewriter. 'Possum' is Latin for 'I can'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person in a hospital bed using a mouthpiece to operate an electric typewriter"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the Latin word 'possum' mean?",
+    "right": "I can",
+    "wrong": [
+     "I speak",
+     "We listen",
+     "I wait"
+    ],
+    "why": "The name Possum is close to POSM, and it means 'I can' in Latin."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "POSSUM also scanned through symbols on a lit display. So scanning is not new. In 1966 the UK Ministry of Health was persuaded to supply the system to severely disabled people nationwide."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1960: first prototype|1961: Possum company founded|1966: Ministry of Health supplies it"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop three: symbols. Charles Bliss designed Blissymbols as a written language of picture-like signs. For example, a male under a roof means a son."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Blissymbol for 'son': a symbol for male drawn beneath a roof"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1971, Blissymbols were first used with children with cerebral palsy at the Ontario Crippled Children's Centre in Toronto. That is how they came into AAC."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1971"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the 1970s speech-language pathologist Roxie Johnson saw a need for a set of picture symbols. Her Picture Communication Symbols began as 700 line drawings."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "700 line drawings"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which symbol set began in the 1970s as 700 line drawings made by a speech-language pathologist?",
+    "right": "Picture Communication Symbols (PCS)",
+    "wrong": [
+     "POSSUM",
+     "The Voder",
+     "Proloquo2Go"
+    ],
+    "why": "Roxie Johnson created PCS. POSSUM is a device, the Voder is a speech synthesizer, and Proloquo2Go is an app."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop four: speech. In the early 1970s came portable aids such as the LightWriter and the Talking Brooch. Text-to-speech appeared in the late 1970s, and the first devices were cumbersome."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Early 1970s: LightWriter, Talking Brooch|Late 1970s: text-to-speech systems|1970s: microcomputers open new doors"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Machine speech is older than computers. The Voder was shown at the 1939 World's Fair. By the late 1970s, the microprocessor and miniaturization made smaller, portable synthesizers possible."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Microprocessor + miniaturization = portable speech"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What helped make smaller, portable speech devices possible by the late 1970s?",
+    "right": "Miniaturization and the microprocessor",
+    "wrong": [
+     "Touchscreen tablets",
+     "Free apps",
+     "Bigger batteries only"
+    ],
+    "why": "The Computer History Museum credits miniaturization and the microprocessor for the smaller systems."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop five: AAC becomes a field. ISAAC was founded in 1983 by therapists, teachers, people who use AAC, parents and engineers. A journal began in 1985."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1983: ISAAC founded|1985: the journal 'Augmentative and Alternative Communication' begins"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who founded ISAAC in 1983?",
+    "right": "A mix of therapists, teachers, AAC users, parents and engineers",
+    "wrong": [
+     "Only doctors",
+     "Only toy makers",
+     "Only government officials"
+    ],
+    "why": "ISAAC began with many kinds of people, including people who use AAC themselves."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A tribute to the pioneer David Beukelman put it well. The field mattered because, before it, people who could not talk were often overlooked."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "people who could not talk were invisible or seldom noticed"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The field's name changed too. It was first called 'augmentative communication', meaning it supported natural speech. 'Alternative' was added when it became clear some people had no other means."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Augmentative: supports speech|Alternative: takes the place of speech"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why was the word 'alternative' added to the name?",
+    "right": "For some people, non-speech systems were their only means of communication",
+    "wrong": [
+     "Because speech was banned",
+     "Because devices got cheaper",
+     "Because boards stopped being used"
+    ],
+    "why": "At first the aim was to add to natural speech. Later it was clear that for some people AAC is their main way to communicate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stephen Hawking is the best-known case. In 1986 he was given software called the Equalizer, built by Walter Woltosz to help his mother-in-law, who also had ALS."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A wheelchair with a small screen, and a hand clicker held in one hand"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He used a switch to scan options on screen until the one he wanted was reached, and then the device spoke. His hand clicker was even a Possum switch. That ties us back to 1960."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scanning: options are highlighted in turn; a switch picks one"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does scanning mean in this story?",
+    "right": "Moving through the options on screen until the person reaches the one to select",
+    "wrong": [
+     "Photocopying a printed board",
+     "Reading someone's face to guess a word",
+     "Typing very fast with ten fingers"
+    ],
+    "why": "A switch lets a person stop on the wanted letter, word or message while the options are highlighted one after another."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His voice has its own story. Dennis Klatt's speech software first came out in 1984 in the DECtalk synthesizer. Hawking kept the voice until 2018, even though upgrades were offered."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1984: DECtalk released|Hawking used the CallText 5010 until his death in 2018|His team restored the voice rather than replace it"
+   },
+   "cite": [
+    "s11",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop six: tablets and apps. In April 2009 Proloquo2Go launched as the first full-featured symbol-based AAC app on iOS. The aim was a price within reach of people without funding."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "April 2009"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In which year did Proloquo2Go launch?",
+    "right": "2009",
+    "wrong": [
+     "1971",
+     "1983",
+     "2018"
+    ],
+    "why": "The app was released in April 2009. The iPad followed in April 2010."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The iPad launched in April 2010, and things took off. Adult AAC users were among the early adopters. The cumbersome dedicated devices of the 1970s have become a large app industry."
+   },
+   "show": {
+    "kind": "list",
+    "text": "April 2010: iPad released|Adult AAC users adopt early|Access no longer limited to people eligible for funding"
+   },
+   "cite": [
+    "s14",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's measure the whole journey in years since the first POSSUM prototype in 1960. Apps came 49 years later."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s7",
+    "s25",
+    "s26",
+    "s14"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "About how many years passed between the 1960 POSSUM prototype and the 2009 app?",
+    "right": "49",
+    "wrong": [
+     "29",
+     "39",
+     "59"
+    ],
+    "why": "2009 minus 1960 is 49 years."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop seven: attitudes. For a long time came the 'prerequisite' idea. It says a person must show certain skills before being given AAC. That is like asking someone to learn to swim before getting in the water."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prerequisite = something to prove first"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the 'prerequisite' idea?",
+    "right": "That a person must show certain skills before AAC is given",
+    "wrong": [
+     "That AAC is only for children",
+     "That AAC must always be high-tech",
+     "That families must buy the device first"
+    ],
+    "why": "Practitioners once believed readiness skills, such as certain cognitive skills, had to come first."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The evidence moved on. ASHA says current evidence points to no specific prerequisites such as age, thinking skills, language or movement. Research also finds AAC does not hold back speech."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Then: prove you are ready|Now: start where the person is, with support"
+   },
+   "cite": [
+    "s17",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement matches today's evidence?",
+    "right": "There are no specific prerequisites such as age or cognitive level for getting started with AAC",
+    "wrong": [
+     "AAC should wait until speech has been ruled out",
+     "Only people with strong motor skills can use AAC",
+     "Children under five cannot use AAC"
+    ],
+    "why": "ASHA, as quoted by the Virginia project, says no specific prerequisites have been shown. AAC is not a barrier to speech."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That shift joins a bigger one: communication as a right. In 1992 the NJC published a Communication Bill of Rights. It was updated in 2016 and 2024."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Communication is a right"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One right matters for families and carers. People have the right to receive a response to all their communication, even when what they want is not possible."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dignity and respect|Meaningful communication|A response to all communication|Services and supports across the lifespan"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the Bill of Rights, people have the right to a response to their communication even when...",
+    "right": "The thing they want is not possible",
+    "wrong": [
+     "The message is long",
+     "They use a high-tech device",
+     "A professional is not present"
+    ],
+    "why": "The right says every attempt to communicate deserves a response, even if the answer is 'not now'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The United Nations disability convention names AAC. Its definition of communication includes AAC. It asks that AAC be accepted and facilitated in official interactions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "UN Convention on the Rights of Persons with Disabilities names AAC"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Does the UN disability convention mention AAC?",
+    "right": "Yes, it names AAC in its definition of communication and in Article 21",
+    "wrong": [
+     "No, it only covers writing",
+     "No, it covers only spoken language",
+     "Yes, but only for children in schools"
+    ],
+    "why": "Article 2 lists augmentative and alternative modes of communication, and Article 21 asks governments to accept and facilitate AAC."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Those changes came partly from AAC users themselves. 'Nothing about us without us' is an old slogan of marginalized groups. Charlton applied it to the disability movement in 1998."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nothing about us without us"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'nothing about us without us' ask for?",
+    "right": "That disabled people take part in decisions about their own lives",
+    "wrong": [
+     "That only professionals decide",
+     "That nothing should ever change",
+     "That devices are free for everyone"
+    ],
+    "why": "The slogan claims the right of people to take control of decisions that affect their lives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Michael B. Williams, who has cerebral palsy, co-wrote 'Reach for the Stars'. It sets five principles for the next 25 years, including that AAC users be meaningfully involved in AAC research."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A speaker at a conference lectern, with a speech-generating device on a mount"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Alice Wong, an activist, founder of the Disability Visibility Project and AAC user, speaks out about ableism. The advocacy group CommunicationFIRST works for the civil rights of people who rely on AAC."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Alice Wong: activist and AAC user|CommunicationFIRST: civil rights for people who rely on AAC"
+   },
+   "cite": [
+    "s22",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick roll call of well-known AAC users in our story: Stephen Hawking, Michael B. Williams, Alice Wong, and Glenda Watson Hyatt. She is a writer and speaker who described her first 24 hours with an iPad and Proloquo2Go in 2010."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stephen Hawking|Michael B. Williams|Alice Wong|Glenda Watson Hyatt"
+   },
+   "cite": [
+    "s1",
+    "s23",
+    "s22",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these people, famous for physics, used a speech-generating device?",
+    "right": "Stephen Hawking",
+    "wrong": [
+     "Albert Einstein",
+     "Marie Curie",
+     "Isaac Newton"
+    ],
+    "why": "Stephen Hawking had ALS and communicated through a speech-generating device."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Put together, the story goes from 'prove you are ready' to 'communication is a right'. Along the way came tools, symbols, speech, apps, and the voices of AAC users."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Boards and signs → POSSUM (1960) → Blissymbols (1971) → ISAAC (1983) → Proloquo2Go (2009) → rights and user-led advocacy"
+   },
+   "cite": [
+    "s2",
+    "s7",
+    "s25",
+    "s14",
+    "s18",
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which best describes how attitudes changed?",
+    "right": "From asking people to prove they were ready, to treating communication as a right and involving AAC users",
+    "wrong": [
+     "From using devices to using only boards",
+     "From including families to excluding families",
+     "From early support to waiting longer"
+    ],
+    "why": "The field moved away from prerequisite thinking and towards rights, early access and user voices."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That's the timeline. Next class is about how to support a communicator. If you are thinking about a real person, a speech-language pathologist can give individual advice. This class cannot."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: how to support a communicator"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years after the first POSSUM prototype (1960)",
+   "rows": [
+    {
+     "label": "Blissymbols first used in AAC (1971)",
+     "value": 11,
+     "source": "s7"
+    },
+    {
+     "label": "ISAAC founded (1983)",
+     "value": 23,
+     "source": "s25"
+    },
+    {
+     "label": "AAC journal begins (1985)",
+     "value": 25,
+     "source": "s26"
+    },
+    {
+     "label": "Proloquo2Go app launched (2009)",
+     "value": 49,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Communication boards",
+   "links": [
+    "[[Symbol sets and how pages are laid out]]",
+    "[[The AAC toolbox]]"
+   ]
+  },
+  {
+   "topic": "POSSUM and scanning",
+   "links": [
+    "[[Switches and scanning]]"
+   ]
+  },
+  {
+   "topic": "Speech synthesis and Stephen Hawking's voice",
+   "links": [
+    "[[The AAC toolbox]]",
+    "[[Eye gaze and other ways to access a device]]"
+   ]
+  },
+  {
+   "topic": "Core vocabulary and apps",
+   "links": [
+    "[[Core and fringe vocabulary]]"
+   ]
+  },
+  {
+   "topic": "Rights and user voices",
+   "links": [
+    "[[How to support a communicator]]",
+    "[[Getting professional help and what to do next]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1939",
+   "elsewhere": "The Voder, a keyboard-based voice synthesis system, was displayed at the World's Fair in New York.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "when": "1960s-1970s",
+   "elsewhere": "The West was increasingly committed to including disabled people in mainstream society and building independence.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "when": "Late 1970s",
+   "elsewhere": "Miniaturization and the microprocessor were making small, portable speech synthesis systems possible.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "when": "1998",
+   "elsewhere": "Charlton applied the phrase 'nothing about us without us' to the disability movement.",
+   "cite": [
+    "s21"
+   ]
+  },
+  {
+   "when": "April 2010",
+   "elsewhere": "The iPad was released, and AAC apps took off.",
+   "cite": [
+    "s14"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "There are no prerequisites for AAC.",
+   "other_view": "A paper reviewing the research agrees that cognitive prerequisites should not be applied stringently. It adds that some AAC systems may still be easier to learn at different developmental levels. So the question becomes which system fits, not whether the person qualifies.",
+   "cite": [
+    "s16",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Apps put AAC in reach of everyone.",
+   "other_view": "When Proloquo2Go launched, many speech-language pathologists were worried. Families began buying their own devices instead of waiting for an assessment and funding. Beukelman also noted that new communication technology comes with a price as well as a promise.",
+   "cite": [
+    "s14",
+    "s32"
+   ]
+  },
+  {
+   "claim": "POSSUM is the work of one inventor, Reg Maling.",
+   "other_view": "Historians ask whether 'who invented it' is the right question. Others also shaped the Possum, and Roger Jefcoate helped develop it and persuaded the Ministry of Health to supply it in 1966.",
+   "cite": [
+    "s5",
+    "s4"
+   ]
+  },
+  {
+   "claim": "'Nothing about us without us' means AAC users must lead decisions about their own communication.",
+   "other_view": "One writer argues that for people who cannot take part in the discussion, the phrase should be broadened to include parents and caregivers. Others stress that supporters can walk beside a person without speaking for them.",
+   "cite": [
+    "s31"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,818 @@
+{
+ "about": {
+  "title": "Machine minds",
+  "course": "consciousness",
+  "class_n": 11,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are six topics. Each is taught in small steps with a check question, so the lesson runs a little long rather than rushing. You can stop after any beat and pick it up later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Consciousness in Artificial Intelligence: Insights from the Science of Consciousness (Butlin, Long and colleagues)",
+   "publisher": "arXiv",
+   "date": "2023",
+   "link": "https://arxiv.org/html/2308.08708v3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Identifying indicators of consciousness in AI systems",
+   "publisher": "Trends in Cognitive Sciences (Elsevier)",
+   "date": "2025",
+   "link": "https://www.sciencedirect.com/science/article/pii/S1364661325002864",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The Chinese Room Argument (David Cole)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Current online edition (first archived Spring 2004)",
+   "link": "https://plato.stanford.edu/entries/chinese-room/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Chinese Room Argument (Winter 2020 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Winter 2020 archived edition",
+   "link": "https://plato.stanford.edu/archives/win2020/entries/chinese-room/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Chinese Room Argument (Fall 2004 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Fall 2004 archived edition",
+   "link": "https://plato.stanford.edu/archives/fall2004/entries/chinese-room/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Chinese Room Argument (Spring 2010 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Spring 2010 archived edition",
+   "link": "https://plato.stanford.edu/archIves/spr2010/entries/chinese-room/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Turing Test",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Current online edition",
+   "link": "https://plato.stanford.edu/entries/turing-test/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Turing Test (Spring 2019 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Spring 2019 archived edition",
+   "link": "https://plato.stanford.edu/archives/spr2019/entries/turing-test/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Could a Large Language Model be Conscious? (David Chalmers)",
+   "publisher": "arXiv",
+   "date": "2023",
+   "link": "https://arxiv.org/abs/2303.07103",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Could a Large Language Model Be Conscious? (Chalmers, edited talk)",
+   "publisher": "Boston Review",
+   "date": "Date not shown on the page I read",
+   "link": "https://www.bostonreview.net/articles/could-a-large-language-model-be-conscious/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Functionalism (Winter 2017 edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Winter 2017 archived edition",
+   "link": "https://plato.stanford.edu/archives/win2017/entries/functionalism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Conscious artificial intelligence and biological naturalism (Anil K. Seth)",
+   "publisher": "Behavioral and Brain Sciences (record on PhilPapers)",
+   "date": "2025",
+   "link": "https://philpapers.org/rec/SETCAI-4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Biological naturalism is compatible with substrate independence (commentary on Seth)",
+   "publisher": "Behavioral and Brain Sciences, Volume 49 (Cambridge University Press)",
+   "date": "2026",
+   "link": "https://www.cambridge.org/core/product/AFFA2DDBAFEBA04FCD0E86F368F5A468",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "What It Will Take for Computers to Be Conscious (interview with Christof Koch)",
+   "publisher": "MIT Technology Review",
+   "date": "2014-10-02",
+   "link": "https://www.technologyreview.com/2014/10/02/171077/what-it-will-take-for-computers-to-be-conscious/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Problem with Phi: A Critique of Integrated Information Theory",
+   "publisher": "PubMed Central (National Library of Medicine)",
+   "date": "2015",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4574706/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Emergent Introspective Awareness in Large Language Models (Jack Lindsey)",
+   "publisher": "Anthropic, Transformer Circuits Thread",
+   "date": "2025",
+   "link": "https://transformer-circuits.pub/2025/introspection/index.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Anthropic's announcement thread: Signs of introspection in LLMs",
+   "publisher": "Anthropic (on X)",
+   "date": "2025-10-29",
+   "link": "https://x.com/AnthropicAI/status/1983584136972677319",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Taking AI Welfare Seriously (Long, Sebo and colleagues)",
+   "publisher": "arXiv",
+   "date": "2024-11-04",
+   "link": "https://arxiv.org/html/2411.00986v1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "AI welfare risks (Adrià Moret)",
+   "publisher": "Philosophical Studies (Springer)",
+   "date": "2025",
+   "link": "https://link.springer.com/article/10.1007/s11098-025-02343-7",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Identifying indicators of consciousness in AI systems (author manuscript)",
+   "publisher": "London School of Economics Research Online",
+   "date": "2025",
+   "link": "https://researchonline.lse.ac.uk/id/eprint/130322/1/1-s2.0-S1364661325002864-main.pdf",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 11. Last time we looked at animal minds. Today we meet a new kind of candidate: machines."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Machine minds"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our goal: see what the main theories imply about AI, and weigh the best case for and against a conscious machine. We'll go one idea at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Turing test and Chinese room\n2. Functionalism or biology?\n3. Checklists of indicators\n4. What today's AI shows\n5. Ethics under uncertainty"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, two words. Intelligent means doing hard tasks well. Conscious means there is something it feels like to be you."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Smart is not the same as conscious"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A calculator beats you at sums, yet few people think it feels anything. So skill and feeling are two different questions."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A pocket calculator showing a long sum, with a small thought bubble above it that is empty."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is the consciousness question?",
+    "right": "Does it feel like anything to be this machine?",
+    "wrong": [
+     "Can this machine solve hard problems?",
+     "Can this machine talk like a person?",
+     "Is this machine faster than a human?"
+    ],
+    "why": "Solving problems, talking and speed are about skill. Consciousness is about whether there is experience."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1950 Alan Turing offered a way around 'can machines think?'. Ask instead whether a machine can do well in an 'imitation game'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Turing test"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the common version. A judge types to two hidden partners, one human and one machine. If the judge can't tell which is which, the machine did well. Turing's original game had a twist, but this is the idea."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A judge at a screen with two chat windows labelled X and Y. One has a person behind it and one has a machine. The judge is unsure which is which."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the Turing test look at?",
+    "right": "Whether a judge can tell the machine from a person by their conversation alone.",
+    "wrong": [
+     "Whether the machine has a brain.",
+     "Whether the machine feels pain.",
+     "Whether the machine can lift heavy things."
+    ],
+    "why": "The test only compares behaviour in conversation. It does not look inside the machine."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The test has problems. In 2014 a program called Eugene Goostman fooled 33% of judges, and claims arose that it had 'passed'. But Turing never said how much success should raise our confidence, so the test is underspecified."
+   },
+   "show": {
+    "kind": "list",
+    "text": "2014: Eugene Goostman fools 33% of judges\nClaims it 'passed' the test\nTest is underspecified: how much success counts?"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This leads to a bigger idea: acting conscious versus being conscious. An actor can cry on stage without feeling sad. Convincing behaviour might be a performance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Acting conscious vs being conscious"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Machines trained on human writing will say human-sounding things. Anil Seth lists biases that lead us to over-credit machines, and Anthropic says AI self-reports should not be blindly trusted."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Acting conscious: says 'I feel sad', talks smoothly\nBeing conscious: there is actually an inner experience"
+   },
+   "cite": [
+    "s12",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A chatbot says 'I feel sad.' What does that show on its own?",
+    "right": "That it produces those words. It does not settle whether it feels anything.",
+    "wrong": [
+     "That it definitely feels sad.",
+     "That it is definitely lying.",
+     "That it is a human in disguise."
+    ],
+    "why": "Words are weak evidence for experience, because a machine can produce them without any feeling behind them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a famous thought experiment about this: the Chinese room. In 1980 the philosopher John Searle published it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Chinese room"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Imagine someone who knows only English, alone in a room. They follow English instructions for shuffling Chinese characters. To people outside, it looks as if someone in the room understands Chinese."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small room with a slot in the wall. Chinese characters go in. A person inside flips through a thick English rulebook and passes other characters back out."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Searle's point: the person could run that program without understanding a word. So, he argued, you can't get meaning from symbol-shuffling alone. He also said brains are machines and brains think, so he wasn't ruling out every machine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Following rules is not the same as understanding"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is Searle's main point?",
+    "right": "Following rules for shuffling symbols does not, by itself, give understanding.",
+    "wrong": [
+     "No machine of any kind could ever think.",
+     "The person in the room secretly speaks Chinese.",
+     "Brains are not physical things."
+    ],
+    "why": "Searle said that running a program is not enough for understanding. He did not say that all machines are unable to think, since he counts brains as machines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Critics have a reply. The person doesn't understand Chinese, they say, but maybe the whole system does: person, rulebook and room together. That is the systems reply."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Searle: the person doesn't understand, so nothing does\nSystems reply: the whole room might understand"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the systems reply say?",
+    "right": "The person may not understand, but the whole system (person plus rulebook plus room) might.",
+    "wrong": [
+     "The room is made of the wrong material.",
+     "The person understands Chinese after all.",
+     "Computers can never follow rules."
+    ],
+    "why": "The systems reply accepts that the person does not understand. It disputes that this shows nothing in the room understands."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a theory behind the replies. Functionalism says a mental state is defined by the role it plays, not by what it is made of. The Stanford Encyclopedia says it counts as less chauvinistic about species."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Functionalism: what it does, not what it's made of"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "According to functionalism, what makes something a mental state?",
+    "right": "The role it plays: what it does, not what it is made of.",
+    "wrong": [
+     "The kind of material it is made of.",
+     "Whether it is inside a human skull.",
+     "Whether it can be seen on a brain scan."
+    ],
+    "why": "Functionalism ties mental states to their role. That is why it does not limit minds to creatures with brains like ours."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Think of a clock. Gears or a quartz chip, both tell time. If minds work like that, the same mind could in principle run on a computer. Assuming computation is enough is often called computational functionalism."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two clocks side by side. One has visible gears and one is a digital quartz clock. Both show the same time."
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rival view says biology matters. Anil Seth argues that consciousness depends on our nature as living organisms. He thinks conscious AI is unlikely on current paths, but more plausible as AI gets more brain-like or life-like."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Biological naturalism: life matters"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Integrated information theory points the same way, but for another reason. Christof Koch says a perfect software model of a brain would never be conscious. A specially designed machine that mimics the brain's physical structure could be."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Koch: a software model of a brain would never be conscious, but a brain-mimicking machine could be."
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's compare the two views side by side. On one side, the right computation is enough. On the other, the material or physical structure also matters."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Functionalism: the right pattern of processing is enough, whatever it runs on\nBiology / hardware matters: living bodies (Seth) or brain-like physical structure (IIT) are needed"
+   },
+   "cite": [
+    "s11",
+    "s12",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A perfect software copy of a human brain runs on an ordinary computer. Which view says it would be conscious?",
+    "right": "Functionalism.",
+    "wrong": [
+     "Integrated information theory.",
+     "Biological naturalism.",
+     "All the views agree it would be conscious."
+    ],
+    "why": "Koch notes that functionalists say that once you simulate everything, nothing else is needed. IIT and biological naturalism say the physical stuff matters."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Since the theories disagree, we can't just wait for a winner. Researchers built a checklist instead. For each theory, ask what a conscious system would need, then check whether an AI has it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Theories as checklists of 'indicators'"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do you read the checklist? Each indicator is said by at least one theory to be needed for consciousness. A system with more indicators is a better candidate, but that is not proof."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More indicators = more likely, not proven"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "If an AI has many indicators, what does that mean?",
+    "right": "It is more likely to be conscious, but it is not proven.",
+    "wrong": [
+     "It is certainly conscious.",
+     "It is certainly not conscious.",
+     "The checklist has been proven correct."
+    ],
+    "why": "The authors say that systems with more indicators are more likely to be conscious. The checklist shifts our confidence and does not give a verdict."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are some examples. Recurrence is processing that loops back on itself. Another is monitoring of its own perception. Another is making predictions about the world. Another is a global workspace, a limited hub that shares information."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Recurrence: processing that loops back\nSelf-monitoring of perception\nPrediction of the world\nGlobal workspace: a limited-capacity hub"
+   },
+   "cite": [
+    "s2",
+    "s1",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what did the 2023 checklist find? No current system looked like a strong candidate. But many indicators looked buildable with existing techniques."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not yet, but no obvious wall"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the 2023 checklist report conclude?",
+    "right": "No current system is a strong candidate, but many indicators could be built with current techniques.",
+    "wrong": [
+     "Today's chatbots are clearly conscious.",
+     "Machines can never have any indicator.",
+     "The checklist proved which theory is correct."
+    ],
+    "why": "The report found no strong candidate yet. It also found many indicators look achievable with existing methods."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "David Chalmers looked at today's large language models in the same spirit. He found obstacles: no recurrent processing, no global workspace, no unified agency. But he said these may be overcome within about a decade."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Missing: recurrent processing\nMissing: global workspace\nMissing: unified agency\nMay be fixed within about ten years"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He also gave a rough sum. If six missing features were independent, a system lacking all six would have under a one-in-ten chance of being conscious. It's back-of-envelope reasoning, not a measurement."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Under 1 in 10 (a rough estimate)"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, what can today's AI show us? Anthropic tested whether models can access and report their own internal states. They found some limited ability, strongest in the most capable models."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What today's AI can and cannot show"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The team stressed that this does not address whether a model has subjective experience. And they warn that AI self-reports should not be blindly trusted."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Can show: limited, measurable access to its own internal states\nCannot show: whether there is any experience, or that its self-reports are reliable"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the introspection study show?",
+    "right": "Some limited ability to report internal states, but nothing about whether the model has experience.",
+    "wrong": [
+     "That the model is certainly conscious.",
+     "That the model is certainly not conscious.",
+     "That the model's self-reports can always be trusted."
+    ],
+    "why": "The researchers said the work does not address subjective experience, and that self-reports should not be blindly trusted."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last topic: ethics. If we are unsure, there are two ways to go wrong. We might treat a mere tool as a person, or ignore a being that can suffer. Researchers warn of both risks."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Over-attribution: treating a tool as a mind\nUnder-attribution: ignoring a mind that is there"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One report argues there is a realistic possibility that some AI systems will be conscious or robustly agentic in the near future. It does not say any system definitely is. It recommends three steps: acknowledge the issue, assess systems, and prepare policies."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Acknowledge the issue\n2. Assess AI systems\n3. Prepare policies"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do the authors of 'Taking AI Welfare Seriously' argue?",
+    "right": "There is a realistic possibility, so we should start preparing, though they do not claim any system is conscious.",
+    "wrong": [
+     "Current chatbots are definitely conscious.",
+     "AI could never matter morally.",
+     "We should stop all AI research."
+    ],
+    "why": "The authors argue the possibility is realistic enough to act on now. They say clearly that they are not claiming current systems are conscious."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Seth adds a twist. Ethical questions arise whether an AI really is conscious or only convincingly appears to be. So the ethics doesn't wait for the science to finish."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ethics doesn't wait for certainty"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it together. Tests of behaviour are weak. Theories disagree about what matters. Checklists give a rough guide. So the honest position is careful uncertainty."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Behaviour alone is weak evidence\nTheories disagree: computation or biology?\nChecklists give a rough guide\nHonest position: careful uncertainty"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which sentence best sums up this class?",
+    "right": "We don't know yet, so we weigh the evidence carefully and plan for either outcome.",
+    "wrong": [
+     "Chatbots are conscious because they talk like us.",
+     "Machines can never be conscious, so there is nothing to think about.",
+     "The Turing test has settled the question."
+    ],
+    "why": "Behaviour is weak evidence, the theories disagree, and the checklist is only a rough guide. That leaves careful uncertainty."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. In class 12 we'll put it all together and ask where we stand. Take a break and come back when you're ready."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Putting it together"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Turing test",
+   "links": [
+    "[[Chinese room]]",
+    "[[Acting conscious versus being conscious]]"
+   ]
+  },
+  {
+   "topic": "Chinese room",
+   "links": [
+    "[[Functionalism]]",
+    "[[Systems reply]]"
+   ]
+  },
+  {
+   "topic": "Functionalism",
+   "links": [
+    "[[Biological naturalism]]",
+    "[[Integrated information theory]]",
+    "[[Computational functionalism]]"
+   ]
+  },
+  {
+   "topic": "Indicator properties",
+   "links": [
+    "[[Global workspace theory]]",
+    "[[Higher-order theories]]",
+    "[[Predictive processing]]",
+    "[[Machine minds]]"
+   ]
+  },
+  {
+   "topic": "AI welfare",
+   "links": [
+    "[[Animal minds]]",
+    "[[Moral status]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The Chinese room shows that running a program is not enough for understanding.",
+   "other_view": "Many philosophers reject the step from 'the person doesn't understand' to 'nothing understands'. The systems reply says the whole room might. The Stanford Encyclopedia says the debate may stay open until we agree about meaning and consciousness.",
+   "cite": [
+    "s4",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Consciousness depends on being a living organism (biological naturalism), so conscious AI is unlikely on current paths.",
+   "other_view": "Functionalists say the right pattern of processing is enough, whatever it is made of. One commentator on Seth argues his criteria could be met by digital organisms in a detailed simulation, so they do not show that biology is required.",
+   "cite": [
+    "s12",
+    "s11",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Integrated information theory says a software copy of a brain on a digital computer would not be conscious.",
+   "other_view": "Koch himself says this clashes with the dominant functionalist view. Critics also challenge the theory's core definition of integrated information.",
+   "cite": [
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "A checklist of theory-based indicators is a useful way to judge AI consciousness.",
+   "other_view": "The checklist inherits the uncertainty of the theories behind it, which the authors call live candidates. It is a rubric that shifts confidence, not a test with an agreed answer.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "We should start taking AI welfare seriously now.",
+   "other_view": "One philosopher doubts that consciousness and agency are themselves enough for welfare. Chalmers judges that current language models face significant obstacles to being conscious.",
+   "cite": [
+    "s18",
+    "s19",
+    "s9"
+   ]
+  }
+ ]
+}
