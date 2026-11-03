@@ -206,6 +206,27 @@ if (!motionOn) {
     check('*** ...it moves, and with motion "still" nothing in it runs ***', moving > 0 && !!svg2 && running === 0,
       `moving ${moving}, still ${running}`);
     st.destroy();
+
+    // Big idea 3 (2026-11-02): the village keeps the real day (village_day.js, Design's villageDay.js).
+    const V = await import('../village_day.js');
+    const at = (y, mo, d, h, mi) => new Date(y, mo, d, h, mi);
+    const castAt = (date) => V.villageAt(date).pieces.filter((p) => p.cast).map((p) => `${p.cast}${p.gesture ? ':' + p.gesture : ''}`);
+    const tueNap = castAt(at(2026, 10, 3, 14, 30));           // a Tuesday, 14:30
+    check('*** a Tuesday at 14:30: Nimrod naps by the well, the baker chats by her door ***',
+      tueNap.includes('nimrod:sleepBreathe') && tueNap.some((c) => c.startsWith('baker')), JSON.stringify(tueNap));
+    const marketTue = V.villageAt(at(2026, 10, 3, 10, 0)).pieces.some((p) => p.piece === 'marketStall');
+    const marketSun = V.villageAt(at(2026, 10, 1, 10, 0)).pieces.some((p) => p.piece === 'marketStall');
+    check('...the market stall is up on a market day and not on Sunday', marketTue && !marketSun, `${marketTue} ${marketSun}`);
+    check('...and at 03:00 the light is night and only Nimrod is out, at home', V.villageAt(at(2026, 10, 3, 3, 0)).time === 'night'
+      && JSON.stringify(castAt(at(2026, 10, 3, 3, 0))) === '["nimrod:tailSwish"]', JSON.stringify(castAt(at(2026, 10, 3, 3, 0))));
+    check('...a still village places everyone and nobody gestures', V.villageAt(at(2026, 10, 3, 14, 30), { moving: false }).pieces
+      .filter((p) => p.cast).every((p) => !p.gesture && !p.motion));
+    const pin = mountScene(box, { scene: 'medieval', overlays: [], date: at(2026, 10, 3, 14, 30) });
+    let drawn = null;
+    for (let i = 0; i < 60 && !drawn; i++) { await new Promise((r) => setTimeout(r, 50)); drawn = box.querySelector('.ls-medieval[data-village-at]'); }
+    check('*** the scene draws the moment it is given (14:30), not the time now ***', drawn?.dataset.villageAt === '14:30',
+      drawn ? drawn.dataset.villageAt : 'not drawn');
+    pin.destroy();
   }
 }
 

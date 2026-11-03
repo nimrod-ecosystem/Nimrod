@@ -3246,15 +3246,35 @@ if (!GROUND_THEMES.medieval) {
       '--ab-veil': 'rgba(31,25,18,0.8)',
     },
     halo: 'dark',
+    // *** THE VILLAGE KEEPS THE REAL DAY (big idea 3, Mike 2026-11-02: yes; Design's villageDay.js). *** The cast are
+    // placed by their routines for this minute (the baker opens at six, the market on market days, the children after
+    // lessons, Nimrod naps after lunch) and the light follows the clock. REDRAWN ON THE MINUTE, never per frame (cheap on
+    // a Pi 400), while the box is on a page; the timer stops itself once the box is gone. A pinned date (a suite, a
+    // preview) draws that moment and is not redrawn. Weather and seasons need nothing here: the sky's weather overlays
+    // and the theme's season schedule already apply to every scene. Whether a PERSON'S own day may drive a routine is
+    // Mike's question first (it is personal data), so nothing personal is read.
     render: ({ date } = {}) => {
       const box = __lsh('div', { className: 'ls-medieval' });
       box.style.cssText = 'position:absolute;inset:0;overflow:hidden';
       const view = box.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null);
       const aspect = view && view.innerHeight ? view.innerWidth / view.innerHeight : 16 / 9;
-      Promise.all([import('./medieval_theme.js'), import('./cast.js')]).then(([m, c]) => {
-        box.innerHTML = m.medievalBackdropSvg({}, { date: date || new Date(), aspect, castSvg: c.castSvg, assetBase: '/design-assets/' });
-        const svg = box.firstElementChild;
-        if (svg) { svg.setAttribute('preserveAspectRatio', 'xMidYMid slice'); svg.style.cssText = 'width:100%;height:100%;display:block'; }
+      const pinned = date && Math.abs(new Date(date).valueOf() - Date.now()) > 60000 ? new Date(date) : null;
+      Promise.all([import('./medieval_theme.js'), import('./cast.js'), import('./village_day.js')]).then(([m, c, v]) => {
+        let drawnAt = '';
+        const draw = () => {
+          const now = pinned || new Date();
+          const key = `${now.getHours()}:${now.getMinutes()}`;
+          if (key === drawnAt) return;
+          drawnAt = key;
+          box.innerHTML = m.medievalBackdropSvg({ recipe: v.villageAt(now) },
+            { date: now, aspect, castSvg: c.castSvg, assetBase: '/design-assets/' });
+          const svg = box.firstElementChild;
+          if (svg) { svg.setAttribute('preserveAspectRatio', 'xMidYMid slice'); svg.style.cssText = 'width:100%;height:100%;display:block'; }
+          box.dataset.villageAt = key;
+        };
+        draw();
+        if (pinned || !view) return;
+        const t = view.setInterval(() => { if (!box.isConnected && box.dataset.villageAt) { view.clearInterval(t); return; } draw(); }, 15000);
       }).catch((err) => console.error('livescene: medieval', err));
       return [box];
     },
