@@ -46,7 +46,7 @@ import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID,
   PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
-  paintMirror, paintEditPanel,
+  paintMirror, paintEditPanel, drawArrangeToggle, paintBarGroups, arrangeOpenFrom, arrangeWaiting, ARRANGE_OPEN_FIELD,
   paintSave as paintSaveBtn, paintSwap as paintSwapBtn,
   sitOutWakePress,
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
@@ -506,6 +506,9 @@ export async function mountKiosk(root, {
   // (row 2.191) The panels' corner buttons when this screen has not chosen (panel_corners.js: off). A seam, as above, so a
   // suite about how corners behave can run on a screen that has them without writing a row per mount.
   panelCornersDefault = PANEL_CORNERS_FIELD.default,
+  // (row 2.191) Whether the bar's arrange group starts open when this screen has not chosen (transport_bar.js: folded).
+  // The same kind of seam, for a suite that presses Bigger or Save for real.
+  arrangeOpenDefault = ARRANGE_OPEN_FIELD.default,
   // STEP 6 STAGE 3b -- both read only on the dashboard path (`embedded` + `dashboardModule`).
   // `dashboardChrome`: what the dashboard PLACES besides its panels -- by default the transport bar
   // along the bottom and the settings menu down the side (Mike, 2.33: the default dashboard "will
@@ -2722,6 +2725,8 @@ export async function mountKiosk(root, {
     try { applyZoomFocus(kioskEl, s?.zoomFocus); } catch (err) { console.error('kiosk: zoom on focus', err); }
     try { panelRing?.apply(s?.[PANEL_RING_FIELD.key]); } catch (err) { console.error('kiosk: panel ring', err); }   // panel ring
     try { applyPanelCorners(kioskEl, cornersOnFrom(s, panelCornersDefault)); } catch (err) { console.error('kiosk: corners', err); }   // row 2.191
+    // (row 2.191) "Arrange buttons on the bar": both bars hear it now.
+    try { paintGroups(); if (useDashboard) bus.publish(SHELL_STATE, { arrangeAlways: arrangeOpenFrom(s || {}, arrangeOpenDefault) }); } catch { /* not built yet */ }
     // A volume or a mix changed from the menu, or from another device, is heard now.
     try { master?.sync(); } catch (err) { console.error('kiosk: master volume', err); }
     try { mixer?.sync(); } catch (err) { console.error('kiosk: mixer', err); }
@@ -4089,6 +4094,7 @@ export async function mountKiosk(root, {
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
     // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
     [BAR_QUIET_FIELD.key]: ['devices', 2], [BAR_SELF_FIELD.key]: ['devices', 2],
+    [ARRANGE_OPEN_FIELD.key]: ['devices', 2],   // (row 2.191) under "The bar", with how it comes and goes
     [BAR_PLAY_FIELD.key]: ['devices', 2],   // bar while playing (row 2.65): under "The bar" with the other two
     // play on (row 2.68, Mike: "Speakers should be under devices"): under "Speakers", after the rest of Devices.
     ...Object.fromEntries(SPEAKER_KINDS.map((k) => [k.key, ['devices', 4]])),
@@ -4446,6 +4452,7 @@ export async function mountKiosk(root, {
     const s = saveState();
     paintSaveBtn(controlsEl?.querySelector?.('[data-act="save"]'), s);
     if (useDashboard) { try { bus.publish(SHELL_STATE, { save: s }); } catch { /* not load-bearing */ } }
+    try { paintGroups(); } catch { /* (row 2.191) declared below; the next repaint draws the dot */ }
   }
   function saveDashboard() {
     if (!canChangeLayout() || !unsavedCount()) { paintSave(); return false; }
@@ -4656,6 +4663,8 @@ export async function mountKiosk(root, {
     // they are about the keys and the hands in front of this device, the same reason that row is the screen's.
     { ...BAR_QUIET_FIELD, options: BAR_QUIET_FIELD.options.map((o) => ({ ...o })) },
     { ...BAR_SELF_FIELD, options: BAR_SELF_FIELD.options.map((o) => ({ ...o })) },
+    // (row 2.191) "Arrange buttons on the bar": folded behind "Arrange ▸" (default) or always shown.
+    { ...ARRANGE_OPEN_FIELD, default: !!arrangeOpenDefault },
     // bar while playing (row 2.65; bar_toggle.js argues the default): the screen's too, for the same reason.
     { ...BAR_PLAY_FIELD, options: BAR_PLAY_FIELD.options.map((o) => ({ ...o })) },
     // play on (row 2.68; speakers.js argues the rows): where this screen's music goes. Its first choice is the computer's
@@ -5958,7 +5967,29 @@ export async function mountKiosk(root, {
     let ep = null;
     try { ep = editPanelState(); paintEditPanel(controlsEl.querySelector('[data-act="editpanel"]'), ep); } catch { ep = null; /* not built yet */ }
     if (useDashboard && ep) { try { bus.publish(SHELL_STATE, { editPanel: ep }); } catch { /* not load-bearing */ } }
+    paintGroups();
     return s;
+  }
+  // (row 2.191) THE PLAIN BAR'S GROUPS, SEEN, AND "ARRANGE ▸" (transport_bar.js argues both). `arrangeOpen` is this bar's
+  // own: opened by its button, folded by `foldArrange` when the bar hides or the switch scan lets go. The screen's
+  // "Arrange buttons on the bar: Always shown" keeps it open. Guarded: paintSave can run before this line has.
+  let arrangeOpen = false;
+  function paintGroups() {
+    try {
+      const actionsEl = controlsEl.querySelector('.k-actions');
+      drawArrangeToggle(actionsEl, () => { arrangeOpen = !arrangeOpen; paintGroups(); });
+      let b = null;
+      try { b = biggerState(); } catch { b = null; }
+      paintBarGroups(actionsEl, { open: arrangeOpen || arrangeOpenFrom(settings.get() || {}, arrangeOpenDefault), waiting: arrangeWaiting(saveState(), b) });
+    } catch { /* not built yet: the next repaint draws it */ }
+  }
+  // `both`: the switch scan let go, which is about whichever bar it held, so a placed bar is told too. The plain bar's own
+  // hiding is not: it says nothing about a placed bar somebody may be using.
+  function foldArrange(both = false) {
+    try {
+      if (arrangeOpen) { arrangeOpen = false; paintGroups(); }
+      if (both && useDashboard) bus.publish(SHELL_STATE, { arrangeFold: true });
+    } catch { /* not built yet: nothing is open */ }
   }
   // What the bars' ✎ Edit panel says (row 2.191). `on`: a panel is being edited in place now (whichever arrangement shows
   // the panels marks its box `data-editing`, edit_mode.js), so the press stops it; else the picked panel can be edited.
@@ -8507,6 +8538,7 @@ export async function mountKiosk(root, {
       hideT = null;
       if (!embedded) controlsEl.classList.add('hidden');    // an embed's bar stays: see kiosk.css
       try { liftCorners(); } catch { /* the corners come back down with it; not load-bearing */ }
+      if (!embedded) foldArrange();                          // (row 2.191) nobody is looking at the bar now
       // The picker goes with the bar it hangs off. This is the "what if nobody answers"
       // answer for it: left alone, it puts itself away and the screen is back to what it was
       // doing, with nothing having been decided on anybody's behalf.
@@ -9030,7 +9062,7 @@ export async function mountKiosk(root, {
     othersHold: () => torn || screensOpen || !!menu?.isOpen?.() || editScanHeld || hostScanHeld || libScanHeld || callScanHeld,
     pause: (on) => { try { runtime?.router?.setPaused?.(!!on); } catch { /* no router yet */ } },
     isPaused: () => { try { return runtime?.router ? !!runtime.router.isPaused() : true; } catch { return true; } },
-    show: (on) => { holdBar(!!on); },
+    show: (on) => { holdBar(!!on); if (!on) foldArrange(true); },   // (row 2.191) the scan let go: arrange folds
     idleMs: () => { try { return editIdleMsFrom(settings.get() || {}); } catch { return 0; } },
   });
   offsScreen.push(() => barScan.destroy());
@@ -9482,6 +9514,7 @@ export async function mountKiosk(root, {
     mirror: () => mirrorState(), // row 2.191: Mirror dimmed with no camera, at mount (then SHELL_STATE `mirror`)
           bigger: () => biggerState(),
           editPanel: () => editPanelState(), // row 2.191: ✎ Edit panel at mount (then SHELL_STATE `editPanel`)
+          arrangeAlways: () => { try { return arrangeOpenFrom(settings.get() || {}, arrangeOpenDefault); } catch { return false; } },   // row 2.191
           // row 2.109: what its Save and ⇄ Swap show at mount (then SHELL_STATE `save` / `swap`).
           save: () => saveState(), swap: () => swapState(),
           fullscreenElement: () => {

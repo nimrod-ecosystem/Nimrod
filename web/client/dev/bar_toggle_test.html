@@ -407,7 +407,7 @@ const mouseNearBar = async (bar) => {
     // ROW 2.171 / 2.172 on the placed bar too.
     check('*** the placed bar: ⌂ Home, ▦ Dashboards, and ▾ Hide in the last group with ⚙ and ⛶ ***',
       /Home/.test(tb().querySelector('[data-act="gohome"]')?.textContent || '') && /Dashboards/.test(tb().querySelector('[data-act="home"]')?.textContent || '')
-      && barGroupOf(tb().querySelector('[data-act="hidebar"]')) === 'menu');
+      && barGroupOf(tb().querySelector('[data-act="hidebar"]')) === 'screen');   // row 2.191: the "menu" group is "screen" now
     tb().querySelector('[data-act="hidebar"]').click();
     await sleep(30);
     check('*** its ▾ Hide puts it away as T does ***', tb().dataset.tucked === '1' && k.barToggle().hiddenByKey, J(k.barToggle()));

@@ -728,18 +728,40 @@ function unreachableChips() {
       <div class="tb-actions tb-host"><button data-host="picker">Modules</button><button data-host="save">Save</button><button data-host="history" disabled>History</button></div>
       <div class="tb-mods"><button class="k-dot on" data-id="m1">Photos</button><button class="k-dot" data-id="m2">Trivia</button></div>
       <div class="tb-actions"><span data-call-controls style="display:contents"><button data-call="mic">Mute my mic</button><button data-call="their" disabled>Show their video</button><button data-call="louder">Call louder</button></span>
-        <button data-act="home">Home</button><button data-act="back">Back</button><button data-act="next">Next</button><button data-act="panel" hidden>Panel</button><button data-act="hush">Hush</button>
+        <button data-act="gohome">Home</button><button data-act="home">Dashboards</button><button data-act="back">Back</button><button data-act="next">Next</button><button data-act="panel" hidden>Panel</button><button data-act="switch">Switch module</button><button data-act="bigger">Bigger</button><button data-act="hush">Hush</button>
         <button data-act="help">Nimrod</button><button data-act="settings">⚙</button><button data-act="fs">⛶</button></div></div>`;
     document.body.append(fx);
     const barEl = fx.querySelector('.tb-bar');
+    // (row 2.191) The bar's own "Arrange ▸", folded, as both bars draw it.
+    const actionsFx = fx.querySelector('.tb-actions:not(.tb-host)');
+    let fxOpen = false;
+    TB.drawArrangeToggle(actionsFx, () => { fxOpen = !fxOpen; TB.paintBarGroups(actionsFx, { open: fxOpen }); });
+    TB.paintBarGroups(actionsFx, { open: false });
     const pressed = [];
     barEl.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) pressed.push(b.textContent.trim()); });
     const gs = barGroups(barEl);
-    check('*** five groups, in the order the eye reads the bar: this page, panels, this call, the controls, the menu ***',
-      gs.map((g) => g.key).join() === 'page,panels,call,transport,menu', gs.map((g) => g.key).join());
+    // (row 2.191, Mike 2026-11-02: chat's groups approved) "the controls" split into go, play and arrange; "the menu" is
+    // now "screen", with Hush in it.
+    check('*** seven groups, in the order the eye reads the bar: this page, panels, this call, go, play, arrange, screen ***',
+      gs.map((g) => g.key).join() === 'page,panels,call,go,play,arrange,screen', gs.map((g) => g.key).join());
     check('...dimmed and hidden buttons are not stops (Design: dimmed, never hidden, and the scan skips them)',
       gs.find((g) => g.key === 'page').stops.length === 2 && gs.find((g) => g.key === 'call').stops.length === 2
-      && !gs.find((g) => g.key === 'transport').stops.some((b) => b.dataset.act === 'panel'));
+      && !gs.find((g) => g.key === 'play').stops.some((b) => b.dataset.act === 'panel'));
+    check('*** (row 2.191) folded, the arrange group is one stop, "Arrange ▸"; Switch module and Bigger are not drawn ***',
+      gs.find((g) => g.key === 'arrange').stops.map((b) => b.textContent.trim()).join() === 'Arrange ▸'
+      && getComputedStyle(barEl.querySelector('[data-act="bigger"]')).display === 'none',
+      gs.find((g) => g.key === 'arrange').stops.map((b) => b.textContent.trim()).join());
+    check('...a gap marks where each group starts (play, arrange, screen), not a box',
+      [...actionsFx.querySelectorAll('[data-group-start]')].map((b) => b.dataset.act).join() === 'back,arrange,hush',
+      [...actionsFx.querySelectorAll('[data-group-start]')].map((b) => b.dataset.act).join());
+    {
+      const d = document.createElement('div');
+      d.innerHTML = '<button data-act="arrange">x</button>';
+      TB.paintBarGroups(d, { open: false, waiting: TB.arrangeWaiting({ n: 1 }, { promoted: false }) });
+      check('*** "Arrange ▸" carries a dot while something in it waits, and its name says why ***',
+        d.firstChild.textContent === 'Arrange • ▸' && /unsaved changes/.test(d.firstChild.getAttribute('aria-label')),
+        `${d.firstChild.textContent} | ${d.firstChild.getAttribute('aria-label')}`);
+    }
 
     const bus = createBus();
     let paused = false, shown = false, others = false;
@@ -780,8 +802,9 @@ function unreachableChips() {
     V('next'); V('select');
     check('the controls group: Home first', cursorText() === 'Home', cursorText());
     // Two quiet rounds inside a group go back up (Design's rule; quietLaps, default 2).
-    for (let k = 0; k < 4 * BAR_SCAN_DEFAULTS.quietLaps; k++) V('next');
-    check(`*** ${BAR_SCAN_DEFAULTS.quietLaps} quiet rounds of a group go back up to the groups ***`, lit().level === 'groups' && lit().group === 'transport',
+    // (row 2.191) the go group has 2 stops (Home, Dashboards): two quiet rounds are 2 x quietLaps presses.
+    for (let k = 0; k < 2 * BAR_SCAN_DEFAULTS.quietLaps; k++) V('next');
+    check(`*** ${BAR_SCAN_DEFAULTS.quietLaps} quiet rounds of a group go back up to the groups ***`, lit().level === 'groups' && lit().group === 'go',
       JSON.stringify(lit()));
     // A redraw (the chips are re-made on every change) keeps the cursor on the same button.
     V('prev'); V('prev'); V('select');
@@ -808,7 +831,7 @@ function unreachableChips() {
     check('the router un-paused by somebody else: the bar lets go rather than walk under a panel', !lit().held);
     // Two quiet rounds of the GROUPS: the bar gives the switch back.
     bus.publish(BAR_SCAN_TOPIC, {});
-    for (let k = 0; k < 5 * BAR_SCAN_DEFAULTS.quietLaps + 1; k++) V('next');
+    for (let k = 0; k < 7 * BAR_SCAN_DEFAULTS.quietLaps + 1; k++) V('next');   // (row 2.191) seven groups now
     check(`*** ${BAR_SCAN_DEFAULTS.quietLaps} quiet rounds of the groups: the bar lets go ***`, !lit().held && paused === false, JSON.stringify(lit()));
     // Nobody pressing: it lets go after the wait.
     bus.publish(BAR_SCAN_TOPIC, {});
@@ -819,6 +842,21 @@ function unreachableChips() {
     // The same action pressed again leaves.
     bus.publish(BAR_SCAN_TOPIC, {}); bus.publish(BAR_SCAN_TOPIC, {});
     check('the action pressed again: the bar lets go', !lit().held && paused === false);
+    // (row 2.191) Folded, "Arrange ▸" is the group's one stop: the select that would go into it opens it, in place, and
+    // goes in, its first button lit. Nothing else is pressed.
+    bus.publish(BAR_SCAN_TOPIC, {});
+    V('next');
+    for (let k = 0; k < 8 && lit().group !== 'arrange'; k++) V('next');
+    pressed.length = 0;
+    V('select');
+    check('*** select on the folded arrange group opens it and goes in: Switch module lit, nothing else pressed ***',
+      fxOpen && cursorText() === 'Switch module' && lit().level === 'items' && !pressed.includes('Switch module'),
+      `${fxOpen} ${cursorText()} ${JSON.stringify(lit())} ${pressed}`);
+    V('next');
+    check('...next walks the opened group (Bigger)', cursorText() === 'Bigger', cursorText());
+    bus.publish(BAR_SCAN_TOPIC, {});
+    if (fxOpen) actionsFx.querySelector('[data-act="arrange"]').click();
+    pressed.length = 0;
 
     // ONE AT A TIME: every button, in order; the first press only lights.
     modeV = 'one';
@@ -827,9 +865,9 @@ function unreachableChips() {
     V('select');
     check('*** one at a time: a stray select only LIGHTS the first button ***', cursorText() === 'Modules' && pressed.length === 0, cursorText());
     const walk = [cursorText()];
-    for (let k = 0; k < 13; k++) { V('next'); walk.push(cursorText()); }
-    check('...next walks every button that can act, in the bar’s order, and wraps',
-      walk.join(',') === 'Modules,Save,Photos,Trivia,Mute my mic,Call louder,Home,Back,Next,Hush,Nimrod,⚙,⛶,Modules', walk.join(','));
+    for (let k = 0; k < 15; k++) { V('next'); walk.push(cursorText()); }
+    check('...next walks every button that can act, in the bar’s order, and wraps (arrange folded: one stop)',
+      walk.join(',') === 'Modules,Save,Photos,Trivia,Mute my mic,Call louder,Home,Dashboards,Back,Next,Arrange ▸,Hush,Nimrod,⚙,⛶,Modules', walk.join(','));
     V('next'); V('select');
     check('...select presses the lit one', pressed.join() === 'Save', pressed.join());
     V('back');
@@ -885,7 +923,7 @@ function unreachableChips() {
       check(`(${path}) ...and the bar still holds the scan, the cursor where it was`, bs().held && !!cursorText(), JSON.stringify(bs()));
       // To the menu group, and ⚙: the menu takes the scan.
       V('back');
-      for (let k = 0; k < 6 && bs().group !== 'menu'; k++) V('next');
+      for (let k = 0; k < 8 && bs().group !== 'screen'; k++) V('next');
       V('select');
       for (let k = 0; k < 4 && !/⚙/.test(cursorText() || ''); k++) V('next');
       check(`(${path}) (setup) on ⚙`, /⚙/.test(cursorText() || ''), cursorText());

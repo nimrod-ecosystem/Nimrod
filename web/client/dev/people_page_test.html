@@ -387,7 +387,10 @@ try {
   check('*** ...and the bar carries the way back, first: ‹ Your people ***', await until(() => hbar('people')?.textContent === '‹ Your people', 6000)
     && $$('#stage .tb-bar .tb-host button')[0] === hbar('people'));
   check('*** ...and away from Your people the whole bar is back (the panel chips, Switch module) ***',
-    await until(() => shown($('#stage .tb-bar .tb-mods')) && shown($('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="switch"]')), 6000), J(barShows()));
+    // (row 2.191) Switch module sits in the arrange group, folded behind "Arrange ▸" by default: back means not hidden by
+    // the plain-page rule, with "Arrange ▸" on the bar to open it.
+    await until(() => shown($('#stage .tb-bar .tb-mods')) && !$('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="switch"]')?.hidden
+      && shown($('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="arrange"]')), 6000), J(barShows()));
   check('*** ...and so is the whole ⚙ menu, as before: no "All settings…", and "Settings for" steps through the panels and levels ***',
     await openGear() && !menuRow('all-settings') && !menuRow('subject-pick')?.disabled
     && Number(((menuRow('subject-pick')?.textContent || '').match(/of (\d+)/) || [])[1]) >= 4, $('#stage [data-list]')?.textContent.slice(0, 200));

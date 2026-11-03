@@ -550,9 +550,11 @@ const toTab = (m, id) => {
       // shelf" beside "Asked for by voice". 61.)
       // (row 2.191, 2026-11-02, DELIBERATELY: the corner buttons retired to the bar, so "Buttons in a panel's corner" joins
       // How it looks, beside "Show which panel is selected", for a screen that wants them back. 62.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 62) ***',
-        lapStops.length === 15 && oldStops.length === 62 && oldStops.some((i) => i.id === 'mirror') /* Mirror */
+      // (row 2.191, 2026-11-02, DELIBERATELY: "Arrange buttons on the bar" under The bar on Devices. 63.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 63) ***',
+        lapStops.length === 15 && oldStops.length === 63 && oldStops.some((i) => i.id === 'mirror') /* Mirror */
         && oldStops.some((i) => i.id === 'set:panelCorners') /* the corners */
+        && oldStops.some((i) => i.id === 'set:barArrangeOpen') /* arrange on the bar */
         && oldStops.some((i) => i.id === 'set:booksOpen') /* books */
         && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
         && oldStops.some((i) => i.id === 'set:callTheirCaptions') /* subtitles a caller sends */
@@ -5201,6 +5203,15 @@ const toTab = (m, id) => {
     {
       const ep = barBtn('editpanel');
       const editing = () => vroot.querySelector('[data-editing]');
+      // (row 2.191) Edit panel lives in the arrange group, folded behind "Arrange ▸" by default.
+      const arrBtn = barBtn('arrange');
+      check('*** (row 2.191) the bar shows "Arrange ▸", and Edit panel is folded inside it ***',
+        !!arrBtn && /Arrange/.test(arrBtn.textContent) && !!ep && getComputedStyle(ep).display === 'none',
+        `${arrBtn?.textContent} ${ep && getComputedStyle(ep).display}`);
+      arrBtn?.click();
+      check('...pressed, the group opens in place: Edit panel is drawn, and the button folds it again (◂)',
+        !!ep && getComputedStyle(ep).display !== 'none' && arrBtn?.textContent === '◂' && arrBtn?.getAttribute('aria-expanded') === 'true',
+        `${ep && getComputedStyle(ep).display} ${arrBtn?.textContent}`);
       check('*** (row 2.191) the bar has ✎ Edit panel, lit for the picked panel ***',
         await settled(() => !!ep && !ep.hidden && !ep.disabled && ep.textContent === '✎ Edit panel', 2000),
         ep ? `${ep.hidden} ${ep.disabled} ${ep.textContent}` : 'no button');

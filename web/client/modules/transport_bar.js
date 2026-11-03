@@ -42,7 +42,7 @@
 import { registerModule } from '../module.js';
 import {
   barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
-  sitOutWakePress, paintSave, paintSwap, paintMirror, paintEditPanel,
+  sitOutWakePress, paintSave, paintSwap, paintMirror, paintEditPanel, drawArrangeToggle, paintBarGroups, arrangeWaiting,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME,
@@ -130,6 +130,9 @@ registerModule(
     let bigger = (() => { try { return ctx.shell?.bigger?.() || null; } catch { return null; } })();
     // (row 2.191) ✎ Edit panel: the same, and whether a panel is being edited now.
     let editS = (() => { try { return ctx.shell?.editPanel?.() || null; } catch { return null; } })();
+    // (row 2.191) "Arrange ▸": this bar's own open/folded, and the screen's "always shown" (SHELL_STATE `arrangeAlways`).
+    let arrangeOpen = false;
+    let arrangeAlways = (() => { try { return !!ctx.shell?.arrangeAlways?.(); } catch { return false; } })();
     // Save and ⇄ Swap (row 2.109): the same.
     let saveS = (() => { try { return ctx.shell?.save?.() || null; } catch { return null; } })();
     let swapS = (() => { try { return ctx.shell?.swap?.() || null; } catch { return null; } })();
@@ -161,7 +164,7 @@ registerModule(
     // HIDDEN, not dimmed, ARGUED against D16's "dimmed, never hidden": that rule is about a control that can act on
     // this screen and cannot right now; these never act on this page, and a row of grey panel words is exactly the
     // building vocabulary the page is meant to keep out of the way. Edit (the host's first button) brings all of it back.
-    const PLAIN_HIDES = Object.freeze(['back', 'playpause', 'next', 'panel', 'switch', 'save', 'swap', 'bigger', 'smaller', 'editpanel']);
+    const PLAIN_HIDES = Object.freeze(['back', 'playpause', 'next', 'panel', 'switch', 'save', 'swap', 'bigger', 'smaller', 'editpanel', 'arrange']);
     const plainHost = () => { try { return typeof host?.plainBar === 'function' && !!host.plainBar(); } catch { return false; } };
 
     // THE HOST PAGE FLOATS THIS BAR OVER THE PANELS (Home's dashboard filling the window, 2026-10-02 late:
@@ -183,6 +186,8 @@ registerModule(
       if (!root) return;
       root.style.visibility = tucked ? 'hidden' : '';
       if (tucked) root.dataset.tucked = '1'; else delete root.dataset.tucked;
+      // (row 2.191) Tucked away, nobody is looking at it: arrange folds.
+      if (tucked && arrangeOpen) { arrangeOpen = false; draw(); }
     }
     /** Show the bar, and (in full screen, unless held) tuck it away again after the delay. */
     function reveal() {
@@ -356,6 +361,8 @@ registerModule(
       }
       drawHost();
       wordShell();
+      // (row 2.191) The groups, seen, and "Arrange ▸" folded or open. Last, so it reads what every rule above hid.
+      paintBarGroups(shell, { open: arrangeOpen || arrangeAlways, waiting: arrangeWaiting(saveS, bigger) });
     }
 
     return {
@@ -389,6 +396,8 @@ registerModule(
         // SHELL_HELP and the shell's one cat answers.
         helpEl = drawHelpButton(actions, { before: actions.querySelector('[data-act="settings"]'),
           onPress: () => say?.publish(SHELL_HELP, { from: 'transport_bar' }) });
+        // (row 2.191) "Arrange ▸", before the first arrange button.
+        drawArrangeToggle(actions, () => { arrangeOpen = !arrangeOpen; draw(); });
         if (host) {
           // The host's group goes FIRST (Design's order: Modules, then Save...), as a `tb-actions` so
           // it looks like the rest of the bar.
@@ -414,6 +423,8 @@ registerModule(
           if ('pages' in s) pages = s.pages || null;
           if ('mirror' in s) mirrorS = s.mirror || null;
           if ('editPanel' in s) editS = s.editPanel || null;
+          if ('arrangeAlways' in s) { arrangeAlways = !!s.arrangeAlways; draw(); }
+          if ('arrangeFold' in s && arrangeOpen) { arrangeOpen = false; draw(); }   // the switch scan let go of the bar
           if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s
             || 'pages' in s || 'mirror' in s || 'editPanel' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }

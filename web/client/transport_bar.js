@@ -624,20 +624,110 @@ export function barScanModeOf(v, chooseMode = 'point') {
 // how long a stale outline may linger after the menu or a call took the scan. Every verb checks at once,
 // so a press is never sent to the wrong holder.
 const CHECK_MS = 1000;
+// *** THE GROUPS YOU CAN SEE (row 2.191, Mike 2026-11-02: chat's groups approved). *** The old "transport" group (8 to 13
+// buttons of three kinds) is split in three, so the eye and the switch see the same blocks, in this order:
+//   go       ⌂ Home, ▦ Dashboards
+//   play     Back, Pause, Next, the page pair, Panel ▸        -- what acts on the picked panel's content
+//   arrange  Switch module, Save, ⇄ Swap, ⤢ Bigger, ⤡ Smaller, ✎ Edit panel (and Mirror, off the bar) -- FOLDED behind
+//            "Arrange ▸" unless the screen says otherwise (ARRANGE_OPEN_FIELD); it opens in place, beside play
+//   screen   Hush, the cat, ⚙, ⛶, ▾ Hide (was "menu"; Hush moved here: it acts on the whole screen, not one panel)
+// The earlier argument against splitting (the halves were not side by side) is gone: the bar was reordered so they are.
+// A thin gap marks where a group starts (`data-group-start`), not a box: the bar gets no longer.
 export const BAR_GROUP_NAMES = Object.freeze({
-  page: 'this page', panels: 'the panels', call: 'this call', transport: 'the controls',
-  menu: 'help, settings, full screen and hide',
+  page: 'this page', panels: 'the panels', call: 'this call', go: 'go somewhere', play: 'play and move',
+  arrange: 'arrange the panels', screen: 'sound, help, settings, full screen and hide',
+});
+export const BAR_ACT_GROUPS = Object.freeze({
+  gohome: 'go', home: 'go',
+  back: 'play', playpause: 'play', next: 'play', pageprev: 'play', pagenext: 'play', panel: 'play',
+  arrange: 'arrange', switch: 'arrange', save: 'arrange', swap: 'arrange', bigger: 'arrange', smaller: 'arrange',
+  editpanel: 'arrange', mirror: 'arrange',
+  hush: 'screen', help: 'screen', settings: 'screen', fs: 'screen', hidebar: 'screen',
 });
 
 /** Which group a bar button belongs to (both bars: the plain one and the placed module). */
 export function barGroupOf(el) {
-  if (!el || typeof el.closest !== 'function') return 'transport';
+  if (!el || typeof el.closest !== 'function') return 'play';
   if (el.closest('[data-call-controls]')) return 'call';
   if (el.closest('.tb-host')) return 'page';
   if (el.closest('[data-mods], .tb-mods')) return 'panels';
-  const a = el.dataset?.act;
-  if (a === 'help' || a === 'settings' || a === 'fs' || a === 'hidebar') return 'menu';
-  return 'transport';
+  return BAR_ACT_GROUPS[el.dataset?.act] || 'play';
+}
+
+// *** "ARRANGE ▸" (row 2.191). *** One button stands for the folded group. Pressed, the group opens beside play and the
+// button reads "◂" (fold it again). It folds BY ITSELF only when nobody can be looking: the bar tucks or hides, or the
+// switch scan lets go of the bar -- never on a timer while somebody might be using it, which would move the highlight
+// from under a slow switch user. It carries a dot, and says why in its name, while something in it is waiting: Save
+// has changes, or a panel is bigger (Smaller can act). No flash, no sound.
+//   FOR folding: the bar is 10 to 14 buttons instead of 15 to 19, and a switch user steps past one stop, not six.
+//   AGAINST: one more press for Bigger, Edit panel and Save. So it is a setting, "Arrange buttons on the bar": folded
+// (the default, chat's suggestion Mike approved) or always shown.
+export const ARRANGE_ACT = 'arrange';
+export const ARRANGE_OPEN_KEY = 'barArrangeOpen';
+export const ARRANGE_OPEN_FIELD = Object.freeze({
+  key: ARRANGE_OPEN_KEY, label: 'Arrange buttons on the bar (Switch module, Bigger, Edit panel, Save…)', kind: 'toggle',
+  level: 'standard', default: false, onLabel: 'Always shown', offLabel: 'Folded behind “Arrange ▸”',
+});
+/** Whether a settings row keeps the arrange group always open: its own choice, else `dflt` (the field's, or a host's). */
+export function arrangeOpenFrom(row, dflt = ARRANGE_OPEN_FIELD.default) {
+  const v = row ? row[ARRANGE_OPEN_KEY] : undefined;
+  return typeof v === 'boolean' ? v : !!dflt;
+}
+/** Put the "Arrange ▸" button in `actionsEl`, before the first arrange button. Returns it (or the one already there). */
+export function drawArrangeToggle(actionsEl, onPress, doc = actionsEl?.ownerDocument) {
+  if (!actionsEl || !doc) return null;
+  const had = actionsEl.querySelector(`:scope > [data-act="${ARRANGE_ACT}"]`);
+  if (had) return had;
+  const btn = doc.createElement('button');
+  btn.type = 'button';
+  btn.dataset.act = ARRANGE_ACT;
+  btn.dataset.opens = 'arrange';       // the bar scan: pressing this goes INTO the group it opens (createBarScan)
+  btn.textContent = 'Arrange ▸';
+  btn.addEventListener('click', () => { try { onPress?.(); } catch (err) { console.error('transport bar: arrange', err); } });
+  const first = [...actionsEl.querySelectorAll(':scope > [data-act]')].find((b) => BAR_ACT_GROUPS[b.dataset.act] === 'arrange');
+  actionsEl.insertBefore(btn, first || null);
+  return btn;
+}
+/**
+ * Mark each button with its group, mark where each group starts, and fold or open the arrange group. Idempotent: the
+ * bars call it on every repaint. `waiting`: reasons the folded group carries a dot ("unsaved changes").
+ */
+export function paintBarGroups(actionsEl, { open = false, waiting = [] } = {}) {
+  if (!actionsEl) return;
+  ensureBarGroupCss(actionsEl.ownerDocument);
+  actionsEl.dataset.arrange = open ? 'open' : 'folded';
+  let last = null;
+  for (const b of actionsEl.querySelectorAll(':scope > [data-act]')) {
+    const g = BAR_ACT_GROUPS[b.dataset.act] || 'play';
+    b.dataset.barGroup = g;
+    const shows = !b.hidden && !(g === 'arrange' && !open && b.dataset.act !== ARRANGE_ACT);
+    if (shows && g !== last) { if (last !== null) b.dataset.groupStart = ''; else delete b.dataset.groupStart; last = g; }
+    else delete b.dataset.groupStart;
+  }
+  const t = actionsEl.querySelector(`:scope > [data-act="${ARRANGE_ACT}"]`);
+  if (!t) return;
+  const why = (waiting || []).filter(Boolean);
+  t.textContent = open ? '◂' : (why.length ? 'Arrange • ▸' : 'Arrange ▸');
+  t.setAttribute('aria-expanded', open ? 'true' : 'false');
+  const say = open ? 'fold the arrange buttons away' : `Arrange${why.length ? `, ${why.join(', ')}` : ''}: Switch module, Bigger, Smaller, Edit panel, Save`;
+  t.title = say;
+  t.setAttribute('aria-label', open ? 'Fold the arrange buttons' : `Arrange${why.length ? `, ${why.join(', ')}` : ''}`);
+}
+const BAR_GROUP_CSS_ID = 'nimrod-bar-groups';
+function ensureBarGroupCss(doc) {
+  if (!doc || doc.getElementById(BAR_GROUP_CSS_ID)) return;
+  const st = doc.createElement('style');
+  st.id = BAR_GROUP_CSS_ID;
+  st.textContent = '[data-arrange="folded"]>[data-bar-group="arrange"]:not([data-act="arrange"]){display:none!important}'
+    + '[data-group-start]{margin-inline-start:.9em!important}';
+  (doc.head || doc.documentElement).append(st);
+}
+/** The reasons a folded arrange group carries a dot, from the shell's save and bigger states. */
+export function arrangeWaiting(saveS, biggerS) {
+  const out = [];
+  if (saveS && Number(saveS.n) > 0) out.push('unsaved changes');
+  if (biggerS && biggerS.promoted) out.push('something is bigger');
+  return out;
 }
 function isStop(el) {
   if (!el || el.disabled || el.hidden) return false;
@@ -870,7 +960,21 @@ export function createBarScan({
       if (v === 'back') { leave(); return; }
       if (v === 'select') {
         const g = w.gs[w.gi];
-        if (g.stops.length === 1) { press(g.stops[0]); if (stillMine()) paint(); return; }
+        if (g.stops.length === 1) {
+          const only = g.stops[0];
+          press(only);
+          if (!stillMine()) return;
+          // (row 2.191) A folded group's own opener ("Arrange ▸"): the select that opened it goes INTO the group, its
+          // first button lit, so a switch user is where they were heading rather than back at the groups.
+          if (only.dataset?.opens) {
+            const now = barGroups(rootNow());
+            const gi2 = now.findIndex((x) => x.key === g.key);
+            const first = gi2 >= 0 ? now[gi2].stops.find((s) => s !== only) : null;
+            if (first) { level = 'items'; gk = g.key; gAt = gi2; sAt = now[gi2].stops.indexOf(first); sk = stopKey(first); laps = 0; }
+          }
+          paint();
+          return;
+        }
         level = 'items'; sAt = 0; sk = stopKey(g.stops[0]); laps = 0;
         paint();
         return;

@@ -430,7 +430,9 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
     // panelCornersDefault (row 2.191, 2026-11-02): the corners retired to the bar and are off unless a screen turns them on.
     // This suite is about how corners BEHAVE where they are on, so every screen it mounts has them.
     const seams = (storage) => ({ storage, session: fakeStorage(), navigate: () => {}, reloadPage: () => reloads.push(1), recoveryTick: 0,
-      panelCornersDefault: true });
+      panelCornersDefault: true,
+      // (row 2.191) and the bar's arrange group open: these checks press Bigger, Smaller, Save and Swap for real.
+      arrangeOpenDefault: true });
 
     section('*** (1) on the real screen: "Settings for" steps the levels ***');
     {
