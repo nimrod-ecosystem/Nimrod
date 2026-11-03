@@ -541,6 +541,22 @@ registerModule(
         + `${art(c)}</${tag}>`;
     }
 
+    // Only the stats line changes each second, so only its text is touched: re-drawing the table
+    // every second would pull a card out from under a pointer mid-click.
+    // AND IT TICKS ONLY WHILE THAT LINE IS COUNTING (idle_cost_test, 2026-11-02). "Moves and time" is off by
+    // default, and a won deal's time has stopped; either way nothing on the table changes by itself, and the
+    // tick that used to run every second for as long as it was open did nothing at all. render() keeps it in step.
+    function syncTicker() {
+      const want = !dead && !!cfg.showStats && !isWon(game());
+      if (want && ticker == null) {
+        ticker = setInterval(() => {
+          if (!cfg.showStats || dead || isWon(game())) return;
+          const el = mount.querySelector('[data-stats]');
+          if (el) el.textContent = `Moves: ${game().moves} · Time: ${fmtTime(now() - (rec.startedAt || now()))}`;
+        }, 1000);
+      } else if (!want && ticker != null) { clearInterval(ticker); ticker = null; }
+    }
+
     function render() {
       if (dead || !rootEl) return;
       const g = game();
@@ -611,6 +627,7 @@ registerModule(
       const scoreLine = own ? `<p class="sol-stats" data-score>${homeCount(g)} of 52 cards home</p>` : '';
       const statsLine = cfg.showStats
         ? `<p class="sol-stats" data-stats>Moves: ${g.moves} · Time: ${fmtTime(now() - (rec.startedAt || now()))}</p>` : '';
+      syncTicker();
       // The empty cell between the drawn cards and the home piles: where a King comes out to cheer (court solitaire).
       const cheering = cheerHtml();
       const cheerCell = cheering ? `<div class="sol-cheer-slot" data-cheer-slot>${cheering}</div>`
@@ -656,7 +673,7 @@ registerModule(
           items: items.map((i) => i.key), litKey: lit >= 0 ? items[lit]?.key : null, stats: { ...stats }, cfg: { ...cfg },
           theme: themeWatch ? themeWatch.id() : null,
           cheer: cheer ? { suits: [...cheer.suits], started: cheer.started, until: cheer.until } : null,
-          cheered: [...cheered] };
+          cheered: [...cheered], ticking: ticker != null };
       },
       init() {
         let cssHref = '';
@@ -711,14 +728,7 @@ registerModule(
         plays.watch({ topics: [`${GAME}/next`, `${GAME}/prev`, `${GAME}/select`, `${GAME}/back`, `${GAME}/undo`],
           mount, when: () => !dead && !isWon(game()) });
 
-        render();
-        // Only the stats line changes each second, so only its text is touched: re-drawing the table
-        // every second would pull a card out from under a pointer mid-click.
-        ticker = setInterval(() => {
-          if (!cfg.showStats || dead || isWon(game())) return;
-          const el = mount.querySelector('[data-stats]');
-          if (el) el.textContent = `Moves: ${game().moves} · Time: ${fmtTime(now() - (rec.startedAt || now()))}`;
-        }, 1000);
+        render();             // starts the stats tick, if the stats line is on (syncTicker)
       },
       onResize() {},
       onHide() { plays?.rest(); musicHost?.follow(false); try { state?.flush?.(); } catch { /* nothing to do */ } },

@@ -606,8 +606,10 @@ try {
     const bus = createBus();
     const scores = [];
     bus.subscribe('score/update', (p) => scores.push(p));
-    const t = mount({ bus, saved: { autoMove: 'off' } });
+    // "Moves and time" on, so the same game shows the stats tick stopping at the win (idle_cost_test, 2026-11-02).
+    const t = mount({ bus, saved: { autoMove: 'off', showStats: true } });
     t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    check('with "Moves and time" on, the time ticks while the deal is being played', t.probe().ticking === true);
     let presses = 0, stuckAt = -1;
     (solution || []).forEach((m, i) => {
       if (stuckAt >= 0) return;
@@ -623,8 +625,15 @@ try {
     check('and says so, beside the cards', !!t.host.querySelector('[data-won]') && /You won/.test(t.bar()));
     check('the score reached 52 of 52 on the score contract', scores.some((s) => s.source === GAME && s.value === 52 && s.target === 52));
     check(`${solution?.length} moves took ${presses} switch presses`, presses > 0);
+    check('a won deal\'s time has stopped, so nothing ticks', t.probe().ticking === false);
     check('a won game offers a new one (one press: nothing is lost)', t.probe().items.includes('new') && walkTo(t, 'new') > 0 && !isWon(t.probe().game));
+    check('and the new deal\'s time ticks again', t.probe().ticking === true);
     t.inst.destroy();
+    check('destroyed, nothing ticks', t.probe().ticking === false);
+    const plain = mount();
+    check('*** with "Moves and time" off (the default) nothing ticks at all: there is nothing to count ***',
+      plain.probe().ticking === false);
+    plain.inst.destroy();
   }
 
   section('auto-move to the foundations (the default: safe)');
